@@ -144,7 +144,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       { q: "What is a design system and do we need one?", a: "A shared component and token library that makes every screen consistent and every change cheap. If your product will grow past a handful of screens, it pays for itself quickly." },
     ],
     industries: ["ecommerce", "education", "real-estate"],
-    related: ["web-development", "mobile-apps", "product-engineering"],
+    related: ["web-development", "mobile-app-development", "product-engineering"],
   },
   {
     slug: "cloud-devops",
@@ -183,7 +183,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       { q: "Can you work alongside our internal team?", a: "Yes — we embed with your engineers, transfer knowledge deliberately and leave documentation and runbooks behind. Dependency is not the goal." },
     ],
     industries: ["logistics", "energy", "manufacturing"],
-    related: ["custom-software", "data-analytics", "qa-testing"],
+    related: ["custom-software-development", "data-analytics", "qa-testing"],
   },
   {
     slug: "data-analytics",
@@ -222,7 +222,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       { q: "Is this the same as data science?", a: "No — this is the engineering that makes analysis trustworthy. Once foundations hold, forecasting and ML become possible; without them, every model inherits the mess." },
     ],
     industries: ["manufacturing", "energy", "travel"],
-    related: ["ai-agent-development", "cloud-devops", "custom-software"],
+    related: ["ai-agent-development", "cloud-devops", "custom-software-development"],
   },
   {
     slug: "ai-agent-development",
@@ -261,7 +261,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       { q: "What does an agent project look like?", a: "A focused first workflow ships in weeks: scope, ground, guard, evaluate. It starts supervised, earns autonomy with evidence, and expands once the pattern proves itself." },
     ],
     industries: ["healthcare", "education", "fintech"],
-    related: ["data-analytics", "custom-software", "web-development"],
+    related: ["data-analytics", "custom-software-development", "web-development"],
   },
   {
     slug: "custom-software-development",
@@ -378,7 +378,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       { q: "Do you test performance and security?", a: "Yes — load baselines establish your ceilings, and security scanning plus review catch the common holes before auditors or attackers tour them." },
     ],
     industries: ["fintech", "government", "healthcare"],
-    related: ["cloud-devops", "custom-software", "web-development"],
+    related: ["cloud-devops", "custom-software-development", "web-development"],
   },
   {
     slug: "product-engineering",
@@ -417,7 +417,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       { q: "Do you start from zero or rescue in-flight products?", a: "Both. Zero-to-one gets discovery and disciplined slices; in-flight rescues get an audit, a stabilisation plan and a rebuilt delivery rhythm." },
     ],
     industries: ["ecommerce", "education", "logistics"],
-    related: ["ui-ux-design", "custom-software", "mobile-apps"],
+    related: ["ui-ux-design", "custom-software-development", "mobile-app-development"],
   },
 ];
 
