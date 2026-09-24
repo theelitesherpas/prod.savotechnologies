@@ -107,6 +107,26 @@ Replace with genuine SAVO studio photography when available. Vector
 infographics (service icons, AI pipeline, growth convergence diagram) are
 hand-authored SVG in `src/sections/home/` — no icon library dependency.
 
+## Navigation & footer (ported from version 1 — /newdesign)
+
+The header and footer reproduce version 1's information architecture in the
+v6 design system (version 1 itself is untouched):
+
+- **Header**: AI mega-menu (AI Agents PRO, Generative AI, AI Consulting,
+  Machine Learning + flagship card), Services (10 links + estimator card),
+  Hire Resources (6 roles + rates card), Industries (10 sectors + card),
+  Case Study, Careers, Contact Us (→ enquiry drawer).
+- **Footer**: brand column + Services / Industries / Company / Quick Links,
+  global presence strip, real contact details, callback form, compliance
+  badges, legal.
+- Future routes (`/services/*`, `/hire/*`, `/industries/*`, `/careers/,
+  `/portal/`, `/privacy/`, `/terms/`) render the designed 404
+  ("still in production") until built — architecture-ready without broken
+  pages.
+- Callback requests post to `/api/callback` (country-aware phone
+  validation, honeypot, rate limit) and store in `project_enquiries` as
+  `projectType: "Callback"`.
+
 ## Design system
 
 See `DESIGN.md` (tokens, type scale, chapters, motion, do's & don'ts) and

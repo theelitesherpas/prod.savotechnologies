@@ -13,7 +13,7 @@ datasource db {
 model ProjectEnquiry {
   id          String   @id @default(cuid())
   name        String
-  email       String
+  email       String?
   company     String?
   projectType String   @map("project_type")
   budget      String?

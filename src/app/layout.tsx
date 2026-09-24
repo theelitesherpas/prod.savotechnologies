@@ -4,7 +4,7 @@ import Script from "next/script";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { EnquiryProvider } from "@/components/shared/enquiry-dialog";
-import { SITE } from "@/constants/site";
+import { SITE, SOCIAL_LINKS } from "@/constants/site";
 import { absoluteUrl, env } from "@/lib/env";
 import "./globals.css";
 
@@ -83,8 +83,19 @@ const jsonLd = {
       name: SITE.name,
       alternateName: "SAVO",
       url: absoluteUrl("/"),
+      logo: absoluteUrl("/icon.svg"),
       description: SITE.description,
       slogan: SITE.tagline,
+      email: SITE.email,
+      telephone: SITE.phoneE164,
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "sales",
+        email: SITE.email,
+        telephone: SITE.phoneE164,
+        availableLanguage: ["en"],
+      },
+      sameAs: SOCIAL_LINKS.map((s) => s.href),
       knowsAbout: [
         "Website Design & Development",
         "Web Application Development",

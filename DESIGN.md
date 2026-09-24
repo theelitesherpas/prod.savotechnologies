@@ -192,6 +192,22 @@ wireframe overlays and an "In preparation" tag — never presented as clients.
 
 ## Components
 
+- **Wordmark** — the official SAVO logo (ported from v1): single-color
+  currentColor lockup, `SavoLogo` in `shared/savo-logo.tsx`; paper contexts
+  fill ink, ink contexts fill paper.
+- **Navigation (v1 architecture)** — AI mega (AI Services + flagship
+  feature), Services / Hire Resources / Industries dropdowns (10/6/10 links
+  + feature cards + "All …" link), Case Study, Careers, Contact Us (opens
+  the enquiry drawer). Panels are full-width ink bars under the header with
+  mono titles, indexed links, PRO chips, square-node feature art. Hover
+  opens with a 160ms grace timer; click opens; Esc / outside / hover-leave
+  closes. Mobile: full-screen ink menu with numbered accordion sections.
+  Future routes resolve to the designed 404 ("still in production").
+- **Footer (v1 architecture)** — brand column (logo, v1 statement, socials)
+  + Services / Industries / Company / Quick Links columns; global presence
+  strip (India HQ, USA, GCC, UK, Australia) + Talk to us (email/phone/
+  portal); callback form (country-aware phone validation → /api/callback);
+  compliance badges + © + legal.
 - **Buttons** — solid (ink→vermilion hover), outline, `link-underline` text
   links; 2.75–3.25rem; arrow nudges +3px.
 - **Fields** — baseline hairlines, accent focus, error caption; native

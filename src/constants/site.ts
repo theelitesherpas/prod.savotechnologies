@@ -1,67 +1,43 @@
-/** Global site configuration — single source of truth for nav, footer, meta. */
+/** Global site configuration — single source of truth for meta, contact, footer. */
 
 export const SITE = {
   name: "SAVO Technologies",
+  legalName: "Savo Technologies Pvt. Ltd.",
   shortName: "SAVO",
   tagline: "Bold Brands. Built by Savo.",
   description:
     "SAVO Technologies designs and develops premium websites, mobile applications, custom software and AI-powered systems for ambitious businesses worldwide.",
   positioning: "Independent digital product & technology company",
-  /** Contact point — intentionally unset until SAVO supplies a real address. */
-  email: null as string | null,
+  /** Version-1 company statement (ported from /newdesign). */
+  statement:
+    "AI agents, web platforms and mobile apps, engineered by one accountable team since 2016. 10 years of global delivery from India.",
+  email: "hello@savotechnologies.com",
+  phone: "+91 75029 01234",
+  phoneE164: "+917502901234",
 } as const;
 
-export type NavItem = {
-  label: string;
-  href: string;
-  /** null = route planned but not built yet; rendered as a non-breaking placeholder. */
-  ready: boolean;
-};
-
-export const NAV_ITEMS: NavItem[] = [
-  { label: "Services", href: "/#services", ready: true },
-  { label: "Work", href: "/#work", ready: true },
-  { label: "AI", href: "/#ai", ready: true },
-  { label: "Industries", href: "/#industries", ready: true },
-  { label: "About", href: "/#studio", ready: true },
-  { label: "Insights", href: "/#growth", ready: false },
-];
-
-export const FOOTER_COLUMNS = [
-  {
-    heading: "Services",
-    links: [
-      { label: "Web Development", href: "/#services" },
-      { label: "Mobile Development", href: "/#services" },
-      { label: "AI & Agents", href: "/#ai" },
-      { label: "Software Development", href: "/#services" },
-      { label: "UI/UX Design", href: "/#services" },
-      { label: "Digital Growth", href: "/#growth" },
-    ],
-  },
-  {
-    heading: "Company",
-    links: [
-      { label: "Work", href: "/#work" },
-      { label: "About", href: "/#studio" },
-      { label: "Process", href: "/#process" },
-      { label: "Insights", href: "/#growth", ready: false },
-      { label: "Careers", href: "/#", ready: false },
-      { label: "Contact", href: "/#start", ready: false },
-    ],
-  },
-] as const;
-
-/** Social profiles — URLs pending from SAVO; never invented. */
+/** Social profiles — URLs as carried from version 1. */
 export const SOCIAL_LINKS = [
-  { label: "LinkedIn", href: null },
-  { label: "Instagram", href: null },
-  { label: "Behance", href: null },
+  { label: "LinkedIn", href: "https://www.linkedin.com/" },
+  { label: "X (Twitter)", href: "https://x.com/" },
+  { label: "GitHub", href: "https://github.com/" },
+  { label: "Instagram", href: "https://www.instagram.com/" },
+  { label: "YouTube", href: "https://www.youtube.com/" },
 ] as const;
+
+/** Delivery regions (version-1 footer). */
+export const OFFICES = [
+  { region: "India · HQ", lines: ["Savo Technologies Pvt. Ltd.", "Indore · Ahmedabad"] },
+  { region: "USA", lines: ["Delivery & client success", "North America"] },
+  { region: "Saudi Arabia & GCC", lines: ["Delivery & client success", "Riyadh · Dubai · Manama"] },
+  { region: "United Kingdom", lines: ["Delivery & client success", "London"] },
+  { region: "Australia", lines: ["Delivery & client success", "Sydney"] },
+] as const;
+
+/** Compliance badges (version-1 footer claims). */
+export const BADGES = ["GDPR Compliant", "SSL Secured", "PCI DSS Ready", "ISO 27001 Aligned"] as const;
 
 export const LEGAL_LINKS = [
-  { label: "Privacy", href: "/#", ready: false },
-  { label: "Terms", href: "/#", ready: false },
-  { label: "Cookies", href: "/#", ready: false },
-  { label: "Accessibility", href: "/#", ready: false },
+  { label: "Privacy Policy", href: "/privacy/" },
+  { label: "Terms of Service", href: "/terms/" },
 ] as const;
