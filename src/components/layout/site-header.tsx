@@ -14,7 +14,7 @@ const FOCUSABLE =
 
 const panelId = (label: string) => `nav-panel-${label.replace(/\s+/g, "-").toLowerCase()}`;
 
-export function SiteHeader() {
+export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
   const [scrolled, setScrolled] = useState(false);
   const [openPanel, setOpenPanel] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -111,7 +111,7 @@ export function SiteHeader() {
   };
   useEffect(() => keepOpen, []);
 
-  const withChildren = HEADER_NAV.filter((n): n is NavItem & { children: NavLink[] } => !!n.children);
+  const withChildren = nav.filter((n): n is NavItem & { children: NavLink[] } => !!n.children);
 
   const activate = (item: NavItem) => {
     if (item.action === "dialog") {
@@ -148,7 +148,7 @@ export function SiteHeader() {
         {/* Desktop navigation (version-1 architecture) */}
         <nav aria-label="Primary" className="hidden items-center lg:flex">
           <ul className="flex items-center gap-1">
-            {HEADER_NAV.map((item) =>
+            {nav.map((item) =>
               item.children ? (
                 <li
                   key={item.label}
@@ -283,7 +283,7 @@ export function SiteHeader() {
         </div>
         <nav aria-label="Mobile" className="shell flex-1 pb-10">
           <ul>
-            {HEADER_NAV.map((item, i) => (
+            {nav.map((item, i) => (
               <li
                 key={item.label}
                 style={{ transitionDelay: `${80 + i * 45}ms` }}

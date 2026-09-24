@@ -190,6 +190,14 @@ settles from 1.12 scale; cinematic bands drift with capped parallax (pointer
 devices only). Case-study placeholders pair representative imagery with
 wireframe overlays and an "In preparation" tag — never presented as clients.
 
+## Admin panel (operations surface)
+
+The admin is deliberately utilitarian — same tokens (paper/ink/vermilion,
+`t-label`/`t-sm` typography, hairline borders, square corners) but applied as
+a working interface: mono stat tiles, table rows, status chips, two-step
+danger zones. No bespoke illustration or motion beyond hover states; it is
+chrome for operators, not a chapter of the document.
+
 ## Components
 
 - **Wordmark** — the official SAVO logo (ported from v1): single-color

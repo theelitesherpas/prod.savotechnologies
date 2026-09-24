@@ -151,11 +151,55 @@ if (!process.exitCode) pass("no console errors");
   await Promise.all([page, mm, dp, sv].map((p) => p.close()));
 }
 
-/* ---- 3. SEO endpoints ---- */
-for (const path of ["/robots.txt", "/sitemap.xml", "/icon.svg"]) {
+/* ---- 3. SEO / AEO endpoints ---- */
+for (const path of ["/robots.txt", "/sitemap.xml", "/icon.svg", "/llms.txt", "/llms-full.txt"]) {
   const res = await fetch(BASE + path);
   res.ok ? pass(`${path} → ${res.status}`) : fail(path, String(res.status));
 }
+
+// robots.txt declares AI crawler policy
+const robotsBody = await (await fetch(BASE + "/robots.txt")).text();
+robotsBody.includes("GPTBot") && robotsBody.includes("Disallow: /admin")
+  ? pass("robots: AI crawlers allowed, admin excluded")
+  : fail("robots", "missing AI crawler policy");
+
+// llms.txt carries the org identity
+const llms = await (await fetch(BASE + "/llms.txt")).text();
+llms.includes("SAVO") && llms.includes("savotechnologies.com")
+  ? pass("llms.txt has org facts")
+  : fail("llms.txt", "missing org facts");
+
+// llms-full.txt mirrors visible services
+const llmsFull = await (await fetch(BASE + "/llms-full.txt")).text();
+llmsFull.includes("Web Experiences") && llmsFull.includes("## Process")
+  ? pass("llms-full.txt mirrors site content")
+  : fail("llms-full.txt", "content mismatch");
+
+/* ---- 4. Platform endpoints ---- */
+const health = await (await fetch(BASE + "/api/health")).json();
+health.ok === true && health.status === "up"
+  ? pass("health check: db up")
+  : fail("health", JSON.stringify(health));
+
+// Admin gate: unauthenticated /admin redirects to login
+const adminRes = await fetch(BASE + "/admin", { redirect: "manual" });
+adminRes.status === 307 || adminRes.status === 302
+  ? pass("admin gate redirects unauthenticated")
+  : fail("admin gate", String(adminRes.status));
+const loginRes = await fetch(BASE + "/admin/login");
+loginRes.ok && (await loginRes.text()).includes("Operations Panel")
+  ? pass("admin login page renders")
+  : fail("admin login", String(loginRes.status));
+
+// API CSRF: cross-origin POST rejected
+const csrfRes = await fetch(BASE + "/api/enquiries", {
+  method: "POST",
+  headers: { "content-type": "application/json", origin: "https://evil.example" },
+  body: "{}",
+});
+csrfRes.status === 403
+  ? pass("API rejects cross-origin POST")
+  : fail("csrf guard", String(csrfRes.status));
 
 await browser.close();
 console.log(results.join("\n"));

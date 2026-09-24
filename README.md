@@ -1,142 +1,196 @@
 # SAVO Technologies — Website (v6)
 
-Premium homepage for SAVO Technologies — a technology and digital product
-partner. **Phase 1: homepage only**, built as the foundation the rest of the
-site (Services, Work, AI, Industries, About, Insights, Contact, Careers) will
-extend without redesigning the base.
+Production-grade Next.js website for **SAVO Technologies** — a technology
+services company (web, mobile, AI, software, design, growth) — with a
+PostgreSQL-backed lead pipeline, an operations admin panel, and a strong
+SEO / AEO / GEO foundation for classic and AI-driven search.
 
-**Bold Brands. Built by Savo.**
+- **Live (dev server):** http://localhost:4311 · **Admin:** http://localhost:4311/admin
+- Stack: **Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · PostgreSQL + Prisma 6 · Zod · Vitest**
 
-## Stack
+---
 
-- **Next.js 16** (App Router, React Server Components, Turbopack)
-- **TypeScript** (strict) · **Tailwind CSS v4** (CSS-first tokens)
-- **PostgreSQL + Prisma** (project enquiries) · **Zod** validation
-- Analytics event layer (GA4 — loads only when `NEXT_PUBLIC_GA_ID` is set)
+## Contents
 
-## Getting started
+1. [Quick start](#quick-start)
+2. [Environment variables](#environment-variables)
+3. [Scripts](#scripts)
+4. [Architecture](#architecture)
+5. [Admin panel](#admin-panel)
+6. [Content model: constants → DB → fallback](#content-model-constants--db--fallback)
+7. [Security posture](#security-posture)
+8. [SEO / AEO / GEO](#seo--aeo--geo)
+9. [Testing & CI](#testing--ci)
+10. [Adding a new public page](#adding-a-new-public-page)
+11. [Deployment notes](#deployment-notes)
+
+---
+
+## Quick start
 
 ```bash
-# 1. PostgreSQL (role + database)
-psql postgres -c "CREATE ROLE savo LOGIN PASSWORD 'savo_local_dev';"
-psql postgres -c "CREATE DATABASE savo_v6 OWNER savo;"
+# 1. Install
+npm install
 
 # 2. Environment
-cp .env.example .env   # then edit DATABASE_URL
+cp .env.example .env        # then edit values (see below)
 
-# 3. Schema + run
-npx prisma db push
-npm install
-npm run dev            # http://localhost:3000
+# 3. Database (PostgreSQL must be running)
+npm run db:push             # apply schema
+npm run db:seed             # create the admin user (ADMIN_EMAIL/ADMIN_PASSWORD)
+
+# 4. Run
+npm run dev                 # development
+npm run build && npm start  # production
 ```
 
-Production build: `npm run build && npm start`.
+Prerequisites: **Node 20+** (22 recommended), **PostgreSQL 14+**.
+
+## Environment variables
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `DATABASE_URL` | yes | PostgreSQL connection (enquiries, admin, content) |
+| `NEXT_PUBLIC_SITE_URL` | yes | Canonical origin for metadata/sitemap/JSON-LD |
+| `ENQUIRY_IP_SALT` | prod | Pepper for hashing enquirer IPs at rest |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | seed only | Initial admin (bcrypt-hashed by `db:seed`) |
+| `NEXT_PUBLIC_GA_ID` | no | GA4 id; analytics stay inert when unset |
+| `LOG_LEVEL` | no | `debug·info·warn·error` (default `info`) |
+
+Server-only variables are validated and typed in `src/lib/env.ts`; they are
+never imported into client components.
 
 ## Scripts
 
-| Command | Purpose |
+| Script | What it does |
 |---|---|
 | `npm run dev` | Dev server |
 | `npm run build` / `npm start` | Production build / serve |
-| `npm run lint` | ESLint |
-| `npx prisma studio` | Inspect enquiries |
-| `node scripts/verify.mjs` | Automated verification (overflow at 11 widths, fonts, a11y interactions, SEO endpoints). Start the server first (`BASE_URL` to override). |
+| `npm run lint` | ESLint (flat config, next/core-web-vitals) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run test:run` | Vitest unit + integration (44 tests) |
+| `npm run test:e2e` | Playwright-core smoke suite — needs the server running |
+| `npm run db:push` / `db:seed` / `db:studio` | Prisma schema push / seeding / studio |
 
 ## Architecture
 
-```
+See **[ARCHITECTURE.md](./ARCHITECTURE.md)** for the full map. Summary:
+
+```text
 src/
-├── app/                  # layout (fonts, metadata, JSON-LD), page (composition),
-│   │                     # globals.css (design tokens), api/enquiries (POST)
-│   ├── robots.ts · sitemap.ts · icon.svg
-├── components/
-│   ├── ui/               # button, section shell, reveal, track-view
-│   ├── layout/           # site-header, site-footer, footer-cta
-│   └── shared/           # enquiry dialog (provider + drawer + form), brand mark
-├── sections/home/        # hero (+canvas), introduction, marquee, services,
-│                         # ai-systems, selected-work, methodology, technology,
-│                         # why-savo, metrics, industries, growth,
-│                         # brand-statement, final-cta
-├── constants/            # site, services, content (single source of copy)
-├── schemas/              # zod enquiry schema (shared client + server)
-├── lib/                  # env, prisma, rate-limit, analytics, utils
+├── app/
+│   ├── (site)/               # public site: chrome + homepage (future pages go here)
+│   ├── admin/                # login + (protected)/ panel — own chrome, noindex
+│   ├── api/                  # enquiries · callback · health
+│   ├── llms.txt/ llms-full.txt/  # AEO/GEO artifacts
+│   ├── robots.ts sitemap.ts icon.svg
+│   ├── error.tsx global-error.tsx not-found.tsx
+│   └── layout.tsx            # root shell: fonts, GA, design contract
+├── components/  ui/ layout/ shared/ admin/
+├── sections/    home/        # homepage narrative sections (RSC)
+├── constants/   site navigation services content
+├── lib/         env prisma auth audit api logger phone settings collections
+│                rate-limit enquiry-status utils analytics
+├── schemas/     enquiry.ts (zod, shared client+server)
+└── middleware.ts            # admin gate + API cross-origin guard
+scripts/  seed.mjs verify.mjs
+tests/    *.test.ts (vitest) + stubs/
+prisma/   schema.prisma
 ```
 
-`page.tsx` only composes sections; all copy lives in `src/constants/`.
+Layering rule: **routes → features/sections → lib (server-only where marked) →
+prisma**. `server-only` imports guard privileged modules from leaking into
+client bundles.
 
-## Enquiry pipeline
+## Admin panel
 
-`Start a Project` (header / hero / services / CTA / footer) opens an accessible
-drawer → `POST /api/enquiries` → Zod validation → honeypot + per-IP rate limit
-(5/h) → Prisma → PostgreSQL (IP stored only as a salted hash).
+`/admin` — session-based (HttpOnly cookie, SHA-256-hashed token in the DB,
+12-hour expiry, revocable). Middleware gates cookie-less requests; every
+page/action re-authorizes server-side. Two roles: **admin** (full) and
+**editor** (content + inbox, no destructive ops).
 
-## Security
+- **Dashboard** — lead health at a glance
+- **Enquiries** — filter/paginate inbox, status workflow, internal notes,
+  delete with two-step confirm (admin role only)
+- **Services / Industries** — full CRUD on the managed collections that
+  drive the public header panels and future pages; one-click **Import
+  version-1 defaults** materializes the canonical baseline
+- **Settings** — contact email/phone overrides (footer, structured data)
+  with public-page regeneration on save
 
-CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS
-(prod) via `next.config.ts`. Server-side validation only is trusted; env access
-is typed (`src/lib/env.ts`).
+Every mutation is zod-validated, audited (`audit_logs`), and triggers
+`revalidatePath("/", "layout")` so static public pages regenerate on demand.
 
-## Content rules (non-negotiable)
+## Content model: constants → DB → fallback
 
-- **Never fabricate**: testimonials (section omitted until real quotes exist),
-  client names, metrics (rendered as verified-pending placeholders), awards,
-  emails, social URLs.
-- Selected-work cards are designed placeholders until real case studies arrive
-  (`src/constants/content.ts` → `WORK_PLACEHOLDERS`).
-- Future routes (Insights, Careers, legal pages) render as non-breaking
-  placeholders — no empty pages.
+1. **Constants** (`src/constants/`) are the seed of truth — the version-1
+   architecture, editorial homepage copy, design metadata.
+2. **Admin import** copies a collection into PostgreSQL (editable rows).
+3. **Public pages** read the DB via `src/lib/collections.ts`; if the table
+   is empty or the DB is unreachable, they **fall back to constants** — the
+   site can never break over content.
 
-## Imagery & infographics
+## Security posture
 
-All photography ships as optimized WebP in `public/images/` (lazy, sized,
-`next/image`) and is held in the document's duotone treatment.
+- Strict CSP (no external script/font origins; GA only when configured),
+  HSTS + full header set in `next.config.ts`
+- Zod validation at every trust boundary; honeypots + sliding-window rate
+  limits on public forms (5/h/IP) and admin login (8/15min/IP+email)
+- IP addresses stored only as salted SHA-256 prefixes (data minimisation)
+- Session tokens hashed at rest; bcrypt(12) passwords; constant-time compare
+- Server-side authorization on every admin mutation; destructive actions
+  require the admin role + explicit confirm step
+- Cross-origin POSTs to `/api/*` rejected (middleware + route guards)
+- `robots.txt` excludes `/admin`; admin pages carry noindex metadata
 
-**Provenance** — all photos from Unsplash (Unsplash License, free for
-commercial use, no attribution required):
+## SEO / AEO / GEO
 
-| File | Source |
-|---|---|
-| `team.webp` | unsplash.com/photos/…9f0129c71c (team collaborating) |
-| `studio.webp` | unsplash.com/photos/…f40138edfeb (design workspace) |
-| `meeting.webp` | unsplash.com/photos/…757bb62b4baf (professionals reviewing work) |
-| `code.webp` | unsplash.com/photos/…c5249f4df085 (engineering close-up) |
-| `mobile.webp` | unsplash.com/photos/…90a1b58e7e9c (mobile product in hand) |
-| `architecture.webp` | unsplash.com/photos/…c627a92ad1ab (corporate architecture, spare) |
+- Per-page metadata via root template + `%s | SAVO Technologies`; canonical
+  URLs from `NEXT_PUBLIC_SITE_URL`
+- JSON-LD: Organization (contact, offers catalog, areaServed, sameAs) +
+  WebSite — mirrors **visible** content only
+- `sitemap.xml`, `robots.txt` with explicit AI-crawler welcome (GPTBot,
+  ClaudeBot, PerplexityBot, …)
+- `/llms.txt` + `/llms-full.txt` — machine-readable company/service facts
+  for answer engines (AEO/GEO)
+- Semantic landmarks, single h1, skip link, breadcrumb-ready structure
 
-Replace with genuine SAVO studio photography when available. Vector
-infographics (service icons, AI pipeline, growth convergence diagram) are
-hand-authored SVG in `src/sections/home/` — no icon library dependency.
+## Testing & CI
 
-## Navigation & footer (ported from version 1 — /newdesign)
+- **Vitest**: 44 unit/integration tests — phone rules, rate limiter, API
+  helpers (origin/JSON/size), enquiry schema, route handlers with mocked
+  Prisma (415/400/429/honeypot/200 paths), auth crypto, status vocabulary
+- **`scripts/verify.mjs`** (Playwright-core, Chrome): 42 end-to-end checks —
+  responsive overflow, fonts, images, menus, dialog a11y, SEO/AEO endpoints,
+  admin gate, CSRF guard, health
+- **GitHub Actions** (`.github/workflows/ci.yml`): install → lint →
+  typecheck → tests → build → audit report
 
-The header and footer reproduce version 1's information architecture in the
-v6 design system (version 1 itself is untouched):
+## Adding a new public page
 
-- **Header**: AI mega-menu (AI Agents PRO, Generative AI, AI Consulting,
-  Machine Learning + flagship card), Services (10 links + estimator card),
-  Hire Resources (6 roles + rates card), Industries (10 sectors + card),
-  Case Study, Careers, Contact Us (→ enquiry drawer).
-- **Footer**: brand column + Services / Industries / Company / Quick Links,
-  global presence strip, real contact details, callback form, compliance
-  badges, legal.
-- Future routes (`/services/*`, `/hire/*`, `/industries/*`, `/careers/,
-  `/portal/`, `/privacy/`, `/terms/`) render the designed 404
-  ("still in production") until built — architecture-ready without broken
-  pages.
-- Callback requests post to `/api/callback` (country-aware phone
-  validation, honeypot, rate limit) and store in `project_enquiries` as
-  `projectType: "Callback"`.
+1. Create `src/app/(site)/<segment>/page.tsx` — it inherits header/footer,
+   skip link and JSON-LD from the group layout.
+2. Export `metadata` (`title` fills the template; set `alternates.canonical`).
+3. Add the route to `src/app/sitemap.ts` and (if applicable) `llms-full.txt`.
+4. Navigation: add to `src/constants/navigation.ts` (or the DB collection via
+   admin) — future-ready hrefs already resolve to the designed 404.
+5. Follow the v6 design tokens (`DESIGN.md`) and section primitives in
+   `src/components/ui/`.
 
-## Design system
+## Deployment notes
 
-See `DESIGN.md` (tokens, type scale, chapters, motion, do's & don'ts) and
-`PRODUCT.md` (positioning, content rules). Design contract is embedded as the
-first element of `<body>` in the built HTML.
+- Set a **real** `NEXT_PUBLIC_SITE_URL` (production domain) — it drives
+  canonicals; changing it later affects SEO.
+- Generate `ENQUIRY_IP_SALT` with `openssl rand -hex 32`.
+- `npm run db:seed` with real `ADMIN_EMAIL`/`ADMIN_PASSWORD` (required in
+  production; rotate the password after first login when a change-password
+  flow exists).
+- The admin panel assumes an HTTPS-terminating proxy in production
+  (Secure cookies auto-enabled when `NODE_ENV=production`).
+- Keep Prisma on the pinned major (6.x) — see ENGINEERING report §J.
 
-## Before production
+---
 
-- [ ] Set `NEXT_PUBLIC_SITE_URL` to the real domain (canonical/OG/sitemap)
-- [ ] Supply real metrics, case studies, email, social profiles
-- [ ] Configure GA4 via `NEXT_PUBLIC_GA_ID` when analytics is approved
-- [ ] Set a strong `ENQUIRY_IP_SALT`
-- [ ] Run `node scripts/verify.mjs` against the deployed URL
+Design system: **[DESIGN.md](./DESIGN.md)** · Product brief:
+**[PRODUCT.md](./PRODUCT.md)** · Engineering report:
+**[docs/ENGINEERING-REPORT.md](./docs/ENGINEERING-REPORT.md)**

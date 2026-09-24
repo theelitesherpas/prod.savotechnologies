@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { COUNTRY_PHONE_RULES, CALLBACK_COUNTRIES } from "@/lib/phone";
 import { track } from "@/lib/analytics";
 
 /**
@@ -8,48 +9,20 @@ import { track } from "@/lib/analytics";
  * Posts to /api/callback, which stores it beside project enquiries.
  */
 
-type Country = {
-  name: string;
-  dial: string;
-  min: number;
-  max: number;
-};
-
-const COUNTRIES: Country[] = [
-  { name: "India", dial: "+91", min: 10, max: 10 },
-  { name: "United States", dial: "+1", min: 10, max: 10 },
-  { name: "United Kingdom", dial: "+44", min: 10, max: 10 },
-  { name: "United Arab Emirates", dial: "+971", min: 9, max: 9 },
-  { name: "Saudi Arabia", dial: "+966", min: 9, max: 9 },
-  { name: "Qatar", dial: "+974", min: 8, max: 8 },
-  { name: "Kuwait", dial: "+965", min: 8, max: 8 },
-  { name: "Oman", dial: "+968", min: 8, max: 8 },
-  { name: "Bahrain", dial: "+973", min: 8, max: 8 },
-  { name: "Australia", dial: "+61", min: 9, max: 9 },
-  { name: "Canada", dial: "+1", min: 10, max: 10 },
-  { name: "Germany", dial: "+49", min: 10, max: 11 },
-  { name: "Netherlands", dial: "+31", min: 9, max: 9 },
-  { name: "France", dial: "+33", min: 9, max: 9 },
-  { name: "Singapore", dial: "+65", min: 8, max: 8 },
-  { name: "New Zealand", dial: "+64", min: 9, max: 10 },
-  { name: "South Africa", dial: "+27", min: 9, max: 9 },
-  { name: "Ireland", dial: "+353", min: 9, max: 9 },
-  { name: "Other", dial: "+", min: 7, max: 12 },
-];
-
 type Status = "idle" | "submitting" | "success" | "error";
 
 export function CallbackForm() {
-  const [countryName, setCountryName] = useState(COUNTRIES[0].name);
+  const [countryName, setCountryName] = useState(CALLBACK_COUNTRIES[0]);
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
   const [touched, setTouched] = useState(false);
 
-  const country = COUNTRIES.find((c) => c.name === countryName) ?? COUNTRIES[0];
-  const digits = phone.replace(/\D/g, "").slice(0, country.max);
-  const valid = digits.length >= country.min && digits.length <= country.max;
+  const countryNameSafe = COUNTRY_PHONE_RULES[countryName] ? countryName : CALLBACK_COUNTRIES[0];
+  const rule = COUNTRY_PHONE_RULES[countryNameSafe];
+  const digits = phone.replace(/\D/g, "").slice(0, rule.max);
+  const valid = digits.length >= rule.min && digits.length <= rule.max;
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -66,8 +39,8 @@ export function CallbackForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: (fd.get("cb-name") as string) || "",
-          country: country.name,
-          phone: `${country.dial}${digits}`,
+          country: countryNameSafe,
+          phone: `${rule.dial}${digits}`,
           website: (fd.get("cb-website") as string) || "",
         }),
       });
@@ -91,7 +64,7 @@ export function CallbackForm() {
         <span aria-hidden="true" className="mb-4 block h-2.5 w-2.5 bg-accent" />
         <p className="t-h4">Request received.</p>
         <p className="t-sm mt-2 text-muted">
-          A senior consultant will call {country.dial} {digits} within two business hours.
+          A senior consultant will call {rule.dial} {digits} within two business hours.
         </p>
       </div>
     );
@@ -110,9 +83,9 @@ export function CallbackForm() {
             value={countryName}
             onChange={(e) => setCountryName(e.target.value)}
           >
-            {COUNTRIES.map((c) => (
-              <option key={c.name} value={c.name}>
-                {c.name} ({c.dial})
+            {CALLBACK_COUNTRIES.map((name) => (
+              <option key={name} value={name}>
+                {name} ({COUNTRY_PHONE_RULES[name].dial})
               </option>
             ))}
           </select>
@@ -133,7 +106,7 @@ export function CallbackForm() {
           inputMode="numeric"
           autoComplete="tel"
           className="field tnum"
-          placeholder={`${country.dial} · ${country.min === country.max ? country.min : `${country.min}–${country.max}`} digits`}
+          placeholder={`${rule.dial} · ${rule.min === rule.max ? rule.min : `${rule.min}–${rule.max}`} digits`}
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           aria-invalid={touched && !valid}
@@ -141,7 +114,7 @@ export function CallbackForm() {
         />
         {touched && !valid ? (
           <p id="cb-phone-error" className="t-caption mt-1.5 text-error">
-            {country.name}: {country.min === country.max ? `${country.min} digits` : `${country.min} to ${country.max} digits`}.
+            {countryNameSafe}: {rule.min === rule.max ? `${rule.min} digits` : `${rule.min} to ${rule.max} digits`}.
           </p>
         ) : null}
       </div>

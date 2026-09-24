@@ -1,5 +1,13 @@
-// SAVO Technologies — data model (homepage phase)
-// The homepage stores project enquiries; future phases extend this schema.
+// SAVO Technologies — data model
+//
+// Layers:
+//   1. Leads        — ProjectEnquiry (project enquiries + phone callbacks)
+//   2. Admin        — AdminUser, AdminSession, AuditLog
+//   3. Content      — Service, Industry, SiteSetting (website content the
+//                     admin panel manages; constants act as seed + fallback)
+//
+// Conventions: snake_case columns (@map), camelCase fields, cuid ids,
+// explicit indexes on every foreign key and hot query path.
 
 generator client {
   provider = "prisma-client-js"
@@ -10,20 +18,131 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─────────────────────────────── Leads ───────────────────────────────
+
+/// Inbound project enquiries and phone callback requests (single inbox).
 model ProjectEnquiry {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   email       String?
   company     String?
-  projectType String   @map("project_type")
+  phone       String?
+  projectType String    @map("project_type")
   budget      String?
   message     String
-  status      String   @default("new")
-  source      String   @default("homepage")
-  userAgent   String?  @map("user_agent")
-  ipHash      String?  @map("ip_hash")
-  createdAt   DateTime @default(now()) @map("created_at")
+  /// new | in_progress | closed | archived (app-level enum, see lib/enquiry-status.ts)
+  status      String    @default("new")
+  adminNotes  String?   @map("admin_notes")
+  source      String    @default("homepage")
+  userAgent   String?   @map("user_agent")
+  /// Salted SHA-256 prefix — raw IPs are never stored (data minimisation).
+  ipHash      String?   @map("ip_hash")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@index([createdAt])
+  @@index([status])
+  @@index([projectType])
   @@map("project_enquiries")
+}
+
+// ─────────────────────────────── Admin ───────────────────────────────
+
+/// Panel operators. Created via `npm run db:seed` (or an invite flow later).
+model AdminUser {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  /// bcrypt hash — plaintext never stored or logged.
+  passwordHash String         @map("password_hash")
+  name         String
+  /// admin (full access) | editor (content + inbox, no user management)
+  role         String         @default("admin")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  sessions     AdminSession[]
+  auditLogs    AuditLog[]
+
+  @@map("admin_users")
+}
+
+/// Server-side sessions. The cookie carries an opaque random token; only its
+/// SHA-256 hash is stored, so a DB leak does not yield usable tokens.
+/// Sessions are revocable (delete row) and expire server-side.
+model AdminSession {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 of the cookie token.
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("admin_sessions")
+}
+
+/// Who did what, when — append-only trail for the admin panel.
+model AuditLog {
+  id        String     @id @default(cuid())
+  userId    String?    @map("user_id")
+  user      AdminUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// e.g. "enquiry.status", "service.update", "auth.login"
+  action    String
+  entity    String?
+  entityId  String?
+  meta      Json?
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+// ────────────────────────────── Content ──────────────────────────────
+
+/// Website services, managed in the admin panel; seeds come from
+/// src/constants (which also act as the fallback when the DB is empty).
+model Service {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  summary     String
+  /// Long-form copy for the future /services/[slug] page.
+  description String?
+  /// Icon key from src/constants/services.ts icon set.
+  icon        String   @default("system")
+  order       Int      @default(0)
+  featured    Boolean  @default(false)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([active, order])
+  @@map("services")
+}
+
+/// Website industries, same lifecycle as services.
+model Industry {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  summary   String
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([active, order])
+  @@map("industries")
+}
+
+/// Small key-value overrides the admin panel controls (contact email,
+/// phone, announcement line). Falls back to src/constants/site.ts.
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
 }

@@ -31,7 +31,12 @@ function FooterColumn({ heading, links, label }: { heading: string; links: reado
   );
 }
 
-export function SiteFooter() {
+/** Contact details come from admin-managed settings (with constant defaults). */
+export function SiteFooter({
+  contact,
+}: {
+  contact: { email: string; phone: string; phoneE164: string };
+}) {
   const year = new Date().getFullYear();
 
   return (
@@ -91,13 +96,13 @@ export function SiteFooter() {
         <div className="bg-background p-5">
           <p className="t-label text-accent">Talk to us</p>
           <div className="mt-2.5 space-y-1.5">
-            <a href={`mailto:${SITE.email}`} className="flex items-center gap-2 text-[0.875rem] font-medium text-foreground/85 transition-colors hover:text-accent">
+            <a href={`mailto:${contact.email}`} className="flex items-center gap-2 text-[0.875rem] font-medium text-foreground/85 transition-colors hover:text-accent">
               <MailGlyph />
-              {SITE.email}
+              {contact.email}
             </a>
-            <a href={`tel:${SITE.phoneE164}`} className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent">
+            <a href={`tel:${contact.phoneE164}`} className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent">
               <PhoneGlyph />
-              {SITE.phone}
+              {contact.phone}
             </a>
             <Link href="/portal/" className="flex items-center gap-2 text-[0.875rem] font-medium text-foreground/85 transition-colors hover:text-accent">
               <LockGlyph />

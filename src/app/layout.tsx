@@ -1,11 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Source_Serif_4, Fragment_Mono } from "next/font/google";
 import Script from "next/script";
-import { SiteHeader } from "@/components/layout/site-header";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { EnquiryProvider } from "@/components/shared/enquiry-dialog";
-import { SITE, SOCIAL_LINKS } from "@/constants/site";
-import { absoluteUrl, env } from "@/lib/env";
+import { SITE } from "@/constants/site";
+import { env } from "@/lib/env";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -29,6 +26,10 @@ const fragment = Fragment_Mono({
   display: "swap",
 });
 
+/**
+ * Root metadata. Route groups (site)/ and admin/ extend or override this
+ * (admin pages are noindex).
+ */
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL),
   title: {
@@ -74,56 +75,6 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": absoluteUrl("/#organization"),
-      name: SITE.name,
-      alternateName: "SAVO",
-      url: absoluteUrl("/"),
-      logo: absoluteUrl("/icon.svg"),
-      description: SITE.description,
-      slogan: SITE.tagline,
-      email: SITE.email,
-      telephone: SITE.phoneE164,
-      contactPoint: {
-        "@type": "ContactPoint",
-        contactType: "sales",
-        email: SITE.email,
-        telephone: SITE.phoneE164,
-        availableLanguage: ["en"],
-      },
-      sameAs: SOCIAL_LINKS.map((s) => s.href),
-      knowsAbout: [
-        "Website Design & Development",
-        "Web Application Development",
-        "Mobile Application Development",
-        "Custom Software Development",
-        "SaaS Product Development",
-        "Artificial Intelligence Development",
-        "AI Agent Development",
-        "Generative AI",
-        "Business Process Automation",
-        "UI/UX Design",
-        "eCommerce Development",
-        "SEO",
-        "Cloud & Backend Engineering",
-      ],
-    },
-    {
-      "@type": "WebSite",
-      "@id": absoluteUrl("/#website"),
-      url: absoluteUrl("/"),
-      name: SITE.name,
-      description: SITE.description,
-      publisher: { "@id": absoluteUrl("/#organization") },
-      inLanguage: "en",
-    },
-  ],
-};
-
 /** Marks JS availability so entrance motion only hides content when it can reveal it. */
 const jsMarker = "document.documentElement.dataset.js='true'";
 
@@ -152,6 +103,11 @@ const designContract = `<!--
   its provenance
 -->`;
 
+/**
+ * Root shell: fonts, global styles, analytics, design contract.
+ * Public chrome (header/footer/dialog) lives in app/(site)/layout.tsx;
+ * the admin panel composes its own chrome.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -160,27 +116,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${manrope.variable} ${sourceSerif.variable} ${fragment.variable}`}>
       <body className="bg-background font-sans text-foreground antialiased">
-        {/* Design contract — survives the production build; see docs/DESIGN.md */}
+        {/* Design contract — survives the production build; see DESIGN.md */}
         <div hidden dangerouslySetInnerHTML={{ __html: designContract }} />
         <script dangerouslySetInnerHTML={{ __html: jsMarker }} />
-
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:bg-foreground focus:px-4 focus:py-2 focus:text-background"
-        >
-          Skip to content
-        </a>
-
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-
-        <EnquiryProvider>
-          <SiteHeader />
-          <main id="main">{children}</main>
-          <SiteFooter />
-        </EnquiryProvider>
 
         {gaId ? (
           <>
@@ -193,6 +131,8 @@ export default function RootLayout({
             </Script>
           </>
         ) : null}
+
+        {children}
       </body>
     </html>
   );

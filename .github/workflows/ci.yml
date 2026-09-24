@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    env:
+      # Placeholder values — CI validates code, not data. DATABASE_URL is a
+      # syntactically valid local URL; no database is contacted during build
+      # (pages are built from constants; DB reads happen per-request at runtime
+      # and fall back to constants when unreachable).
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/savo_ci"
+      ENQUIRY_IP_SALT: "ci-only-salt"
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit & integration tests
+        run: npm run test:run
+
+      - name: Production build
+        run: npm run build
+
+      - name: Dependency audit (non-blocking report)
+        run: npm audit --omit=dev || true
