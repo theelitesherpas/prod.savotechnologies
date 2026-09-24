@@ -63,6 +63,10 @@ git push prod main            # SHAs already verified in test go live
    then immediately back-merge the same commit into dev `main` so the
    environments never drift.
 3. **No force-push, no branch deletion** on `main` in any repo.
+   *Enforced by GitHub branch protection on `prod` (public repo). Branch
+   protection for the private `dev`/`test` repos requires GitHub Pro —
+   until then this rule is on the honour system; the CI gate on dev is the
+   practical guard.*
 4. **Secrets never live in code** — `.env` is gitignored; each environment
    (dev/test/prod) holds its own variables in its deployment platform.
 5. **Tag releases** so every production push is traceable:
