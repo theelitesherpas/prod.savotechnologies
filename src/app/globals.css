@@ -1,26 +1,392 @@
 @import "tailwindcss";
 
+/* ============================================================
+   SAVO TECHNOLOGIES — DESIGN TOKENS
+   World: "the engineering document". Warm paper + deep ink
+   chapters, one vermilion signal, square-node motif.
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Paper chapter (default) */
+  --background: #f5f4f0;
+  --foreground: #17171a;
+  --surface: #fbfaf7;
+  --surface-secondary: #ebe9e2;
+  --muted: #5b5a53;
+  --border: rgb(23 23 26 / 0.14);
+  --accent: #d9480f;
+  --accent-hover: #b23a09;
+  --on-accent: #f5f4f0;
+  --success: #1e7a3f;
+  --warning: #94660f;
+  --error: #b3261e;
+
+  --nav-h: 4.25rem;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Ink chapter — engineering / systems sections */
+.chapter-ink {
+  --background: #0e0e11;
+  --foreground: #f1f0eb;
+  --surface: #16161b;
+  --surface-secondary: #1e1e25;
+  --muted: #a09f97;
+  --border: rgb(241 240 235 / 0.13);
+  --accent: #ff5a24;
+  --accent-hover: #ff7c4d;
+  --on-accent: #0e0e11;
+}
+
+/* Vermilion chapter — the final conversion moment */
+.chapter-accent {
+  --background: #e8490f;
+  --foreground: #16130f;
+  --surface: rgb(22 19 15 / 0.07);
+  --surface-secondary: rgb(22 19 15 / 0.16);
+  /* Vermilion is a mid-luminance field — secondary text must stay near-full
+     ink weight to hold 4.5:1; hierarchy comes from size, not tone. */
+  --muted: rgb(22 19 15 / 0.95);
+  --border: rgb(22 19 15 / 0.26);
+  --accent: #16130f;
+  --accent-hover: #2b251e;
+  --on-accent: #f5f4f0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-secondary);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-mono: var(--font-fragment), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================================
+   BASE
+   ============================================================ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-color: color-mix(in oklab, var(--foreground) 30%, transparent)
+    transparent;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+/* Themed scrollbar (WebKit) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--foreground) 26%, transparent);
+  border-radius: 99px;
+  border: 3px solid var(--background);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Page shell */
+.shell {
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4.5vw, 4.5rem);
+}
+
+/* ============================================================
+   TYPE SYSTEM — Archivo variable (width + weight axes)
+   Caps + expanded are reserved for statement moments.
+   ============================================================ */
+
+.t-dxl {
+  font-size: clamp(2.85rem, 8vw, 6.6rem);
+  line-height: 0.94;
+  letter-spacing: -0.032em;
+  font-weight: 790;
+  font-stretch: 113%;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+/* Statement moments — smaller floor so long words hold the line on 320px */
+.t-statement {
+  font-size: clamp(2.3rem, 10.2vw, 6.6rem);
+  line-height: 0.95;
+  letter-spacing: -0.028em;
+  font-weight: 790;
+  font-stretch: 112%;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+.t-dl {
+  font-size: clamp(2.35rem, 5.4vw, 4.6rem);
+  line-height: 0.99;
+  letter-spacing: -0.026em;
+  font-weight: 740;
+  font-stretch: 108%;
+  text-wrap: balance;
+}
+
+.t-h1 {
+  font-size: clamp(1.95rem, 3.9vw, 3.2rem);
+  line-height: 1.03;
+  letter-spacing: -0.022em;
+  font-weight: 710;
+  font-stretch: 106%;
+  text-wrap: balance;
+}
+
+.t-h2 {
+  font-size: clamp(1.55rem, 2.8vw, 2.3rem);
+  line-height: 1.06;
+  letter-spacing: -0.018em;
+  font-weight: 690;
+  font-stretch: 105%;
+  text-wrap: balance;
+}
+
+.t-h3 {
+  font-size: clamp(1.25rem, 1.9vw, 1.55rem);
+  line-height: 1.16;
+  letter-spacing: -0.012em;
+  font-weight: 670;
+}
+
+.t-h4 {
+  font-size: 1.0625rem;
+  line-height: 1.25;
+  letter-spacing: -0.008em;
+  font-weight: 640;
+}
+
+.t-body-lg {
+  font-size: clamp(1.125rem, 1.5vw, 1.3125rem);
+  line-height: 1.55;
+  letter-spacing: -0.006em;
+}
+
+.t-body {
+  font-size: 1rem;
+  line-height: 1.68;
+}
+
+.t-sm {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.t-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.t-caption {
+  font-size: 0.75rem;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   MOTION
+   ============================================================ */
+
+/* Entrance reveals — hidden only when JS is present, so SSR/no-JS
+   content is always visible. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    transform 0.9s var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.js .reveal.is-inview {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Marquee */
+@keyframes marquee-x {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-x 52s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* AI pipeline pulse — a signal travelling down the spine */
+@keyframes pulse-down {
+  0% {
+    stroke-dashoffset: 24;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -240;
+    opacity: 0;
+  }
+}
+.pipeline-pulse {
+  stroke-dasharray: 10 14;
+  animation: pulse-down 5.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pipeline-pulse {
+    animation: none;
+    opacity: 0.9;
+  }
+}
+
+/* Signal square travelling down the agent-pipeline spine */
+@keyframes dot-down {
+  0% {
+    top: 1.25rem;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 1.25rem);
+    opacity: 0;
+  }
+}
+.pipeline-dot {
+  animation: dot-down 6.5s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pipeline-dot {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* ============================================================
+   CONTROLS
+   ============================================================ */
+
+.link-underline {
+  text-underline-offset: 0.28em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in oklab, currentColor 38%, transparent);
+  transition: text-decoration-color 0.3s var(--ease-out-expo);
+}
+.link-underline:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Form fields — document-style: baseline rules, no boxes */
+.field {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0.65rem 0 0.55rem;
+  font-size: 0.9375rem;
+  color: var(--foreground);
+  transition: border-color 0.3s var(--ease-out-expo);
+}
+.field::placeholder {
+  color: color-mix(in oklab, var(--muted) 72%, transparent);
+}
+.field:hover {
+  border-color: color-mix(in oklab, var(--foreground) 34%, transparent);
+}
+.field:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+.field[aria-invalid="true"] {
+  border-bottom-color: var(--error);
+}
+select.field {
+  appearance: none;
+  cursor: pointer;
+}
+textarea.field {
+  resize: vertical;
+  min-height: 6.5rem;
 }

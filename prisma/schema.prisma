@@ -1,0 +1,29 @@
+// SAVO Technologies — data model (homepage phase)
+// The homepage stores project enquiries; future phases extend this schema.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ProjectEnquiry {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  company     String?
+  projectType String   @map("project_type")
+  budget      String?
+  message     String
+  status      String   @default("new")
+  source      String   @default("homepage")
+  userAgent   String?  @map("user_agent")
+  ipHash      String?  @map("ip_hash")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("project_enquiries")
+}

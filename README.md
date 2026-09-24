@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SAVO Technologies — Website (v6)
 
-## Getting Started
+Premium homepage for SAVO Technologies — a technology and digital product
+partner. **Phase 1: homepage only**, built as the foundation the rest of the
+site (Services, Work, AI, Industries, About, Insights, Contact, Careers) will
+extend without redesigning the base.
 
-First, run the development server:
+**Bold Brands. Built by Savo.**
+
+## Stack
+
+- **Next.js 16** (App Router, React Server Components, Turbopack)
+- **TypeScript** (strict) · **Tailwind CSS v4** (CSS-first tokens)
+- **PostgreSQL + Prisma** (project enquiries) · **Zod** validation
+- Analytics event layer (GA4 — loads only when `NEXT_PUBLIC_GA_ID` is set)
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 1. PostgreSQL (role + database)
+psql postgres -c "CREATE ROLE savo LOGIN PASSWORD 'savo_local_dev';"
+psql postgres -c "CREATE DATABASE savo_v6 OWNER savo;"
+
+# 2. Environment
+cp .env.example .env   # then edit DATABASE_URL
+
+# 3. Schema + run
+npx prisma db push
+npm install
+npm run dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Production build: `npm run build && npm start`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Dev server |
+| `npm run build` / `npm start` | Production build / serve |
+| `npm run lint` | ESLint |
+| `npx prisma studio` | Inspect enquiries |
+| `node scripts/verify.mjs` | Automated verification (overflow at 11 widths, fonts, a11y interactions, SEO endpoints). Start the server first (`BASE_URL` to override). |
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/                  # layout (fonts, metadata, JSON-LD), page (composition),
+│   │                     # globals.css (design tokens), api/enquiries (POST)
+│   ├── robots.ts · sitemap.ts · icon.svg
+├── components/
+│   ├── ui/               # button, section shell, reveal, track-view
+│   ├── layout/           # site-header, site-footer, footer-cta
+│   └── shared/           # enquiry dialog (provider + drawer + form), brand mark
+├── sections/home/        # hero (+canvas), introduction, marquee, services,
+│                         # ai-systems, selected-work, methodology, technology,
+│                         # why-savo, metrics, industries, growth,
+│                         # brand-statement, final-cta
+├── constants/            # site, services, content (single source of copy)
+├── schemas/              # zod enquiry schema (shared client + server)
+├── lib/                  # env, prisma, rate-limit, analytics, utils
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`page.tsx` only composes sections; all copy lives in `src/constants/`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Enquiry pipeline
 
-## Deploy on Vercel
+`Start a Project` (header / hero / services / CTA / footer) opens an accessible
+drawer → `POST /api/enquiries` → Zod validation → honeypot + per-IP rate limit
+(5/h) → Prisma → PostgreSQL (IP stored only as a salted hash).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Security
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS
+(prod) via `next.config.ts`. Server-side validation only is trusted; env access
+is typed (`src/lib/env.ts`).
+
+## Content rules (non-negotiable)
+
+- **Never fabricate**: testimonials (section omitted until real quotes exist),
+  client names, metrics (rendered as verified-pending placeholders), awards,
+  emails, social URLs.
+- Selected-work cards are designed placeholders until real case studies arrive
+  (`src/constants/content.ts` → `WORK_PLACEHOLDERS`).
+- Future routes (Insights, Careers, legal pages) render as non-breaking
+  placeholders — no empty pages.
+
+## Design system
+
+See `DESIGN.md` (tokens, type scale, chapters, motion, do's & don'ts) and
+`PRODUCT.md` (positioning, content rules). Design contract is embedded as the
+first element of `<body>` in the built HTML.
+
+## Before production
+
+- [ ] Set `NEXT_PUBLIC_SITE_URL` to the real domain (canonical/OG/sitemap)
+- [ ] Supply real metrics, case studies, email, social profiles
+- [ ] Configure GA4 via `NEXT_PUBLIC_GA_ID` when analytics is approved
+- [ ] Set a strong `ENQUIRY_IP_SALT`
+- [ ] Run `node scripts/verify.mjs` against the deployed URL
