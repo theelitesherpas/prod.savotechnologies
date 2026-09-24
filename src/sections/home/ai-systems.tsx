@@ -17,7 +17,7 @@ export function AISystems() {
             </Reveal>
             <Reveal delay={120}>
               <p className="t-body-lg mt-8 max-w-xl text-muted">
-                SAVO builds AI systems capable of working across information,
+                Savo builds AI systems capable of working across information,
                 applications and workflows — from customer support and research
                 to document processing, sales operations and internal automation.
               </p>
@@ -71,7 +71,7 @@ export function AISystems() {
           <div className="lg:col-span-6">
             <Reveal delay={150} className="lg:sticky lg:top-28">
               <figure
-                aria-label="How a SAVO AI agent works: an event triggers the agent, which reasons over company data and tools, acts on business systems, and defers to human approval when required."
+                aria-label="How a Savo AI agent works: an event triggers the agent, which reasons over company data and tools, acts on business systems, and defers to human approval when required."
                 className="blueprint relative border border-border bg-surface p-6 sm:p-9"
               >
                 <figcaption className="t-label mb-8 flex items-center justify-between text-muted">

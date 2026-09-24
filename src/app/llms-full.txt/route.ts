@@ -1,4 +1,4 @@
-import { env, absoluteUrl } from "@/lib/env";
+import { canonicalOrigin, absoluteUrl } from "@/lib/env";
 import { SITE } from "@/constants/site";
 import { SERVICES } from "@/constants/services";
 import { MARQUEE_ITEMS } from "@/constants/services";
@@ -14,7 +14,7 @@ export const dynamic = "force-static";
  * claims); numbers are omitted where the site itself omits them.
  */
 export function GET() {
-  const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  const base = canonicalOrigin;
 
   const services = SERVICES.map(
     (s) =>
@@ -62,7 +62,7 @@ ${industries}
 5. Grow — improve and scale what works
 
 ## AI position
-AI at SAVO is production engineering, not demos: agents with guardrails, human
+AI at Savo is production engineering, not demos: agents with guardrails, human
 oversight, observability, permissions, evaluation and fallback behavior —
 deployed against real business workflows with enterprise security.
 

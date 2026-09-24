@@ -259,7 +259,7 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
         <span aria-hidden="true" className="mb-6 block h-3 w-3 bg-accent" />
         <p className="t-h3 mb-3">Enquiry received.</p>
         <p className="t-body text-muted">
-          Thank you — a member of the SAVO team will review your project and reply
+          Thank you — a member of the Savo team will review your project and reply
           within two business days.
         </p>
       </div>

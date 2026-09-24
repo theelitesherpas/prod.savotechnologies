@@ -124,7 +124,7 @@ export const HIRE_ROLES: HireRole[] = [
     ],
     faqs: [
       { q: "Can they work in our existing codebase?", a: "That is the norm. Most engagements start inside an existing React or Next.js app, including older architectures we modernise incrementally." },
-      { q: "How do you test their skills?", a: "Every candidate passes a practical review with our leads — architecture, debugging and a live component build — before you ever see the profile." },
+      { q: "How do you test their skills?", a: "Every candidate passes a practical review with our leads covering architecture, debugging and a live component build before you ever see the profile." },
       { q: "Do they join our standups and tools?", a: "Yes: Slack, Jira, GitHub, rituals. They behave like your employee, just on our payroll." },
       { q: "Can we hire them full time later?", a: "Yes, convert to your payroll after six months with a simple conversion fee." },
     ],
@@ -141,7 +141,7 @@ export const HIRE_ROLES: HireRole[] = [
     metaDescription:
       "Hire dedicated backend developers from Savo Technologies: Node.js, Python, Go, PostgreSQL, integrations and security hardening. Matched in 48 hours, two week paid trial, transparent rates.",
     intro: [
-      "The backend is a promise made under pressure: every request correct, every integration recoverable, every audit answerable. Our engineers carry regulated traffic for a living — payments, records, ledgers — and they write the documentation the next hire can follow.",
+      "The backend is a promise made under pressure: every request correct, every integration recoverable, every audit answerable. Our engineers carry regulated traffic for a living: payments, records and ledgers. They also write the documentation the next hire can follow.",
       "From payment rails to clinical records, they design for the worst day and then make it boring. Tests as a habit, least-privilege as a default, and runbooks that turn incidents into checklists.",
     ],
     monthly: 90000,
@@ -191,7 +191,7 @@ export const HIRE_ROLES: HireRole[] = [
     metaDescription:
       "Hire dedicated full stack developers from Savo Technologies: React, Next.js, Node.js and PostgreSQL in one head. Feature ownership end to end, 48 hour matching, two week paid trial.",
     intro: [
-      "When a feature needs one owner instead of three specialists, this is the profile. Our full stack engineers carry work from acceptance criteria to deploy button — tests and docs included — and ask why before they ask how.",
+      "When a feature needs one owner instead of three specialists, this is the profile. Our full stack engineers carry work from acceptance criteria to deploy button, tests and docs included, and ask why before they ask how.",
       "Ideal for zero-to-one phases, MVPs and teams where breadth beats depth: they scope honestly, push back with alternatives instead of excuses, and leave the codebase easier to extend than they found it.",
     ],
     monthly: 95000,
@@ -223,7 +223,7 @@ export const HIRE_ROLES: HireRole[] = [
       { title: "Transparent rates", text: "One monthly rate, however wide the stack." },
     ],
     faqs: [
-      { q: "Is full stack a jack of all trades?", a: "Ours are senior engineers who chose breadth. Each also has a deep specialism — front or back — which we match to where your work is heavier." },
+      { q: "Is full stack a jack of all trades?", a: "Ours are senior engineers who chose breadth. Each also has a deep specialism, front or back, which we match to where your work is heavier." },
       { q: "Can they lead a small team?", a: "Yes. Several of our full stack engineers run pods of two to four as tech leads." },
       { q: "How do you ensure code quality?", a: "Your reviews, our internal standards, automated tests and CI. Every engineer also has a Savo lead they can pull in for second opinions." },
       { q: "What does it cost to stop?", a: "Thirty days notice. No exit fees, no buyouts, and all work product is yours." },
@@ -292,7 +292,7 @@ export const HIRE_ROLES: HireRole[] = [
       "Hire dedicated DevOps and QA engineers from Savo Technologies: Terraform, Kubernetes, CI/CD pipelines, Playwright automation and observability. 48 hour matching, paid trial, transparent rates.",
     intro: [
       "Reliability is engineered, not hoped for. Our DevOps and QA engineers build the machinery your product ships on: cloud accounts managed like code, deployments small enough to be boring, and quality gates that actually gate.",
-      "From AWS landing zones to Playwright farms, everything they build arrives documented — runbooks, diagrams, a proper handover — so the capability stays with you, whatever happens next.",
+      "From AWS landing zones to Playwright farms, everything they build arrives documented with runbooks, diagrams and a proper handover, so the capability stays with you, whatever happens next.",
     ],
     monthly: 95000,
     stack: ["AWS", "Kubernetes", "Terraform", "Docker", "GitHub Actions", "ArgoCD", "Playwright", "Grafana"],

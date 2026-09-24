@@ -141,7 +141,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
     >
       {/* Bar stays above the open menu (burger must stay reachable) */}
       <div className="shell relative z-10 flex h-[var(--nav-h)] items-center justify-between gap-6">
-        <Link href="/" aria-label="SAVO Technologies — home" className="shrink-0 text-foreground">
+        <Link href="/" aria-label="Savo Technologies — home" className="shrink-0 text-foreground">
           <SavoLogo className="h-8 w-auto sm:h-9" />
         </Link>
 

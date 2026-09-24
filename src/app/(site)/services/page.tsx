@@ -10,13 +10,13 @@ import { openGraphFor } from "@/lib/seo";
  * its service chapter. Capability copy only (PRODUCT.md hard rule).
  */
 
-const DESCRIPTION = `Services from Savo Technologies — web development, mobile apps, UI/UX design, cloud and DevOps, data and analytics, AI agent development, custom software, digital marketing and SEO, QA and product engineering. One team, end to end.`;
+const DESCRIPTION = `Services from Savo Technologies: web development, mobile apps, UI/UX design, cloud and DevOps, data and analytics, AI agent development, custom software, digital marketing and SEO, QA and product engineering. One team, end to end.`;
 
 export const metadata: Metadata = {
   title: "Services",
   description: DESCRIPTION,
   alternates: { canonical: "/services" },
-  openGraph: openGraphFor({ title: "Services | SAVO Technologies", description: DESCRIPTION, url: "/services" }),
+  openGraph: openGraphFor({ title: "Services | Savo Technologies", description: DESCRIPTION, url: "/services" }),
 };
 
 export default function ServicesPage() {
@@ -28,7 +28,7 @@ export default function ServicesPage() {
         "@type": "WebPage",
         "@id": absoluteUrl("/services/#webpage"),
         url: absoluteUrl("/services"),
-        name: "Services | SAVO Technologies",
+        name: "Services | Savo Technologies",
         description: DESCRIPTION,
         isPartOf: { "@id": absoluteUrl("/#website") },
       },

@@ -3,7 +3,7 @@ import { Manrope, Source_Serif_4, Fragment_Mono } from "next/font/google";
 import Script from "next/script";
 import { SITE } from "@/constants/site";
 import { openGraphFor } from "@/lib/seo";
-import { env } from "@/lib/env";
+import { canonicalOrigin, INDEXABLE, env } from "@/lib/env";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -27,44 +27,45 @@ const fragment = Fragment_Mono({
   display: "swap",
 });
 
+const HOME_TITLE = "Savo Technologies | Web, Mobile, AI & Software Development Company";
+const HOME_DESCRIPTION =
+  "Savo Technologies is an Indore based software development company in India providing website development, web applications, mobile app development, AI development, SaaS and custom software solutions for clients across India and worldwide.";
+
 /**
  * Root metadata. Route groups (site)/ and admin/ extend or override this
- * (admin pages are noindex).
+ * (admin pages are noindex). Canonical URLs always target the production
+ * domain; non-production deployments are noindex via the INDEXABLE gate.
  */
 export const metadata: Metadata = {
-  metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL),
+  metadataBase: new URL(canonicalOrigin),
   title: {
-    default: "SAVO Technologies | Web, Mobile, AI & Digital Product Development",
-    template: "%s | SAVO Technologies",
+    default: HOME_TITLE,
+    template: "%s | Savo Technologies",
   },
-  description: SITE.description,
+  description: HOME_DESCRIPTION,
   applicationName: SITE.name,
-  keywords: [
-    "web development company",
-    "mobile app development",
-    "AI development",
-    "AI agents",
-    "custom software development",
-    "SaaS development",
-    "UI/UX design",
-    "digital product company",
-  ],
   alternates: { canonical: "/" },
   openGraph: openGraphFor({
-    title: "SAVO Technologies | Web, Mobile, AI & Digital Product Development",
-    description: SITE.description,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
     url: "/",
   }),
   twitter: {
     card: "summary_large_image",
-    title: "SAVO Technologies | Web, Mobile, AI & Digital Product Development",
-    description: SITE.description,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
-  },
+  robots: INDEXABLE
+    ? {
+        index: true,
+        follow: true,
+        googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+      }
+    : {
+        index: false,
+        follow: false,
+        googleBot: { index: false, follow: false },
+      },
 };
 
 export const viewport: Viewport = {

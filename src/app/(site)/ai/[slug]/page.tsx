@@ -35,7 +35,7 @@ export async function generateMetadata({
     title: svc.title,
     description: svc.metaDescription,
     alternates: { canonical: `/ai/${svc.slug}` },
-    openGraph: openGraphFor({ title: `${svc.title} | SAVO Technologies`, description: svc.metaDescription, url: `/ai/${svc.slug}` }),
+    openGraph: openGraphFor({ title: `${svc.title} | Savo Technologies`, description: svc.metaDescription, url: `/ai/${svc.slug}` }),
   };
 }
 

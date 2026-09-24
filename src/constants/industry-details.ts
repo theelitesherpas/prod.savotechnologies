@@ -52,7 +52,7 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
       "Healthcare software development by Savo Technologies: patient portals, telehealth, records integration and privacy-first clinical tools. Regulation-aware engineering, one team end to end.",
     overview: [
       "Healthcare products carry a weight most software never touches: a dropped session is a missed consultation, a unclear record is a clinical risk, a privacy lapse is a legal event. The sector runs on interoperability standards, layered access rules and consent — and every workflow assumes the system will still be there tomorrow.",
-      "We build for that reality. Savo engineers healthcare platforms the way clinical staff use them — task-focused, audit-ready and calm under load — while design work removes friction for patients who are often anxious, hurried or on a small screen in a waiting room. Security and privacy shape the architecture from the first schema, and every release is regression-tested before it touches anything that resembles production care.",
+      "We build for that reality. Savo engineers healthcare platforms the way clinical staff use them: task-focused, audit-ready and calm under load. Design work removes friction for patients who are often anxious, hurried or on a small screen in a waiting room. Security and privacy shape the architecture from the first schema, and every release is regression-tested before it touches anything that resembles production care.",
     ],
     imageCaption: "Clinical work runs on trust — software should too.",
     detailCaption: "Modern care is distributed. The platform has to hold.",
@@ -86,10 +86,10 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
       { q: "Do you build HIPAA-compliant healthcare software?", a: "We engineer to compliance requirements like HIPAA as architectural constraints — encryption, access control, audit trails and data minimisation are designed in from the start. Final compliance sign-off for your jurisdiction is owned jointly with your compliance officer, and we support the audit process with full documentation." },
       { q: "Can you integrate with our existing hospital or clinic systems?", a: "Yes. Interoperability is a first-class deliverable: we build API layers and interface with existing records, scheduling and billing systems rather than asking a clinic to replace what already works." },
       { q: "How do you handle patient data security?", a: "Least-privilege access, encryption in transit and at rest, segregated environments, and audit logging on every critical action. Security review is part of each release cycle, not a separate phase bolted on at the end." },
-      { q: "Do you build telehealth for low-bandwidth regions?", a: "We optimise video workflows for constrained networks — adaptive quality, graceful degradation to audio, and resumable sessions — because reliable care cannot depend on perfect infrastructure." },
+      { q: "Do you build telehealth for low-bandwidth regions?", a: "We optimise video workflows for constrained networks with adaptive quality, graceful degradation to audio and resumable sessions, because reliable care cannot depend on perfect infrastructure." },
     ],
     relatedIndustries: ["education", "government"],
-    relatedServices: ["custom-software", "ai-agent-development", "web-development"],
+    relatedServices: ["custom-software-development", "ai-agent-development", "web-development"],
   },
   {
     id: "fintech",
@@ -138,7 +138,7 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
       { q: "Can you help us pass a technical audit?", a: "Auditability is designed in: immutable logs, documented data flows, access histories and environment segregation. We support your audit with the technical evidence it needs." },
     ],
     relatedIndustries: ["ecommerce", "government"],
-    relatedServices: ["custom-software", "mobile-apps", "qa-testing"],
+    relatedServices: ["custom-software-development", "mobile-app-development", "qa-testing"],
   },
   {
     id: "ecommerce",
@@ -198,7 +198,7 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
     metaDescription:
       "Logistics software development by Savo Technologies: fleet tracking, route optimisation, warehouse systems and carrier integrations. Real-time visibility from first mile to last.",
     overview: [
-      "Logistics is a real-time system that happens to involve trucks. Customers expect a live answer to “where is it”, dispatchers need exceptions surfaced before they become failures, and margin hides in the difference between a good route and a great one. Meanwhile the data lives everywhere — ERPs, telematics, WMS, carrier APIs — and nowhere at once.",
+      "Logistics is a real-time system that happens to involve trucks. Customers expect a live answer to “where is it”, dispatchers need exceptions surfaced before they become failures, and margin hides in the difference between a good route and a great one. Meanwhile the data lives everywhere (ERPs, telematics, WMS, carrier APIs) and nowhere at once.",
       "Savo builds the connective tissue and the surfaces on top: live tracking, route and load planning, warehouse workflows and exception dashboards that fold many systems into one operating picture. Real-time pipelines keep the map honest, and operational tools are designed for the person under pressure — dispatchers, warehouse leads and drivers on a mount in a cab.",
     ],
     imageCaption: "The port never sleeps. The software can't either.",
@@ -236,7 +236,7 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
       { q: "Can you give our customers a tracking portal?", a: "Yes — branded tracking portals and notification flows (email, SMS, WhatsApp) that answer “where is it” before the support call happens." },
     ],
     relatedIndustries: ["ecommerce", "manufacturing"],
-    relatedServices: ["custom-software", "cloud-devops", "product-engineering"],
+    relatedServices: ["custom-software-development", "cloud-devops", "product-engineering"],
   },
   {
     id: "real-estate",
@@ -279,13 +279,13 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
       ],
     },
     faqs: [
-      { q: "Can you build a property portal like the major listing sites?", a: "We build listing platforms with the features that matter at your scale — faceted and map search, fresh inventory, agent tools and portal sync — shaped to your market rather than cloned from a generic portal." },
+      { q: "Can you build a property portal like the major listing sites?", a: "We build listing platforms with the features that matter at your scale, from faceted and map search to fresh inventory, agent tools and portal sync, shaped to your market rather than cloned from a generic portal." },
       { q: "How do virtual tours work in your builds?", a: "We integrate 360° media, video and floorplans into listing pages with scheduling attached, so fascination converts into a booked viewing instead of a bounce." },
       { q: "Do you integrate with CRMs agents already use?", a: "Yes — enquiry flows land in your existing CRM with full context, and where none exists we shape a pipeline that mirrors how your team actually sells." },
       { q: "How do listings stay fresh across portals?", a: "Sync integrations and verification workflows keep status, price and media consistent everywhere inventory appears — one edit, every surface updated." },
     ],
     relatedIndustries: ["travel", "fintech"],
-    relatedServices: ["web-development", "digital-marketing", "mobile-apps"],
+    relatedServices: ["web-development", "digital-marketing", "mobile-app-development"],
   },
   {
     id: "education",
@@ -328,13 +328,13 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
       ],
     },
     faqs: [
-      { q: "Can you build a platform that works on low-end devices?", a: "That is the default assumption. We design for mid-range Android phones and intermittent connectivity — adaptive streaming, local progress caching and resumable sessions — then let better hardware enjoy the same flow faster." },
+      { q: "Can you build a platform that works on low-end devices?", a: "That is the default assumption. We design for mid-range Android phones and intermittent connectivity with adaptive streaming, local progress caching and resumable sessions, then let better hardware enjoy the same flow faster." },
       { q: "How do you handle exam integrity online?", a: "Layered tooling: timed sessions, question randomisation, plagiarism checks and proctoring integrations where required — proportionate to what is being certified." },
       { q: "Do you integrate with student information systems?", a: "We integrate enrolment, gradebook and roster data with existing SIS/LMS systems so the new platform strengthens the record of learning instead of forking it." },
       { q: "Can analytics predict students at risk?", a: "Progress analytics surface lagging engagement and mastery gaps early, giving teachers a timely nudge list. The judgement of how to intervene stays with the educator." },
     ],
     relatedIndustries: ["healthcare", "government"],
-    relatedServices: ["product-engineering", "mobile-apps", "ai-agent-development"],
+    relatedServices: ["product-engineering", "mobile-app-development", "ai-agent-development"],
   },
   {
     id: "travel",
@@ -345,7 +345,7 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
     metaDescription:
       "Travel and hospitality software development by Savo Technologies: booking engines, property management, channel integrations and guest apps. Experiences built to book and return.",
     overview: [
-      "Travel is the rare purchase people research for hours and complete in seconds. The winning products compress a chaotic decision — dates, budgets, reviews, photos, trust — into a flow that feels like planning, not paperwork. Behind it sits an operational reality: rate parity, channel sync, seasonality and service recovery at speed.",
+      "Travel is the rare purchase people research for hours and complete in seconds. The winning products compress a chaotic decision of dates, budgets, reviews, photos and trust into a flow that feels like planning, not paperwork. Behind it sits an operational reality: rate parity, channel sync, seasonality and service recovery at speed.",
       "We build both sides. Guest-facing search, dynamic packaging and booking flows are engineered for speed and clarity on mobile, while property and operations systems keep inventory, rates and reservations consistent across every channel. After checkout, guest apps and feedback loops turn a stay into a relationship the next booking can build on.",
     ],
     imageCaption: "The trip starts on a phone, usually in a hurry.",
@@ -379,11 +379,11 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
     faqs: [
       { q: "Can you build a booking engine that doesn't redirect guests?", a: "Yes — direct booking on your own domain, with live availability and payment capture. Keeping the flow on-site protects margin and the guest relationship at the same time." },
       { q: "How do you keep rates consistent across channels?", a: "Channel management sits at the centre: one inventory and rate source, synchronised to OTAs and direct sales, with conflict rules that prevent oversells before they reach the front desk." },
-      { q: "Do you build for tours and activities, not just stays?", a: "We build booking for experiences too — availability calendars, group sizes, guides and waivers — the same engineering with different inventory." },
+      { q: "Do you build for tours and activities, not just stays?", a: "We build booking for experiences too, with availability calendars, group sizes, guides and waivers: the same engineering with different inventory." },
       { q: "What about last-minute changes and cancellations?", a: "The workflows are designed for plans changing: self-service modifications, policy-aware refunds and rebooking paths that turn a cancellation into the next reservation." },
     ],
     relatedIndustries: ["ecommerce", "real-estate"],
-    relatedServices: ["web-development", "custom-software", "data-analytics"],
+    relatedServices: ["web-development", "custom-software-development", "data-analytics"],
   },
   {
     id: "manufacturing",
@@ -432,7 +432,7 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
       { q: "Is the dashboard usable on the shop floor?", a: "We design for distance, glare and gloves: large type, high contrast, glanceable states. A dashboard nobody on the floor can read is a screen saver." },
     ],
     relatedIndustries: ["logistics", "energy"],
-    relatedServices: ["data-analytics", "cloud-devops", "custom-software"],
+    relatedServices: ["data-analytics", "cloud-devops", "custom-software-development"],
   },
   {
     id: "government",
@@ -443,7 +443,7 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
     metaDescription:
       "Government software development by Savo Technologies: citizen portals, service digitisation, document workflows and accessibility-first public platforms. Procurement-grade documentation included.",
     overview: [
-      "Public-sector software serves everyone — every ability, language, connection speed and level of digital confidence — and it does so in daylight: procurement documents its requirements, auditors trace its decisions, and accessibility standards are the floor, not the ceiling. Few environments punish shortcuts harder.",
+      "Public-sector software serves everyone of every ability, language, connection speed and level of digital confidence, and it does so in daylight: procurement documents its requirements, auditors trace its decisions, and accessibility standards are the floor, not the ceiling. Few environments punish shortcuts harder.",
       "We build for that daylight deliberately. Accessibility is engineered into components, not audited in afterwards; multilingual delivery treats every language as a first-class citizen of the interface; and documentation is written for the review that will read it. From citizen-facing portals to internal document workflows, the measure of the work is whether the least confident user in the jurisdiction can complete the task.",
     ],
     imageCaption: "Public software is judged in daylight.",
@@ -475,13 +475,13 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
       ],
     },
     faqs: [
-      { q: "How do you ensure accessibility compliance?", a: "Accessibility is engineered into the component layer — semantics, contrast, keyboard paths and screen-reader behaviour — and verified with assistive technologies during the build, not in a remediation sprint after launch." },
+      { q: "How do you ensure accessibility compliance?", a: "Accessibility is engineered into the component layer, from semantics, contrast and keyboard paths to screen-reader behaviour, and verified with assistive technologies during the build, not in a remediation sprint after launch." },
       { q: "Can you deliver in multiple languages?", a: "Yes. Multilingual delivery is architectural: content, interface and documents are structured for translation, and right-to-left layouts are supported where the jurisdiction needs them." },
       { q: "Do you work within public procurement processes?", a: "We are used to structured procurement: scoped documentation, staged deliverables and evidence trails written for review. The paperwork is treated as part of the engineering." },
-      { q: "Can citizens use these services on low connectivity?", a: "Services are built to degrade gracefully — save-and-resume, lightweight pages and offline-tolerant steps — because a public service that requires a flagship phone excludes part of the public." },
+      { q: "Can citizens use these services on low connectivity?", a: "Services are built to degrade gracefully with save-and-resume, lightweight pages and offline-tolerant steps, because a public service that requires a flagship phone excludes part of the public." },
     ],
     relatedIndustries: ["healthcare", "education"],
-    relatedServices: ["web-development", "custom-software", "qa-testing"],
+    relatedServices: ["web-development", "custom-software-development", "qa-testing"],
   },
   {
     id: "energy",
@@ -492,7 +492,7 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
     metaDescription:
       "Energy and utilities software development by Savo Technologies: field service apps, consumption analytics, IoT monitoring and customer billing platforms. From grid operations to the household bill.",
     overview: [
-      "The energy sector runs on long-lived assets, distributed teams and a metering truth that everything downstream — billing, planning, customer trust — depends on. Field crews work where connectivity is a rumour, asset data lives in decades of formats, and customers now expect a utility experience as clear as any consumer app.",
+      "The energy sector runs on long-lived assets, distributed teams and a metering truth that everything downstream, from billing and planning to customer trust, depends on. Field crews work where connectivity is a rumour, asset data lives in decades of formats, and customers now expect a utility experience as clear as any consumer app.",
       "Savo builds across that span. Field service tools work offline and sync when the signal returns. Consumption analytics turn meter and IoT streams into planning-grade insight. And customer platforms make the bill, the usage and the plan legible — because trust in a utility is built one clear statement at a time.",
     ],
     imageCaption: "The grid is the original real-time system.",
@@ -530,7 +530,7 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
       { q: "Can you modernise our customer portal?", a: "Yes — usage clarity, plan management, payments and moving-house flows, delivered progressively so service continuity is never at risk." },
     ],
     relatedIndustries: ["manufacturing", "government"],
-    relatedServices: ["cloud-devops", "data-analytics", "custom-software"],
+    relatedServices: ["cloud-devops", "data-analytics", "custom-software-development"],
   },
 ];
 

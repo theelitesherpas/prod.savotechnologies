@@ -39,7 +39,7 @@ export async function generateMetadata({
     description: detail.metaDescription,
     alternates: { canonical: `/industries/${detail.id}` },
     openGraph: openGraphFor({
-      title: `${detail.title} Software Development | SAVO Technologies`,
+      title: `${detail.title} Software Development | Savo Technologies`,
       description: detail.metaDescription,
       url: `/industries/${detail.id}`,
       images: [{ url: `/images/sectors/${detail.id}-hero.webp`, width: 1800, height: 1013 }],
@@ -74,7 +74,7 @@ export default async function IndustryPage({
         "@type": "WebPage",
         "@id": absoluteUrl(`/industries/${detail.id}/#webpage`),
         url: absoluteUrl(`/industries/${detail.id}`),
-        name: `${detail.title} Software Development | SAVO Technologies`,
+        name: `${detail.title} Software Development | Savo Technologies`,
         description: detail.metaDescription,
         isPartOf: { "@id": absoluteUrl("/#website") },
         about: detail.title,

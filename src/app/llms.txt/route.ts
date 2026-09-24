@@ -1,21 +1,21 @@
-import { env, absoluteUrl } from "@/lib/env";
+import { canonicalOrigin, absoluteUrl } from "@/lib/env";
 import { SITE } from "@/constants/site";
 import { SERVICE_DETAILS } from "@/constants/services-detail";
 import { INDUSTRY_DETAILS } from "@/constants/industry-details";
 import { HIRE_ROLES } from "@/constants/hire";
 import { AI_SERVICES } from "@/constants/ai-services";
-import { ARTICLES } from "@/constants/resources";
+import { ARTICLES } from "@/constants/insights";
 
 export const dynamic = "force-static";
 
 /**
  * /llms.txt — the emerging convention for AI/answer engines (AEO/GEO).
- * Plain-text orientation card: who SAVO is, what the site offers, where the
+ * Plain-text orientation card: who Savo is, what the site offers, where the
  * facts live. Content mirrors visible on-page content only — no claims the
  * site does not make.
  */
 export function GET() {
-  const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  const base = canonicalOrigin;
 
   const body = `# ${SITE.name}
 
@@ -49,7 +49,7 @@ ${SITE.statement}
 - Start a project: ${base}/start
 - AI agents fleet: ${base}/ai-agents
 - About: ${base}/about
-- Resources & insights: ${base}/resources
+- Insights: ${base}/insights
 - Selected work: ${base}/#work
 - AI systems: ${base}/#ai
 - Methodology: ${base}/#methodology
@@ -72,7 +72,7 @@ ${HIRE_ROLES.map((r) => `- Hire ${r.title}: ${base}/hire/${r.slug}`).join("\n")}
 ${AI_SERVICES.map((s) => `- ${s.title}: ${base}/ai/${s.slug}`).join("\n")}
 
 ## Insights
-${ARTICLES.map((a) => `- ${a.title}: ${base}/resources/${a.slug}`).join("\n")}
+${ARTICLES.map((a) => `- ${a.title}: ${base}/insights/${a.slug}`).join("\n")}
 
 ## For agents
 This is the official website of ${SITE.legalName}, a technology services company.

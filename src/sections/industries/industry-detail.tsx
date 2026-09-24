@@ -29,7 +29,7 @@ export function IndustryDetailHero({
         <div aria-hidden="true" className="mb-12 flex items-center gap-4 sm:mb-16">
           <span className="h-2 w-2 shrink-0 bg-accent" />
           <span className="t-label text-muted">
-            <Link href="/industries/" className="transition-colors hover:text-foreground">Industries</Link>
+            <Link href="/industries" className="transition-colors hover:text-foreground">Industries</Link>
             <span className="mx-2.5 text-muted/60">·</span>
             {detail.title}
           </span>
@@ -286,7 +286,7 @@ export function IndustryCrossLinks({
               ))}
               <li>
                 <Link
-                  href="/industries/"
+                  href="/industries"
                   className="group flex items-center gap-3 border-b border-border py-6"
                 >
                   <span aria-hidden="true" className="h-2 w-2 shrink-0 scale-0 bg-accent transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:scale-100" />
@@ -328,7 +328,7 @@ export function IndustryCrossLinks({
                 </li>
               ))}
               <li>
-                <Link href="/case-studies/" className="group flex items-center gap-3 border-b border-border py-5">
+                <Link href="/case-studies" className="group flex items-center gap-3 border-b border-border py-5">
                   <span aria-hidden="true" className="h-2 w-2 shrink-0 scale-0 bg-accent transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:scale-100" />
                   <span className="t-h4 font-medium text-foreground/80 transition-colors group-hover:text-foreground">
                     How the work gets filed

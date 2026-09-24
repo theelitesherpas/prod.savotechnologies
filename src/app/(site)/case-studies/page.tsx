@@ -14,13 +14,13 @@ import { openGraphFor } from "@/lib/seo";
  * verified engagement publishes (PRODUCT.md hard content rule).
  */
 
-const DESCRIPTION = `Case studies from Savo Technologies, filed by discipline — web development, mobile products, AI and intelligent systems, software and SaaS, product design and growth. Published only with verified outcomes.`;
+const DESCRIPTION = `Case studies from Savo Technologies, filed by discipline: web development, mobile products, AI and intelligent systems, software and SaaS, product design and growth. Published only with verified outcomes.`;
 
 export const metadata: Metadata = {
   title: "Case Studies",
   description: DESCRIPTION,
   alternates: { canonical: "/case-studies" },
-  openGraph: openGraphFor({ title: "Case Studies | SAVO Technologies", description: DESCRIPTION, url: "/case-studies" }),
+  openGraph: openGraphFor({ title: "Case Studies | Savo Technologies", description: DESCRIPTION, url: "/case-studies" }),
 };
 
 export default function CaseStudiesPage() {
@@ -34,7 +34,7 @@ export default function CaseStudiesPage() {
         "@type": "WebPage",
         "@id": absoluteUrl("/case-studies/#webpage"),
         url: absoluteUrl("/case-studies"),
-        name: "Case Studies | SAVO Technologies",
+        name: "Case Studies | Savo Technologies",
         description: DESCRIPTION,
         isPartOf: { "@id": absoluteUrl("/#website") },
         about: CASE_DISCIPLINES.map((d) => d.title),

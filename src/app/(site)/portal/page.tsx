@@ -12,13 +12,13 @@ import { openGraphFor } from "@/lib/seo";
  * human channel meanwhile.
  */
 
-const DESCRIPTION = `The Savo Technologies client portal — project status, deliverables, invoices and support in one place. Currently in production; talk to us directly meanwhile.`;
+const DESCRIPTION = `The Savo Technologies client portal for project status, deliverables, invoices and support in one place. Currently in production; talk to us directly meanwhile.`;
 
 export const metadata: Metadata = {
   title: "Client Portal",
   description: DESCRIPTION,
   alternates: { canonical: "/portal" },
-  openGraph: openGraphFor({ title: "Client Portal | SAVO Technologies", description: DESCRIPTION, url: "/portal" }),
+  openGraph: openGraphFor({ title: "Client Portal | Savo Technologies", description: DESCRIPTION, url: "/portal" }),
 };
 
 const PORTAL_SECTIONS = [
@@ -36,7 +36,7 @@ export default function PortalPage() {
         "@type": "WebPage",
         "@id": absoluteUrl("/portal/#webpage"),
         url: absoluteUrl("/portal"),
-        name: "Client Portal | SAVO Technologies",
+        name: "Client Portal | Savo Technologies",
         description: DESCRIPTION,
         isPartOf: { "@id": absoluteUrl("/#website") },
       },

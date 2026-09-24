@@ -40,7 +40,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       "Web development by Savo Technologies: corporate websites, web applications, Next.js and React builds, headless architecture and customer portals. Fast, SEO-strong engineering.",
     overview: [
       "The web is where every buyer's journey quietly begins, and where most websites quietly lose them — to slow loads, cluttered journeys and structures search engines can't read. A serious web presence is an engineering product: performance budgets, content architecture, accessibility and analytics wired in from the first commit.",
-      "We build on modern foundations — Next.js, React, headless architectures — with performance treated as a feature and SEO/AEO shaped into the information architecture itself. Corporate platforms, customer portals or full applications: the same standard applies, and everything ships with measurement, so the site keeps improving after launch instead of slowly rotting.",
+      "We build on modern foundations like Next.js, React and headless architecture, with performance treated as a feature and SEO/AEO shaped into the information architecture itself. Corporate platforms, customer portals or full applications: the same standard applies, and everything ships with measurement, so the site keeps improving after launch instead of slowly rotting.",
     ],
     image: "/images/code.webp",
     imageCaption: "Performance is a feature. Structure is strategy.",
@@ -66,10 +66,10 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       { q: "Can our team edit everything?", a: "Yes — headless CMS setups give editors full control of content, media and navigation without developer tickets, with roles and preview built in." },
     ],
     industries: ["ecommerce", "real-estate", "government"],
-    related: ["ui-ux", "digital-marketing", "product-engineering"],
+    related: ["ui-ux-design", "digital-marketing", "product-engineering"],
   },
   {
-    slug: "mobile-apps",
+    slug: "mobile-app-development",
     title: "Mobile App Development",
     short: "Mobile",
     tagline: "Mobile products that feel native to the hand.",
@@ -102,13 +102,13 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       { q: "Flutter, React Native or fully native?", a: "For most products, Flutter or React Native delivers near-native quality from one codebase — faster and leaner to maintain. When an app is platform-deep (heavy camera, AR, widgets), we go native. The choice follows the product, not our preference." },
       { q: "What does a mobile app project cost?", a: "Scope decides: a focused MVP and a commerce-grade platform differ by an order of magnitude. After a discovery conversation you get a staged estimate with no surprises hidden in phase three." },
       { q: "Do you handle app store approval?", a: "Yes — assets, privacy declarations, guideline compliance and the review cycle are part of delivery, along with staged rollouts and monitoring after release." },
-      { q: "Can you take over an existing app?", a: "We start with a structured audit — code, dependencies, crashes, store standing — then take over delivery with a stabilisation plan before new features." },
+      { q: "Can you take over an existing app?", a: "We start with a structured audit of code, dependencies, crashes and store standing, then take over delivery with a stabilisation plan before new features." },
     ],
     industries: ["fintech", "education", "travel"],
-    related: ["ui-ux", "web-development", "product-engineering"],
+    related: ["ui-ux-design", "web-development", "product-engineering"],
   },
   {
-    slug: "ui-ux",
+    slug: "ui-ux-design",
     title: "UI/UX Design",
     short: "Design",
     tagline: "Design that makes products easier to use.",
@@ -126,7 +126,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     deliverables: [
       { title: "Product strategy", text: "Positioning, journeys and feature prioritisation — what to build, for whom, in what order." },
       { title: "UX research", text: "Interviews, usability testing and analytics review that ground decisions in evidence, not taste." },
-      { title: "Interface design", text: "High-fidelity UI with every state designed — empty, loading, error, success — not just the happy path." },
+      { title: "Interface design", text: "High-fidelity UI with every state designed, from empty and loading to error and success, not just the happy path." },
       { title: "Design systems", text: "Token-based component libraries that keep product surfaces consistent and handover cheap." },
       { title: "Prototyping", text: "Interactive prototypes tested with real users before a line of production code exists." },
       { title: "Conversion design", text: "Flows instrumented and iterated — persuasion that survives measurement." },
@@ -139,7 +139,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     ],
     faqs: [
       { q: "Do you redesign existing products?", a: "Yes — and we start with an audit of what works before touching what doesn't. Redesigns preserve earned trust and muscle memory; we change what measurably fails and leave what users rely on." },
-      { q: "Can you work with our engineers?", a: "We design with implementation in mind — tokens, components and specs documented for the stack that will build them — and collaborate directly with your team or ours." },
+      { q: "Can you work with our engineers?", a: "We design with implementation in mind: tokens, components and specs documented for the stack that will build them. We collaborate directly with your team or ours." },
       { q: "How do you test designs?", a: "Interactive prototypes go to real users for task-based testing; findings feed revisions before code. Post-launch, analytics keeps the loop running." },
       { q: "What is a design system and do we need one?", a: "A shared component and token library that makes every screen consistent and every change cheap. If your product will grow past a handful of screens, it pays for itself quickly." },
     ],
@@ -157,7 +157,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       "Cloud and DevOps engineering by Savo Technologies: cloud architecture, CI/CD pipelines, containerisation, infrastructure as code and observability. Reliable, auditable operations.",
     overview: [
       "Infrastructure is where products go to disappoint quietly: deployments that work on Fridays and break on Mondays, environments that drift, outages discovered by customers. Mature operations flip that — infrastructure expressed as code, changes shipped through the same discipline as software, and systems that tell you they're struggling before they fail.",
-      "We build that maturity: cloud architecture sized to reality (not resale), pipelines that test and promote automatically, and observability that traces a user problem to its cause in minutes. Security is operational here — secrets managed, access least-privileged, backups rehearsed — and cost is a monitored metric, not a monthly surprise.",
+      "We build that maturity: cloud architecture sized to reality (not resale), pipelines that test and promote automatically, and observability that traces a user problem to its cause in minutes. Security is operational here, with secrets managed, access least-privileged and backups rehearsed, and cost is a monitored metric, not a monthly surprise.",
     ],
     image: "/images/architecture.webp",
     imageCaption: "Boring deployments are a feature.",
@@ -196,7 +196,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       "Data and analytics engineering by Savo Technologies: pipelines, warehouses, BI dashboards and decision intelligence. Trusted data turned into decisions.",
     overview: [
       "Most organisations don't lack data — they lack trust in it. Numbers disagree between meetings, reports are assembled by hand each cycle, and the interesting signals sit locked in operational corners nobody queries. The fix is unglamorous and valuable: pipelines that reliably collect, models that define metrics once, and surfaces that answer questions in seconds.",
-      "We build that backbone and the decision layers above it. Warehouses modelled around your business — not a generic template — fed by tested pipelines, surfaced in dashboards tuned to each audience: executive, operational, analytical. Definitions live in one place, lineage is traceable, and the quarter's arguments about whose number is right end.",
+      "We build that backbone and the decision layers above it. Warehouses modelled around your business rather than a generic template, fed by tested pipelines, surfaced in dashboards tuned to each audience: executive, operational, analytical. Definitions live in one place, lineage is traceable, and the quarter's arguments about whose number is right end.",
     ],
     image: "/images/services/data-analytics-hero.webp",
     imageCaption: "One number, one truth, one place.",
@@ -264,7 +264,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     related: ["data-analytics", "custom-software", "web-development"],
   },
   {
-    slug: "custom-software",
+    slug: "custom-software-development",
     title: "Custom Software",
     short: "Software",
     tagline: "Software shaped to the business, not the template.",
@@ -274,7 +274,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       "Custom software development by Savo Technologies: SaaS platforms, business applications, multi-tenant systems and enterprise tools. Built around your operations, integrated with your stack.",
     overview: [
       "Every business accumulates processes that no shelf product quite fits — so people adapt to the tool, build shadow spreadsheets around it, or simply absorb the friction as normal. Custom software removes that tax: systems shaped to how your operation actually runs, integrated with what you already use, and owned by you outright.",
-      "We build the full range: multi-tenant SaaS products, internal business applications, marketplaces and enterprise tools. Architecture decisions are made for your next three years — tenancy, integrations, reporting — and the codebase arrives documented and transferable, because software you can't maintain is software you rented at premium rates.",
+      "We build the full range: multi-tenant SaaS products, internal business applications, marketplaces and enterprise tools. Architecture decisions are made for your next three years of tenancy, integrations and reporting, and the codebase arrives documented and transferable, because software you can't maintain is software you rented at premium rates.",
     ],
     image: "/images/team.webp",
     imageCaption: "The operation defines the software. Not the reverse.",
@@ -312,7 +312,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     metaDescription:
       "Digital marketing by Savo Technologies: SEO, AEO for AI answer engines, performance marketing and content strategy. Discovery engineered to compound.",
     overview: [
-      "Search has split in two: the classic blue links and the AI answers increasingly read instead of clicked. Winning both demands the same foundation — genuine authority expressed in structures machines can parse — plus the measurement to know which channel actually earns revenue rather than applause.",
+      "Search has split in two: the classic blue links and the AI answers increasingly read instead of clicked. Winning both demands the same foundation of genuine authority expressed in structures machines can parse, plus the measurement to know which channel actually earns revenue rather than applause.",
       "We run growth as an engineering discipline: technical SEO baked into the product, content strategy built on what your buyers actually search, AEO structuring for the answer engines, and performance campaigns instrumented to revenue. Reports speak in pipeline and acquisition cost — because ranking positions are weather, but compounded authority is climate.",
     ],
     image: "/images/services/digital-marketing-hero.webp",
@@ -339,7 +339,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       { q: "How do you report results?", a: "In acquisition and revenue terms: pipeline by channel, cost per qualified lead, and the trajectory of organic authority. Vanity metrics don't survive our reports." },
     ],
     industries: ["ecommerce", "real-estate", "travel"],
-    related: ["web-development", "data-analytics", "ui-ux"],
+    related: ["web-development", "data-analytics", "ui-ux-design"],
   },
   {
     slug: "qa-testing",
@@ -351,7 +351,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     metaDescription:
       "QA and software testing by Savo Technologies: automated test suites, manual exploration, performance and security testing. Release confidence engineered in.",
     overview: [
-      "Every untested release is a bet placed with customers' patience. Manual clicking finds the obvious; production finds the expensive. Real quality engineering sits in the pipeline — suites that run on every change, cover the flows that matter, and fail loudly before anything ships — leaving human testers free to do what machines can't: explore like a devious user.",
+      "Every untested release is a bet placed with customers' patience. Manual clicking finds the obvious; production finds the expensive. Real quality engineering sits in the pipeline: suites that run on every change, cover the flows that matter and fail loudly before anything ships, leaving human testers free to do what machines can't: explore like a devious user.",
       "We build that system: automated functional suites, API and integration tests, performance baselines and security checks, wired into CI so quality is a gate rather than a phase. Exploratory testing hunts the edges automation can't reach, and every defect found becomes a regression test that ensures it stays fixed.",
     ],
     image: "/images/services/qa-testing-hero.webp",
@@ -417,7 +417,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       { q: "Do you start from zero or rescue in-flight products?", a: "Both. Zero-to-one gets discovery and disciplined slices; in-flight rescues get an audit, a stabilisation plan and a rebuilt delivery rhythm." },
     ],
     industries: ["ecommerce", "education", "logistics"],
-    related: ["ui-ux", "custom-software", "mobile-apps"],
+    related: ["ui-ux-design", "custom-software", "mobile-apps"],
   },
 ];
 

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The official SAVO Technologies wordmark (ported from version 1's
+ * The official Savo Technologies wordmark (ported from version 1's
  * savotech logo). Single-color lockup — SAVO geometric caps over the
  * Technologies sub-line — fills with currentColor so paper and ink
  * contexts restyle it through color alone.

@@ -5,7 +5,7 @@ import { absoluteUrl } from "@/lib/env";
 import { openGraphFor } from "@/lib/seo";
 import { Reveal } from "@/components/ui/reveal";
 import { DetailCta } from "@/components/shared/detail-cta";
-import { ARTICLES, getArticle } from "@/constants/resources";
+import { ARTICLES, getArticle } from "@/constants/insights";
 
 /**
  * The reading page — one article, set in the document's reading style:
@@ -27,9 +27,9 @@ export async function generateMetadata({
   return {
     title: article.title,
     description: article.excerpt,
-    alternates: { canonical: `/resources/${article.slug}` },
+    alternates: { canonical: `/insights/${article.slug}` },
     openGraph: {
-      ...openGraphFor({ title: `${article.title} | SAVO Technologies`, description: article.excerpt, url: `/resources/${article.slug}` }),
+      ...openGraphFor({ title: `${article.title} | Savo Technologies`, description: article.excerpt, url: `/insights/${article.slug}` }),
       type: "article",
     },
   };
@@ -54,7 +54,7 @@ export default async function ArticlePage({
         headline: article.title,
         description: article.excerpt,
         datePublished: article.date,
-        url: absoluteUrl(`/resources/${article.slug}`),
+        url: absoluteUrl(`/insights/${article.slug}`),
         author: { "@id": absoluteUrl("/#organization") },
         publisher: { "@id": absoluteUrl("/#organization") },
       },
@@ -62,8 +62,8 @@ export default async function ArticlePage({
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
-          { "@type": "ListItem", position: 2, name: "Resources", item: absoluteUrl("/resources") },
-          { "@type": "ListItem", position: 3, name: article.title, item: absoluteUrl(`/resources/${article.slug}`) },
+          { "@type": "ListItem", position: 2, name: "Insights", item: absoluteUrl("/insights") },
+          { "@type": "ListItem", position: 3, name: article.title, item: absoluteUrl(`/insights/${article.slug}`) },
         ],
       },
     ],
@@ -79,7 +79,7 @@ export default async function ArticlePage({
           <div aria-hidden="true" className="mb-12 flex items-center gap-4">
             <span className="h-2 w-2 shrink-0 bg-accent" />
             <span className="t-label text-muted">
-              <Link href="/resources" className="transition-colors hover:text-foreground">Resources</Link>
+              <Link href="/insights" className="transition-colors hover:text-foreground">Resources</Link>
               <span className="mx-2.5 text-muted/60">·</span>
               {article.cat}
             </span>
@@ -148,7 +148,7 @@ export default async function ArticlePage({
               <ul className="grid gap-px border border-border bg-border md:grid-cols-2">
                 {others.map((other) => (
                   <li key={other.slug}>
-                    <Link href={`/resources/${other.slug}`} className="group flex h-full flex-col gap-3 bg-background p-7 transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-foreground hover:text-background">
+                    <Link href={`/insights/${other.slug}`} className="group flex h-full flex-col gap-3 bg-background p-7 transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-foreground hover:text-background">
                       <p className="t-label text-accent transition-colors group-hover:text-background/80">
                         {other.cat} · {other.time}
                       </p>

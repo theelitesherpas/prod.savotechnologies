@@ -174,7 +174,7 @@ export function SelectedWork() {
 
       <Reveal className="mt-12">
         <Link
-          href="/case-studies/"
+          href="/case-studies"
           className="group/link t-sm -ml-1 inline-flex items-center gap-2 py-3 font-semibold text-foreground transition-colors hover:text-accent"
         >
           Browse the full dossier — all disciplines

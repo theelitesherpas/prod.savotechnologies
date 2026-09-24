@@ -4,7 +4,7 @@ import { absoluteUrl } from "@/lib/env";
 import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { DetailCta } from "@/components/shared/detail-cta";
-import { ARTICLES } from "@/constants/resources";
+import { ARTICLES } from "@/constants/insights";
 import { openGraphFor } from "@/lib/seo";
 
 /**
@@ -12,26 +12,26 @@ import { openGraphFor } from "@/lib/seo";
  * hairline grid grammar; each opens the full reading page.
  */
 
-const DESCRIPTION = `Insights from Savo Technologies — engineering, AI, design and delivery. Field notes on shipping production AI agents, performance budgets, accessibility loops and honest estimation.`;
+const DESCRIPTION = `Insights from Savo Technologies on engineering, AI, design and delivery. Field notes on shipping production AI agents, performance budgets, accessibility loops and honest estimation.`;
 
 export const metadata: Metadata = {
-  title: "Resources & Insights",
+  title: "Insights",
   description: DESCRIPTION,
-  alternates: { canonical: "/resources" },
-  openGraph: openGraphFor({ title: "Resources & Insights | SAVO Technologies", description: DESCRIPTION, url: "/resources" }),
+  alternates: { canonical: "/insights" },
+  openGraph: openGraphFor({ title: "Insights | Savo Technologies", description: DESCRIPTION, url: "/insights" }),
 };
 
 const CATS = ["AI", "Engineering", "Design", "Delivery"] as const;
 
-export default function ResourcesPage() {
+export default function InsightsPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "WebPage",
-        "@id": absoluteUrl("/resources/#webpage"),
-        url: absoluteUrl("/resources"),
-        name: "Resources & Insights | SAVO Technologies",
+        "@id": absoluteUrl("/insights/#webpage"),
+        url: absoluteUrl("/insights"),
+        name: "Insights | Savo Technologies",
         description: DESCRIPTION,
         isPartOf: { "@id": absoluteUrl("/#website") },
       },
@@ -39,7 +39,7 @@ export default function ResourcesPage() {
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
-          { "@type": "ListItem", position: 2, name: "Resources", item: absoluteUrl("/resources") },
+          { "@type": "ListItem", position: 2, name: "Insights", item: absoluteUrl("/insights") },
         ],
       },
       {
@@ -49,7 +49,7 @@ export default function ResourcesPage() {
           "@type": "ListItem",
           position: i + 1,
           name: a.title,
-          url: absoluteUrl(`/resources/${a.slug}`),
+          url: absoluteUrl(`/insights/${a.slug}`),
         })),
       },
     ],
@@ -108,7 +108,7 @@ export default function ResourcesPage() {
             {ARTICLES.map((article) => (
               <li key={article.slug}>
                 <Link
-                  href={`/resources/${article.slug}`}
+                  href={`/insights/${article.slug}`}
                   className="group grid gap-4 border-b border-border px-2 py-8 transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-foreground focus-visible:bg-foreground sm:grid-cols-12 sm:gap-8 sm:px-4"
                 >
                   <div className="sm:col-span-8">

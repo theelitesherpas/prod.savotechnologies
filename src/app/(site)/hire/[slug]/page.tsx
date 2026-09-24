@@ -39,7 +39,7 @@ export async function generateMetadata({
     description: role.metaDescription,
     alternates: { canonical: `/hire/${role.slug}` },
     openGraph: openGraphFor({
-      title: `Hire ${role.title} | SAVO Technologies`,
+      title: `Hire ${role.title} | Savo Technologies`,
       description: role.metaDescription,
       url: `/hire/${role.slug}`,
     }),

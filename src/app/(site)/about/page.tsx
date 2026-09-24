@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   title: "About Us",
   description: DESCRIPTION,
   alternates: { canonical: "/about" },
-  openGraph: openGraphFor({ title: "About Us | SAVO Technologies", description: DESCRIPTION, url: "/about" }),
+  openGraph: openGraphFor({ title: "About Us | Savo Technologies", description: DESCRIPTION, url: "/about" }),
 };
 
 export default function AboutPage() {
@@ -65,7 +65,7 @@ export default function AboutPage() {
         "@type": "AboutPage",
         "@id": absoluteUrl("/about/#webpage"),
         url: absoluteUrl("/about"),
-        name: "About Us | SAVO Technologies",
+        name: "About Us | Savo Technologies",
         description: DESCRIPTION,
         isPartOf: { "@id": absoluteUrl("/#website") },
         about: { "@id": absoluteUrl("/#organization") },
@@ -110,10 +110,13 @@ export default function AboutPage() {
               </Reveal>
               <Reveal delay={200}>
                 <p className="t-body mt-6 max-w-xl text-muted">
-                  Ten years later that rule still holds. Every engagement
-                  starts with a senior consultant, every architecture is
-                  reviewed by a lead, and every client can name the engineer
-                  who wrote the code they depend on.
+                  Savo Technologies, also known as Savo, is a software
+                  development and technology company based in Indore, Madhya
+                  Pradesh, India. The incorporated company operates as Savo
+                  Technologies Private Limited. Ten years on, the founding rule
+                  still holds: every engagement starts with a senior consultant,
+                  every architecture is reviewed by a lead, and every client can
+                  name the engineer who wrote the code they depend on.
                 </p>
               </Reveal>
               <Reveal delay={260}>

@@ -10,13 +10,13 @@ import { openGraphFor } from "@/lib/seo";
  * deployment path, and the honest engineering behind them.
  */
 
-const DESCRIPTION = `Deploy production AI agents with Savo Technologies — sales, support, recruiting, analytics, content and operations personas trained on your data, guarded by enterprise security, live in 2 to 4 weeks.`;
+const DESCRIPTION = `Deploy production AI agents with Savo Technologies: sales, support, recruiting, analytics, content and operations personas trained on your data, guarded by enterprise security, live in 2 to 4 weeks.`;
 
 export const metadata: Metadata = {
   title: "AI Agents",
   description: DESCRIPTION,
   alternates: { canonical: "/ai-agents" },
-  openGraph: openGraphFor({ title: "AI Agents | SAVO Technologies", description: DESCRIPTION, url: "/ai-agents" }),
+  openGraph: openGraphFor({ title: "AI Agents | Savo Technologies", description: DESCRIPTION, url: "/ai-agents" }),
 };
 
 export default function AgentsPage() {
@@ -27,7 +27,7 @@ export default function AgentsPage() {
         "@type": "WebPage",
         "@id": absoluteUrl("/ai-agents/#webpage"),
         url: absoluteUrl("/ai-agents"),
-        name: "AI Agents | SAVO Technologies",
+        name: "AI Agents | Savo Technologies",
         description: DESCRIPTION,
         isPartOf: { "@id": absoluteUrl("/#website") },
       },

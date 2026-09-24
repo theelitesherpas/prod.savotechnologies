@@ -24,7 +24,7 @@ export function ServiceDetailHero({ detail }: { detail: ServiceDetail }) {
         <div aria-hidden="true" className="mb-12 flex items-center gap-4 sm:mb-14">
           <span className="h-2 w-2 shrink-0 bg-accent" />
           <span className="t-label text-muted">
-            <Link href="/services/" className="transition-colors hover:text-foreground">Services</Link>
+            <Link href="/services" className="transition-colors hover:text-foreground">Services</Link>
             <span className="mx-2.5 text-muted/60">·</span>
             {detail.title}
           </span>
@@ -190,7 +190,7 @@ export function ServiceFaqs({ detail }: { detail: ServiceDetail }) {
                 engagement — answered plainly.
               </p>
               <Link
-                href="/contact/"
+                href="/contact"
                 className="group/btn t-sm mt-8 inline-flex items-center gap-2 font-semibold text-foreground transition-colors hover:text-accent"
               >
                 A question we missed?
@@ -271,7 +271,7 @@ export function ServiceCrossLinks({
                 </li>
               ))}
               <li>
-                <Link href="/industries/" className="group flex items-center gap-3 border-b border-border py-6">
+                <Link href="/industries" className="group flex items-center gap-3 border-b border-border py-6">
                   <span aria-hidden="true" className="h-2 w-2 shrink-0 scale-0 bg-accent transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:scale-100" />
                   <span className="t-h4 text-foreground/80 transition-colors group-hover:text-foreground">
                     All industries
@@ -311,7 +311,7 @@ export function ServiceCrossLinks({
                 </li>
               ))}
               <li>
-                <Link href="/services/" className="group flex items-center gap-3 border-b border-border py-5">
+                <Link href="/services" className="group flex items-center gap-3 border-b border-border py-5">
                   <span aria-hidden="true" className="h-2 w-2 shrink-0 scale-0 bg-accent transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:scale-100" />
                   <span className="t-h4 font-medium text-foreground/80 transition-colors group-hover:text-foreground">
                     All services

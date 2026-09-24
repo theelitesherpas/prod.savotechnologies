@@ -37,7 +37,7 @@ export function Industries() {
       <Reveal delay={240}>
         <div className="mt-10 flex items-center gap-4">
           <Link
-            href="/industries/"
+            href="/industries"
             className="link-underline t-h4 inline-flex items-center gap-2.5 text-foreground"
           >
             Explore all industries

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: "Hire Developers",
   description: DESCRIPTION,
   alternates: { canonical: "/hire" },
-  openGraph: openGraphFor({ title: "Hire Developers | SAVO Technologies", description: DESCRIPTION, url: "/hire" }),
+  openGraph: openGraphFor({ title: "Hire Developers | Savo Technologies", description: DESCRIPTION, url: "/hire" }),
 };
 
 export default function HirePage() {
@@ -29,7 +29,7 @@ export default function HirePage() {
         "@type": "WebPage",
         "@id": absoluteUrl("/hire/#webpage"),
         url: absoluteUrl("/hire"),
-        name: "Hire Developers | SAVO Technologies",
+        name: "Hire Developers | Savo Technologies",
         description: DESCRIPTION,
         isPartOf: { "@id": absoluteUrl("/#website") },
       },

@@ -3,7 +3,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { EnquiryProvider } from "@/components/shared/enquiry-dialog";
 import { AskSavoBar } from "@/components/shared/ask-savo-bar";
 import { HEADER_NAV, type NavItem } from "@/constants/navigation";
-import { SITE, SOCIAL_LINKS, OFFICES } from "@/constants/site";
+import { SITE } from "@/constants/site";
 import { absoluteUrl } from "@/lib/env";
 import { getSettings } from "@/lib/settings";
 import {
@@ -34,6 +34,21 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     return item;
   });
 
+  // One canonical entity graph: Organization (Savo Technologies = Savo =
+  // Savo Technologies Private Limited = Savo Technologies Pvt Ltd) and the
+  // WebSite it publishes. Every page references these @ids — no duplicate
+  // entities. Countries the company genuinely serves per the v1 office map.
+  const AREA_SERVED_COUNTRIES = [
+    "India",
+    "Switzerland",
+    "Saudi Arabia",
+    "United Arab Emirates",
+    "Bahrain",
+    "Australia",
+    "United Kingdom",
+    "United States",
+  ];
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -41,13 +56,15 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         "@type": "Organization",
         "@id": absoluteUrl("/#organization"),
         name: SITE.name,
-        alternateName: "SAVO",
+        alternateName: [SITE.shortName, SITE.legalNameShort],
+        legalName: SITE.legalName,
         url: absoluteUrl("/"),
-        logo: absoluteUrl("/icon.svg"),
+        logo: absoluteUrl("/images/savo-technologies-logo.svg"),
         description: SITE.description,
         slogan: SITE.tagline,
         email: settings.contactEmail,
         telephone: SITE.phoneE164,
+        foundingDate: SITE.registration.foundedYear,
         contactPoint: {
           "@type": "ContactPoint",
           contactType: "sales",
@@ -55,9 +72,18 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           telephone: SITE.phoneE164,
           availableLanguage: ["en"],
         },
-        address: { "@type": "PostalAddress", addressCountry: "IN" },
-        areaServed: OFFICES.map((o) => o.region),
-        sameAs: SOCIAL_LINKS.map((s) => s.href),
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: SITE.hq.city,
+          addressRegion: SITE.hq.region,
+          addressCountry: SITE.hq.countryCode,
+          ...(SITE.hq.street ? { streetAddress: SITE.hq.street } : {}),
+          ...(SITE.hq.postalCode ? { postalCode: SITE.hq.postalCode } : {}),
+        },
+        areaServed: AREA_SERVED_COUNTRIES,
+        // sameAs deliberately omitted: it will list only verified
+        // Savo-controlled profiles (LinkedIn, GBP, GitHub…) once the
+        // company supplies the URLs. Placeholder platform links never go here.
         knowsAbout: [
           "Website Design & Development",
           "Web Application Development",
@@ -88,6 +114,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         "@id": absoluteUrl("/#website"),
         url: absoluteUrl("/"),
         name: SITE.name,
+        alternateName: [SITE.shortName, SITE.legalName, SITE.legalNameShort, "savotechnologies.com"],
         description: SITE.description,
         publisher: { "@id": absoluteUrl("/#organization") },
         inLanguage: "en",

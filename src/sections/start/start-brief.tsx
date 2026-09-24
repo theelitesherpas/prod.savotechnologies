@@ -148,7 +148,7 @@ export function StartBrief() {
         <span aria-hidden="true" className="mb-7 block h-3 w-3 bg-accent" />
         <p className="t-h2">Brief received.</p>
         <p className="t-body-lg mt-4 max-w-lg text-muted">
-          A senior engineer — not a sales rep — reads it today and replies
+          A senior engineer, not a sales rep, reads it today and replies
           within one business day. If it is urgent, the phone line answers
           faster.
         </p>

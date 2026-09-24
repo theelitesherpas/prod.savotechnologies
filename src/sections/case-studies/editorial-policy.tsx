@@ -59,7 +59,7 @@ export function EditorialPolicy() {
                 the references to match.
               </p>
               <Link
-                href="/contact/"
+                href="/contact"
                 className="group/btn t-sm mt-6 inline-flex items-center gap-2 py-3 font-semibold text-foreground transition-colors hover:text-accent"
               >
                 Request references

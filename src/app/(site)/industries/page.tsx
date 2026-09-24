@@ -13,13 +13,13 @@ import { openGraphFor } from "@/lib/seo";
  * arrive next). Capability copy only — no invented clients or figures.
  */
 
-const DESCRIPTION = `Industries served by Savo Technologies — healthcare, fintech, ecommerce, logistics, real estate, education, travel, manufacturing, government and energy. Sector-fluent teams, one engineering playbook across all ten.`;
+const DESCRIPTION = `Industries served by Savo Technologies: healthcare, fintech, ecommerce, logistics, real estate, education, travel, manufacturing, government and energy. Sector-fluent teams, one engineering playbook across all ten.`;
 
 export const metadata: Metadata = {
   title: "Industries",
   description: DESCRIPTION,
   alternates: { canonical: "/industries" },
-  openGraph: openGraphFor({ title: "Industries | SAVO Technologies", description: DESCRIPTION, url: "/industries" }),
+  openGraph: openGraphFor({ title: "Industries | Savo Technologies", description: DESCRIPTION, url: "/industries" }),
 };
 
 export default function IndustriesPage() {
@@ -32,7 +32,7 @@ export default function IndustriesPage() {
         "@type": "WebPage",
         "@id": absoluteUrl("/industries/#webpage"),
         url: absoluteUrl("/industries"),
-        name: "Industries | SAVO Technologies",
+        name: "Industries | Savo Technologies",
         description: DESCRIPTION,
         isPartOf: { "@id": absoluteUrl("/#website") },
         about: INDUSTRIES_ATLAS.map((i) => i.title),

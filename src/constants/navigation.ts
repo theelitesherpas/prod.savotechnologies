@@ -30,7 +30,7 @@ export type NavItem = {
 /* ---------------- Link lists (version-1 canonical order) ------------- */
 
 export const AI_LINKS: NavLink[] = [
-  { label: "AI Agents", href: "/ai-agents/", pro: true },
+  { label: "AI Agents", href: "/ai-agents", pro: true },
   { label: "Generative AI & LLM Integration", href: "/ai/generative-ai/" },
   { label: "AI Consulting & Strategy", href: "/ai/consulting/" },
   { label: "Machine Learning & Analytics", href: "/ai/machine-learning/" },
@@ -76,19 +76,19 @@ export const INDUSTRY_LINKS: NavLink[] = [
 export const HEADER_NAV: NavItem[] = [
   {
     label: "AI",
-    href: "/ai-agents/",
+    href: "/ai-agents",
     mega: true,
     children: AI_LINKS,
     feature: {
       title: "Deploy your first AI agent in 2 to 4 weeks",
       copy: "Six production ready personas, trained on your data, guarded by enterprise security.",
       cta: "Explore the fleet",
-      href: "/ai-agents/",
+      href: "/ai-agents",
     },
   },
   {
     label: "Services",
-    href: "/services/",
+    href: "/services",
     children: SERVICE_LINKS,
     feature: {
       title: "Scope it in minutes",
@@ -98,30 +98,31 @@ export const HEADER_NAV: NavItem[] = [
     },
   },
   {
-    label: "Hire Resources",
-    href: "/hire/",
+    label: "Hire Developers",
+    href: "/hire",
     children: HIRE_LINKS,
     feature: {
       title: "A senior dev in your standup within 2 weeks",
       copy: "Vetted engineers, transparent monthly rates and a two week trial on every engagement.",
       cta: "See roles and rates",
-      href: "/hire/",
+      href: "/hire",
     },
   },
   {
     label: "Industries",
-    href: "/industries/",
+    href: "/industries",
     children: INDUSTRY_LINKS,
     feature: {
       title: "Ten sectors, one playbook",
       copy: "Regulation fluent teams in healthcare, fintech and the Gulf energy economy.",
       cta: "Explore industries",
-      href: "/industries/",
+      href: "/industries",
     },
   },
-  { label: "Case Study", href: "/case-studies/" },
-  { label: "Careers", href: "/careers/" },
-  { label: "Contact Us", href: "/contact/" },
+  { label: "Case Studies", href: "/case-studies" },
+  { label: "Insights", href: "/insights" },
+  { label: "Careers", href: "/careers" },
+  { label: "Contact", href: "/contact" },
 ];
 
 /* ----------------------------- Footer nav ----------------------------- */
@@ -129,24 +130,25 @@ export const HEADER_NAV: NavItem[] = [
 export const FOOTER_NAV = {
   services: [
     ...SERVICE_LINKS,
-    { label: "All Services", href: "/services/" },
+    { label: "All Services", href: "/services" },
   ],
   industries: [
     ...INDUSTRY_LINKS,
-    { label: "All Industries", href: "/industries/" },
+    { label: "All Industries", href: "/industries" },
   ],
   company: [
-    { label: "About Us", href: "/about/" },
-    { label: "Case Studies", href: "/case-studies/" },
-    { label: "Resources & Blog", href: "/resources/" },
-    { label: "Careers", href: "/careers/" },
-    { label: "Contact Us", href: "/contact/" },
+    { label: "About Us", href: "/about" },
+    { label: "Case Studies", href: "/case-studies" },
+    { label: "Insights", href: "/insights" },
+    { label: "Indore Office", href: "/locations/indore" },
+    { label: "Careers", href: "/careers" },
+    { label: "Contact", href: "/contact" },
   ],
   quick: [
-    { label: "Client Login", href: "/portal/" },
-    { label: "Hire Developers", href: "/hire/" },
-    { label: "AI Agents", href: "/ai-agents/", pro: true },
-    { label: "Get a Quote", href: "/start/" },
+    { label: "Client Login", href: "/portal" },
+    { label: "Hire Developers", href: "/hire" },
+    { label: "AI Agents", href: "/ai-agents", pro: true },
+    { label: "Get a Quote", href: "/start" },
     { label: "Ask Savo Assistant", href: "/#ai" },
   ],
 } as const satisfies Record<string, readonly (NavLink & { action?: "dialog" })[]>;

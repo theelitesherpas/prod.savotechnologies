@@ -18,7 +18,7 @@ export default function NotFound() {
           <span aria-hidden="true" className="text-accent">.</span>
         </h1>
         <p className="t-body-lg mt-8 max-w-lg text-muted">
-          The new SAVO site is rolling out section by section. The page you
+          The new Savo site is rolling out section by section. The page you
           requested is on the roadmap — in the meantime, the homepage carries
           the full picture, or start your project directly.
         </p>

@@ -49,7 +49,7 @@ export function SiteFooter({
       {/* Row 1 — brand + navigation columns */}
       <div className="shell grid gap-12 border-b border-border py-16 sm:py-20 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-4 lg:pr-8">
-          <Link href="/" aria-label="SAVO Technologies — home" className="inline-block text-foreground">
+          <Link href="/" aria-label="Savo Technologies — home" className="inline-block text-foreground">
             <SavoLogo className="h-12 w-auto" />
           </Link>
           <p className="t-sm mt-6 max-w-sm leading-relaxed text-muted">{SITE.statement}</p>
@@ -122,7 +122,7 @@ export function SiteFooter({
               <PhoneGlyph />
               {contact.phone}
             </a>
-            <Link href="/portal/" className="flex items-center gap-2 text-[0.875rem] font-medium text-foreground/85 transition-colors hover:text-accent">
+            <Link href="/portal" className="flex items-center gap-2 text-[0.875rem] font-medium text-foreground/85 transition-colors hover:text-accent">
               <LockGlyph />
               Client Login
             </Link>

@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   title: "Careers",
   description: DESCRIPTION,
   alternates: { canonical: "/careers" },
-  openGraph: openGraphFor({ title: "Careers | SAVO Technologies", description: DESCRIPTION, url: "/careers" }),
+  openGraph: openGraphFor({ title: "Careers | Savo Technologies", description: DESCRIPTION, url: "/careers" }),
 };
 
 export default function CareersPage() {

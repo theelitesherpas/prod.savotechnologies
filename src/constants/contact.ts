@@ -54,7 +54,7 @@ export const WHAT_HAPPENS_NEXT = [
   {
     step: "01",
     title: "Message received",
-    text: "A senior consultant — not a bot, not a junior — reads every message and replies within one business day.",
+    text: "A senior consultant, not a bot and not a junior, reads every message and replies within one business day.",
   },
   {
     step: "02",

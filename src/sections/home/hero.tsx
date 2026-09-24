@@ -25,7 +25,7 @@ export function Hero() {
             </h1>
 
             <p className="t-body-lg mt-8 max-w-[34rem] text-muted">
-              SAVO Technologies creates high-performance websites, mobile apps,
+              Savo Technologies creates high-performance websites, mobile apps,
               software products and AI-powered systems for ambitious businesses.
             </p>
 
@@ -63,9 +63,9 @@ export function Hero() {
           <a
             href="#studio"
             className="t-label group inline-flex items-center gap-2 py-3 text-muted transition-colors hover:text-foreground"
-            aria-label="Scroll to discover SAVO"
+            aria-label="Scroll to discover Savo"
           >
-            Discover SAVO
+            Discover Savo
             <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3 transition-transform duration-300 group-hover:translate-y-[3px]" fill="none" stroke="currentColor" strokeWidth="1.6">
               <path d="M7 1v11M2.5 7.5 7 12l4.5-4.5" />
             </svg>

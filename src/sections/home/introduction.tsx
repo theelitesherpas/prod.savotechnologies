@@ -22,8 +22,10 @@ export function Introduction() {
           <Reveal delay={120}>
             <div className="max-w-[42rem] space-y-6 border-l border-border pl-8 text-muted lg:pt-2">
               <p className="t-body-lg">
-                SAVO brings strategy, product design, software engineering,
-                artificial intelligence and digital growth under one team.
+                Savo brings strategy, product design, software engineering,
+                artificial intelligence and digital growth under one team,
+                working from Indore, India with clients across India and
+                worldwide.
               </p>
               <p className="t-body">
                 We don&apos;t simply deliver screens or code. We help shape the

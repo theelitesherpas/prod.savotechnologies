@@ -49,6 +49,29 @@ const nextConfig: NextConfig = {
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || undefined,
   poweredByHeader: false,
   reactStrictMode: true,
+  async redirects() {
+    // Permanent (308) redirects for URLs renamed before production launch.
+    // Direct one-hop mappings only — no chains. Internal links already point
+    // at the final destinations; these preserve any equity the test
+    // environment accumulated.
+    return [
+      // /resources → /insights (route renamed pre-launch)
+      { source: "/resources", destination: "/insights", permanent: true },
+      { source: "/resources/:slug", destination: "/insights/:slug", permanent: true },
+      // Service slugs normalized to full descriptive forms
+      {
+        source: "/services/mobile-apps",
+        destination: "/services/mobile-app-development",
+        permanent: true,
+      },
+      { source: "/services/ui-ux", destination: "/services/ui-ux-design", permanent: true },
+      {
+        source: "/services/custom-software",
+        destination: "/services/custom-software-development",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -99,7 +99,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Yes — vetted engineers join your standup within two weeks: AI & ML, frontend, backend, full stack, mobile, DevOps and QA.",
       "Transparent monthly rates and a two-week trial on every engagement.",
     ],
-    links: [{ label: "Hire resources", href: "/hire/" }],
+    links: [{ label: "Hire resources", href: "/hire" }],
   },
 
   /* ------------------------- Process & pricing ------------------------ */
@@ -123,7 +123,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "First reply within one business day — every message reaches a human, never a ticket queue. From there: a discovery call, then a fixed-scope proposal.",
       "AI agents deploy in 2 to 4 weeks; hired engineers join your standup within 2 weeks.",
     ],
-    links: [{ label: "Contact us", href: "/contact/" }],
+    links: [{ label: "Contact us", href: "/contact" }],
   },
   {
     id: "process",
@@ -157,7 +157,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "An independent digital product and technology company — web platforms, mobile apps and AI systems, engineered by one accountable team since 2016.",
       "Ten years of global delivery from India, for clients across India, Switzerland, the Gulf, the UK, the USA and Australia.",
     ],
-    links: [{ label: "Case studies", href: "/case-studies/" }],
+    links: [{ label: "Case studies", href: "/case-studies" }],
   },
   {
     id: "where",
@@ -180,8 +180,8 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Need proof sooner? Ask directly and we will walk you through relevant engagements under NDA, with the numbers clients allow us to share.",
     ],
     links: [
-      { label: "Case studies", href: "/case-studies/" },
-      { label: "Request references", href: "/contact/" },
+      { label: "Case studies", href: "/case-studies" },
+      { label: "Request references", href: "/contact" },
     ],
   },
   {
@@ -206,7 +206,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Applications get an engineer-read review and a personal reply within two business days. Four steps to a written offer, including a paid pairing session.",
     ],
     links: [
-      { label: "Open roles", href: "/careers/" },
+      { label: "Open roles", href: "/careers" },
       { label: "Apply now", href: "/careers/apply/" },
     ],
   },

@@ -22,13 +22,13 @@ import { openGraphFor } from "@/lib/seo";
  */
 
 const DESCRIPTION =
-  "Talk to the engineers who will build it. Message SAVO Technologies, book a call back, or reach the offices in Indore, Zürich, Riyadh, London and Sydney. One business day reply.";
+  "Talk to the engineers who will build it. Message Savo Technologies, book a call back, or reach the offices in Indore, Zürich, Riyadh, London and Sydney. One business day reply.";
 
 export const metadata: Metadata = {
   title: "Contact Us",
   description: DESCRIPTION,
   alternates: { canonical: "/contact" },
-  openGraph: openGraphFor({ title: "Contact Us | SAVO Technologies", description: DESCRIPTION, url: "/contact" }),
+  openGraph: openGraphFor({ title: "Contact Us | Savo Technologies", description: DESCRIPTION, url: "/contact" }),
 };
 
 export default async function ContactPage() {
@@ -37,7 +37,7 @@ export default async function ContactPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
-    name: "Contact SAVO Technologies",
+    name: "Contact Savo Technologies",
     url: absoluteUrl("/contact"),
     description: DESCRIPTION,
     mainEntity: {
