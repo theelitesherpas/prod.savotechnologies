@@ -14,9 +14,12 @@ deployment environment:
 
 ```bash
 git remote -v
-# origin  → https://github.com/theelitesherpas/dev.savotechnologies.git  (push/pull)
-# test    → https://github.com/theelitesherpas/test.savotechnologies.git (push only)
-# prod    → https://github.com/theelitesherpas/prod.savotechnologies.git (push only)
+# origin  → https://github.com/theelitesherpas/dev.savotechnologies.git  (push/pull — development lands here)
+# test    → https://github.com/theelitesherpas/test.savotechnologies.git (fetch only; push URL disabled)
+# prod    → https://github.com/theelitesherpas/prod.savotechnologies.git (fetch only; push URL disabled)
+#
+# Re-enable direct push if ever needed (prefer the URL method in Promotion):
+# git remote set-url --push test https://github.com/theelitesherpas/test.savotechnologies.git
 
 git config user.name    # theelitesherpas
 git config user.email   # theelitesherpas@users.noreply.github.com
@@ -29,14 +32,22 @@ git config user.email   # theelitesherpas@users.noreply.github.com
 3. Open a PR against `main` in **dev.savotechnologies**; review, then merge
 4. CI (lint + typecheck + 56 tests + production build) must pass before merge
 
+## Push policy (default on this machine)
+
+**Only `origin` (dev repo) receives pushes during development.** The
+`test` and `prod` remotes have their push URLs disabled, so an accidental
+`git push test` / `git push prod` fails immediately. Fetch/verification
+(`git ls-remote`) still works for both.
+
 ## Promotion — dev → test
 
-When a change set is ready for QA:
+When a change set is ready for QA, push **explicitly by URL** (works while
+the remote push URL is disabled, and makes promotion a deliberate act):
 
 ```bash
 git checkout main
 git pull origin main          # be exactly on the dev main you verified
-git push test main            # same commit SHAs land in the test repo
+git push https://github.com/theelitesherpas/test.savotechnologies.git main
 ```
 
 * Test environment deploys automatically from `test.savotechnologies`.
@@ -48,7 +59,7 @@ Only after QA signs off on the test environment:
 
 ```bash
 git checkout main
-git push prod main            # SHAs already verified in test go live
+git push https://github.com/theelitesherpas/prod.savotechnologies.git main
 ```
 
 * Verify the release: `git ls-remote origin main test main prod main` —
