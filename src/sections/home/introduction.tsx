@@ -3,6 +3,7 @@ import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { ImageReveal } from "@/components/ui/image-reveal";
 import { Parallax } from "@/components/ui/parallax";
+import { withBasePath } from "@/lib/utils";
 
 const CHAIN = ["Strategy", "Design", "Technology", "Intelligence", "Growth"] as const;
 
@@ -40,7 +41,7 @@ export function Introduction() {
           <ImageReveal className="relative aspect-[16/9] overflow-hidden border border-border sm:aspect-[21/9]">
             <Parallax strength={56} className="absolute inset-0">
               <Image
-                src="/images/team.webp"
+                src={withBasePath("/images/team.webp")}
                 alt="A product team reviewing work together around a studio table"
                 fill
                 sizes="(max-width: 1536px) 100vw, 1440px"

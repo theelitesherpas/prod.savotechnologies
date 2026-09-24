@@ -10,7 +10,7 @@ import {
   type EnquiryFieldErrors,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
-import { cn } from "@/lib/utils";
+import { cn, withBasePath } from "@/lib/utils";
 
 /**
  * The brief — the detailed start-a-project wizard. Three steps (you, the
@@ -110,7 +110,7 @@ export function StartBrief() {
     track("enquiry_form_submit", { form: "start-page" });
 
     try {
-      const res = await fetch("/api/enquiries", {
+      const res = await fetch(withBasePath("/api/enquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...draft, source: "start-page" }),

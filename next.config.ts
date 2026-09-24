@@ -44,6 +44,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Sub-path hosting (e.g. https://savotech.vercel.app/savo.v6) — set via
+  // NEXT_PUBLIC_BASE_PATH at build time; undefined locally.
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || undefined,
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {

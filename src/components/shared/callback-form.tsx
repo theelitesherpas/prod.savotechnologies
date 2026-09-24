@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { COUNTRY_PHONE_RULES, CALLBACK_COUNTRIES } from "@/lib/phone";
 import { track } from "@/lib/analytics";
+import { withBasePath } from "@/lib/utils";
 
 /**
  * Footer call-back request: one attached control — country select (flag +
@@ -37,7 +38,7 @@ export function CallbackForm() {
 
     const fd = new FormData(e.currentTarget);
     try {
-      const res = await fetch("/api/callback", {
+      const res = await fetch(withBasePath("/api/callback"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

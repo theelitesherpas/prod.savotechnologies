@@ -4,6 +4,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { ImageReveal } from "@/components/ui/image-reveal";
 import { LIFE_POINTS } from "@/constants/careers";
+import { withBasePath } from "@/lib/utils";
 
 /**
  * Life at Savo — the candidate pitch as hairline rows (why-savo idiom),
@@ -45,7 +46,7 @@ export function LifeAtSavo() {
           <Reveal delay={200} className="lg:sticky lg:top-28">
             <ImageReveal className="relative aspect-[4/5] overflow-hidden border border-border">
               <Image
-                src="/images/meeting.webp"
+                src={withBasePath("/images/meeting.webp")}
                 alt="The Savo team reviewing product work together around a table"
                 fill
                 sizes="(max-width: 1024px) 100vw, 420px"

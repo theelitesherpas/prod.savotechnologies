@@ -17,7 +17,7 @@ import {
 } from "@/lib/assistant";
 import { useEnquiry } from "@/components/shared/enquiry-dialog";
 import { track } from "@/lib/analytics";
-import { cn } from "@/lib/utils";
+import { cn, withBasePath } from "@/lib/utils";
 
 /**
  * Ask Savo — a floating bar pinned to the bottom of every public page that
@@ -194,7 +194,7 @@ export function AskSavoBar() {
     setEmailState("sending");
     track("ask_savo_handoff");
     try {
-      const res = await fetch("/api/enquiries", {
+      const res = await fetch(withBasePath("/api/enquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

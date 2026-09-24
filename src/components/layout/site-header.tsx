@@ -7,7 +7,7 @@ import { SavoLogo } from "@/components/shared/savo-logo";
 import { useEnquiry } from "@/components/shared/enquiry-dialog";
 import { MegaBar } from "./nav-panels";
 import { track } from "@/lib/analytics";
-import { cn } from "@/lib/utils";
+import { cn, withBasePath } from "@/lib/utils";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -381,7 +381,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                         setMobileOpen(false);
                         track("nav_link_click", { label: item.label, mobile: true });
                         window.location.hash = item.href?.startsWith("/#") ? item.href.slice(1) : "";
-                        if (!item.href?.startsWith("/#") && item.href) window.location.href = item.href;
+                        if (!item.href?.startsWith("/#") && item.href) window.location.href = withBasePath(item.href);
                       }
                     }}
                   >

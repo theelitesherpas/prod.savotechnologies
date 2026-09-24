@@ -7,7 +7,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { ImageReveal } from "@/components/ui/image-reveal";
 import { DetailCta } from "@/components/shared/detail-cta";
 import { OFFICES, SITE } from "@/constants/site";
-import { cn } from "@/lib/utils";
+import { cn, withBasePath } from "@/lib/utils";
 import { openGraphFor } from "@/lib/seo";
 
 /**
@@ -133,7 +133,7 @@ export default function AboutPage() {
               <Reveal delay={200}>
                 <ImageReveal className="relative aspect-[4/5] overflow-hidden border border-border">
                   <Image
-                    src="/images/team.webp"
+                    src={withBasePath("/images/team.webp")}
                     alt="The Savo team shipping a client platform"
                     fill
                     priority

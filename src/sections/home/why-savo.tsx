@@ -4,6 +4,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { ImageReveal } from "@/components/ui/image-reveal";
 import { WHY_SAVO } from "@/constants/content";
+import { withBasePath } from "@/lib/utils";
 
 export function WhySavo() {
   return (
@@ -39,7 +40,7 @@ export function WhySavo() {
           <Reveal delay={200} className="lg:sticky lg:top-28">
             <ImageReveal className="relative aspect-[4/5] overflow-hidden border border-border">
               <Image
-                src="/images/studio.webp"
+                src={withBasePath("/images/studio.webp")}
                 alt="A designer's workspace with product work in progress on screen"
                 fill
                 sizes="(max-width: 1024px) 100vw, 420px"

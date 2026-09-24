@@ -10,7 +10,7 @@ import {
   type EnquiryInput,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
-import { cn } from "@/lib/utils";
+import { cn, withBasePath } from "@/lib/utils";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -51,7 +51,7 @@ export function ContactForm() {
     track("enquiry_form_submit", { form: "contact", topic });
 
     try {
-      const res = await fetch("/api/enquiries", {
+      const res = await fetch(withBasePath("/api/enquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...parsed.data, source: "contact" }),

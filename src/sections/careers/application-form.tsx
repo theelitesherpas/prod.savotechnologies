@@ -17,7 +17,7 @@ import {
   type EnquiryInput,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
-import { cn } from "@/lib/utils";
+import { cn, withBasePath } from "@/lib/utils";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -104,7 +104,7 @@ export function ApplicationForm({ initialRole }: { initialRole?: string }) {
     track("enquiry_form_submit", { form: "careers", role });
 
     try {
-      const res = await fetch("/api/enquiries", {
+      const res = await fetch(withBasePath("/api/enquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...parsed.data, source: `careers:${roleSlug(role)}` }),
