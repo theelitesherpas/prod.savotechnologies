@@ -33,7 +33,11 @@ export type AdminIconName =
   | "import"
   | "check"
   | "alert"
-  | "node";
+  | "node"
+  | "sun"
+  | "moon"
+  | "user"
+  | "trend";
 
 const PATHS: Record<AdminIconName, React.ReactNode> = {
   gauge: (
@@ -178,6 +182,25 @@ const PATHS: Record<AdminIconName, React.ReactNode> = {
     </>
   ),
   node: <path d="M5 5h14v14H5z" />,
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3 7 7M17 17l1.7 1.7M18.7 5.3 17 7M7 17l-1.7 1.7" />
+    </>
+  ),
+  moon: <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" />,
+  user: (
+    <>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20c.7-3.6 3.6-5.5 7.5-5.5s6.8 1.9 7.5 5.5" />
+    </>
+  ),
+  trend: (
+    <>
+      <path d="m3.5 17 5.5-6 4 3.5 7.5-8.5" />
+      <path d="M15 6h5v5" />
+    </>
+  ),
 };
 
 export function AdminIcon({ name, className }: { name: AdminIconName; className?: string }) {

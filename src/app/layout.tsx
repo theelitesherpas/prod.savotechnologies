@@ -113,7 +113,7 @@ export default function RootLayout({
   const gaId = env.NEXT_PUBLIC_GA_ID;
 
   return (
-    <html lang="en" className={`${manrope.variable} ${sourceSerif.variable} ${fragment.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${manrope.variable} ${sourceSerif.variable} ${fragment.variable}`}>
       <body className="bg-background font-sans text-foreground antialiased">
         {/* Design contract, survives the production build; see DESIGN.md */}
         <div hidden dangerouslySetInnerHTML={{ __html: designContract }} />

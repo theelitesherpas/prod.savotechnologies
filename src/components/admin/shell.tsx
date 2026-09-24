@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AdminIcon, type AdminIconName } from "./icons";
 import { logoutAction } from "@/app/admin/(protected)/actions";
+import { SearchPalette } from "./search-palette";
 import { cn } from "@/lib/utils";
 
 /**
@@ -398,16 +399,37 @@ export function AdminShell({
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [dark, setDark] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Set<string>>(
     () => new Set(nav.filter((n) => n.items).map((n) => n.key)),
   );
 
-  // Restore the rail-collapse preference after first paint (deferred so
-  // hydration matches the server render, then the rail settles).
+  // Restore the rail-collapse + theme preferences after first paint
+  // (deferred so hydration matches the server render, then they settle).
   useEffect(() => {
-    if (window.localStorage.getItem("adm-rail") !== "1") return;
-    const id = requestAnimationFrame(() => setCollapsed(true));
+    const id = requestAnimationFrame(() => {
+      if (window.localStorage.getItem("adm-rail") === "1") setCollapsed(true);
+      if (window.localStorage.getItem("adm-theme") === "dark") setDark(true);
+    });
     return () => cancelAnimationFrame(id);
+  }, []);
+  const toggleDark = () =>
+    setDark((d) => {
+      window.localStorage.setItem("adm-theme", d ? "light" : "dark");
+      return !d;
+    });
+
+  // ⌘K / Ctrl+K toggles the global search palette.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
   const toggleCollapsed = () =>
     setCollapsed((c) => {
@@ -455,7 +477,7 @@ export function AdminShell({
 
   return (
     <div
-      className="chapter-admin min-h-dvh bg-background"
+      className={`${dark ? "chapter-admin-dark" : "chapter-admin"} min-h-dvh bg-background`}
       style={{ "--rail-w": collapsed ? "76px" : "272px" } as React.CSSProperties}
     >
       {/* ── Spine (desktop) ─────────────────────────────── */}
@@ -480,6 +502,10 @@ export function AdminShell({
         <TopBar
           crumbs={crumbs}
           newCount={newCount}
+          user={user}
+          dark={dark}
+          onToggleDark={toggleDark}
+          onOpenSearch={() => setSearchOpen(true)}
           onToggleRail={toggleCollapsed}
           onOpenDrawer={() => setDrawerOpen(true)}
         />
@@ -492,6 +518,8 @@ export function AdminShell({
           </p>
         </footer>
       </div>
+
+      <SearchPalette open={searchOpen} onOpenChange={setSearchOpen} />
 
       {/* ── Spine (mobile drawer) ──────────────────────────── */}
       {drawerOpen ? (
@@ -530,14 +558,90 @@ export function AdminShell({
   );
 }
 
+function ProfileMenu({ user }: { user: AdminUserChip }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      {open ? (
+        <button
+          type="button"
+          aria-label="Close account menu"
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-40 cursor-default"
+        />
+      ) : null}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label="Account menu"
+        className={cn(
+          "flex h-9 w-9 items-center justify-center rounded-full text-[0.75rem] font-bold transition-colors",
+          open ? "bg-accent text-on-accent" : "bg-accent/10 text-accent hover:bg-accent/20",
+        )}
+      >
+        {initials(user.name)}
+      </button>
+      {open ? (
+        <div className="absolute right-0 top-11 z-50 w-60 overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
+          <div className="border-b border-border px-4 py-3">
+            <p className="truncate text-[0.875rem] font-semibold text-foreground">{user.name}</p>
+            <p className="truncate text-[0.75rem] text-muted">{user.email}</p>
+            <p className="mt-1.5 inline-flex rounded-full bg-foreground/[0.06] px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-[0.06em] text-muted">
+              {user.role}
+            </p>
+          </div>
+          <div className="p-1.5">
+            {user.role === "admin" ? (
+              <Link
+                href="/admin/users"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[0.8125rem] font-medium text-foreground/80 transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
+              >
+                <AdminIcon name="userCog" className="h-4 w-4" />
+                Panel users
+              </Link>
+            ) : null}
+            <Link
+              href="/admin/audit"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[0.8125rem] font-medium text-foreground/80 transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
+            >
+              <AdminIcon name="trail" className="h-4 w-4" />
+              Audit log
+            </Link>
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[0.8125rem] font-medium text-error transition-colors hover:bg-error/10"
+              >
+                <AdminIcon name="external" className="h-4 w-4" />
+                Sign out
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function TopBar({
   crumbs,
   newCount,
+  user,
+  dark,
+  onToggleDark,
+  onOpenSearch,
   onToggleRail,
   onOpenDrawer,
 }: {
   crumbs: { href: string; label: string }[];
   newCount: number;
+  user: AdminUserChip;
+  dark: boolean;
+  onToggleDark: () => void;
+  onOpenSearch: () => void;
   onToggleRail?: () => void;
   onOpenDrawer: () => void;
 }) {
@@ -580,6 +684,24 @@ function TopBar({
           ))}
         </ol>
       </nav>
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        aria-label="Search (Command K)"
+        className="hidden h-9 items-center gap-2.5 rounded-lg border border-border px-3 text-[0.8125rem] text-muted transition-colors hover:border-foreground/25 hover:text-foreground md:flex"
+      >
+        <AdminIcon name="search" className="h-4 w-4" />
+        <span className="pr-6">Search…</span>
+        <kbd className="rounded-md border border-border px-1.5 py-0.5 font-mono text-[0.625rem]">⌘K</kbd>
+      </button>
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        aria-label="Search"
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-foreground/[0.06] hover:text-foreground md:hidden"
+      >
+        <AdminIcon name="search" className="h-[18px] w-[18px]" />
+      </button>
       <Link
         href="/admin/enquiries?status=new"
         aria-label={newCount > 0 ? `${newCount} new enquiries` : "Enquiries"}
@@ -593,6 +715,15 @@ function TopBar({
           </span>
         ) : null}
       </Link>
+      <button
+        type="button"
+        onClick={onToggleDark}
+        aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+        title={dark ? "Light theme" : "Dark theme"}
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+      >
+        <AdminIcon name={dark ? "sun" : "moon"} className="h-[18px] w-[18px]" />
+      </button>
       <Link
         href="/"
         target="_blank"
@@ -602,6 +733,7 @@ function TopBar({
         View site
         <AdminIcon name="external" className="h-3 w-3" />
       </Link>
+      <ProfileMenu user={user} />
     </header>
   );
 }

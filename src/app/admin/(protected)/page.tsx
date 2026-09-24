@@ -13,7 +13,89 @@ function weekAgoDate(): Date {
   return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 }
 
+function twoWeeksAgoDate(): Date {
+  return new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+}
+
 const fmtDateTime = (d: Date) => d.toISOString().replace("T", " · ").slice(0, 17);
+
+/** Pure-SVG 14-day enquiry trend — area + line, accent stroke, hairline grid. */
+function TrendChart(rows: { createdAt: Date }[]) {
+  const days = 14;
+  const now = new Date();
+  const buckets: { label: string; count: number }[] = [];
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    buckets.push({
+      label: day.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      count: 0,
+    });
+  }
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  for (const r of rows) {
+    const d = new Date(r.createdAt);
+    const idx =
+      days - 1 -
+      Math.floor((todayEnd.getTime() - new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) / 86400000);
+    if (idx >= 0 && idx < days) buckets[idx].count += 1;
+  }
+  const max = Math.max(1, ...buckets.map((b) => b.count));
+  const W = 640;
+  const H = 150;
+  const PAD = 8;
+  const x = (i: number) => PAD + (i * (W - PAD * 2)) / (days - 1);
+  const y = (v: number) => H - PAD - (v / max) * (H - PAD * 2 - 18);
+  const line = buckets.map((b, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(b.count).toFixed(1)}`).join(" ");
+  const area = `${line} L${x(days - 1).toFixed(1)},${H - PAD} L${x(0).toFixed(1)},${H - PAD} Z`;
+  const total = buckets.reduce((a, b) => a + b.count, 0);
+
+  return (
+    <div className="adm-card p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 id="trend-heading" className="text-[0.9375rem] font-bold tracking-[-0.01em] text-foreground">
+            Enquiries · last 14 days
+          </h2>
+          <p className="t-caption text-muted">{total} submissions across every form</p>
+        </div>
+        <Chip tone={total > 0 ? "accent" : "muted"}>{total > 0 ? "live" : "quiet"}</Chip>
+      </div>
+      {total === 0 ? (
+        <p className="t-sm py-8 text-center text-muted">
+          No submissions in the last two weeks — the chart draws itself the moment one arrives.
+        </p>
+      ) : (
+        <svg viewBox={`0 0 ${W} ${H}`} className="h-[150px] w-full" role="img" aria-label={`Enquiries over the last 14 days, ${total} total`} preserveAspectRatio="none">
+          {[0.25, 0.5, 0.75].map((f) => (
+            <line
+              key={f}
+              x1={PAD}
+              x2={W - PAD}
+              y1={PAD + f * (H - PAD * 2)}
+              y2={PAD + f * (H - PAD * 2)}
+              stroke="var(--border)"
+              strokeWidth="1"
+            />
+          ))}
+          <path d={area} fill="var(--accent)" fillOpacity="0.08" />
+          <path d={line} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          {buckets.map((b, i) =>
+            b.count > 0 ? (
+              <rect key={i} x={x(i) - 2.5} y={y(b.count) - 2.5} width="5" height="5" fill="var(--accent)" />
+            ) : null,
+          )}
+        </svg>
+      )}
+      <div className="mt-2 flex justify-between font-mono text-[0.625rem] text-muted">
+        {buckets
+          .filter((_, i) => i % 3 === 0 || i === days - 1)
+          .map((b) => (
+            <span key={b.label}>{b.label}</span>
+          ))}
+      </div>
+    </div>
+  );
+}
 
 export default async function AdminDashboard() {
   const user = await getAdminUser();
@@ -29,11 +111,20 @@ export default async function AdminDashboard() {
 
   const weekAgo = weekAgoDate();
 
-  const [statusRows, weekCount, callbackWeekCount, activeServices, activeIndustries, recent, activity] =
+  const twoWeeksAgo = twoWeeksAgoDate();
+  const [statusRows, weekCount, prevWeekCount, callbackWeekCount, recentDated, activeServices, activeIndustries, recent, activity] =
     await Promise.all([
       prisma.projectEnquiry.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.projectEnquiry.count({ where: { createdAt: { gte: weekAgo } } }),
+      prisma.projectEnquiry.count({
+        where: { createdAt: { gte: twoWeeksAgo, lt: weekAgo } },
+      }),
       prisma.projectEnquiry.count({ where: { projectType: "Callback", createdAt: { gte: weekAgo } } }),
+      prisma.projectEnquiry.findMany({
+        where: { createdAt: { gte: twoWeeksAgo } },
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+      }),
       prisma.service.count({ where: { active: true } }),
       prisma.industry.count({ where: { active: true } }),
       prisma.projectEnquiry.findMany({
@@ -82,17 +173,30 @@ export default async function AdminDashboard() {
       />
 
       {/* Stat tiles */}
-      <div className="mb-10 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatTile label="New enquiries" value={newCount} href="/admin/enquiries?status=new" accent={newCount > 0} />
-        <StatTile label="This week" value={weekCount} href="/admin/enquiries" hint="All submissions, 7 days" />
-        <StatTile label="Callbacks · 7d" value={callbackWeekCount} href="/admin/enquiries?type=Callback" />
+      <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <StatTile label="New enquiries" value={newCount} href="/admin/enquiries?status=new" icon="inbox" accent={newCount > 0} />
         <StatTile
-          label="Needs action"
-          value={newCount + inProgressCount}
+          label="This week"
+          value={weekCount}
           href="/admin/enquiries"
-          hint="New + in progress"
+          icon="trend"
+          trend={
+            prevWeekCount === 0
+              ? weekCount > 0
+                ? { dir: "up", text: "first this period" }
+                : undefined
+              : {
+                  dir: weekCount >= prevWeekCount ? "up" : "down",
+                  text: `${Math.abs(Math.round(((weekCount - prevWeekCount) / prevWeekCount) * 100))}% vs last week`,
+                }
+          }
         />
+        <StatTile label="Callbacks · 7d" value={callbackWeekCount} href="/admin/enquiries?type=Callback" icon="gauge" />
+        <StatTile label="Needs action" value={newCount + inProgressCount} href="/admin/enquiries" icon="alert" hint="New + in progress" />
       </div>
+
+      {/* 14-day trend chart */}
+      <section aria-labelledby="trend-heading" className="mb-6">{TrendChart(recentDated)}</section>
 
       {/* Pipeline */}
       <section aria-labelledby="pipeline-heading" className="mb-10">
@@ -239,7 +343,7 @@ export default async function AdminDashboard() {
             <Link
               key={c.href}
               href={c.href}
-              className="group flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3.5 shadow-[0_1px_2px_rgb(16_24_40/0.05)] transition-colors hover:border-foreground/25"
+              className="adm-card group flex items-center gap-3 px-4 py-3.5 transition-colors hover:border-foreground/25"
             >
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[0.875rem] font-semibold text-foreground group-hover:text-accent">

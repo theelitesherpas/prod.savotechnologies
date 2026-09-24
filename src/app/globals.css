@@ -569,11 +569,38 @@ textarea.field {
   --success: #067647;
   --warning: #b54708;
   --error: #b42318;
+  --input-border: rgb(16 24 40 / 0.16);
+  --input-border-hover: rgb(16 24 40 / 0.32);
+  --input-placeholder: rgb(16 24 40 / 0.35);
+  --card-shadow: 0 1px 2px rgb(16 24 40 / 0.05);
+}
+
+/* Dark operations theme — deep slate cards over a near-black slate canvas */
+.chapter-admin-dark {
+  --background: #0b0f1a;
+  --foreground: #e8ebf1;
+  --surface: #111827;
+  --surface-secondary: #1a2333;
+  --muted: #8a93a6;
+  --border: #243044;
+  --accent: #ff5a24;
+  --accent-hover: #ff7c4d;
+  --on-accent: #0b0f1a;
+  --success: #3ecf8e;
+  --warning: #f5b545;
+  --error: #ff7a66;
+  --input-border: rgb(232 235 241 / 0.16);
+  --input-border-hover: rgb(232 235 241 / 0.34);
+  --input-placeholder: rgb(232 235 241 / 0.35);
+  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
 }
 
 /* Canvas bleeds correctly on overscroll when the admin is on screen */
 body:has(.chapter-admin) {
   background: #f6f7f9;
+}
+body:has(.chapter-admin-dark) {
+  background: #0b0f1a;
 }
 
 .adm-label {
@@ -590,7 +617,7 @@ body:has(.chapter-admin) {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 0.75rem;
-  box-shadow: 0 1px 2px rgb(16 24 40 / 0.05);
+  box-shadow: var(--card-shadow);
 }
 
 .adm-input,
@@ -598,7 +625,7 @@ body:has(.chapter-admin) {
 .adm-select {
   width: 100%;
   background: var(--surface);
-  border: 1px solid rgb(16 24 40 / 0.16);
+  border: 1px solid var(--input-border);
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
   font-family: var(--font-sans);
@@ -609,12 +636,12 @@ body:has(.chapter-admin) {
 }
 .adm-input::placeholder,
 .adm-textarea::placeholder {
-  color: rgb(16 24 40 / 0.35);
+  color: var(--input-placeholder);
 }
 .adm-input:hover,
 .adm-textarea:hover,
 .adm-select:hover {
-  border-color: rgb(16 24 40 / 0.32);
+  border-color: var(--input-border-hover);
 }
 .adm-input:focus-visible,
 .adm-textarea:focus-visible,
@@ -654,13 +681,13 @@ body:has(.chapter-admin) {
 /* Sidebar scroll rail */
 .adm-rail {
   scrollbar-width: thin;
-  scrollbar-color: rgb(16 24 40 / 0.2) transparent;
+  scrollbar-color: var(--input-border-hover) transparent;
 }
 .adm-rail::-webkit-scrollbar {
   width: 8px;
 }
 .adm-rail::-webkit-scrollbar-thumb {
-  background: rgb(16 24 40 / 0.2);
+  background: var(--input-border-hover);
   border-radius: 99px;
   border: 2px solid var(--surface);
 }

@@ -38,6 +38,7 @@ export function StatTile({
   href,
   hint,
   icon,
+  trend,
   accent,
 }: {
   label: string;
@@ -45,6 +46,7 @@ export function StatTile({
   href?: string;
   hint?: string;
   icon?: AdminIconName;
+  trend?: { dir: "up" | "down"; text: string };
   accent?: boolean;
 }) {
   const inner = (
@@ -70,7 +72,14 @@ export function StatTile({
         ) : null}
       </div>
       <p className="mt-3 text-[0.8125rem] font-semibold text-foreground/80">{label}</p>
-      {hint ? <p className="mt-0.5 text-[0.75rem] text-muted">{hint}</p> : null}
+      {trend ? (
+        <p className={cn("mt-0.5 inline-flex items-center gap-1 text-[0.75rem] font-semibold", trend.dir === "up" ? "text-success" : "text-error")}>
+          <AdminIcon name="trend" className={cn("h-3 w-3", trend.dir === "down" && "scale-y-[-1]")} />
+          {trend.text}
+        </p>
+      ) : hint ? (
+        <p className="mt-0.5 text-[0.75rem] text-muted">{hint}</p>
+      ) : null}
     </>
   );
   return href ? (
