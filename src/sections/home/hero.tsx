@@ -19,7 +19,7 @@ export function Hero() {
               {SITE.positioning}
             </p>
 
-            <h1 id="hero-heading" className="t-dxl max-w-[13ch]">
+            <h1 id="hero-heading" className="t-dxl max-w-[15ch]">
               We design and engineer what&apos;s next
               <span aria-hidden="true" className="text-accent">.</span>
             </h1>

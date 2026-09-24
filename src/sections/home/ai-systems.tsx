@@ -71,7 +71,7 @@ export function AISystems() {
             <Reveal delay={150} className="lg:sticky lg:top-28">
               <figure
                 aria-label="How a SAVO AI agent works: an event triggers the agent, which reasons over company data and tools, acts on business systems, and defers to human approval when required."
-                className="relative border border-border bg-surface p-6 sm:p-9"
+                className="blueprint relative border border-border bg-surface p-6 sm:p-9"
               >
                 <figcaption className="t-label mb-8 flex items-center justify-between text-muted">
                   <span>Agent architecture</span>

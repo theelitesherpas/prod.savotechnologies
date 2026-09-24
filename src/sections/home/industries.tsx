@@ -1,27 +1,21 @@
 import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
+import { SectionHeader } from "@/components/ui/section-header";
 import { INDUSTRIES } from "@/constants/content";
 
 export function Industries() {
   return (
     <Section id="industries" index="12 — Industries" labelledBy="industries-heading">
-      <div className="grid gap-12 lg:grid-cols-12">
-        <div className="lg:col-span-6">
-          <Reveal>
-            <h2 id="industries-heading" className="t-dl max-w-[14ch]">
-              Technology without industry boundaries.
-            </h2>
-          </Reveal>
-        </div>
-        <div className="lg:col-span-5 lg:col-start-8 lg:pt-4">
-          <Reveal delay={120}>
-            <p className="t-body-lg max-w-md text-muted">
-              The fundamentals of good product thinking transfer. We adapt them
-              to the realities of each sector we work in.
-            </p>
-          </Reveal>
-        </div>
-      </div>
+      <SectionHeader
+        id="industries-heading"
+        heading="Technology without industry boundaries."
+        lead={
+          <>
+            The fundamentals of good product thinking transfer. We adapt them
+            to the realities of each sector we work in.
+          </>
+        }
+      />
 
       <Reveal delay={160}>
         <ul className="mt-16 grid grid-cols-1 gap-x-10 border-t border-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

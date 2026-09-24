@@ -55,31 +55,44 @@ if (!process.exitCode) pass("no console errors");
 {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  await page.waitForTimeout(1500);
+  // Scroll through the page so lazy images request + decode, then wait for them
+  await page.evaluate(async () => {
+    const step = window.innerHeight * 0.8;
+    for (let y = 0; y < document.body.scrollHeight; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 120));
+    }
+  });
+  await page.waitForFunction(
+    () => Array.from(document.querySelectorAll("img")).every((i) => i.complete && i.naturalWidth > 0),
+    { timeout: 8000 },
+  ).catch(() => {});
 
   const structure = await page.evaluate(() => {
     const ids = Array.from(document.querySelectorAll("main > *")).map((s) => s.id || s.tagName);
     const h1 = document.querySelector("h1")?.textContent?.trim();
     const bodyFont = getComputedStyle(document.body).fontFamily;
-    const h1Stretch = getComputedStyle(document.querySelector("h1")).fontStretch;
+    const h1Font = getComputedStyle(document.querySelector("h1")).fontFamily;
     const canvas = document.querySelector("canvas");
     const jsonLd = Array.from(document.querySelectorAll('script[type="application/ld+json"]')).map((s) => {
       try { return JSON.parse(s.textContent); } catch { return null; }
     });
+    const imgs = Array.from(document.querySelectorAll("img"));
+    const imgsLoaded = imgs.every((i) => i.complete && i.naturalWidth > 0);
     const title = document.title;
     const metaDesc = document.querySelector('meta[name="description"]')?.content ?? "";
     const canonical = document.querySelector('link[rel="canonical"]')?.href;
     const contract = document.body.innerHTML.includes("HOMEPAGE DESIGN CONTRACT");
-    return { ids, h1, bodyFont, h1Stretch, canvasSize: canvas ? [canvas.width, canvas.height] : null, jsonLdOk: jsonLd.every(Boolean) && jsonLd.length > 0, title, metaDesc, canonical, contract };
+    return { ids, h1, bodyFont, h1Font, imgs: { total: imgs.length, loaded: imgsLoaded }, canvasSize: canvas ? [canvas.width, canvas.height] : null, jsonLdOk: jsonLd.every(Boolean) && jsonLd.length > 0, title, metaDesc, canonical, contract };
   });
 
   structure.ids.includes("top") && structure.ids.includes("ai") && structure.ids.includes("growth")
     ? pass("section order present") : fail("sections", structure.ids.join(","));
   structure.h1?.includes("We design and engineer")
     ? pass("hero headline") : fail("hero headline", String(structure.h1));
-  structure.bodyFont.toLowerCase().includes("archivo") ? pass("Archivo body font") : fail("body font", structure.bodyFont);
-  structure.h1Stretch !== "100%" && structure.h1Stretch !== "normal"
-    ? pass(`display font-stretch ${structure.h1Stretch}`) : fail("font-stretch", String(structure.h1Stretch));
+  structure.bodyFont.toLowerCase().includes("manrope") ? pass("Manrope body font") : fail("body font", structure.bodyFont);
+  structure.h1Font.toLowerCase().includes("source serif") ? pass("Source Serif display") : fail("display font", structure.h1Font);
+  structure.imgs.total >= 4 && structure.imgs.loaded ? pass(`images loaded (${structure.imgs.total})`) : fail("images", JSON.stringify(structure.imgs));
   structure.canvasSize && structure.canvasSize[0] > 100 ? pass(`hero canvas ${structure.canvasSize.join("×")}`) : fail("canvas", JSON.stringify(structure.canvasSize));
   structure.jsonLdOk ? pass("JSON-LD parses") : fail("json-ld", "invalid");
   structure.title.length > 20 && structure.title.length < 70 ? pass(`title (${structure.title.length} chars)`) : fail("title", structure.title);

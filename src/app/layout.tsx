@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Fragment_Mono } from "next/font/google";
+import { Manrope, Source_Serif_4, Fragment_Mono } from "next/font/google";
 import Script from "next/script";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -8,10 +8,17 @@ import { SITE } from "@/constants/site";
 import { absoluteUrl, env } from "@/lib/env";
 import "./globals.css";
 
-const archivo = Archivo({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-archivo",
-  axes: ["wdth"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  variable: "--font-source-serif",
+  style: ["normal", "italic"],
+  axes: ["opsz"],
   display: "swap",
 });
 
@@ -110,22 +117,25 @@ const jsonLd = {
 const jsMarker = "document.documentElement.dataset.js='true'";
 
 const designContract = `<!--
-  SAVO TECHNOLOGIES — HOMEPAGE DESIGN CONTRACT
+  SAVO TECHNOLOGIES — HOMEPAGE DESIGN CONTRACT (v2)
   THESIS: One partner from idea to scale, presented as a precision-authored
-  engineering document — a technology partner's dossier, not an agency pitch.
-  OWN-WORLD: Warm-paper and deep-ink chapters, one vermilion signal, hairline
-  rules, square-node motif, Archivo width-axis display + Fragment Mono data
-  labels. Recognizable with every word removed.
+  engineering dossier bound in leather — a technology partner's document,
+  not an agency pitch.
+  OWN-WORLD: Warm paper and sand bands, blue-black ink chapters, one vermilion
+  signal; hairline rules, blueprint grids, square-node motif; Source Serif 4
+  display voice over Manrope UI voice, Fragment Mono for measurement; duotone
+  photography held inside the document's ink.
   STORY: Visitor learns what SAVO builds (web, mobile, software, AI, design,
   growth), why it differs from an agency, that AI is serious engineering, and
   how to start a project — then acts via Start a Project.
-  FIRST VIEWPORT: Paper field; left — mono positioning label, expanded-grotesk
-  caps headline "We design and engineer what's next." with vermilion period,
-  two-line support, solid ink CTA pair; right — live orbiting square-node
-  system (WEB·MOBILE·AI·SOFTWARE·DESIGN·GROWTH) around a SAVO core, pointer-
+  FIRST VIEWPORT: Paper field; left — mono positioning label, serif headline
+  "We design and engineer what's next." closing on a vermilion period,
+  two-line support, ink CTA pair; right — live orbiting square-node system
+  (WEB·MOBILE·AI·SOFTWARE·DESIGN·GROWTH) around a SAVO core with pointer-
   reactive hairlines. Primary action: ink "Start a Project" button.
-  FORM: Brief-pinned world (premium·minimal·editorial·technical); the dark/
-  light chapter rhythm and document index rail carry the narrative sequence.
+  FORM: Brief-pinned world (premium·minimal·editorial·technical), refined by
+  user direction toward professional richness: serif type, real photography,
+  drawn vector infographics; chapter rhythm and index rail carry the narrative.
   FINISH: unreviewed and undocumented is unfinished; this build ends with the
   finish review, the verdict, DESIGN.md, and every shipping raster carrying
   its provenance
@@ -137,7 +147,7 @@ export default function RootLayout({
   const gaId = env.NEXT_PUBLIC_GA_ID;
 
   return (
-    <html lang="en" className={`${archivo.variable} ${fragment.variable}`}>
+    <html lang="en" className={`${manrope.variable} ${sourceSerif.variable} ${fragment.variable}`}>
       <body className="bg-background font-sans text-foreground antialiased">
         {/* Design contract — survives the production build; see docs/DESIGN.md */}
         <div hidden dangerouslySetInnerHTML={{ __html: designContract }} />

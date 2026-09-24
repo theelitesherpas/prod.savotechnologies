@@ -1,17 +1,17 @@
 ---
 name: SAVO Technologies
-description: Premium engineering-document world — warm paper and deep ink chapters, one vermilion signal, square-node motif, width-axis grotesk.
+description: The engineering dossier — warm paper and sand bands, blue-black ink chapters, one vermilion signal; Source Serif 4 voice over Manrope UI, duotone photography, drawn vector infographics.
 colors:
-  paper: "#f5f4f0"
-  paper-surface: "#fbfaf7"
-  paper-surface-2: "#ebe9e2"
+  paper: "#f7f5f0"
+  paper-surface: "#fcfbf8"
+  sand: "#ede9de"
   paper-ink: "#17171a"
-  paper-muted: "#5b5a53"
-  ink-bg: "#0e0e11"
-  ink-surface: "#16161b"
-  ink-surface-2: "#1e1e25"
-  ink-foreground: "#f1f0eb"
-  ink-muted: "#a09f97"
+  paper-muted: "#565449"
+  ink-bg: "#101319"
+  ink-surface: "#171b22"
+  ink-surface-2: "#1f242d"
+  ink-foreground: "#eef0f4"
+  ink-muted: "#a3a8b3"
   vermilion: "#e8490f"
   vermilion-dark: "#d9480f"
   vermilion-hover-paper: "#b23a09"
@@ -22,38 +22,63 @@ colors:
   error: "#b3261e"
 typography:
   display:
-    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(2.3rem, 8vw, 6.6rem)"
-    fontWeight: 790
-    lineHeight: 0.95
-    letterSpacing: "-0.03em"
-    fontVariation: "wdth 112–113%"
-  headline:
-    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(1.55rem, 5.4vw, 4.6rem)"
-    fontWeight: 690–740
-    lineHeight: 0.99–1.06
-    letterSpacing: "-0.026em"
-    fontVariation: "wdth 105–108%"
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "clamp(2.75rem, 6.9vw, 6.2rem)"
+    fontWeight: 590
+    lineHeight: 1.03
+    letterSpacing: "-0.015em"
+  statement:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "clamp(2.4rem, 8.6vw, 5.9rem)"
+    fontWeight: 590
+    lineHeight: 1.05
+  section-display:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "clamp(2.1rem, 4.5vw, 3.8rem)"
+    fontWeight: 600
+    lineHeight: 1.07
+  headline-1:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "clamp(1.75rem, 3.1vw, 2.6rem)"
+    fontWeight: 600
+  headline-2:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "clamp(1.45rem, 2.2vw, 2rem)"
+    fontWeight: 600
+  subhead:
+    fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "clamp(1.125rem, 1.5vw, 1.3rem)"
+    fontWeight: 700
   body:
-    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
-    lineHeight: 1.65
+    lineHeight: 1.68
   body-large:
-    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(1.125rem, 1.5vw, 1.3125rem)"
-    lineHeight: 1.55
+    fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "clamp(1.0625rem, 1.35vw, 1.25rem)"
+    lineHeight: 1.62
+  body-small:
+    fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.875rem"
   label:
     fontFamily: "Fragment Mono, ui-monospace, monospace"
     fontSize: "0.6875rem"
     fontWeight: 400
     letterSpacing: "0.16em"
     textTransform: "uppercase"
+  caption:
+    fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.75rem"
+  control:
+    fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.9375rem"
+    fontWeight: 600
 rounded:
   field: "2px"
   chip: "2px"
   node: "0px"
+  browser-chrome-only: "focus ring 1px; scrollbar thumb 99px — browser surfaces, never components"
 spacing:
   shell-inline: "clamp(1.25rem, 4.5vw, 4.5rem)"
   section-y: "clamp(5rem, 9vw, 9rem)"
@@ -83,114 +108,113 @@ components:
     padding: "4px 10px"
 ---
 
-# SAVO Technologies — Design System
+# SAVO Technologies — Design System (v2)
 
 ## Overview
 
-**World: the engineering document.** SAVO's surfaces read as precision-authored
-technical dossiers — a premium product studio's taste expressed through an
-engineering company's instruments: hairline rules, mono data labels, an index
-rail, and one vermilion signal color. The recurring mark is the **square
-node** (brand mark, hero system, marquee separators, grid ticks, metrics dash,
-favicon) — a motif that reads as "system" the way a circle reads as "bubble".
+**World: the engineering dossier, bound in leather.** SAVO's surfaces read as
+precision-authored technical documents with the warmth of a bound volume —
+serif display type over a professional sans, warm paper and sand pages,
+blue-black systems chapters, and one vermilion signal. The recurring mark is
+the **square node** (brand mark, hero system, marquee separators, grid ticks,
+metrics dash, favicon). Photography is real but held inside the document's
+ink (duotone); infographics are hand-drawn vectors that ink themselves in on
+scroll.
 
-The page alternates **chapters**: warm paper (strategy, design, human voice),
-deep ink (systems, AI, metrics, footer), and one full vermilion moment (final
-conversion). Chapters are token scopes — components inherit automatically.
-Scene logic: a printed dossier under studio light, not a dark dashboard.
+Chapters are token scopes — `:root` (paper), `.chapter-ink`, `.chapter-accent`
+in `src/app/globals.css`. Components never hard-code chapter colors.
 
 ## Colors
 
-Token scopes in `src/app/globals.css` — `:root` (paper), `.chapter-ink`,
-`.chapter-accent`. Semantic tokens (`--background`, `--foreground`, `--surface`,
-`--surface-secondary`, `--muted`, `--border`, `--accent`, `--accent-hover`,
-`--on-accent`, `--success`, `--warning`, `--error`) swap per chapter; components
-never hard-code chapter colors.
-
-- **Paper chapter**: `#f5f4f0` ground, `#17171a` ink text, `#5b5a53` muted
-  (6.3:1), hairlines `rgb(23 23 26 / 0.14)`. Accent `#d9480f` (3.9:1 — large or
-  bold text and marks only).
-- **Ink chapter**: `#0e0e11` ground, `#f1f0eb` text, `#a09f97` muted (7.3:1),
-  accent `#ff5a24` (6.2:1). Surfaces are one and two steps lighter, never pure.
-- **Vermilion chapter**: `#e8490f` ground, near-full ink `#16130f` text (4.75:1);
-  secondary text stays ≥0.95 ink-alpha for 4.5:1 — hierarchy comes from size and
-  weight, never from lowering tone on this ground.
-- Status colors are reserved for real states (form errors, success); never
-  decorative.
+- **Paper chapter**: `#f7f5f0` ground, `#17171a` ink, `#565449` muted (7:1),
+  hairlines `rgb(23 23 26 / 0.13)`, accent `#d9480f` (3.95:1 — large/bold and
+  marks only).
+- **Sand band** (`--surface-secondary` `#ede9de`): the alternate section
+  ground for Technology and Growth; muted text holds 6.3:1 on it.
+- **Ink chapter**: blue-black `#101319` (richer than pure black), `#eef0f4`
+  text, `#a3a8b3` muted (7.8:1), accent `#ff5a24` (5.97:1 — safe at small
+  sizes on ink). Surfaces step lighter `#171b22` / `#1f242d`, never pure.
+- **Vermilion chapter**: `#e8490f` ground with near-full ink text (4.75:1);
+  muted stays ≥0.95 ink-alpha — hierarchy by size and weight, never tone.
+- Status colors only for real states.
 
 ## Typography
 
-One family, two registers. **Archivo variable** (self-hosted via next/font,
-width axis 62–125) carries all text; **Fragment Mono** is the measurement
-voice — indices, data, notes, microcopy, never body copy.
+Three voices, one document:
 
-- **Statement moments only** (hero, brand statement, final CTA, footer
-  wordmark): uppercase, `wdth 112–113%`, weight 790, tracking −0.03em, one
-  vermilion period.
-- **Section headings**: sentence case, `wdth 105–110%`, weight 690–740, tight.
-- Scale utilities: `.t-dxl`, `.t-statement`, `.t-dl`, `.t-h1`–`.t-h4`,
-  `.t-body-lg`, `.t-body`, `.t-sm`, `.t-label`, `.t-caption`. Statement floor
-  (2.3rem) keeps long words like "TECHNOLOGY" inside a 320px shell.
-- Body measure stays ≤ ~34rem; indices and figures use `.tnum` tabular numerals.
+- **Source Serif 4** — the voice. Display and all headlines (`t-dxl`,
+  `t-statement`, `t-dl`, `t-h1`, `t-h2`), sentence case, optical sizing on.
+  Italic reserved for the brand line ("Bold Brands. Built by Savo.").
+- **Manrope** — the interface. Sub-heads (`t-h3`, `t-h4`), body (`t-body-lg`,
+  `t-body`, `t-sm`, `t-caption`), controls, wordmark (extrabold, tracking
+  −0.03em).
+- **Fragment Mono** — measurement only (`t-label`): section indices, data,
+  notes, chips of capabilities. Never body copy.
+
+Statement sizes clamp down to 2.4rem so long words ("TECHNOLOGY") hold the
+line at 320px. Body measure ≤ ~34rem; `.tnum` for figures.
 
 ## Layout
 
-- `.shell`: max-width 90rem, inline padding `clamp(1.25rem, 4.5vw, 4.5rem)`.
-- Section rhythm: `py-20 sm:py-28 lg:py-36`; more space above headings than
-  below; tight groups, generous separation.
-- **Index rail**: each narrative section opens with `NN — Name` in mono plus a
-  hairline — the document's wayfinding (the homepage tells a numbered story by
-  brief). Not a decorative eyebrow elsewhere.
-- 12-column editorial grids with offset copy columns; accordions and row lists
-  replace card grids; hairline `divide`/`gap-px` grids for metrics/growth.
-- Sticky sub-elements (services index, AI pipeline) at `top-28`.
+- `.shell` max-width 90rem, inline `clamp(1.25rem, 4.5vw, 4.5rem)`.
+- Section rhythm `py-20 sm:py-28 lg:py-36`; **SectionHeader** standardizes
+  every section opening: serif heading on the left rail (7 cols), lead copy
+  right-aligned on the right rail (5 cols), shared baseline.
+- Index rail opens each section (`NN — Name` mono + hairline) — narrative
+  wayfinding, not decoration.
+- Editorial 12-col grids; accordions and hairline rows instead of card grids;
+  `gap-px` grids for metrics/growth; sticky rails (services index, AI
+  pipeline, studio image) at `top-28`.
 
 ## Elevation & Depth
 
-Flat, tonal depth: chapters, surfaces and hairlines carry hierarchy. One
-elevated surface exists — the enquiry drawer (`0 -24px 80px rgb(0 0 0 / 0.35)`,
-offset + soft blur). No halos, no hard offset shadows, no gradient depth.
+Flat, tonal depth — chapters, sand bands, surfaces and hairlines. Two
+exceptions: the enquiry drawer's offset soft shadow
+(`0 -24px 80px rgb(0 0 0 / 0.35)`) and photographic gradients over duotone
+images. No halos, hard offsets, or gradient depth.
 
 ## Shapes
 
-Radius is a rare event: 2px on buttons, fields and chips; 0 everywhere else —
-nodes, ticks, panels are square. The square node motif (2–16px) is the brand
-signature and appears in every chapter. Icons are authored inline SVG, 1.5px
-stroke, arrows and plus-marks only.
+Radius is rare: 2px on buttons/fields/chips; 0 elsewhere. Square node motif
+2–16px in every chapter. Icons are hand-authored inline SVG, 1.5px stroke on
+a 28px grid (service set: browser, phone, node-circuit, stack, pen, trend).
+Infographics use hairline strokes with `pathLength=1` draw-on-scroll.
+
+## Imagery
+
+Real photography, served as optimized WebP through `next/image` (lazy,
+sized, `object-cover`). Every photo wears the **duotone** treatment
+(grayscale + contrast + slight dim) so it belongs to the document; hover
+eases toward full color. Bands reveal with a clip-path wipe while the photo
+settles from 1.12 scale; cinematic bands drift with capped parallax (pointer
+devices only). Case-study placeholders pair representative imagery with
+wireframe overlays and an "In preparation" tag — never presented as clients.
 
 ## Components
 
-- **Buttons** — solid (ink→vermilion on hover), outline (hairline→full border),
-  text links with `link-underline` (offset .28em, hairline→current). Height
-  2.75–3.25rem, sentence case, arrow nudges +3px on hover.
-- **Fields** — document style: transparent, baseline hairline only, accent
-   underline on focus, error underline + caption. Selects keep native popup.
-- **Chips** — mono/hairline tags for capabilities; text-muted on border.
-- **Accordion rows** (services) — index / title / rotating plus-mark; panel
-  opens via `grid-template-rows 0fr→1fr`; native button headers,
-  `aria-expanded`/`aria-controls`.
-- **Enquiry drawer** — right panel ≥sm, bottom sheet below; ink chapter scope;
-  focus trap, Esc, scroll lock with scrollbar compensation, `inert` when
-  closed.
-- **Mobile menu** — full-screen ink chapter, clip-path wipe, staggered link
-  entrance, mono indices, focus trap, `inert` when closed.
-- **Motion** — one system: `reveal` entrances (26px rise, 0.9s expo-out,
-  IO-gated, stagger ≤220ms), marquee (52s linear), pipeline signal dot (6.5s),
-  methodology scroll progress, canvas orbit. All disabled under
-  `prefers-reduced-motion`; content visible by default (`.js` guard).
+- **Buttons** — solid (ink→vermilion hover), outline, `link-underline` text
+  links; 2.75–3.25rem; arrow nudges +3px.
+- **Fields** — baseline hairlines, accent focus, error caption; native
+  select popup.
+- **Accordion rows** (services) — index / icon / title / rotating plus;
+  `grid-template-rows 0fr→1fr` panels; native button semantics.
+- **Enquiry drawer / mobile menu** — focus trap, Esc, scroll lock, `inert`
+  when closed.
+- **Motion system** — reveals (26px rise, 0.9s expo-out), image mask wipes,
+  vector line-draws (`data-draw`), marquee (52s), pipeline signal dot,
+  methodology scroll progress, hero canvas orbit. All disabled under
+  `prefers-reduced-motion`; content visible by default.
 
 ## Do's and Don'ts
 
-- Do keep chapters as the only background mechanism; never place a paper-styled
-  component on ink by hard-coding colors.
-- Do reserve uppercase-expanded for statement moments; everything else stays
-  sentence case.
-- Do use Fragment Mono only for measurement (indices, data, labels) — never
-  body copy.
-- Do use the square node where a mark is needed; don't introduce circles,
-  gradients, glows, glass, or extra colors.
-- Don't add eyebrows/kickers above headings; the index rail is the only label
-  instrument.
-- Don't publish invented figures, quotes, clients, or claims — placeholders are
-  the honest state until verified content arrives.
+- Do keep chapters as the only background mechanism; never hard-code chapter
+  colors into components.
+- Do keep the serif for voice and the sans for interface; mono measures.
+- Do hold photography in duotone until hover; don't scatter full-color
+  photos across paper chapters.
+- Do use the square node where a mark is needed; no circles, gradients,
+  glows, glass, or extra accent colors.
+- Don't add eyebrows/kickers; the index rail is the only label instrument.
+- Don't publish invented figures, quotes, clients, or claims — placeholders
+  are the honest state until verified content arrives.
 - Don't soften the vermilion moment; it is the page's single shout.

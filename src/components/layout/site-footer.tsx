@@ -14,17 +14,14 @@ export function SiteFooter() {
         <div className="grid gap-14 border-b border-border pb-16 lg:grid-cols-12">
           <div className="lg:col-span-6">
             <Link href="/" aria-label="SAVO Technologies — home" className="inline-block">
-              <span
-                className="block text-[clamp(3.5rem,9vw,7rem)] font-extrabold leading-[0.9] tracking-[-0.03em]"
-                style={{ fontStretch: "116%" }}
-              >
+              <span className="block text-[clamp(3.5rem,9vw,7rem)] font-extrabold leading-[0.9] tracking-[-0.03em]">
                 SAVO
               </span>
             </Link>
             <p className="t-body-lg mt-6 max-w-md text-muted">
               Designing and engineering digital products for ambitious businesses.
             </p>
-            <p className="t-label mt-6 inline-flex items-center gap-3 text-foreground">
+            <p className="t-serif-italic mt-6 inline-flex items-center gap-3 text-[clamp(1.2rem,2vw,1.5rem)] text-foreground">
               <span aria-hidden="true" className="h-2 w-2 bg-accent" />
               {SITE.tagline}
             </p>

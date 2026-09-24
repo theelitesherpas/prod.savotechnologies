@@ -7,17 +7,14 @@ export function BrandStatement() {
     <section aria-labelledby="brand-heading" className="chapter-ink bg-background text-foreground">
       <div className="shell py-28 sm:py-36 lg:py-44">
         <Reveal>
-          <h2
-            id="brand-heading"
-            className="t-statement max-w-[12ch]"
-          >
+          <p className="t-label mb-10 text-muted">Our belief</p>
+          <h2 id="brand-heading" className="t-statement max-w-[13ch]">
             Bold ideas deserve serious technology
             <span aria-hidden="true" className="text-accent">.</span>
           </h2>
         </Reveal>
         <Reveal delay={160}>
-          <p className="t-label mt-12 inline-flex items-center gap-3 text-muted">
-            <span aria-hidden="true" className="h-2 w-2 bg-accent" />
+          <p className="t-serif-italic mt-12 text-[clamp(1.35rem,2.4vw,1.9rem)] text-muted">
             {SITE.tagline}
           </p>
         </Reveal>

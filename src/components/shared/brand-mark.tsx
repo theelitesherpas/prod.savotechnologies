@@ -13,10 +13,7 @@ export function BrandMark({
 }) {
   return (
     <span className={cn("inline-flex items-baseline gap-[0.3em]", className)}>
-      <span
-        className="font-sans text-[1.35rem] font-extrabold leading-none tracking-[-0.02em]"
-        style={{ fontStretch: "118%" }}
-      >
+      <span className="font-sans text-[1.3rem] font-extrabold leading-none tracking-[-0.03em]">
         SAVO
       </span>
       <span aria-hidden="true" className="h-[0.42em] w-[0.42em] translate-y-[-0.06em] bg-accent" />

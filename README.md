@@ -86,6 +86,27 @@ is typed (`src/lib/env.ts`).
 - Future routes (Insights, Careers, legal pages) render as non-breaking
   placeholders — no empty pages.
 
+## Imagery & infographics
+
+All photography ships as optimized WebP in `public/images/` (lazy, sized,
+`next/image`) and is held in the document's duotone treatment.
+
+**Provenance** — all photos from Unsplash (Unsplash License, free for
+commercial use, no attribution required):
+
+| File | Source |
+|---|---|
+| `team.webp` | unsplash.com/photos/…9f0129c71c (team collaborating) |
+| `studio.webp` | unsplash.com/photos/…f40138edfeb (design workspace) |
+| `meeting.webp` | unsplash.com/photos/…757bb62b4baf (professionals reviewing work) |
+| `code.webp` | unsplash.com/photos/…c5249f4df085 (engineering close-up) |
+| `mobile.webp` | unsplash.com/photos/…90a1b58e7e9c (mobile product in hand) |
+| `architecture.webp` | unsplash.com/photos/…c627a92ad1ab (corporate architecture, spare) |
+
+Replace with genuine SAVO studio photography when available. Vector
+infographics (service icons, AI pipeline, growth convergence diagram) are
+hand-authored SVG in `src/sections/home/` — no icon library dependency.
+
 ## Design system
 
 See `DESIGN.md` (tokens, type scale, chapters, motion, do's & don'ts) and

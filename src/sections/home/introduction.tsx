@@ -1,5 +1,8 @@
+import Image from "next/image";
 import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
+import { ImageReveal } from "@/components/ui/image-reveal";
+import { Parallax } from "@/components/ui/parallax";
 
 const CHAIN = ["Strategy", "Design", "Technology", "Intelligence", "Growth"] as const;
 
@@ -31,8 +34,38 @@ export function Introduction() {
         </div>
       </div>
 
+      {/* Studio band — real work, held in the document's ink */}
+      <Reveal delay={160}>
+        <figure className="mt-16 sm:mt-20">
+          <ImageReveal className="relative aspect-[16/9] overflow-hidden border border-border sm:aspect-[21/9]">
+            <Parallax strength={56} className="absolute inset-0">
+              <Image
+                src="/images/team.webp"
+                alt="A product team reviewing work together around a studio table"
+                fill
+                sizes="(max-width: 1536px) 100vw, 1440px"
+                className="duotone object-cover"
+              />
+            </Parallax>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[rgb(16_19_25/0.35)] to-transparent"
+            />
+          </ImageReveal>
+          <figcaption className="mt-4 flex items-center justify-between gap-6">
+            <span className="t-caption text-muted">
+              Strategy, design and engineering under one roof.
+            </span>
+            <span className="t-label hidden shrink-0 text-muted/70 sm:block">The Studio</span>
+          </figcaption>
+        </figure>
+      </Reveal>
+
       <Reveal delay={200}>
-        <ol className="mt-20 flex flex-wrap items-center gap-x-4 gap-y-3 sm:mt-24" aria-label="How we work, end to end">
+        <ol
+          className="mt-16 flex flex-wrap items-center gap-x-4 gap-y-3 sm:mt-20"
+          aria-label="How we work, end to end"
+        >
           {CHAIN.map((step, i) => (
             <li key={step} className="flex items-center gap-4">
               <span className="t-label tnum text-muted">{String(i + 1).padStart(2, "0")}</span>
