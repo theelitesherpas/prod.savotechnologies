@@ -2,16 +2,19 @@ import type { MetadataRoute } from "next";
 import { absoluteUrl } from "@/lib/env";
 import { INDUSTRY_DETAILS } from "@/constants/industry-details";
 import { SERVICE_DETAILS } from "@/constants/services-detail";
-import { HIRE_ROLES } from "@/constants/hire";
-import { AI_SERVICES } from "@/constants/ai-services";
-import { ARTICLES } from "@/constants/insights";
+import { getManagedHireRoles, getManagedAiServices, getManagedArticles } from "@/lib/content-items";
 
 /**
  * Production XML sitemap — canonical, indexable URLs only, always on the
  * canonical origin. Utility pages (client portal login) and admin/API
  * surfaces are excluded by design.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [HIRE_ROLES, AI_SERVICES, ARTICLES] = await Promise.all([
+    getManagedHireRoles(),
+    getManagedAiServices(),
+    getManagedArticles(),
+  ]);
   const now = new Date();
   const page = (url: string, priority: number, changeFrequency: "monthly" | "weekly" = "monthly") => ({
     url: absoluteUrl(url),

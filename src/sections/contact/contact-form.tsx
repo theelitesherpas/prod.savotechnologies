@@ -54,7 +54,7 @@ export function ContactForm() {
       const res = await fetch(withBasePath("/api/enquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...parsed.data, source: "contact" }),
+        body: JSON.stringify({ ...parsed.data, source: "contact", details: { form: "contact", topic } }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;

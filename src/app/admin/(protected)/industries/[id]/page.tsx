@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getAdminUser } from "@/lib/auth";
 import { IndustryFields } from "@/components/admin/industry-fields";
+import { BackLink, PageHeader, Notice, DangerZone } from "@/components/admin/ui";
+import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { updateIndustryAction, deleteIndustryAction } from "../actions";
 
 export const metadata: Metadata = { title: "Edit industry" };
@@ -13,10 +14,10 @@ export default async function EditIndustryPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string; e?: string; confirm?: string }>;
+  searchParams: Promise<{ saved?: string; e?: string }>;
 }) {
   const { id } = await params;
-  const { saved, e, confirm } = await searchParams;
+  const { saved, e } = await searchParams;
 
   const [user, industry] = await Promise.all([
     getAdminUser(),
@@ -26,24 +27,14 @@ export default async function EditIndustryPage({
 
   return (
     <div className="max-w-2xl">
-      <Link href="/admin/industries" className="t-sm link-underline mb-6 inline-block text-muted">
-        ← Back to industries
-      </Link>
+      <BackLink href="/admin/industries" label="All industries" />
+      <PageHeader title={`Edit · ${industry.title}`} description={`/industries/${industry.slug}/`} />
 
-      <h1 className="t-h3 mb-6">Edit · {industry.title}</h1>
+      {saved ? <Notice>Saved. Public pages regenerate on the next request.</Notice> : null}
+      {e === "dup" ? <Notice kind="alert">That slug is already in use by another industry.</Notice> : null}
+      {e === "invalid" ? <Notice kind="alert">Check the fields — titles need 2–80 characters, slugs lowercase/hyphens.</Notice> : null}
 
-      {saved ? (
-        <p role="status" className="t-sm mb-4 border border-border bg-foreground/[0.03] px-3 py-2">
-          Saved. Public pages regenerate on the next request.
-        </p>
-      ) : null}
-      {e === "dup" ? (
-        <p role="alert" className="t-sm mb-4 border border-accent/40 bg-accent/5 px-3 py-2 text-accent">
-          That slug is already in use by another industry.
-        </p>
-      ) : null}
-
-      <form action={updateIndustryAction} className="space-y-4 border border-border bg-background p-5">
+      <form action={updateIndustryAction} className="adm-card space-y-5 p-5">
         <input type="hidden" name="id" value={industry.id} />
         <IndustryFields
           industry={{
@@ -54,32 +45,23 @@ export default async function EditIndustryPage({
             active: industry.active,
           }}
         />
-        <button
-          type="submit"
-          className="h-10 bg-foreground px-5 text-sm font-semibold text-background transition-colors hover:bg-accent hover:text-on-accent"
-        >
-          Save changes
-        </button>
+        <div className="flex items-center gap-3 border-t border-border pt-5">
+          <SubmitButton label="Save changes" />
+        </div>
       </form>
 
       {user?.role === "admin" ? (
-        <div className="mt-8 border border-accent/40 p-4">
-          <h2 className="t-label mb-2 text-accent">Danger zone</h2>
-          {confirm !== "1" ? (
-            <Link
-              href={`/admin/industries/${industry.id}?confirm=1`}
-              className="t-sm border border-accent/50 px-3 py-2 text-accent transition-colors hover:bg-accent hover:text-on-accent"
-            >
-              Delete this industry…
-            </Link>
-          ) : (
+        <div className="mt-8">
+          <DangerZone title="Danger zone">
+            <p className="t-sm mb-3 text-muted">
+              Removes the industry from the collection permanently. The site falls
+              back to coded defaults only if the table becomes empty.
+            </p>
             <form action={deleteIndustryAction}>
               <input type="hidden" name="id" value={industry.id} />
-              <button type="submit" className="t-sm bg-accent px-3 py-2 font-semibold text-on-accent">
-                Yes, delete permanently
-              </button>
+              <ConfirmButton label="Delete this industry…" confirmLabel="Delete permanently" />
             </form>
-          )}
+          </DangerZone>
         </div>
       ) : null}
     </div>

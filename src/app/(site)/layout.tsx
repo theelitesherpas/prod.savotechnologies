@@ -136,6 +136,16 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
+      {/* Admin-managed announcement line (Settings) — hidden when unset */}
+      {settings.announcement ? (
+        <div className="chapter-ink bg-background">
+          <p className="shell flex items-center gap-3 py-2.5 text-[0.8125rem] text-foreground">
+            <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-accent" />
+            <span className="min-w-0 flex-1 truncate">{settings.announcement}</span>
+          </p>
+        </div>
+      ) : null}
+
       <SiteHeader nav={nav} />
       <main id="main">{children}</main>
       <SiteFooter

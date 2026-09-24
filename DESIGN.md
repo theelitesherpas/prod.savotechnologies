@@ -195,11 +195,15 @@ wireframe overlays and an "In preparation" tag — never presented as clients.
 
 ## Admin panel (operations surface)
 
-The admin is deliberately utilitarian — same tokens (paper/ink/vermilion,
-`t-label`/`t-sm` typography, hairline borders, square corners) but applied as
-a working interface: mono stat tiles, table rows, status chips, two-step
-danger zones. No bespoke illustration or motion beyond hover states; it is
-chrome for operators, not a chapter of the document.
+The admin wears its own chapter (`.chapter-admin` in globals.css), pinned by
+the client to the NextAdmin dashboard look: a cool-gray canvas (#f6f7f9)
+with white 12px-radius cards and soft 1px shadows, light grouped sidebar
+with icon tiles, expandable submenus, live count chips and an icon-rail
+collapse; pill badges with soft tints; boxed 8px-radius inputs with an
+accent focus ring; Manrope throughout (no serif in the console); vermilion
+reserved for primary actions, active states and attention. The public
+site's paper/ink/vermilion system is untouched — the console borrows only
+the accent.
 
 ## Components
 

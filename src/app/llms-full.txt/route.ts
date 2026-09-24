@@ -3,8 +3,7 @@ import { SITE } from "@/constants/site";
 import { SERVICES } from "@/constants/services";
 import { MARQUEE_ITEMS } from "@/constants/services";
 import { INDUSTRIES } from "@/constants/content";
-import { ROLES } from "@/constants/careers";
-import { CASE_DISCIPLINES } from "@/constants/case-studies";
+import { getManagedRoles, getManagedCaseDisciplines } from "@/lib/content-items";
 
 export const dynamic = "force-static";
 
@@ -13,7 +12,11 @@ export const dynamic = "force-static";
  * engines. Mirrors visible homepage content (no hidden or unverifiable
  * claims); numbers are omitted where the site itself omits them.
  */
-export function GET() {
+export async function GET() {
+  const [ROLES, CASE_DISCIPLINES] = await Promise.all([
+    getManagedRoles(),
+    getManagedCaseDisciplines(),
+  ]);
   const base = canonicalOrigin;
 
   const services = SERVICES.map(

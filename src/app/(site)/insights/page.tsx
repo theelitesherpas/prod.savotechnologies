@@ -5,7 +5,7 @@ import { absoluteUrl } from "@/lib/env";
 import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { DetailCta } from "@/components/shared/detail-cta";
-import { ARTICLES } from "@/constants/insights";
+import { getManagedArticles } from "@/lib/content-items";
 import { withBasePath } from "@/lib/utils";
 import { openGraphFor } from "@/lib/seo";
 
@@ -25,7 +25,8 @@ export const metadata: Metadata = {
 
 const CATS = ["AI", "Engineering", "Design", "Delivery"] as const;
 
-export default function InsightsPage() {
+export default async function InsightsPage() {
+  const ARTICLES = await getManagedArticles();
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [

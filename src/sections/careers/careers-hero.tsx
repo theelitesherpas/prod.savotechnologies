@@ -1,5 +1,5 @@
 import { Reveal } from "@/components/ui/reveal";
-import { ROLES } from "@/constants/careers";
+import type { Role } from "@/constants/careers";
 import { CodeResultLoop } from "./code-result-loop";
 
 /**
@@ -9,9 +9,9 @@ import { CodeResultLoop } from "./code-result-loop";
  * an animated code→UI loop — careers.js writes itself, then the interface
  * it renders builds in, over and over.
  */
-export function CareersHero() {
+export function CareersHero({ roles }: { roles: Role[] }) {
   const facts = [
-    { v: String(ROLES.length), l: "open roles" },
+    { v: String(roles.length), l: "open roles" },
     { v: "Remote", l: "first · India" },
     { v: "4 steps", l: "to an offer" },
     { v: "<2 days", l: "reply, always" },

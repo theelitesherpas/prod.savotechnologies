@@ -234,6 +234,7 @@ export function AskSavoBar() {
           email,
           projectType: "Something else",
           message: `${emailCapture ?? "Question from the Ask Savo chat"}, sent from the Savo Assistant.`,
+          details: { form: "ask-savo" },
           website: "",
         }),
       });

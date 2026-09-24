@@ -30,6 +30,9 @@ model ProjectEnquiry {
   projectType String    @map("project_type")
   budget      String?
   message     String
+  /// Full structured form payload (careers application details, callback
+  /// country, …) — rendered as its own panel in the admin inbox.
+  data        Json?     @map("form_data")
   /// new | in_progress | closed | archived (app-level enum, see lib/enquiry-status.ts)
   status      String    @default("new")
   adminNotes  String?   @map("admin_notes")
@@ -100,6 +103,29 @@ model AuditLog {
 }
 
 // ────────────────────────────── Content ──────────────────────────────
+
+/// Generic website content items for every admin-managed collection
+/// (insights articles, careers roles, case-study entries, hire roles, AI
+/// services, agent personas). `collection` keys into
+/// src/lib/content-registry.ts; `data` holds the collection-specific
+/// payload validated by the registry's field schema. Constants act as
+/// seed + guaranteed fallback, exactly like services/industries.
+model ContentItem {
+  id         String   @id @default(cuid())
+  /// Registry key, e.g. "insights" | "careers" | "case-studies" | "hire" | "ai-services" | "agents"
+  collection String
+  slug       String
+  title      String
+  data       Json
+  order      Int      @default(0)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([collection, slug])
+  @@index([collection, active, order])
+  @@map("content_items")
+}
 
 /// Website services, managed in the admin panel; seeds come from
 /// src/constants (which also act as the fallback when the DB is empty).

@@ -28,7 +28,8 @@ export const ROLE_TITLES = [
 export type RoleTitle = (typeof ROLE_TITLES)[number];
 
 export type Role = {
-  title: RoleTitle;
+  /** Free-form — managed roles come from the admin panel; ROLE_TITLES is the coded baseline. */
+  title: string;
   /** Short tech/craft track, e.g. "React · Next.js". */
   track: string;
   cat: RoleCategory;

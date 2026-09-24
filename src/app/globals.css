@@ -548,3 +548,119 @@ textarea.field {
   resize: vertical;
   min-height: 6.5rem;
 }
+
+/* ============================================================
+   ADMIN — Operations Console (NextAdmin-style operations theme)
+   Light dashboard skin on its own token scope: white rounded cards
+   with soft shadows over a cool-gray canvas, pill badges, vermilion
+   primary. Scoped under .chapter-admin so public tokens are untouched.
+   ============================================================ */
+
+.chapter-admin {
+  --background: #f6f7f9;
+  --foreground: #0f1728;
+  --surface: #ffffff;
+  --surface-secondary: #f2f4f7;
+  --muted: #667085;
+  --border: #e4e7ec;
+  --accent: #d9480f;
+  --accent-hover: #b23a09;
+  --on-accent: #ffffff;
+  --success: #067647;
+  --warning: #b54708;
+  --error: #b42318;
+}
+
+/* Canvas bleeds correctly on overscroll when the admin is on screen */
+body:has(.chapter-admin) {
+  background: #f6f7f9;
+}
+
+.adm-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+
+/* Card — the standard container: white, 12px radius, hairline + soft shadow */
+.adm-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.05);
+}
+
+.adm-input,
+.adm-textarea,
+.adm-select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid rgb(16 24 40 / 0.16);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--foreground);
+  transition: border-color 0.2s var(--ease-out-expo), box-shadow 0.2s var(--ease-out-expo);
+}
+.adm-input::placeholder,
+.adm-textarea::placeholder {
+  color: rgb(16 24 40 / 0.35);
+}
+.adm-input:hover,
+.adm-textarea:hover,
+.adm-select:hover {
+  border-color: rgb(16 24 40 / 0.32);
+}
+.adm-input:focus-visible,
+.adm-textarea:focus-visible,
+.adm-select:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 14%, transparent);
+}
+.adm-textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+.adm-select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 2rem;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 15px) 55%, calc(100% - 10px) 55%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+
+/* Mono-slug control — auto-derived from the title, editable */
+.adm-input[data-slug="auto"] {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.adm-hairline-table tbody tr {
+  transition: background-color 0.15s var(--ease-out-expo);
+}
+.adm-hairline-table tbody tr:hover {
+  background: color-mix(in oklab, var(--foreground) 3%, transparent);
+}
+
+/* Sidebar scroll rail */
+.adm-rail {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(16 24 40 / 0.2) transparent;
+}
+.adm-rail::-webkit-scrollbar {
+  width: 8px;
+}
+.adm-rail::-webkit-scrollbar-thumb {
+  background: rgb(16 24 40 / 0.2);
+  border-radius: 99px;
+  border: 2px solid var(--surface);
+}

@@ -86,6 +86,17 @@ export async function updateIndustryAction(formData: FormData): Promise<void> {
   redirect(`/admin/industries/${id}?saved=1`);
 }
 
+export async function toggleIndustryActiveAction(formData: FormData): Promise<void> {
+  const user = await requireAdmin();
+  const id = z.string().min(10).max(32).parse(formData.get("id"));
+  const active = formData.get("active") === "true";
+
+  const updated = await prisma!.industry.update({ where: { id }, data: { active } });
+  await audit(user.id, active ? "industry.activate" : "industry.deactivate", "Industry", updated.slug);
+  await revalidateManagedContent();
+  redirect("/admin/industries");
+}
+
 export async function deleteIndustryAction(formData: FormData): Promise<void> {
   const user = await requireAdminRole();
   const id = z.string().min(10).max(32).parse(formData.get("id"));

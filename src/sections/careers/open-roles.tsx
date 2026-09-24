@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
-import { ROLES, ROLE_FILTERS, CAREERS_EMAIL, roleSlug } from "@/constants/careers";
+import { ROLE_FILTERS, CAREERS_EMAIL, roleSlug, type Role } from "@/constants/careers";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  * (services pattern: rotating plus, grid-rows 0fr→1fr panels).
  * "Apply for this role" deep-links the apply page with the role preselected.
  */
-export function OpenRoles() {
+export function OpenRoles({ roles: ROLES }: { roles: Role[] }) {
   const [filter, setFilter] = useState<"all" | "eng" | "design" | "ops">("all");
   const [openTitle, setOpenTitle] = useState<string | null>(ROLES[0]?.title ?? null);
 

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ServiceFields } from "@/components/admin/service-fields";
+import { PageHeader, Notice, Chip, EmptyState } from "@/components/admin/ui";
+import { AdminIcon } from "@/components/admin/icons";
+import { SubmitButton } from "@/components/admin/form";
 import {
   createServiceAction,
   toggleServiceActiveAction,
@@ -21,101 +24,109 @@ export default async function ServicesPage({
     : [];
 
   return (
-    <div>
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="t-h3">Services</h1>
-        <form action={importDefaultServicesAction}>
-          <button
-            type="submit"
-            className="t-sm border border-border px-3 py-1.5 text-foreground/70 transition-colors hover:border-foreground/40 hover:text-foreground"
-          >
-            Import version-1 defaults
-          </button>
-        </form>
-      </div>
-      <p className="t-sm mb-6 text-muted">
-        These power the header Services panel and the future <code>/services/…</code> pages.
-        Until rows exist, the site falls back to the version-1 constants.
-      </p>
+    <>
+      <PageHeader
+        title="Services"
+        description="These power the header Services panel, the homepage services section and the /services/ directory. Until rows exist, the site falls back to the coded defaults."
+        actions={
+          services.length === 0 ? (
+            <form action={importDefaultServicesAction}>
+              <button
+                type="submit"
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-4 text-[0.875rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+              >
+                <AdminIcon name="import" className="h-4 w-4" />
+                Import defaults
+              </button>
+            </form>
+          ) : null
+        }
+      />
 
-      {sp.saved ? <p role="status" className="t-sm mb-4 border border-border bg-foreground/[0.03] px-3 py-2">Service saved.</p> : null}
-      {sp.deleted ? <p role="status" className="t-sm mb-4 border border-border bg-foreground/[0.03] px-3 py-2">Service deleted.</p> : null}
-      {sp.imported ? (
-        <p role="status" className="t-sm mb-4 border border-border bg-foreground/[0.03] px-3 py-2">
-          Imported/refreshed {sp.imported} services from the version-1 defaults.
-        </p>
-      ) : null}
-      {sp.e === "dup" ? (
-        <p role="alert" className="t-sm mb-4 border border-accent/40 bg-accent/5 px-3 py-2 text-accent">
-          That slug is already in use, choose another.
-        </p>
-      ) : null}
+      {sp.saved === "1" ? <Notice>Service saved. Public pages regenerate on the next request.</Notice> : null}
+      {sp.deleted ? <Notice>Service deleted.</Notice> : null}
+      {sp.imported ? <Notice>Imported/refreshed {sp.imported} services from the coded defaults.</Notice> : null}
+      {sp.e === "dup" ? <Notice kind="alert">That slug is already in use, choose another.</Notice> : null}
       {sp.e === "invalid" ? (
-        <p role="alert" className="t-sm mb-4 border border-accent/40 bg-accent/5 px-3 py-2 text-accent">
-          Check the fields, titles need 2–80 characters, slugs lowercase/hyphens.
-        </p>
+        <Notice kind="alert">Check the fields, titles need 2–80 characters, slugs lowercase/hyphens.</Notice>
       ) : null}
 
-      {/* List */}
       {services.length === 0 ? (
-        <div className="mb-8 border border-border bg-background p-8 text-center">
-          <p className="t-h4 mb-2">No services in the database</p>
-          <p className="t-sm mb-4 text-muted">
-            The public site currently renders the version-1 defaults. Import them
-            above to make the collection editable, or add the first row below.
-          </p>
-        </div>
+        <EmptyState
+          title="No services in the database"
+          message="The public site currently renders the coded defaults. Import them above to make the collection editable, or add the first row below."
+        />
       ) : (
-        <ul className="mb-8 divide-y divide-border border border-border">
-          {services.map((s) => (
-            <li key={s.id} className="flex flex-wrap items-center gap-3 bg-background px-4 py-3">
-              <span className="t-caption tnum w-8 text-muted">{String(s.order).padStart(2, "0")}</span>
-              <Link
-                href={`/admin/services/${s.id}`}
-                className="t-sm min-w-0 flex-1 truncate font-medium text-foreground hover:text-accent"
-              >
-                {s.title}
-                <span className="t-caption ml-2 text-muted">/services/{s.slug}/</span>
-              </Link>
-              {s.featured ? (
-                <span className="t-caption border border-foreground/30 px-2 py-0.5 text-foreground/70">FEATURED</span>
-              ) : null}
-              <span className={`t-caption border px-2 py-0.5 ${s.active ? "border-border text-muted" : "border-accent/50 text-accent"}`}>
-                {s.active ? "Active" : "Hidden"}
-              </span>
-              <form action={toggleServiceActiveAction}>
-                <input type="hidden" name="id" value={s.id} />
-                <input type="hidden" name="active" value={s.active ? "false" : "true"} />
-                <button type="submit" className="t-caption border border-border px-2 py-1 text-foreground/70 hover:border-foreground/40">
-                  {s.active ? "Hide" : "Show"}
-                </button>
-              </form>
-              <Link
-                href={`/admin/services/${s.id}`}
-                className="t-caption border border-border px-2 py-1 text-foreground/70 hover:border-foreground/40"
-              >
-                Edit
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="adm-card mb-10 overflow-hidden">
+          <table className="adm-hairline-table w-full text-left">
+            <thead>
+              <tr className="border-b border-border">
+                <th scope="col" className="adm-label w-14 px-4 py-3">Order</th>
+                <th scope="col" className="adm-label px-4 py-3">Service</th>
+                <th scope="col" className="adm-label hidden px-4 py-3 sm:table-cell">Flags</th>
+                <th scope="col" className="adm-label w-56 px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {services.map((s) => (
+                <tr key={s.id}>
+                  <td className="tnum px-4 py-3 font-mono text-[0.6875rem] text-muted">
+                    {String(s.order).padStart(2, "0")}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/admin/services/${s.id}`}
+                      className="block max-w-md truncate text-[0.875rem] font-semibold text-foreground transition-colors hover:text-accent"
+                    >
+                      {s.title}
+                    </Link>
+                    <span className="t-caption font-mono text-muted">/services/{s.slug}/</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      {s.featured ? <Chip tone="accent">Featured</Chip> : null}
+                      {s.active ? <Chip tone="success">Published</Chip> : <Chip tone="warning">Hidden</Chip>}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <form action={toggleServiceActiveAction}>
+                        <input type="hidden" name="id" value={s.id} />
+                        <input type="hidden" name="active" value={s.active ? "false" : "true"} />
+                        <button
+                          type="submit"
+                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
+                        >
+                          <AdminIcon name={s.active ? "eyeOff" : "eye"} className="h-3.5 w-3.5" />
+                          {s.active ? "Hide" : "Show"}
+                        </button>
+                      </form>
+                      <Link
+                        href={`/admin/services/${s.id}`}
+                        className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+                      >
+                        Edit
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* Create */}
-      <details className="border border-border bg-background">
-        <summary className="t-sm cursor-pointer px-4 py-3 font-semibold text-foreground">
-          + Add a service
+      <details className="adm-card overflow-hidden">
+        <summary className="flex cursor-pointer items-center gap-2 px-4 py-3.5 text-[0.875rem] font-semibold text-foreground">
+          <AdminIcon name="plus" className="h-4 w-4 text-accent" />
+          Add a service
         </summary>
-        <form action={createServiceAction} className="space-y-4 border-t border-border p-4">
+        <form action={createServiceAction} className="space-y-5 border-t border-border p-5">
           <ServiceFields />
-          <button
-            type="submit"
-            className="h-10 bg-foreground px-5 text-sm font-semibold text-background transition-colors hover:bg-accent hover:text-on-accent"
-          >
-            Create service
-          </button>
+          <SubmitButton label="Create service" />
         </form>
       </details>
-    </div>
+    </>
   );
 }

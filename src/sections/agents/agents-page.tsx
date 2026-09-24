@@ -3,7 +3,7 @@ import { Section } from "@/components/ui/section";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Reveal } from "@/components/ui/reveal";
 import { Faq } from "@/components/shared/faq";
-import { AGENTS, AGENT_DEPLOY_STEPS, AGENT_FAQS } from "@/constants/agents";
+import { AGENT_DEPLOY_STEPS, AGENT_FAQS, type Agent } from "@/constants/agents";
 import { cn } from "@/lib/utils";
 
 /**
@@ -58,7 +58,7 @@ function AgentMark({ variant }: { variant: number }) {
   );
 }
 
-export function AgentsHero() {
+export function AgentsHero({ agents: AGENTS }: { agents: Agent[] }) {
   return (
     <section aria-labelledby="agents-heading" className="relative overflow-hidden">
       <div className="shell pb-20 pt-[calc(var(--nav-h)+4.5rem)] sm:pb-24">
@@ -146,7 +146,7 @@ export function AgentsHero() {
 /* Agent chapters — hairline accordions with deliverables + tags       */
 /* ------------------------------------------------------------------ */
 
-export function AgentChapters() {
+export function AgentChapters({ agents: AGENTS }: { agents: Agent[] }) {
   const headingId = "fleet-heading";
   return (
     <Section id="fleet" index="The Fleet" labelledBy={headingId}>
@@ -173,7 +173,7 @@ function AgentChapter({
   agent,
   variant,
 }: {
-  agent: (typeof AGENTS)[number];
+  agent: Agent;
   variant: number;
 }) {
   // Static server-rendered chapters (details/summary for progressive

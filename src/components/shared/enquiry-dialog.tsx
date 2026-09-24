@@ -223,7 +223,7 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
       const res = await fetch(withBasePath("/api/enquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify({ ...parsed.data, details: { form: "start-project" } }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;

@@ -5,18 +5,21 @@ import {
   ENQUIRY_STATUSES,
   ENQUIRY_STATUS_META,
   isEnquiryStatus,
-  type EnquiryStatus,
 } from "@/lib/enquiry-status";
+import { PageHeader, Notice, EnquiryStatusChip, Chip, EmptyState } from "@/components/admin/ui";
+import { AdminIcon } from "@/components/admin/icons";
 
 export const metadata: Metadata = { title: "Enquiries" };
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 20;
 
 type SearchParams = {
   status?: string;
   type?: string;
+  q?: string;
   page?: string;
   deleted?: string;
+  e?: string;
 };
 
 export default async function EnquiriesPage({
@@ -27,11 +30,17 @@ export default async function EnquiriesPage({
   const sp = await searchParams;
 
   if (!prisma) {
-    return <p className="t-sm text-muted">Database not configured, set DATABASE_URL.</p>;
+    return (
+      <>
+        <PageHeader title="Enquiries" />
+        <p className="t-sm text-muted">Database not configured, set DATABASE_URL.</p>
+      </>
+    );
   }
 
   const status = sp.status && isEnquiryStatus(sp.status) ? sp.status : undefined;
   const type = sp.type === "Callback" || sp.type === "Project" ? sp.type : undefined;
+  const q = (sp.q ?? "").trim().slice(0, 80);
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
 
   const where = {
@@ -41,6 +50,16 @@ export default async function EnquiriesPage({
       : type === "Project"
         ? { projectType: { not: "Callback" } }
         : {}),
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" as const } },
+            { email: { contains: q, mode: "insensitive" as const } },
+            { company: { contains: q, mode: "insensitive" as const } },
+            { message: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
   };
 
   const [total, items] = await Promise.all([
@@ -57,6 +76,7 @@ export default async function EnquiriesPage({
         company: true,
         projectType: true,
         status: true,
+        source: true,
         message: true,
         createdAt: true,
       },
@@ -70,114 +90,187 @@ export default async function EnquiriesPage({
     const params = new URLSearchParams();
     if (merged.status) params.set("status", merged.status);
     if (merged.type) params.set("type", merged.type);
+    if (merged.q) params.set("q", merged.q);
     if (merged.page && merged.page !== "1") params.set("page", merged.page);
     const s = params.toString();
     return s ? `/admin/enquiries?${s}` : "/admin/enquiries";
   };
 
+  const filterTab = (label: string, href: string, active: boolean, count?: number) => (
+    <Link
+      key={label}
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`inline-flex h-9 items-center gap-2 rounded-lg border px-3.5 text-[0.8125rem] font-semibold transition-colors ${
+        active
+          ? "border-foreground bg-foreground text-background"
+          : "border-border text-muted hover:border-foreground/40 hover:text-foreground"
+      }`}
+    >
+      {label}
+      {typeof count === "number" ? (
+        <span className={`tnum font-mono text-[0.6875rem] ${active ? "opacity-70" : "opacity-60"}`}>{count}</span>
+      ) : null}
+    </Link>
+  );
+
+  const statusCounts = await prisma.projectEnquiry.groupBy({ by: ["status"], _count: { _all: true } });
+  const sc = (s: string) => statusCounts.find((r) => r.status === s)?._count._all ?? 0;
+
   return (
-    <div>
-      <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
-        <div>
-          <h1 className="t-h3">Enquiry inbox</h1>
-          <p className="t-sm mt-1 text-muted">
-            {total} record{total === 1 ? "" : "s"}
-            {status ? ` · ${ENQUIRY_STATUS_META[status as EnquiryStatus].label.toLowerCase()}` : " · excluding archived"}
-            {type ? ` · ${type.toLowerCase()}s` : ""}
-          </p>
-        </div>
-        {sp.deleted ? (
-          <p role="status" className="t-sm border border-border bg-foreground/[0.03] px-3 py-1.5 text-foreground/80">
-            Enquiry deleted.
-          </p>
-        ) : null}
-      </div>
+    <>
+      <PageHeader
+        title="Enquiries"
+        description={`Every public form — Start a project, Contact, Careers applications and callbacks — lands in this one pipeline. ${total} shown for the current filter.`}
+      />
+
+      {sp.deleted ? <Notice>Enquiry deleted.</Notice> : null}
+      {sp.e === "notfound" ? <Notice kind="alert">That enquiry no longer exists.</Notice> : null}
 
       {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-1.5">
-        <Link
-          href={qs({ status: undefined, page: undefined })}
-          className={`t-sm border px-3 py-1.5 transition-colors ${!status ? "border-foreground bg-foreground text-background" : "border-border text-foreground/70 hover:border-foreground/40"}`}
-        >
-          Active
-        </Link>
-        {ENQUIRY_STATUSES.map((s) => (
-          <Link
-            key={s}
-            href={qs({ status: s, page: undefined })}
-            className={`t-sm border px-3 py-1.5 transition-colors ${status === s ? "border-foreground bg-foreground text-background" : "border-border text-foreground/70 hover:border-foreground/40"}`}
-          >
-            {ENQUIRY_STATUS_META[s].label}
-          </Link>
-        ))}
-        <span className="mx-2 hidden w-px bg-border sm:block" />
-        {["Project", "Callback"].map((t) => (
-          <Link
-            key={t}
-            href={qs({ type: type === t ? undefined : t, page: undefined })}
-            className={`t-sm border px-3 py-1.5 transition-colors ${type === t ? "border-accent text-accent" : "border-border text-foreground/70 hover:border-foreground/40"}`}
-          >
-            {t === "Project" ? "Projects only" : "Callbacks only"}
-          </Link>
-        ))}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {filterTab("Inbox", qs({ status: undefined, page: "1" }), !status)}
+        {ENQUIRY_STATUSES.map((s) =>
+          filterTab(
+            ENQUIRY_STATUS_META[s].label,
+            qs({ status: s, page: "1" }),
+            status === s,
+            s === "archived" ? undefined : sc(s),
+          ),
+        )}
+        <span aria-hidden="true" className="mx-1 hidden h-6 w-px bg-border sm:block" />
+        {filterTab("Projects", qs({ type: "Project", page: "1" }), type === "Project")}
+        {filterTab("Callbacks", qs({ type: "Callback", page: "1" }), type === "Callback")}
+        {type ? filterTab("All types", qs({ type: undefined, page: "1" }), false) : null}
       </div>
 
-      {items.length === 0 ? (
-        <div className="border border-border bg-background p-8 text-center">
-          <p className="t-h4 mb-2">Inbox zero</p>
-          <p className="t-sm text-muted">
-            No enquiries match this filter. New leads arrive from the site&apos;s
-            enquiry drawer and footer callback form.
-          </p>
+      {/* Search */}
+      <form action="/admin/enquiries" method="get" className="mb-6 flex max-w-md items-center gap-2">
+        {status ? <input type="hidden" name="status" value={status} /> : null}
+        <div className="relative min-w-0 flex-1">
+          <AdminIcon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            maxLength={80}
+            placeholder="Search name, email, company, message…"
+            aria-label="Search enquiries"
+            className="adm-input pl-9"
+          />
         </div>
+        <button
+          type="submit"
+          className="inline-flex h-[38px] items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+        >
+          Search
+        </button>
+        {q ? (
+          <Link href={qs({ q: undefined, page: "1" })} className="t-caption link-underline text-muted">
+            Clear
+          </Link>
+        ) : null}
+      </form>
+
+      {items.length === 0 ? (
+        <EmptyState
+          title="No enquiries match"
+          message={
+            q
+              ? `Nothing matches “${q}” under the current filter. Try a shorter search, or clear the filters.`
+              : "No enquiries here yet. Every form on the site feeds this inbox the moment it is submitted."
+          }
+          actions={
+            <Link
+              href="/admin/enquiries"
+              className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-[0.875rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+            >
+              Reset filters
+            </Link>
+          }
+        />
       ) : (
-        <ul className="border border-border divide-y divide-border">
-          {items.map((enq) => (
-            <li key={enq.id}>
-              <Link
-                href={`/admin/enquiries/${enq.id}`}
-                className="flex flex-wrap items-center gap-x-4 gap-y-1.5 bg-background px-4 py-3.5 transition-colors hover:bg-foreground/[0.03]"
-              >
-                <span className="t-sm min-w-0 flex-1 truncate font-medium text-foreground">
-                  {enq.name}
-                  {enq.company ? <span className="text-muted"> · {enq.company}</span> : null}
-                </span>
-                <span className="t-caption tnum text-muted">
-                  {enq.createdAt.toISOString().slice(0, 16).replace("T", " · ")}
-                </span>
-                <span
-                  className={`t-caption border px-2 py-0.5 ${
-                    enq.status === "new" ? "border-accent/50 text-accent" : "border-border text-muted"
-                  }`}
-                >
-                  {isEnquiryStatus(enq.status) ? ENQUIRY_STATUS_META[enq.status].label : enq.status}
-                </span>
-                <span className="t-caption border border-border px-2 py-0.5 text-muted">
-                  {enq.projectType}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="adm-card overflow-hidden">
+          <table className="adm-hairline-table w-full text-left">
+            <thead>
+              <tr className="border-b border-border">
+                <th scope="col" className="adm-label px-4 py-3">Lead</th>
+                <th scope="col" className="adm-label hidden px-4 py-3 lg:table-cell">Type</th>
+                <th scope="col" className="adm-label hidden px-4 py-3 md:table-cell">Source</th>
+                <th scope="col" className="adm-label hidden px-4 py-3 sm:table-cell">Received</th>
+                <th scope="col" className="adm-label px-4 py-3">Status</th>
+                <th scope="col" className="adm-label px-4 py-3 text-right"><span className="sr-only">Open</span></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {items.map((enq) => (
+                <tr key={enq.id}>
+                  <td className="px-4 py-3">
+                    <Link href={`/admin/enquiries/${enq.id}`} className="group block max-w-sm">
+                      <span className="block truncate text-[0.875rem] font-semibold text-foreground group-hover:text-accent">
+                        {enq.name}
+                      </span>
+                      <span className="t-caption block truncate text-muted">
+                        {enq.email ?? enq.company ?? "—"}
+                      </span>
+                      <span className="t-caption mt-0.5 block truncate text-muted/80 lg:hidden">
+                        {enq.projectType}
+                      </span>
+                    </Link>
+                  </td>
+                  <td className="hidden px-4 py-3 lg:table-cell">
+                    <Chip tone="muted">{enq.projectType}</Chip>
+                  </td>
+                  <td className="hidden px-4 py-3 font-mono text-[0.6875rem] text-muted md:table-cell">
+                    {enq.source}
+                  </td>
+                  <td className="tnum hidden px-4 py-3 font-mono text-[0.6875rem] text-muted sm:table-cell">
+                    {enq.createdAt.toISOString().replace("T", " ").slice(0, 16)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <EnquiryStatusChip status={enq.status} />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Link
+                      href={`/admin/enquiries/${enq.id}`}
+                      className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-[0.75rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+                    >
+                      Open
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
+      {/* Pagination */}
       {pages > 1 ? (
-        <nav aria-label="Pagination" className="mt-6 flex items-center gap-3">
-          {page > 1 ? (
-            <Link href={qs({ page: String(page - 1) })} className="t-sm border border-border px-3 py-1.5 hover:border-foreground/40">
-              ← Previous
-            </Link>
-          ) : null}
-          <span className="t-caption tnum text-muted">
-            Page {page} / {pages}
-          </span>
-          {page < pages ? (
-            <Link href={qs({ page: String(page + 1) })} className="t-sm border border-border px-3 py-1.5 hover:border-foreground/40">
-              Next →
-            </Link>
-          ) : null}
+        <nav aria-label="Pagination" className="mt-6 flex items-center justify-between">
+          <p className="t-caption tnum text-muted">
+            Page {page} of {pages}
+          </p>
+          <div className="flex gap-2">
+            {page > 1 ? (
+              <Link
+                href={qs({ page: String(page - 1) })}
+                className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
+              >
+                Previous
+              </Link>
+            ) : null}
+            {page < pages ? (
+              <Link
+                href={qs({ page: String(page + 1) })}
+                className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
+              >
+                Next
+              </Link>
+            ) : null}
+          </div>
         </nav>
       ) : null}
-    </div>
+    </>
   );
 }

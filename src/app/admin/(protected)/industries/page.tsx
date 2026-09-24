@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { IndustryFields } from "@/components/admin/industry-fields";
-import { createIndustryAction, importDefaultIndustriesAction } from "./actions";
+import { PageHeader, Notice, Chip, EmptyState } from "@/components/admin/ui";
+import { AdminIcon } from "@/components/admin/icons";
+import { SubmitButton } from "@/components/admin/form";
+import {
+  createIndustryAction,
+  toggleIndustryActiveAction,
+  importDefaultIndustriesAction,
+} from "./actions";
 
 export const metadata: Metadata = { title: "Industries" };
 
@@ -17,82 +24,106 @@ export default async function IndustriesPage({
     : [];
 
   return (
-    <div>
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="t-h3">Industries</h1>
-        <form action={importDefaultIndustriesAction}>
-          <button
-            type="submit"
-            className="t-sm border border-border px-3 py-1.5 text-foreground/70 transition-colors hover:border-foreground/40 hover:text-foreground"
-          >
-            Import version-1 defaults
-          </button>
-        </form>
-      </div>
-      <p className="t-sm mb-6 text-muted">
-        These power the header Industries panel and the future <code>/industries/…</code> pages.
-      </p>
+    <>
+      <PageHeader
+        title="Industries"
+        description="These power the header Industries panel, the homepage industries section and the /industries/ atlas. Until rows exist, the site falls back to the coded defaults."
+        actions={
+          industries.length === 0 ? (
+            <form action={importDefaultIndustriesAction}>
+              <button
+                type="submit"
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-4 text-[0.875rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+              >
+                <AdminIcon name="import" className="h-4 w-4" />
+                Import defaults
+              </button>
+            </form>
+          ) : null
+        }
+      />
 
-      {sp.saved ? <p role="status" className="t-sm mb-4 border border-border bg-foreground/[0.03] px-3 py-2">Saved.</p> : null}
-      {sp.deleted ? <p role="status" className="t-sm mb-4 border border-border bg-foreground/[0.03] px-3 py-2">Industry deleted.</p> : null}
-      {sp.imported ? (
-        <p role="status" className="t-sm mb-4 border border-border bg-foreground/[0.03] px-3 py-2">
-          Imported/refreshed {sp.imported} industries from the version-1 defaults.
-        </p>
-      ) : null}
-      {sp.e ? (
-        <p role="alert" className="t-sm mb-4 border border-accent/40 bg-accent/5 px-3 py-2 text-accent">
-          {sp.e === "dup" ? "That slug is already in use." : "Check the fields, slugs are lowercase/hyphens."}
-        </p>
+      {sp.saved === "1" ? <Notice>Industry saved. Public pages regenerate on the next request.</Notice> : null}
+      {sp.deleted ? <Notice>Industry deleted.</Notice> : null}
+      {sp.imported ? <Notice>Imported/refreshed {sp.imported} industries from the coded defaults.</Notice> : null}
+      {sp.e === "dup" ? <Notice kind="alert">That slug is already in use, choose another.</Notice> : null}
+      {sp.e === "invalid" ? (
+        <Notice kind="alert">Check the fields, titles need 2–80 characters, slugs lowercase/hyphens.</Notice>
       ) : null}
 
       {industries.length === 0 ? (
-        <div className="mb-8 border border-border bg-background p-8 text-center">
-          <p className="t-h4 mb-2">No industries in the database</p>
-          <p className="t-sm text-muted">
-            The public site currently renders the version-1 defaults. Import them above to edit.
-          </p>
-        </div>
+        <EmptyState
+          title="No industries in the database"
+          message="The public site currently renders the coded defaults. Import them above to make the collection editable, or add the first row below."
+        />
       ) : (
-        <ul className="mb-8 divide-y divide-border border border-border">
-          {industries.map((ind) => (
-            <li key={ind.id} className="flex flex-wrap items-center gap-3 bg-background px-4 py-3">
-              <span className="t-caption tnum w-8 text-muted">{String(ind.order).padStart(2, "0")}</span>
-              <Link
-                href={`/admin/industries/${ind.id}`}
-                className="t-sm min-w-0 flex-1 truncate font-medium text-foreground hover:text-accent"
-              >
-                {ind.title}
-                <span className="t-caption ml-2 text-muted">/industries/{ind.slug}/</span>
-              </Link>
-              <span className={`t-caption border px-2 py-0.5 ${ind.active ? "border-border text-muted" : "border-accent/50 text-accent"}`}>
-                {ind.active ? "Active" : "Hidden"}
-              </span>
-              <Link
-                href={`/admin/industries/${ind.id}`}
-                className="t-caption border border-border px-2 py-1 text-foreground/70 hover:border-foreground/40"
-              >
-                Edit
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="adm-card mb-10 overflow-hidden">
+          <table className="adm-hairline-table w-full text-left">
+            <thead>
+              <tr className="border-b border-border">
+                <th scope="col" className="adm-label w-14 px-4 py-3">Order</th>
+                <th scope="col" className="adm-label px-4 py-3">Industry</th>
+                <th scope="col" className="adm-label w-32 px-4 py-3">Status</th>
+                <th scope="col" className="adm-label w-56 px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {industries.map((s) => (
+                <tr key={s.id}>
+                  <td className="tnum px-4 py-3 font-mono text-[0.6875rem] text-muted">
+                    {String(s.order).padStart(2, "0")}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/admin/industries/${s.id}`}
+                      className="block max-w-md truncate text-[0.875rem] font-semibold text-foreground transition-colors hover:text-accent"
+                    >
+                      {s.title}
+                    </Link>
+                    <span className="t-caption font-mono text-muted">/industries/{s.slug}/</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {s.active ? <Chip tone="success">Published</Chip> : <Chip tone="warning">Hidden</Chip>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <form action={toggleIndustryActiveAction}>
+                        <input type="hidden" name="id" value={s.id} />
+                        <input type="hidden" name="active" value={s.active ? "false" : "true"} />
+                        <button
+                          type="submit"
+                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
+                        >
+                          <AdminIcon name={s.active ? "eyeOff" : "eye"} className="h-3.5 w-3.5" />
+                          {s.active ? "Hide" : "Show"}
+                        </button>
+                      </form>
+                      <Link
+                        href={`/admin/industries/${s.id}`}
+                        className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+                      >
+                        Edit
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <details className="border border-border bg-background">
-        <summary className="t-sm cursor-pointer px-4 py-3 font-semibold text-foreground">
-          + Add an industry
+      {/* Create */}
+      <details className="adm-card overflow-hidden">
+        <summary className="flex cursor-pointer items-center gap-2 px-4 py-3.5 text-[0.875rem] font-semibold text-foreground">
+          <AdminIcon name="plus" className="h-4 w-4 text-accent" />
+          Add an industry
         </summary>
-        <form action={createIndustryAction} className="space-y-4 border-t border-border p-4">
+        <form action={createIndustryAction} className="space-y-5 border-t border-border p-5">
           <IndustryFields />
-          <button
-            type="submit"
-            className="h-10 bg-foreground px-5 text-sm font-semibold text-background transition-colors hover:bg-accent hover:text-on-accent"
-          >
-            Create industry
-          </button>
+          <SubmitButton label="Create industry" />
         </form>
       </details>
-    </div>
+    </>
   );
 }

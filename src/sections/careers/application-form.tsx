@@ -6,10 +6,10 @@ import {
   EXPERIENCE_OPTIONS,
   GENERAL_APPLICATION,
   NOTICE_OPTIONS,
-  ROLES,
   SKILLS,
   roleSlug,
 } from "@/constants/careers";
+import type { Role } from "@/constants/careers";
 import {
   enquirySchema,
   flattenFieldErrors,
@@ -28,7 +28,7 @@ type Status = "idle" | "submitting" | "success" | "error";
  * Details the inbox schema has no column for (city, skills, links…) are
  * composed into the message, exactly like version 1.
  */
-export function ApplicationForm({ initialRole }: { initialRole?: string }) {
+export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: string; roles: Role[] }) {
   const roles: readonly string[] = [...ROLES.map((r) => r.title), GENERAL_APPLICATION];
   const [role, setRole] = useState<string>(
     initialRole && roles.includes(initialRole) ? initialRole : (ROLES[0]?.title ?? GENERAL_APPLICATION),
@@ -107,7 +107,22 @@ export function ApplicationForm({ initialRole }: { initialRole?: string }) {
       const res = await fetch(withBasePath("/api/enquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...parsed.data, source: `careers:${roleSlug(role)}` }),
+        body: JSON.stringify({
+          ...parsed.data,
+          source: `careers:${roleSlug(role)}`,
+          // Structured payload — rendered as its own panel in the admin inbox.
+          details: {
+            form: "careers",
+            role,
+            city: data.city?.trim() ?? "",
+            experience: data.experience ?? "",
+            notice: data.notice ?? "",
+            expectedCtc: data.ctc ?? "",
+            skills,
+            links: data.links?.trim() ?? "",
+            resume: data.resume?.trim() ?? "",
+          },
+        }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;

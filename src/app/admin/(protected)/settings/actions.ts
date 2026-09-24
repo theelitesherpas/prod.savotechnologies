@@ -20,6 +20,7 @@ const settingsSchema = z.object({
     .min(7)
     .max(24)
     .regex(/^[+0-9 ()-]+$/, "Digits, spaces and + ( ) - only."),
+  announcement: z.string().trim().max(180).optional().or(z.literal("")),
 });
 
 export async function saveSettingsAction(formData: FormData): Promise<void> {
@@ -27,6 +28,7 @@ export async function saveSettingsAction(formData: FormData): Promise<void> {
   const parsed = settingsSchema.safeParse({
     contactEmail: formData.get("contactEmail"),
     contactPhone: formData.get("contactPhone"),
+    announcement: formData.get("announcement") ?? "",
   });
 
   if (!parsed.success) {
@@ -34,7 +36,7 @@ export async function saveSettingsAction(formData: FormData): Promise<void> {
     redirect(`/admin/settings?e=${encodeURIComponent(issue?.message ?? "invalid")}`);
   }
 
-  const { contactEmail, contactPhone } = parsed.data;
+  const { contactEmail, contactPhone, announcement } = parsed.data;
 
   await prisma!.$transaction([
     prisma!.siteSetting.upsert({
@@ -47,10 +49,16 @@ export async function saveSettingsAction(formData: FormData): Promise<void> {
       create: { key: "contact_phone", value: contactPhone },
       update: { value: contactPhone },
     }),
+    prisma!.siteSetting.upsert({
+      where: { key: "announcement" },
+      create: { key: "announcement", value: announcement || "" },
+      update: { value: announcement || "" },
+    }),
   ]);
 
   await audit(user.id, "settings.update", "SiteSetting", undefined, {
     email: contactEmail,
+    announcement: announcement ? "set" : "cleared",
   });
   await revalidateManagedContent();
   redirect("/admin/settings?saved=1");

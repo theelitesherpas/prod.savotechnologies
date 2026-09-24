@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/env";
-import { CASE_DISCIPLINES } from "@/constants/case-studies";
+import { getManagedCaseDisciplines } from "@/lib/content-items";
 import { CaseStudiesHero } from "@/sections/case-studies/case-studies-hero";
 import { DisciplineSection } from "@/sections/case-studies/discipline-sections";
 import { EditorialPolicy } from "@/sections/case-studies/editorial-policy";
@@ -23,7 +23,8 @@ export const metadata: Metadata = {
   openGraph: openGraphFor({ title: "Case Studies | Savo Technologies", description: DESCRIPTION, url: "/case-studies" }),
 };
 
-export default function CaseStudiesPage() {
+export default async function CaseStudiesPage() {
+  const CASE_DISCIPLINES = await getManagedCaseDisciplines();
   // Mirrors visible content: the page exists, its disciplines and its
   // editorial policy. No client entities are asserted while entries are
   // in preparation.

@@ -97,7 +97,12 @@ Prisma → `audit()` → `revalidatePath("/", "layout")` → redirect with statu
 
 ## Data model (prisma/schema.prisma)
 
-- `ProjectEnquiry` — enquiries + callbacks, status workflow, admin notes,
+- `ContentItem` — generic admin-managed website content (insights,
+  careers, case studies, hire, AI services, agents): collection key +
+  slug + JSONB payload validated by `src/lib/content-registry.ts`;
+  constants seed + fallback exactly like services/industries
+- `ProjectEnquiry` — enquiries + callbacks (incl. structured `form_data`
+  JSON from every public form), status workflow, admin notes,
   hashed IP. Indexes: created_at, status, project_type.
 - `AdminUser` / `AdminSession` / `AuditLog` — operators, revocable hashed
   sessions, append-only trail (FK indexes; sessions cascade).

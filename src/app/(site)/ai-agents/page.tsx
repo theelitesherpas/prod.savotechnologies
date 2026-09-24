@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/env";
 import { DetailCta } from "@/components/shared/detail-cta";
-import { AGENTS, AGENT_FAQS } from "@/constants/agents";
+import { AGENT_FAQS } from "@/constants/agents";
+import { getManagedAgents } from "@/lib/content-items";
 import { AgentsHero, AgentChapters, AgentDeploy, AgentsFaqs } from "@/sections/agents/agents-page";
 import { openGraphFor } from "@/lib/seo";
 
@@ -19,7 +20,8 @@ export const metadata: Metadata = {
   openGraph: openGraphFor({ title: "AI Agents | Savo Technologies", description: DESCRIPTION, url: "/ai-agents" }),
 };
 
-export default function AgentsPage() {
+export default async function AgentsPage() {
+  const AGENTS = await getManagedAgents();
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -62,8 +64,8 @@ export default function AgentsPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <AgentsHero />
-      <AgentChapters />
+      <AgentsHero agents={AGENTS} />
+      <AgentChapters agents={AGENTS} />
       <AgentDeploy />
       <AgentsFaqs />
 

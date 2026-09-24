@@ -6,7 +6,8 @@ import { absoluteUrl } from "@/lib/env";
 import { openGraphFor } from "@/lib/seo";
 import { Reveal } from "@/components/ui/reveal";
 import { DetailCta } from "@/components/shared/detail-cta";
-import { ARTICLES, getArticle } from "@/constants/insights";
+import { ARTICLES } from "@/constants/insights";
+import { getManagedArticles } from "@/lib/content-items";
 import { withBasePath } from "@/lib/utils";
 
 /**
@@ -24,7 +25,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticle(slug);
+  const article = (await getManagedArticles()).find((a) => a.slug === slug);
   if (!article) return {};
   return {
     title: article.title,
@@ -48,10 +49,11 @@ export default async function ArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const article = getArticle(slug);
+  const all = await getManagedArticles();
+  const article = all.find((a) => a.slug === slug);
   if (!article) notFound();
 
-  const others = ARTICLES.filter((a) => a.slug !== slug).slice(0, 2);
+  const others = all.filter((a) => a.slug !== slug).slice(0, 2);
 
   const jsonLd = {
     "@context": "https://schema.org",

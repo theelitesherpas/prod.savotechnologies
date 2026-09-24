@@ -1,6 +1,6 @@
 /**
- * Shared service create/edit fields — plain server-rendered form markup,
- * works without client JavaScript.
+ * Shared service create/edit fields — plain server-rendered form markup
+ * in the operations-console control language (boxed adm-* controls).
  */
 export function ServiceFields({
   service,
@@ -17,9 +17,9 @@ export function ServiceFields({
   const key = service?.slug ?? "new";
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor={`title-${key}`} className="t-label mb-1 block text-muted">
+          <label htmlFor={`title-${key}`} className="adm-label mb-1.5 block">
             Title
           </label>
           <input
@@ -29,11 +29,11 @@ export function ServiceFields({
             minLength={2}
             maxLength={80}
             defaultValue={service?.title}
-            className="h-10 w-full border border-border bg-transparent px-3 text-foreground outline-none focus:border-accent"
+            className="adm-input"
           />
         </div>
         <div>
-          <label htmlFor={`slug-${key}`} className="t-label mb-1 block text-muted">
+          <label htmlFor={`slug-${key}`} className="adm-label mb-1.5 block">
             Slug (/services/…/)
           </label>
           <input
@@ -44,13 +44,13 @@ export function ServiceFields({
             minLength={2}
             maxLength={80}
             defaultValue={service?.slug}
-            className="h-10 w-full border border-border bg-transparent px-3 text-foreground outline-none focus:border-accent"
+            className="adm-input font-mono text-[0.8125rem]"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor={`summary-${key}`} className="t-label mb-1 block text-muted">
+        <label htmlFor={`summary-${key}`} className="adm-label mb-1.5 block">
           Summary (optional, for the future services index)
         </label>
         <textarea
@@ -59,13 +59,13 @@ export function ServiceFields({
           rows={2}
           maxLength={300}
           defaultValue={service?.summary}
-          className="w-full border border-border bg-transparent p-3 text-foreground outline-none focus:border-accent"
+          className="adm-textarea"
         />
       </div>
 
-      <div className="flex flex-wrap items-end gap-6">
+      <div className="flex flex-wrap items-end gap-8">
         <div>
-          <label htmlFor={`order-${key}`} className="t-label mb-1 block text-muted">
+          <label htmlFor={`order-${key}`} className="adm-label mb-1.5 block">
             Order
           </label>
           <input
@@ -75,26 +75,26 @@ export function ServiceFields({
             min={0}
             max={999}
             defaultValue={service?.order ?? 0}
-            className="h-10 w-20 border border-border bg-transparent px-3 text-foreground outline-none focus:border-accent"
+            className="adm-input h-10 w-24"
           />
         </div>
-        <label className="t-sm flex items-center gap-2 text-foreground/80">
+        <label className="flex cursor-pointer items-center gap-2 pb-2 text-[0.875rem] font-medium text-foreground">
           <input
             type="checkbox"
             name="featured"
-            defaultChecked={service?.featured ?? false}
-            className="h-4 w-4 accent-[#e8490f]"
+            defaultChecked={service?.featured}
+            className="h-4 w-4 accent-[var(--accent)]"
           />
           Featured
         </label>
-        <label className="t-sm flex items-center gap-2 text-foreground/80">
+        <label className="flex cursor-pointer items-center gap-2 pb-2 text-[0.875rem] font-medium text-foreground">
           <input
             type="checkbox"
             name="active"
-            defaultChecked={service?.active ?? true}
-            className="h-4 w-4 accent-[#e8490f]"
+            defaultChecked={service ? service.active : true}
+            className="h-4 w-4 accent-[var(--accent)]"
           />
-          Active (visible on site)
+          Published
         </label>
       </div>
     </>

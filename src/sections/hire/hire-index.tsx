@@ -3,7 +3,7 @@ import { Section } from "@/components/ui/section";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Reveal } from "@/components/ui/reveal";
 import { ServiceIcon } from "@/components/shared/service-icon";
-import { HIRE_ROLES, HIRE_MODELS, HIRE_FACTS } from "@/constants/hire";
+import { HIRE_MODELS, HIRE_FACTS } from "@/constants/hire";
 import type { HireRole } from "@/constants/hire";
 import { CrewBand } from "./crew-band";
 
@@ -74,7 +74,7 @@ export function HireHero() {
 /* Roles directory — atlas grammar rows with rates                     */
 /* ================================================================== */
 
-export function HireDirectory() {
+export function HireDirectory({ roles: HIRE_ROLES }: { roles: HireRole[] }) {
   const headingId = "roles-heading";
   return (
     <Section id="roles" index="The Roles" labelledBy={headingId}>
@@ -174,9 +174,9 @@ export function HireModels() {
 /* How hiring runs — paper steps                                       */
 /* ================================================================== */
 
-export function HireSteps() {
+export function HireSteps({ roles: HIRE_ROLES }: { roles: HireRole[] }) {
   const headingId = "steps-heading";
-  const steps = HIRE_ROLES[0].process;
+  const steps = HIRE_ROLES[0]?.process ?? [];
   return (
     <Section index="How Hiring Runs" labelledBy={headingId}>
       <SectionHeader

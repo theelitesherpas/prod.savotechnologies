@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getAdminUser } from "@/lib/auth";
-import { ENQUIRY_STATUSES, ENQUIRY_STATUS_META, isEnquiryStatus } from "@/lib/enquiry-status";
+import { ENQUIRY_STATUSES, ENQUIRY_STATUS_META } from "@/lib/enquiry-status";
+import {
+  BackLink,
+  PageHeader,
+  Notice,
+  Chip,
+  EnquiryStatusChip,
+  DangerZone,
+} from "@/components/admin/ui";
+import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import {
   updateEnquiryStatusAction,
   saveEnquiryNotesAction,
@@ -11,6 +19,60 @@ import {
 } from "../actions";
 
 export const metadata: Metadata = { title: "Enquiry" };
+
+const FIELD_LABELS: Record<string, string> = {
+  form: "Form",
+  role: "Role applied for",
+  city: "Current city",
+  experience: "Experience",
+  notice: "Notice period",
+  expectedCtc: "Expected CTC",
+  skills: "Key skills",
+  links: "Portfolio / GitHub",
+  resume: "Resume link",
+  country: "Country",
+  topic: "Topic",
+};
+
+/** Render the structured form payload as a labelled data grid. */
+function FormDataPanel({ data }: { data: Record<string, unknown> }) {
+  const entries = Object.entries(data).filter(([, v]) => {
+    if (v === null || v === undefined || v === "") return false;
+    if (Array.isArray(v)) return v.length > 0;
+    return true;
+  });
+  if (entries.length === 0) return null;
+
+  return (
+    <section aria-labelledby="formdata-heading" className="mb-8">
+      <h2 id="formdata-heading" className="adm-label mb-2.5">
+        Form submission · complete data
+      </h2>
+      <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2">
+        {entries.map(([key, value]) => (
+          <div key={key} className="bg-surface px-4 py-3">
+            <dt className="adm-label mb-1">{FIELD_LABELS[key] ?? key}</dt>
+            <dd className="t-sm break-words text-foreground">
+              {Array.isArray(value) ? (
+                <span className="flex flex-wrap gap-1.5">
+                  {(value as unknown[]).map((item, i) => (
+                    <Chip key={i} tone="default">
+                      {String(item)}
+                    </Chip>
+                  ))}
+                </span>
+              ) : typeof value === "object" ? (
+                <code className="font-mono text-[0.75rem]">{JSON.stringify(value)}</code>
+              ) : (
+                String(value)
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
 
 export default async function EnquiryDetailPage({
   params,
@@ -20,145 +82,173 @@ export default async function EnquiryDetailPage({
   searchParams: Promise<{ saved?: string; confirm?: string }>;
 }) {
   const { id } = await params;
-  const { saved, confirm } = await searchParams;
+  const { saved } = await searchParams;
   const [user, enquiry] = await Promise.all([
     getAdminUser(),
-    prisma
-      ? prisma.projectEnquiry.findUnique({ where: { id } })
-      : Promise.resolve(null),
+    prisma ? prisma.projectEnquiry.findUnique({ where: { id } }) : Promise.resolve(null),
   ]);
 
   if (!enquiry) notFound();
 
+  const formData =
+    enquiry.data && typeof enquiry.data === "object" ? (enquiry.data as Record<string, unknown>) : null;
+  const mailto = `mailto:${enquiry.email ?? ""}?subject=${encodeURIComponent(
+    `Re: your ${enquiry.projectType.toLowerCase()} enquiry — Savo Technologies`,
+  )}`;
+
   return (
-    <div>
-      <Link href="/admin/enquiries" className="t-sm link-underline mb-6 inline-block text-muted">
-        ← Back to inbox
-      </Link>
+    <>
+      <BackLink href="/admin/enquiries" label="Back to inbox" />
+      <PageHeader
+        title={enquiry.name}
+        description={`Received ${enquiry.createdAt.toISOString().replace("T", " · ").slice(0, 17)}`}
+        actions={
+          <>
+            <EnquiryStatusChip status={enquiry.status} />
+            {enquiry.email ? (
+              <a
+                href={mailto}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-4 text-[0.875rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+              >
+                Reply by email
+              </a>
+            ) : null}
+          </>
+        }
+      />
 
-      {saved ? (
-        <p role="status" className="t-sm mb-4 border border-border bg-foreground/[0.03] px-3 py-2 text-foreground/80">
-          Notes saved.
-        </p>
-      ) : null}
+      {saved ? <Notice>Notes saved.</Notice> : null}
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-10 lg:grid-cols-3">
         {/* Lead record */}
-        <div className="lg:col-span-2">
-          <div className="mb-6 flex flex-wrap items-center gap-3">
-            <h1 className="t-h3">{enquiry.name}</h1>
-            <span
-              className={`t-caption border px-2 py-0.5 ${
-                enquiry.status === "new" ? "border-accent/50 text-accent" : "border-border text-muted"
-              }`}
-            >
-              {isEnquiryStatus(enquiry.status) ? ENQUIRY_STATUS_META[enquiry.status].label : enquiry.status}
-            </span>
-          </div>
+        <div className="min-w-0 lg:col-span-2">
+          {/* Contact record */}
+          <section aria-labelledby="record-heading" className="mb-8">
+            <h2 id="record-heading" className="adm-label mb-2.5">
+              Contact record
+            </h2>
+            <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2">
+              {[
+                ["Email", enquiry.email ?? "—"],
+                ["Phone", enquiry.phone ?? "—"],
+                ["Company", enquiry.company ?? "—"],
+                ["Type", enquiry.projectType],
+                ["Budget", enquiry.budget ?? "—"],
+                ["Source", enquiry.source],
+                ["Received", enquiry.createdAt.toISOString().replace("T", " · ").slice(0, 17)],
+                ["IP (hashed prefix)", enquiry.ipHash ? enquiry.ipHash.slice(0, 12) : "—"],
+              ].map(([label, value]) => (
+                <div key={label} className="bg-surface px-4 py-3">
+                  <dt className="adm-label mb-1">{label}</dt>
+                  <dd className="t-sm break-words text-foreground">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
 
-          <dl className="mb-8 grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2">
-            {[
-              ["Email", enquiry.email ?? "—"],
-              ["Phone", enquiry.phone ?? "—"],
-              ["Company", enquiry.company ?? "—"],
-              ["Type", enquiry.projectType],
-              ["Budget", enquiry.budget ?? "—"],
-              ["Source", enquiry.source],
-              ["Received", enquiry.createdAt.toISOString().replace("T", " · ").slice(0, 17)],
-              ["IP (hashed prefix)", enquiry.ipHash ? enquiry.ipHash.slice(0, 12) : "—"],
-            ].map(([label, value]) => (
-              <div key={label} className="bg-background px-4 py-3">
-                <dt className="t-label mb-1 text-muted">{label}</dt>
-                <dd className="t-sm break-words text-foreground">{value}</dd>
-              </div>
-            ))}
-          </dl>
+          {/* Structured form payload */}
+          {formData ? <FormDataPanel data={formData} /> : null}
 
-          <h2 className="t-label mb-2 text-muted">Message</h2>
-          <p className="t-sm mb-8 whitespace-pre-wrap break-words border border-border bg-background p-4 leading-relaxed text-foreground">
-            {enquiry.message}
-          </p>
+          {/* Message */}
+          <section aria-labelledby="message-heading" className="mb-8">
+            <h2 id="message-heading" className="adm-label mb-2.5">
+              Message
+            </h2>
+            <p className="t-sm whitespace-pre-wrap break-words rounded-lg border border-border bg-surface p-4 leading-relaxed text-foreground">
+              {enquiry.message}
+            </p>
+            {enquiry.userAgent ? (
+              <p className="t-caption mt-2 break-all text-muted">
+                <span className="font-mono uppercase tracking-[0.08em]">User agent</span> · {enquiry.userAgent}
+              </p>
+            ) : null}
+          </section>
 
           {/* Notes */}
-          <form action={saveEnquiryNotesAction} className="mb-8">
-            <input type="hidden" name="id" value={enquiry.id} />
-            <label htmlFor="notes" className="t-label mb-2 block text-muted">
-              Internal notes
-            </label>
-            <textarea
-              id="notes"
-              name="notes"
-              rows={4}
-              maxLength={4000}
-              defaultValue={enquiry.adminNotes ?? ""}
-              className="w-full border border-border bg-background p-3 text-foreground outline-none transition-colors focus:border-accent"
-              placeholder="Context, follow-ups, outcome…"
-            />
-            <button
-              type="submit"
-              className="mt-3 h-10 bg-foreground px-5 text-sm font-semibold text-background transition-colors hover:bg-accent hover:text-on-accent"
-            >
-              Save notes
-            </button>
-          </form>
+          <section aria-labelledby="notes-heading">
+            <form action={saveEnquiryNotesAction}>
+              <input type="hidden" name="id" value={enquiry.id} />
+              <label htmlFor="notes" className="adm-label mb-2 block">
+                Internal notes
+              </label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows={4}
+                maxLength={4000}
+                defaultValue={enquiry.adminNotes ?? ""}
+                placeholder="Context, follow-ups, outcome…"
+                className="adm-textarea"
+              />
+              <div className="mt-3">
+                <SubmitButton label="Save notes" pendingLabel="Saving…" />
+              </div>
+            </form>
+          </section>
         </div>
 
-        {/* Side rail: status + danger zone */}
-        <aside>
-          <h2 className="t-label mb-3 text-muted">Status</h2>
-          <form action={updateEnquiryStatusAction} className="mb-8 space-y-2">
-            <input type="hidden" name="id" value={enquiry.id} />
-            <input type="hidden" name="backTo" value={`/admin/enquiries/${enquiry.id}`} />
-            {ENQUIRY_STATUSES.map((s) => (
-              <button
-                key={s}
-                type="submit"
-                name="status"
-                value={s}
-                aria-pressed={enquiry.status === s}
-                className={`t-sm block w-full border px-3 py-2 text-left transition-colors ${
-                  enquiry.status === s
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border text-foreground/80 hover:border-foreground/40"
-                }`}
-              >
-                {ENQUIRY_STATUS_META[s].label}
-                <span className="t-caption ml-2 text-muted">
-                  {ENQUIRY_STATUS_META[s].hint}
-                </span>
-              </button>
-            ))}
-          </form>
+        {/* Side rail: status + danger */}
+        <aside className="min-w-0">
+          <section aria-labelledby="status-heading" className="mb-8">
+            <h2 id="status-heading" className="adm-label mb-2.5">
+              Status
+            </h2>
+            <form action={updateEnquiryStatusAction} className="space-y-2">
+              <input type="hidden" name="id" value={enquiry.id} />
+              <input type="hidden" name="backTo" value={`/admin/enquiries/${enquiry.id}`} />
+              {ENQUIRY_STATUSES.map((s) => {
+                const active = enquiry.status === s;
+                return (
+                  <button
+                    key={s}
+                    type="submit"
+                    name="status"
+                    value={s}
+                    aria-pressed={active}
+                    className={`flex w-full items-start gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors ${
+                      active
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border text-foreground/80 hover:border-foreground/40"
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`mt-[5px] h-1.5 w-1.5 shrink-0 ${
+                        active
+                          ? "bg-accent"
+                          : s === "new"
+                            ? "bg-accent/60"
+                            : s === "in_progress"
+                              ? "bg-foreground/50"
+                              : "bg-muted/50"
+                      }`}
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-[0.875rem] font-semibold">{ENQUIRY_STATUS_META[s].label}</span>
+                      <span className={`t-caption block ${active ? "text-background/70" : "text-muted"}`}>
+                        {ENQUIRY_STATUS_META[s].hint}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </form>
+          </section>
 
           {user?.role === "admin" ? (
-            <div className="border border-accent/40 p-4">
-              <h2 className="t-label mb-2 text-accent">Danger zone</h2>
-              {confirm !== "1" ? (
-                <Link
-                  href={`/admin/enquiries/${enquiry.id}?confirm=1`}
-                  className="t-sm border border-accent/50 px-3 py-2 text-accent transition-colors hover:bg-accent hover:text-on-accent"
-                >
-                  Delete this enquiry…
-                </Link>
-              ) : (
-                <form action={deleteEnquiryAction}>
-                  <input type="hidden" name="id" value={enquiry.id} />
-                  <input type="hidden" name="confirm" value="DELETE" />
-                  <p className="t-sm mb-3 text-foreground/80">
-                    Permanent. This cannot be undone.
-                  </p>
-                  <button
-                    type="submit"
-                    className="t-sm bg-accent px-3 py-2 font-semibold text-on-accent"
-                  >
-                    Yes, delete permanently
-                  </button>
-                </form>
-              )}
-            </div>
+            <DangerZone title="Danger zone">
+              <p className="t-sm mb-3 text-muted">
+                Permanent. This cannot be undone.
+              </p>
+              <form action={deleteEnquiryAction}>
+                <input type="hidden" name="id" value={enquiry.id} />
+                <input type="hidden" name="confirm" value="DELETE" />
+                <ConfirmButton label="Delete this enquiry…" confirmLabel="Delete permanently" />
+              </form>
+            </DangerZone>
           ) : null}
         </aside>
       </div>
-    </div>
+    </>
   );
 }

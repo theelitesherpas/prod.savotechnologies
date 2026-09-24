@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE } from "@/constants/site";
 import { absoluteUrl } from "@/lib/env";
-import { ROLES, ROLES_POSTED, roleSlug } from "@/constants/careers";
+import { ROLES_POSTED, roleSlug } from "@/constants/careers";
+import { getManagedRoles } from "@/lib/content-items";
 import { Reveal } from "@/components/ui/reveal";
 import { CareersHero } from "@/sections/careers/careers-hero";
 import { OpenRoles } from "@/sections/careers/open-roles";
@@ -29,7 +30,8 @@ export const metadata: Metadata = {
   openGraph: openGraphFor({ title: "Careers | Savo Technologies", description: DESCRIPTION, url: "/careers" }),
 };
 
-export default function CareersPage() {
+export default async function CareersPage() {
+  const ROLES = await getManagedRoles();
   // JobPosting structured data — one entry per open role (Google Jobs / AEO).
   const jsonLd = {
     "@context": "https://schema.org",
@@ -82,10 +84,10 @@ export default function CareersPage() {
       />
 
       {/* 01: Ink hero: statement, facts, code specimen */}
-      <CareersHero />
+      <CareersHero roles={ROLES} />
 
       {/* 02: Open roles, filterable accordion */}
-      <OpenRoles />
+      <OpenRoles roles={ROLES} />
 
       {/* 03: The four-step hiring promise (sand band) */}
       <HiringProcess />

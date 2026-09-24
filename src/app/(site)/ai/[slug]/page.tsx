@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { absoluteUrl } from "@/lib/env";
-import { AI_SERVICES, aiService } from "@/constants/ai-services";
+import { AI_SERVICES } from "@/constants/ai-services";
+import { getManagedAiServices } from "@/lib/content-items";
 import { Section } from "@/components/ui/section";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Reveal } from "@/components/ui/reveal";
@@ -29,7 +30,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const svc = aiService(slug);
+  const svc = (await getManagedAiServices()).find((s) => s.slug === slug);
   if (!svc) return {};
   return {
     title: svc.title,
@@ -41,7 +42,7 @@ export async function generateMetadata({
 
 export default async function AiServicePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const svc = aiService(slug);
+  const svc = (await getManagedAiServices()).find((s) => s.slug === slug);
   if (!svc) notFound();
   const headingId = "ai-heading";
 
@@ -163,7 +164,7 @@ export default async function AiServicePage({ params }: { params: Promise<{ slug
                 <ul className="mt-4 space-y-3">
                   {[
                     { label: "The agent fleet", href: "/ai-agents", hint: "six production personas" },
-                    ...AI_SERVICES.filter((s) => s.slug !== svc.slug).map((s) => ({
+                    ...(await getManagedAiServices()).filter((s) => s.slug !== svc.slug).map((s) => ({
                       label: s.short,
                       href: `/ai/${s.slug}`,
                       hint: s.tagline.toLowerCase(),

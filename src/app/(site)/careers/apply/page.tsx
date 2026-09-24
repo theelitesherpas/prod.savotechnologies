@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ROLES, CAREERS_EMAIL, HIRING_STEPS } from "@/constants/careers";
+import { CAREERS_EMAIL, HIRING_STEPS } from "@/constants/careers";
+import { getManagedRoles } from "@/lib/content-items";
 import { Reveal } from "@/components/ui/reveal";
 import { ApplicationForm } from "@/sections/careers/application-form";
 
@@ -27,6 +28,7 @@ export default async function CareersApplyPage({
   searchParams: Promise<{ role?: string }>;
 }) {
   const { role } = await searchParams;
+  const ROLES = await getManagedRoles();
   const match = ROLES.find((r) => slugify(r.title) === (role ?? "").replace(/^\/|\/$/g, ""));
   const initialRole = match?.title;
 
@@ -67,7 +69,7 @@ export default async function CareersApplyPage({
             <div className="lg:col-span-7">
               <Reveal delay={160}>
                 <div className="border border-border bg-surface p-7 sm:p-10">
-                  <ApplicationForm initialRole={initialRole} />
+                  <ApplicationForm initialRole={initialRole} roles={ROLES} />
                 </div>
               </Reveal>
             </div>

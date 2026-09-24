@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { rateLimit } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
 import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
@@ -10,6 +11,27 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** POST /api/enquiries — homepage enquiry drawer submissions. */
+
+/** Sanitized structured payload a form may attach (careers application
+ *  details, callback country). Keys/values are length-capped and the
+ *  whole object is stored as JSON on the enquiry row. */
+function sanitizeDetails(input: unknown): Record<string, unknown> | null {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+  const out: Record<string, unknown> = {};
+  let keys = 0;
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    if (keys >= 20) break;
+    if (typeof key !== "string" || !/^[a-zA-Z0-9_]{1,40}$/.test(key)) continue;
+    if (typeof value === "string") {
+      out[key] = value.slice(0, 500);
+      keys += 1;
+    } else if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
+      out[key] = value.slice(0, 30).map((v) => v.slice(0, 120));
+      keys += 1;
+    }
+  }
+  return keys ? out : null;
+}
 
 export async function POST(req: Request) {
   if (!isJsonRequest(req)) {
@@ -37,10 +59,10 @@ export async function POST(req: Request) {
     );
   }
   const data = parsed.data;
+  const raw = body.data as Record<string, unknown>;
   const source =
-    typeof (body.data as Record<string, unknown>).source === "string"
-      ? ((body.data as Record<string, unknown>).source as string).slice(0, 60)
-      : "homepage";
+    typeof raw.source === "string" ? (raw.source as string).slice(0, 60) : "homepage";
+  const details = sanitizeDetails(raw.details);
 
   // Honeypot — bots get a silent success so they learn nothing.
   if (data.website) {
@@ -63,6 +85,7 @@ export async function POST(req: Request) {
         projectType: data.projectType,
         budget: data.budget ?? null,
         message: data.message,
+        data: (details as Prisma.InputJsonValue) ?? undefined,
         source,
         userAgent: req.headers.get("user-agent")?.slice(0, 255) ?? null,
         // Salted hash prefix — raw IPs are never persisted (privacy).

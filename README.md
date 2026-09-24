@@ -109,17 +109,36 @@ client bundles.
 page/action re-authorizes server-side. Two roles: **admin** (full) and
 **editor** (content + inbox, no destructive ops).
 
-- **Dashboard** — lead health at a glance
-- **Enquiries** — filter/paginate inbox, status workflow, internal notes,
-  delete with two-step confirm (admin role only)
-- **Services / Industries** — full CRUD on the managed collections that
-  drive the public header panels and future pages; one-click **Import
-  version-1 defaults** materializes the canonical baseline
-- **Settings** — contact email/phone overrides (footer, structured data)
-  with public-page regeneration on save
+The panel is a NextAdmin-style operations console: light theme, grouped
+sidebar with expandable submenus and live counts (collapses to an icon
+rail on desktop, drawer on mobile), breadcrumbs, and white rounded cards.
+
+- **Dashboard** — stat tiles, lead pipeline breakdown, latest enquiries,
+  recent activity, content status matrix
+- **Enquiries** — one inbox for every public form (Start a project,
+  Contact, Careers applications, callbacks): status tabs, type filters,
+  full-text search, pagination, status workflow, internal notes, complete
+  structured form data per submission, two-step delete (admin role only)
+- **Website content** — sidebar submenu with a hub page and full CRUD
+  (add / edit / hide / reorder / two-step delete / import defaults) for:
+  **Services**, **Industries** (dedicated tables) plus the generic
+  `content_items` collections — **Insights articles**, **Careers roles**,
+  **Case studies**, **Hire roles**, **AI services**, **AI agents**
+- **Site settings** — contact email/phone overrides plus an announcement
+  line rendered above the site header when set
+- **Panel users** (admin role) — create users, change name/role, remove;
+  sessions revoke on change
+- **Audit log** — filterable, append-only trail of every panel action
 
 Every mutation is zod-validated, audited (`audit_logs`), and triggers
 `revalidatePath("/", "layout")` so static public pages regenerate on demand.
+
+Every public form stores its complete structured payload (`form_data`
+JSON: careers city/skills/notice/CTC/links, callback country, form origin)
+alongside the enquiry columns, so the inbox shows exactly what was
+submitted. Every mutation is zod-validated, audited (`audit_logs`), and
+triggers `revalidatePath("/", "layout")` so static public pages regenerate
+on demand.
 
 ## Content model: constants → DB → fallback
 

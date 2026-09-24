@@ -2,9 +2,11 @@ import { canonicalOrigin, absoluteUrl } from "@/lib/env";
 import { SITE } from "@/constants/site";
 import { SERVICE_DETAILS } from "@/constants/services-detail";
 import { INDUSTRY_DETAILS } from "@/constants/industry-details";
-import { HIRE_ROLES } from "@/constants/hire";
-import { AI_SERVICES } from "@/constants/ai-services";
-import { ARTICLES } from "@/constants/insights";
+import {
+  getManagedHireRoles,
+  getManagedAiServices,
+  getManagedArticles,
+} from "@/lib/content-items";
 
 export const dynamic = "force-static";
 
@@ -14,7 +16,12 @@ export const dynamic = "force-static";
  * facts live. Content mirrors visible on-page content only — no claims the
  * site does not make.
  */
-export function GET() {
+export async function GET() {
+  const [HIRE_ROLES, AI_SERVICES, ARTICLES] = await Promise.all([
+    getManagedHireRoles(),
+    getManagedAiServices(),
+    getManagedArticles(),
+  ]);
   const base = canonicalOrigin;
 
   const body = `# ${SITE.name}

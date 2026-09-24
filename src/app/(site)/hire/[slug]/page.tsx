@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { absoluteUrl } from "@/lib/env";
 import { openGraphFor } from "@/lib/seo";
-import { HIRE_ROLES, hireRole } from "@/constants/hire";
+import { HIRE_ROLES } from "@/constants/hire";
+import { getManagedHireRoles } from "@/lib/content-items";
 import { serviceDetail } from "@/constants/services-detail";
 import {
   HireRoleHero,
@@ -32,7 +33,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const role = hireRole(slug);
+  const role = (await getManagedHireRoles()).find((r) => r.slug === slug);
   if (!role) return {};
   return {
     title: `Hire ${role.title}`,
@@ -52,11 +53,13 @@ export default async function HireRolePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const role = hireRole(slug);
+  const allRoles = await getManagedHireRoles();
+  const role = allRoles.find((r) => r.slug === slug);
   if (!role) notFound();
+  const resolveRole = (slug: string) => allRoles.find((r) => r.slug === slug);
 
   const relatedRoles = role.related
-    .map(hireRole)
+    .map(resolveRole)
     .filter((r): r is NonNullable<typeof r> => Boolean(r))
     .map((r) => ({ label: r.title, hint: `${r.tagline}.`, href: `/hire/${r.slug}` }));
   const svc = serviceDetail(role.iconSlug);

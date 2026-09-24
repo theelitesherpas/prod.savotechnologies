@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/env";
-import { HIRE_ROLES } from "@/constants/hire";
+import { getManagedHireRoles } from "@/lib/content-items";
 import { HireHero, HireDirectory, HireModels, HireSteps, CrewBand } from "@/sections/hire/hire-index";
 import { DetailCta } from "@/components/shared/detail-cta";
 import { openGraphFor } from "@/lib/seo";
@@ -21,7 +21,8 @@ export const metadata: Metadata = {
   openGraph: openGraphFor({ title: "Hire Developers | Savo Technologies", description: DESCRIPTION, url: "/hire" }),
 };
 
-export default function HirePage() {
+export default async function HirePage() {
+  const HIRE_ROLES = await getManagedHireRoles();
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -61,9 +62,9 @@ export default function HirePage() {
       />
 
       <HireHero />
-      <HireDirectory />
+      <HireDirectory roles={HIRE_ROLES} />
       <HireModels />
-      <HireSteps />
+      <HireSteps roles={HIRE_ROLES} />
       <CrewBand variant="index" />
 
       <DetailCta

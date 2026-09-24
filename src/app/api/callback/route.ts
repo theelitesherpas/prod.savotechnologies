@@ -72,6 +72,7 @@ export async function POST(req: Request) {
         projectType: "Callback",
         budget: null,
         message: `Callback request · ${data.country} · ${phone.normalized}`,
+        data: { form: "callback", country: data.country } as object,
         source: "footer-callback",
         userAgent: req.headers.get("user-agent")?.slice(0, 255) ?? null,
         ipHash:
