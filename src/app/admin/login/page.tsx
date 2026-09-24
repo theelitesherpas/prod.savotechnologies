@@ -66,7 +66,7 @@ export default async function AdminLoginPage({
           {e ? (
             <p role="alert" className="t-sm mb-6 border border-accent/40 bg-accent/5 px-3 py-2 text-accent">
               {e === "rate"
-                ? "Too many attempts — wait a few minutes and try again."
+                ? "Too many attempts, wait a few minutes and try again."
                 : "Email or password is incorrect."}
             </p>
           ) : null}

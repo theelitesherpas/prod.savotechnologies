@@ -163,7 +163,7 @@ export default function AboutPage() {
         <SectionHeader
           id="story-heading"
           heading="Ten years, honestly told."
-          lead={<>The milestones that shaped how we build — including the hard ones.</>}
+          lead={<>The milestones that shaped how we build, including the hard ones.</>}
         />
         <Reveal>
           <ol className="relative space-y-10 sm:space-y-12">
@@ -215,7 +215,7 @@ export default function AboutPage() {
         <SectionHeader
           id="team-heading"
           heading="The people accountable to you."
-          lead={<>Leadership that stays hands on — on your project, not just on the org chart.</>}
+          lead={<>Leadership that stays hands on, on your project, not just on the org chart.</>}
         />
         <ul className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           {LEADERSHIP.map((person, i) => (
@@ -279,7 +279,7 @@ export default function AboutPage() {
         <SectionHeader
           id="presence-heading"
           heading="Where we are."
-          lead={<>A distributed team with registered presence across regions — and one delivery standard everywhere.</>}
+          lead={<>A distributed team with registered presence across regions, and one delivery standard everywhere.</>}
         />
         <Reveal>
           <ul className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
@@ -304,7 +304,7 @@ export default function AboutPage() {
       <DetailCta
         headingId="about-cta-heading"
         heading="Work with the team you just met."
-        lead="Start with a free scoping call — you will talk to one of the four people above. Every proposal is reviewed personally."
+        lead="Start with a free scoping call, you will talk to one of the four people above. Every proposal is reviewed personally."
         location="about-cta"
         secondaryLabel="Join the Team"
         secondaryHref="/careers"

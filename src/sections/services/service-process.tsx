@@ -51,7 +51,7 @@ export function ServiceProcess({ detail }: { detail: ServiceDetail }) {
         heading="How the work runs."
         lead={
           <>
-            The same delivery rhythm every time — so outcomes depend on the
+            The same delivery rhythm every time, so outcomes depend on the
             problem, never the process.
           </>
         }

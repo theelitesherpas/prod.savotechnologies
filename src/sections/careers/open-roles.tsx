@@ -176,7 +176,7 @@ export function OpenRoles() {
           >
             Send a general application
           </Link>{" "}
-          — or write to{" "}
+         or write to{" "}
           <a href={`mailto:${CAREERS_EMAIL}`} className="link-underline font-semibold text-foreground">
             {CAREERS_EMAIL}
           </a>{" "}

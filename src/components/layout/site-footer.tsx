@@ -46,10 +46,10 @@ export function SiteFooter({
         Site footer
       </h2>
 
-      {/* Row 1 — brand + navigation columns */}
+      {/* Row 1, brand + navigation columns */}
       <div className="shell grid gap-12 border-b border-border py-16 sm:py-20 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-4 lg:pr-8">
-          <Link href="/" aria-label="Savo Technologies — home" className="inline-block text-foreground">
+          <Link href="/" aria-label="Savo Technologies, home" className="inline-block text-foreground">
             <SavoLogo className="h-12 w-auto" />
           </Link>
           <p className="t-sm mt-6 max-w-sm leading-relaxed text-muted">{SITE.statement}</p>
@@ -82,7 +82,7 @@ export function SiteFooter({
         </div>
       </div>
 
-      {/* Row 2 — global offices (identity vectors, address + mobile) + direct contact */}
+      {/* Row 2, global offices (identity vectors, address + mobile) + direct contact */}
       <div className="shell grid gap-px border-b border-border bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {OFFICES.map((office) => (
           <div key={office.id} className="flex flex-col bg-background p-5">
@@ -130,7 +130,7 @@ export function SiteFooter({
         </div>
       </div>
 
-      {/* Row 3 — call back */}
+      {/* Row 3, call back */}
       <div className="shell grid gap-10 border-b border-border py-14 lg:grid-cols-12 lg:items-center">
         <div className="lg:col-span-4">
           <p className="t-h3">Prefer a call back?</p>
@@ -144,7 +144,7 @@ export function SiteFooter({
         </div>
       </div>
 
-      {/* Row 4 — badges + legal (extra bottom clearance for the Ask Savo bar) */}
+      {/* Row 4, badges + legal (extra bottom clearance for the Ask Savo bar) */}
       <div className="shell flex flex-col gap-6 pb-24 pt-8 lg:flex-row lg:items-center lg:justify-between">
         <ul className="flex flex-wrap gap-x-7 gap-y-3" aria-label="Compliance and security">
           {BADGES.map((badge) => (

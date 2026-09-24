@@ -49,7 +49,7 @@ export function ServiceDetailHero({ detail }: { detail: ServiceDetail }) {
                   className="h-10 w-10 text-foreground/70 [&_svg]:h-full [&_svg]:w-full"
                 />
                 <p className="t-caption max-w-[24ch] text-muted">
-                  Strategy, design and engineering — one practice, delivered in slices.
+                  Strategy, design and engineering, one practice, delivered in slices.
                 </p>
               </div>
             </Reveal>
@@ -59,14 +59,14 @@ export function ServiceDetailHero({ detail }: { detail: ServiceDetail }) {
           <div className="lg:col-span-5">
             <Reveal delay={160}>
               <figure
-                aria-label={`${detail.title} — schematic`}
+                aria-label={`${detail.title}, schematic`}
                 className="blueprint relative aspect-[4/3] border border-border bg-surface"
               >
                 <div className="absolute inset-0 bottom-[3.25rem] p-8 text-foreground/80 sm:p-10">
                   <ServiceSchematic slug={detail.slug} />
                 </div>
                 <figcaption className="absolute inset-x-0 bottom-0 flex h-[3.25rem] items-center justify-between border-t border-border px-5">
-                  <span className="t-label text-muted">Specimen — {detail.short}</span>
+                  <span className="t-label text-muted">Specimen: {detail.short}</span>
                   <span aria-hidden="true" className="flex gap-1.5">
                     <span className="h-1.5 w-1.5 bg-accent" />
                     <span className="h-1.5 w-1.5 bg-border" />
@@ -79,7 +79,7 @@ export function ServiceDetailHero({ detail }: { detail: ServiceDetail }) {
         </div>
       </div>
 
-      {/* Stack marquee — the toolchain, slowly passing (the kit list
+      {/* Stack marquee, the toolchain, slowly passing (the kit list
           further down is the accessible source) */}
       <div className="border-y border-border py-4" aria-hidden="true">
         <div className="marquee overflow-hidden">
@@ -187,7 +187,7 @@ export function ServiceFaqs({ detail }: { detail: ServiceDetail }) {
               </h2>
               <p className="t-body mt-6 max-w-xs text-muted">
                 The questions buyers raise before starting this kind of
-                engagement — answered plainly.
+                engagement, answered plainly.
               </p>
               <Link
                 href="/contact"
@@ -209,7 +209,7 @@ export function ServiceFaqs({ detail }: { detail: ServiceDetail }) {
           </div>
         </div>
         <div className="lg:col-span-8">
-          <Faq items={detail.faqs} label={`${detail.title} — frequently asked questions`} />
+          <Faq items={detail.faqs} label={`${detail.title}, frequently asked questions`} />
         </div>
       </div>
     </Section>
@@ -235,7 +235,7 @@ export function ServiceCrossLinks({
         heading="Explore further."
         lead={
           <>
-            Where this service does its heaviest lifting — and the services
+            Where this service does its heaviest lifting, and the services
             that pair with it.
           </>
         }

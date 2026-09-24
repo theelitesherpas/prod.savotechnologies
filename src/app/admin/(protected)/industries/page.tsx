@@ -42,7 +42,7 @@ export default async function IndustriesPage({
       ) : null}
       {sp.e ? (
         <p role="alert" className="t-sm mb-4 border border-accent/40 bg-accent/5 px-3 py-2 text-accent">
-          {sp.e === "dup" ? "That slug is already in use." : "Check the fields — slugs are lowercase/hyphens."}
+          {sp.e === "dup" ? "That slug is already in use." : "Check the fields, slugs are lowercase/hyphens."}
         </p>
       ) : null}
 

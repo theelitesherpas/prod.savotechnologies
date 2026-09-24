@@ -23,8 +23,8 @@ export function IndustriesCta() {
             </Reveal>
             <Reveal delay={120}>
               <p className="t-body-lg mt-6 max-w-xl text-muted">
-                Name the industry and the constraint — regulation, legacy
-                systems, scale — and we&apos;ll map the build. Every chapter
+                Name the industry and the constraint, regulation, legacy
+                systems, scale, and we&apos;ll map the build. Every chapter
                 above started exactly there.
               </p>
             </Reveal>

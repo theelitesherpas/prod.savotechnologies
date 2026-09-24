@@ -19,7 +19,7 @@ export default function NotFound() {
         </h1>
         <p className="t-body-lg mt-8 max-w-lg text-muted">
           The new Savo site is rolling out section by section. The page you
-          requested is on the roadmap — in the meantime, the homepage carries
+          requested is on the roadmap, in the meantime, the homepage carries
           the full picture, or start your project directly.
         </p>
         <div className="mt-10 flex flex-wrap gap-4">

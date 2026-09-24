@@ -38,14 +38,14 @@ export function IndustriesHero() {
             <Reveal delay={120}>
               <p className="t-body-lg mt-8 max-w-xl text-muted">
                 We learn the rules of your industry before we write a line of
-                code — the regulations, the systems of record, the way your
+                code, the regulations, the systems of record, the way your
                 customers actually decide. What never changes is the
                 engineering standard underneath.
               </p>
             </Reveal>
           </div>
 
-          {/* The coverage card — counts the site itself can verify */}
+          {/* The coverage card, counts the site itself can verify */}
           <div className="lg:col-span-5">
             <Reveal delay={200}>
               <div className="border border-border bg-surface p-7 sm:p-8">
@@ -73,10 +73,10 @@ export function IndustriesHero() {
           </div>
         </div>
 
-        {/* Sector contents board — the cabinet of anchor cells */}
+        {/* Sector contents board, the cabinet of anchor cells */}
         <Reveal delay={140}>
           <nav aria-label="Industries contents" className="mt-16 sm:mt-20">
-            <p className="t-label mb-5 text-muted">Contents — by sector</p>
+            <p className="t-label mb-5 text-muted">Contents, by sector</p>
             <ul className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-3 lg:grid-cols-5">
               {INDUSTRIES_ATLAS.map((industry) => (
                 <li key={industry.id}>

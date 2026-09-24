@@ -30,7 +30,7 @@ export function RatePlate({ monthly, short }: { monthly: number; short: string }
   return (
     <div className="border border-border bg-surface p-7 sm:p-8">
       <div className="flex items-center justify-between gap-4">
-        <p className="t-label text-muted">One rate — {short}</p>
+        <p className="t-label text-muted">One rate: {short}</p>
         <span aria-hidden="true" className="h-2 w-2 bg-accent" />
       </div>
 

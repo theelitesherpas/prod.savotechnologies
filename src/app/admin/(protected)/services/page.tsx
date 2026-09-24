@@ -47,12 +47,12 @@ export default async function ServicesPage({
       ) : null}
       {sp.e === "dup" ? (
         <p role="alert" className="t-sm mb-4 border border-accent/40 bg-accent/5 px-3 py-2 text-accent">
-          That slug is already in use — choose another.
+          That slug is already in use, choose another.
         </p>
       ) : null}
       {sp.e === "invalid" ? (
         <p role="alert" className="t-sm mb-4 border border-accent/40 bg-accent/5 px-3 py-2 text-accent">
-          Check the fields — titles need 2–80 characters, slugs lowercase/hyphens.
+          Check the fields, titles need 2–80 characters, slugs lowercase/hyphens.
         </p>
       ) : null}
 

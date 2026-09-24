@@ -77,7 +77,7 @@ export function ContactForm() {
       setStatus("error");
       track("enquiry_form_error", { form: "contact", status: res.status });
     } catch {
-      setServerMessage("Network error — please check your connection and try again.");
+      setServerMessage("Network error, please check your connection and try again.");
       setStatus("error");
       track("enquiry_form_error", { form: "contact", status: "network" });
     }
@@ -198,7 +198,7 @@ export function ContactForm() {
         textarea
       />
 
-      {/* Honeypot — invisible to humans, irresistible to bots */}
+      {/* Honeypot, invisible to humans, irresistible to bots */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
           Website

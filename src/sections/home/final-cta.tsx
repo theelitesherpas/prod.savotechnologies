@@ -24,7 +24,7 @@ export function FinalCTA() {
             <Reveal delay={120}>
               <p className="t-body-lg mt-8 max-w-xl text-muted">
                 Whether it&apos;s a website, mobile product, software platform
-                or AI system — let&apos;s explore what we can build together.
+                or AI system, let&apos;s explore what we can build together.
               </p>
             </Reveal>
           </div>

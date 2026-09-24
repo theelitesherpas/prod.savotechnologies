@@ -78,9 +78,9 @@ export const viewport: Viewport = {
 const jsMarker = "document.documentElement.dataset.js='true'";
 
 const designContract = `<!--
-  SAVO TECHNOLOGIES — HOMEPAGE DESIGN CONTRACT (v2)
+  SAVO TECHNOLOGIES: HOMEPAGE DESIGN CONTRACT (v2)
   THESIS: One partner from idea to scale, presented as a precision-authored
-  engineering dossier bound in leather — a technology partner's document,
+  engineering dossier bound in leather, a technology partner's document,
   not an agency pitch.
   OWN-WORLD: Warm paper and sand bands, blue-black ink chapters, one vermilion
   signal; hairline rules, blueprint grids, square-node motif; Source Serif 4
@@ -88,10 +88,10 @@ const designContract = `<!--
   photography held inside the document's ink.
   STORY: Visitor learns what SAVO builds (web, mobile, software, AI, design,
   growth), why it differs from an agency, that AI is serious engineering, and
-  how to start a project — then acts via Start a Project.
-  FIRST VIEWPORT: Paper field; left — mono positioning label, serif headline
+  how to start a project, then acts via Start a Project.
+  FIRST VIEWPORT: Paper field; left, mono positioning label, serif headline
   "We design and engineer what's next." closing on a vermilion period,
-  two-line support, ink CTA pair; right — live orbiting square-node system
+  two-line support, ink CTA pair; right, live orbiting square-node system
   (WEB·MOBILE·AI·SOFTWARE·DESIGN·GROWTH) around a SAVO core with pointer-
   reactive hairlines. Primary action: ink "Start a Project" button.
   FORM: Brief-pinned world (premium·minimal·editorial·technical), refined by
@@ -115,7 +115,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${manrope.variable} ${sourceSerif.variable} ${fragment.variable}`}>
       <body className="bg-background font-sans text-foreground antialiased">
-        {/* Design contract — survives the production build; see DESIGN.md */}
+        {/* Design contract, survives the production build; see DESIGN.md */}
         <div hidden dangerouslySetInnerHTML={{ __html: designContract }} />
         <script dangerouslySetInnerHTML={{ __html: jsMarker }} />
 

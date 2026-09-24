@@ -55,7 +55,7 @@ export function WhySavo() {
               </p>
             </ImageReveal>
             <p className="t-caption mt-4 text-muted">
-              Decisions on both sides of the product — made together, in one
+              Decisions on both sides of the product, made together, in one
               room.
             </p>
           </Reveal>

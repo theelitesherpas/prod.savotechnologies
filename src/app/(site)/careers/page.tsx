@@ -81,16 +81,16 @@ export default function CareersPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 01 — Ink hero: statement, facts, code specimen */}
+      {/* 01: Ink hero: statement, facts, code specimen */}
       <CareersHero />
 
-      {/* 02 — Open roles, filterable accordion */}
+      {/* 02: Open roles, filterable accordion */}
       <OpenRoles />
 
-      {/* 03 — The four-step hiring promise (sand band) */}
+      {/* 03: The four-step hiring promise (sand band) */}
       <HiringProcess />
 
-      {/* 04 — What working here is like */}
+      {/* 04: What working here is like */}
       <LifeAtSavo />
 
       {/* Closing note */}

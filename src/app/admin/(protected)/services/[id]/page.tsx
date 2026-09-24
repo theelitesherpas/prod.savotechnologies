@@ -77,7 +77,7 @@ export default async function EditServicePage({
             <form action={deleteServiceAction}>
               <input type="hidden" name="id" value={service.id} />
               <p className="t-sm mb-3 text-foreground/80">
-                Removes it from the collection permanently — the site falls back
+                Removes it from the collection permanently, the site falls back
                 to defaults if the table becomes empty.
               </p>
               <button type="submit" className="t-sm bg-accent px-3 py-2 font-semibold text-on-accent">

@@ -29,7 +29,7 @@ export function Introduction() {
               </p>
               <p className="t-body">
                 We don&apos;t simply deliver screens or code. We help shape the
-                product, engineer the technology, launch it properly — and keep
+                product, engineer the technology, launch it properly, and keep
                 improving what happens afterward.
               </p>
             </div>
@@ -37,7 +37,7 @@ export function Introduction() {
         </div>
       </div>
 
-      {/* Studio band — real work, held in the document's ink */}
+      {/* Studio band, real work, held in the document's ink */}
       <Reveal delay={160}>
         <figure className="mt-16 sm:mt-20">
           <ImageReveal className="relative aspect-[16/9] overflow-hidden border border-border sm:aspect-[21/9]">

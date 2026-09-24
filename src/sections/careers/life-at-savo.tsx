@@ -61,7 +61,7 @@ export function LifeAtSavo() {
               </p>
             </ImageReveal>
             <p className="t-caption mt-4 text-muted">
-              Small senior teams — the people who interview you are the people
+              Small senior teams, the people who interview you are the people
               you ship with.
             </p>
           </Reveal>

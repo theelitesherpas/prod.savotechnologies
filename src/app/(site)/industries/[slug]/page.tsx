@@ -128,7 +128,7 @@ export default async function IndustryPage({
       <DetailCta
         headingId="industry-cta-heading"
         heading={`Building for ${detail.title.toLowerCase()}?`}
-        lead="Bring the brief — the regulation, the legacy system, the scale problem. We'll map the build in one conversation and quote in days, not weeks."
+        lead="Bring the brief, the regulation, the legacy system, the scale problem. We'll map the build in one conversation and quote in days, not weeks."
         location={`industry-${detail.id}-cta`}
       />
     </>

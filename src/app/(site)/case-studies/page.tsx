@@ -56,18 +56,18 @@ export default function CaseStudiesPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 01 — Ink hero: statement, honest facts, the dossier specimen, contents */}
+      {/* 01: Ink hero: statement, honest facts, the dossier specimen, contents */}
       <CaseStudiesHero />
 
-      {/* 02–07 — The six discipline chapters */}
+      {/* 02–07: The six discipline chapters */}
       {CASE_DISCIPLINES.map((discipline) => (
         <DisciplineSection key={discipline.id} discipline={discipline} />
       ))}
 
-      {/* 08 — Editorial policy (sand band) */}
+      {/* 08: Editorial policy (sand band) */}
       <EditorialPolicy />
 
-      {/* Closing — the vermilion moment */}
+      {/* Closing, the vermilion moment */}
       <CaseStudiesCta />
     </>
   );

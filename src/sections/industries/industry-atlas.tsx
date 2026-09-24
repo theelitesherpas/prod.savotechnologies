@@ -19,7 +19,7 @@ export function IndustryAtlas() {
         heading="The atlas."
         lead={
           <>
-            Every sector below opens into its own chapter — what we build
+            Every sector below opens into its own chapter, what we build
             there, the constraints we respect, the systems we join. Start
             with yours.
           </>

@@ -101,7 +101,7 @@ function WorkCard({
       <div className={`relative overflow-hidden ${aspect}`}>
         <Image
           src={PHOTO_BY_VARIANT[item.variant]}
-          alt="Representative studio imagery — case study in preparation"
+          alt="Representative studio imagery, case study in preparation"
           fill
           sizes={sizes}
           className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
@@ -149,7 +149,7 @@ export function SelectedWork() {
         lead={
           <>
             Digital products designed around real business objectives. Case
-            studies are being prepared — nothing is published here until its
+            studies are being prepared, nothing is published here until its
             results can be verified.
           </>
         }
@@ -177,7 +177,7 @@ export function SelectedWork() {
           href="/case-studies"
           className="group/link t-sm -ml-1 inline-flex items-center gap-2 py-3 font-semibold text-foreground transition-colors hover:text-accent"
         >
-          Browse the full dossier — all disciplines
+          Browse the full dossier, all disciplines
           <svg
             aria-hidden="true"
             viewBox="0 0 14 14"

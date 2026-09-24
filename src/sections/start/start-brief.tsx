@@ -135,7 +135,7 @@ export function StartBrief() {
       setStatus("error");
       track("enquiry_form_error", { status: res.status, form: "start-page" });
     } catch {
-      setServerMessage("Network error — please check your connection and try again.");
+      setServerMessage("Network error, please check your connection and try again.");
       setStatus("error");
       track("enquiry_form_error", { status: "network", form: "start-page" });
     }
@@ -199,7 +199,7 @@ export function StartBrief() {
         {step === 0 ? (
           <div className="workbench-panel space-y-8">
             <div>
-              <p className="t-label text-accent">Step — you</p>
+              <p className="t-label text-accent">Step, you</p>
               <h3 className="t-h2 mt-3">Who is building with us?</h3>
             </div>
             <div className="grid gap-8 sm:grid-cols-2">
@@ -239,7 +239,7 @@ export function StartBrief() {
         {step === 1 ? (
           <div className="workbench-panel space-y-9">
             <div>
-              <p className="t-label text-accent">Step — the project</p>
+              <p className="t-label text-accent">Step, the project</p>
               <h3 className="t-h2 mt-3">What are we building?</h3>
             </div>
 
@@ -257,7 +257,7 @@ export function StartBrief() {
               onSelect={(v) => { onFirstInput(); set("budget", draft.budget === v ? "" : v); }}
             />
 
-            <Field id="sb-message" label="The brief" required error={errors.message} hint="Goals, constraints, what success looks like — at least 20 characters.">
+            <Field id="sb-message" label="The brief" required error={errors.message} hint="Goals, constraints, what success looks like, at least 20 characters.">
               <textarea
                 id="sb-message" name="message" rows={6} className="field resize-y" value={draft.message}
                 onChange={(e) => set("message", e.target.value)} onFocus={onFirstInput}
@@ -272,7 +272,7 @@ export function StartBrief() {
         {step === 2 ? (
           <div className="workbench-panel">
             <div>
-              <p className="t-label text-accent">Step — review</p>
+              <p className="t-label text-accent">Step, review</p>
               <h3 className="t-h2 mt-3">Read it back, then send.</h3>
             </div>
             <dl className="mt-9 border-t border-border">
@@ -346,7 +346,7 @@ export function StartBrief() {
         )}
       </div>
 
-      {/* Side rail — the promise */}
+      {/* Side rail, the promise */}
       <aside className="lg:col-span-4">
         <div className="border border-border bg-surface p-7 lg:sticky lg:top-28 sm:p-8">
           <p className="t-label text-muted">The promise</p>

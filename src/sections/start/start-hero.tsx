@@ -31,7 +31,7 @@ export function StartHero() {
               <p className="t-body-lg mt-8 max-w-xl text-muted">
                 One brief is all it takes. A senior engineer reads it, replies
                 within one business day, and you get scope, timeline and a
-                price — before any commitment.
+                price, before any commitment.
               </p>
             </Reveal>
           </div>
@@ -42,7 +42,7 @@ export function StartHero() {
                 <p className="t-body mt-4 text-muted">
                   Three short steps, nothing binding, and an NDA available
                   before you share anything sensitive. The brief is the
-                  beginning of the proposal — not a sales capture.
+                  beginning of the proposal, not a sales capture.
                 </p>
               </div>
             </Reveal>
@@ -63,7 +63,7 @@ export function StartBriefSection() {
         lead={
           <>
             The more you tell us, the sharper the first reply. Everything
-            goes to an engineer who can build it — never to a script.
+            goes to an engineer who can build it, never to a script.
           </>
         }
       />
@@ -74,7 +74,7 @@ export function StartBriefSection() {
 
 const NEXT_STEPS = [
   { when: "Within 24 hours", what: "A senior engineer, not a sales rep, reads your brief and replies with first questions." },
-  { when: "Day two to three", what: "A free 30 minute scoping call — goals, constraints, success metrics and a rough range." },
+  { when: "Day two to three", what: "A free 30 minute scoping call, goals, constraints, success metrics and a rough range." },
   { when: "Day three to five", what: "A written proposal with fixed milestones, transparent pricing and a start date you can hold us to." },
 ];
 
@@ -87,7 +87,7 @@ export function WhatHappensNext() {
         heading="What happens next."
         lead={
           <>
-            A defined path from your brief to a working engagement — the
+            A defined path from your brief to a working engagement, the
             same every time, so you always know where you stand.
           </>
         }

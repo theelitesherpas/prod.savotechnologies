@@ -65,7 +65,7 @@ export function HireRoleEngagements({ role }: { role: HireRole }) {
         heading="What they take on."
         lead={
           <>
-            The work this role lands most often — select a slot to open it.
+            The work this role lands most often, select a slot to open it.
             Every engagement runs on the same model.
           </>
         }
@@ -118,7 +118,7 @@ export function HireRoleHero({ role }: { role: HireRole }) {
                   className="h-10 w-10 text-foreground/70 [&_svg]:h-full [&_svg]:w-full"
                 />
                 <p className="t-caption max-w-[26ch] text-muted">
-                  Dedicated senior. Your tools, your standups, your repo — two week paid trial to start.
+                  Dedicated senior. Your tools, your standups, your repo, two week paid trial to start.
                 </p>
               </div>
             </Reveal>
@@ -167,7 +167,7 @@ export function HireRoleWhy({ role }: { role: HireRole }) {
         heading="Why teams hire this way."
         lead={
           <>
-            The advantages that show up in the first month — and the ones
+            The advantages that show up in the first month, and the ones
             that compound.
           </>
         }
@@ -203,7 +203,7 @@ export function HireRoleFaqs({ role }: { role: HireRole }) {
                 Asked about hiring {role.short.toLowerCase()}.
               </h2>
               <p className="t-body mt-6 max-w-xs text-muted">
-                The questions teams raise before starting — answered plainly.
+                The questions teams raise before starting, answered plainly.
               </p>
               <Link
                 href="/contact"
@@ -225,7 +225,7 @@ export function HireRoleFaqs({ role }: { role: HireRole }) {
           </div>
         </div>
         <div className="lg:col-span-8">
-          <Faq items={role.faqs} label={`${role.title} — frequently asked questions`} />
+          <Faq items={role.faqs} label={`${role.title}, frequently asked questions`} />
         </div>
       </div>
     </Section>
@@ -251,7 +251,7 @@ export function HireRoleCrossLinks({
         heading="Explore further."
         lead={
           <>
-            Other roles that pair with this one — and the project service
+            Other roles that pair with this one, and the project service
             behind the same discipline.
           </>
         }

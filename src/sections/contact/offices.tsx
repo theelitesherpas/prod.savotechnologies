@@ -21,7 +21,7 @@ export function Offices() {
       <SectionHeader
         id="offices-heading"
         heading="Six regions, one accountable team."
-        lead="Strategy and engineering run from the India headquarters; the head office sits in Zürich. Offices in Riyadh, London, Sydney and the USA cover their regions — wherever you are, someone senior is awake."
+        lead="Strategy and engineering run from the India headquarters; the head office sits in Zürich. Offices in Riyadh, London, Sydney and the USA cover their regions, wherever you are, someone senior is awake."
       />
 
       <div className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

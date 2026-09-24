@@ -29,9 +29,9 @@ ${SITE.statement}
 - Start a project: ${absoluteUrl("/#start")}
 
 ## What we do
-- Web development — corporate sites, marketing sites, web applications, portals
-- Mobile app development — iOS, Android, Flutter, React Native
-- AI & intelligent systems — AI agents, generative AI/LLM integration, AI consulting, machine learning
+- Web development, corporate sites, marketing sites, web applications, portals
+- Mobile app development, iOS, Android, Flutter, React Native
+- AI & intelligent systems: AI agents, generative AI/LLM integration, AI consulting, machine learning
 - Custom software & SaaS product engineering
 - UI/UX design
 - Growth: SEO, digital marketing, analytics
@@ -39,7 +39,7 @@ ${SITE.statement}
 ## How we work
 - One partner from idea to scale: strategy, design, engineering, and growth under one roof
 - Engineering-first process: discover, architect, build, measure, grow
-- AI treated as serious engineering — guardrails, human oversight, observability, evaluation
+- AI treated as serious engineering, guardrails, human oversight, observability, evaluation
 
 ## Key pages
 - Home: ${base}/

@@ -9,7 +9,7 @@ import { ImageResponse } from "next/og";
  */
 
 export const alt =
-  "Savo Technologies — web, mobile, AI and digital product development";
+  "Savo Technologies, web, mobile, AI and digital product development";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

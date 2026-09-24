@@ -30,7 +30,7 @@ export default function Error({
           <span aria-hidden="true" className="text-accent">.</span>
         </h1>
         <p className="t-body-lg mt-8 max-w-lg text-muted">
-          An unexpected error occurred while rendering. Try again — if it
+          An unexpected error occurred while rendering. Try again, if it
           persists, the homepage still carries the full picture and the
           enquiry desk is open.
         </p>

@@ -2,7 +2,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { METRICS } from "@/constants/content";
 
 /**
- * Impact metrics. Values are deliberately rendered as pending marks —
+ * Impact metrics. Values are deliberately rendered as pending marks,
  * SAVO publishes figures only when they can be verified. No invented
  * statistics, ever.
  */
@@ -26,7 +26,7 @@ export function Metrics() {
               <div key={metric.label} className="flex flex-col bg-background p-6 sm:p-7">
                 <dt className="t-label order-2 mt-4 text-muted">{metric.label}</dt>
                 <dd className="order-1 t-dl flex items-start text-foreground/30">
-                  <span aria-label="figure pending verification">—</span>
+                  <span aria-label="figure pending verification">…</span>
                   <span aria-hidden="true" className="mt-2 ml-1 h-2 w-2 shrink-0 bg-accent/70" />
                 </dd>
               </div>

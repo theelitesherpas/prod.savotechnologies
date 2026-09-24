@@ -34,7 +34,7 @@ export default function GlobalError({
             The site hit an unexpected error.
           </h1>
           <p style={{ opacity: 0.7, lineHeight: 1.6 }}>
-            Nothing was lost — reload the page or return in a moment. If the
+            Nothing was lost, reload the page or return in a moment. If the
             problem persists, reach us at hello@savotechnologies.com.
           </p>
           <button

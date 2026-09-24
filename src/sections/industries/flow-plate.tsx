@@ -29,7 +29,7 @@ export function FlowPlate({
         </figcaption>
 
         <ol className="relative mt-10 grid gap-8 sm:grid-cols-5 sm:gap-6 lg:gap-8">
-          {/* Spine — desktop */}
+          {/* Spine, desktop */}
           <span
             aria-hidden="true"
             className="absolute left-0 right-0 top-[5px] hidden h-px bg-border sm:block"
@@ -66,7 +66,7 @@ export function FlowPlate({
         </ol>
 
         <p className="t-caption mt-8 text-muted">
-          Engineered stage by stage — instrumented, access-controlled and documented.
+          Engineered stage by stage, instrumented, access-controlled and documented.
         </p>
       </figure>
     </Reveal>

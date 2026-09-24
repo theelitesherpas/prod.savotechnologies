@@ -78,7 +78,7 @@ export function ApplicationForm({ initialRole }: { initialRole?: string }) {
     ]
       .filter(Boolean)
       .join("\n");
-    const message = `${(data.notes ?? "").trim()}\n\n— Application details —\n${details}`;
+    const message = `${(data.notes ?? "").trim()}\n\nApplication details:\n${details}`;
 
     const parsed = enquirySchema.safeParse({
       name: data.name,
@@ -130,7 +130,7 @@ export function ApplicationForm({ initialRole }: { initialRole?: string }) {
       setStatus("error");
       track("enquiry_form_error", { form: "careers", status: res.status });
     } catch {
-      setServerMessage("Network error — please check your connection and try again.");
+      setServerMessage("Network error, please check your connection and try again.");
       setStatus("error");
       track("enquiry_form_error", { form: "careers", status: "network" });
     }
@@ -307,7 +307,7 @@ export function ApplicationForm({ initialRole }: { initialRole?: string }) {
         ) : null}
       </div>
 
-      {/* Honeypot — invisible to humans, irresistible to bots */}
+      {/* Honeypot, invisible to humans, irresistible to bots */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
           Website

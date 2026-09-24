@@ -18,7 +18,7 @@ export function AISystems() {
             <Reveal delay={120}>
               <p className="t-body-lg mt-8 max-w-xl text-muted">
                 Savo builds AI systems capable of working across information,
-                applications and workflows — from customer support and research
+                applications and workflows, from customer support and research
                 to document processing, sales operations and internal automation.
               </p>
             </Reveal>
@@ -110,7 +110,7 @@ export function AISystems() {
                 </ol>
 
                 <p className="t-caption mt-6 text-muted">
-                  Supervised by design — every agent knows what it may do alone,
+                  Supervised by design, every agent knows what it may do alone,
                   and what it must escalate.
                 </p>
               </figure>

@@ -40,7 +40,7 @@ const WHATSAPP_URL = `https://wa.me/917502901234?text=${encodeURIComponent(
 function Greeting() {
   return (
     <>
-      <p>Hello — I&apos;m the Savo Assistant.</p>
+      <p>Hello: I&apos;m the Savo Assistant.</p>
       <p className="mt-2 text-muted">
         Instant answers about our services, process, offices and careers,
         straight from this site. Ask away, or pick a question:
@@ -161,7 +161,7 @@ export function AskSavoBar() {
       } else {
         say(
           <>
-            <p>I don&apos;t have a verified answer for that one yet — I won&apos;t guess.</p>
+            <p>I don&apos;t have a verified answer for that one yet: I won&apos;t guess.</p>
             <p className="mt-2 text-muted">
               Send it to the team and a senior consultant replies within one business day.
             </p>
@@ -201,7 +201,7 @@ export function AskSavoBar() {
           name: "Ask Savo chat",
           email,
           projectType: "Something else",
-          message: `${emailCapture ?? "Question from the Ask Savo chat"} — sent from the Savo Assistant.`,
+          message: `${emailCapture ?? "Question from the Ask Savo chat"}, sent from the Savo Assistant.`,
           website: "",
         }),
       });
@@ -210,7 +210,7 @@ export function AskSavoBar() {
         setEmailState("sent");
         say(
           <p>
-            Sent. <span className="text-muted">Watch {email} — a reply lands within one business day.</span>
+            Sent. <span className="text-muted">Watch {email}, a reply lands within one business day.</span>
           </p>,
         );
       } else {
@@ -226,14 +226,14 @@ export function AskSavoBar() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))]">
-      {/* Broad glass frame — the window and the bar live inside it */}
+      {/* Broad glass frame, the window and the bar live inside it */}
       <div
         className={cn(
           "pointer-events-auto w-[min(44rem,calc(100%-1.5rem))] rounded-[14px] border border-foreground/10 bg-background p-[7px] shadow-[0_24px_70px_rgb(10_10_14/0.22)] transition-[transform,opacity] duration-500 ease-[var(--ease-out-expo)]",
           shown ? "translate-y-0 opacity-100" : "translate-y-[150%] opacity-0",
         )}
       >
-        {/* Conversation window — grows upward, attached to the bar */}
+        {/* Conversation window, grows upward, attached to the bar */}
         <div
           id="ask-savo-sheet"
           role="region"
@@ -348,14 +348,14 @@ export function AskSavoBar() {
                     </div>
                     {emailState === "error" ? (
                       <p role="alert" className="t-caption mt-2 text-error">
-                        Could not send — try again, or email hello@savotechnologies.com directly.
+                        Could not send, try again, or email hello@savotechnologies.com directly.
                       </p>
                     ) : null}
                   </form>
                 ) : null}
               </div>
 
-              {/* Human actions — always one tap away */}
+              {/* Human actions, always one tap away */}
               <div className="flex flex-wrap gap-2 border-t border-foreground/10 px-4 py-3">
                 <button
                   onClick={() => {
@@ -418,7 +418,7 @@ export function AskSavoBar() {
           </div>
         </div>
 
-        {/* The bar — the chat's composer when open (opens upward, arrow up) */}
+        {/* The bar, the chat's composer when open (opens upward, arrow up) */}
         <form
           onSubmit={submit}
           aria-label="Ask Savo"

@@ -40,7 +40,7 @@ export default async function CareersApplyPage({
               <Link href="/careers" className="transition-colors hover:text-foreground">
                 Careers
               </Link>{" "}
-              — Apply
+             Apply
             </span>
             <span className="h-px flex-1 bg-border" />
           </div>
@@ -72,7 +72,7 @@ export default async function CareersApplyPage({
               </Reveal>
             </div>
 
-            {/* Aside — process + questions */}
+            {/* Aside, process + questions */}
             <aside className="lg:col-span-5 lg:pt-1" aria-label="Application process and contact">
               <Reveal delay={220} className="space-y-6">
                 <div className="border border-border p-7 sm:p-8">

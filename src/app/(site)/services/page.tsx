@@ -64,7 +64,7 @@ export default function ServicesPage() {
       <DetailCta
         headingId="services-cta-heading"
         heading="Not sure which service you need?"
-        lead="Describe the problem in plain words — we'll tell you which chapter it belongs in, and what the first slice looks like. No charge for the map."
+        lead="Describe the problem in plain words, we'll tell you which chapter it belongs in, and what the first slice looks like. No charge for the map."
         location="services-cta"
         secondaryLabel="Explore Industries"
         secondaryHref="/industries"

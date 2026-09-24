@@ -40,7 +40,7 @@ export function ServicesDirectory() {
               </Reveal>
               <Reveal delay={120}>
                 <p className="t-body-lg mt-8 max-w-xl text-muted">
-                  Ten services under one engineering standard — from the first
+                  Ten services under one engineering standard, from the first
                   website to the AI agent answering your support queue. Each
                   opens into its own chapter below.
                 </p>
@@ -77,14 +77,14 @@ export function ServicesDirectory() {
         </div>
       </section>
 
-      {/* The directory — atlas grammar */}
+      {/* The directory, atlas grammar */}
       <Section id="directory" index="The Directory" labelledBy="directory-heading">
         <SectionHeader
           id="directory-heading"
           heading="The directory."
           lead={
             <>
-              Every service we sell, one row each — what it is, what it
+              Every service we sell, one row each, what it is, what it
               includes, how it runs. Start where the pain is.
             </>
           }

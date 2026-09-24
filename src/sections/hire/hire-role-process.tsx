@@ -51,7 +51,7 @@ export function HireRoleProcess({ role }: { role: HireRole }) {
         heading="From call to first commit."
         lead={
           <>
-            Fast where it can be, careful where it must be — and reversible
+            Fast where it can be, careful where it must be, and reversible
             at every step.
           </>
         }

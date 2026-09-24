@@ -48,7 +48,7 @@ export function ContactHero() {
                 <div className="mt-6 flex items-center gap-3 border-t border-border pt-5">
                   <span aria-hidden="true" className="h-2 w-2 shrink-0 bg-accent" />
                   <p className="t-caption text-muted">
-                    Every message reaches a human — never a ticket queue.
+                    Every message reaches a human, never a ticket queue.
                   </p>
                 </div>
               </div>

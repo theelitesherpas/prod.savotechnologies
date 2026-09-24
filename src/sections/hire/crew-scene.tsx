@@ -294,7 +294,7 @@ function VanScene() {
       <Cloud x={640} y={38} s={0.7} />
       <Bird x={505} y={70} />
       <Bird x={780} y={88} flip />
-      {/* the Savo van — doodled, square-windowed, slightly proud */}
+      {/* the Savo van, doodled, square-windowed, slightly proud */}
       <g transform="translate(330 0)">
         <g className="crew-bob-slow">
           <path
@@ -319,7 +319,7 @@ function VanScene() {
         <Wheel x={140} y={230} r={19} />
         <Wheel x={256} y={230} r={19} />
       </g>
-      {/* parcels launched from the top — matched profiles flying out */}
+      {/* parcels launched from the top, matched profiles flying out */}
       <Parcel x={470} y={140} s={0.8} spin delay="-0.4s" />
       <Parcel x={520} y={110} s={0.6} spin delay="-1.1s" />
       <Parcel x={432} y={100} s={0.5} spin delay="-1.7s" />
@@ -362,7 +362,7 @@ function RobotScene() {
           <circle cx="0" cy="-142" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
           <path d="M-26 -78 C -40 -74 -48 -66 -52 -56" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           <path d="M26 -78 C 40 -74 48 -66 52 -56" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          {/* chest gauge — training progress */}
+          {/* chest gauge, training progress */}
           <path d="M-14 -60 h28" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
           <path d="M-14 -60 h14" className="stroke-accent" strokeWidth="2.4" strokeLinecap="round" />
         </g>
@@ -440,7 +440,7 @@ function BrowserScene() {
           <path d="M40 -34 V0 M240 -34 V0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </g>
       </g>
-      {/* a ladder beside the frame — someone is placing the accent block */}
+      {/* a ladder beside the frame, someone is placing the accent block */}
       <g transform="translate(560 232)" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none">
         <path d="M-70 0 V-150 M-40 0 V-150" />
         <path d="M-70 -20 H-40 M-70 -60 H-40 M-70 -100 H-40 M-70 -140 H-40" />
@@ -498,7 +498,7 @@ function RackScene() {
             style={{ animationDelay: "0.6s" }}
           />
           <path d="M96 -132 h10 M96 -76 h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          {/* terminal on top of the rack — deploy log scrolling */}
+          {/* terminal on top of the rack, deploy log scrolling */}
           <rect x="18" y="-216" width="84" height="34" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
           <path d="M24 -206 h20 M24 -198 h34 M24 -190 h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
           <rect x="78" y="-208" width="4" height="4" className="fill-accent stroke-none" />
@@ -587,7 +587,7 @@ function JuggleScene() {
           <path d="M-3 -11 H3" strokeWidth="1.4" strokeLinecap="round" />
         </g>
       </g>
-      {/* coffee balanced on the juggler's head — obviously */}
+      {/* coffee balanced on the juggler's head, obviously */}
       <g transform="translate(430 62)">
         <g stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round">
           <path d="M-9 0 h18 v-11 h-18 Z" strokeLinejoin="round" />
@@ -632,7 +632,7 @@ function ScooterScene() {
           <path d="M13 -5 h8" strokeWidth="1.1" strokeLinecap="round" />
         </g>
       </g>
-      {/* the rider — rides with the scooter, no separate bob */}
+      {/* the rider, rides with the scooter, no separate bob */}
       <Person x={430} pose="ride" accent />
       {/* scooter */}
       <g transform="translate(400 232)">
@@ -785,7 +785,7 @@ function WebBuildScene() {
       <Sun x={112} y={52} />
       <Cloud x={300} y={42} s={0.8} />
       <Bird x={610} y={62} flip />
-      {/* the frame under construction — mast and jib first */}
+      {/* the frame under construction, mast and jib first */}
       <g stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none">
         <path d="M660 232 V44" />
         <path d="M660 44 L 400 76" />
@@ -1067,7 +1067,7 @@ function GearScene() {
       <Sun x={812} y={52} />
       <Cloud x={200} y={44} s={0.8} />
       <Bird x={580} y={62} />
-      {/* two interlocked gears — one winds the other */}
+      {/* two interlocked gears, one winds the other */}
       <g transform="translate(400 130)">
         <g className="crew-wheel" style={{ animationDuration: "18s" }} stroke="currentColor" fill="none">
           <circle r="52" strokeWidth="2.4" />
@@ -1158,7 +1158,7 @@ function BugHuntScene() {
       <Sun x={812} y={52} />
       <Cloud x={220} y={44} s={0.8} />
       <Bird x={600} y={60} flip />
-      {/* the bug — big, doodled, doomed */}
+      {/* the bug, big, doodled, doomed */}
       <g transform="translate(600 226)">
         <g className="crew-bob-slow">
           <ellipse cx="0" cy="-16" rx="34" ry="22" fill="none" stroke="currentColor" strokeWidth="2.2" />
@@ -1167,7 +1167,7 @@ function BugHuntScene() {
           <circle cx="14" cy="-26" r="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
           <path d="M-14 -34 L -20 -46 M14 -34 L 20 -46" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
           <path d="M-12 -16 h10 M12 -16 h-10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          {/* one accent spot — it's the rare one */}
+          {/* one accent spot, it's the rare one */}
           <rect x="-4" y="-20" width="8" height="8" className="fill-accent stroke-none" />
         </g>
       </g>
@@ -1221,7 +1221,7 @@ function ShipItScene() {
           <rect x="-6" y="-6" width="12" height="12" className="fill-accent stroke-none" transform="rotate(12)" />
         </g>
       </g>
-      {/* crew: two pushing the cube; one up top planting the flag (compact — the platform is high) */}
+      {/* crew: two pushing the cube; one up top planting the flag (compact, the platform is high) */}
       <Person x={300} pose="push" accent />
       <Person x={348} pose="push" />
       <g transform="translate(660 128)">
@@ -1272,11 +1272,11 @@ const SCENES: Record<string, () => React.JSX.Element> = {
 };
 
 const CAPTIONS: Record<string, { title: string; note: string }> = {
-  index: { title: "Your next senior is already moving.", note: "matched in 48 hours — the van knows the way" },
+  index: { title: "Your next senior is already moving.", note: "matched in 48 hours, the van knows the way" },
   "ai-ml-engineers": { title: "Trained, leashed, shipping.", note: "our robots stay friendly on a short retrieval lead" },
-  "frontend-developers": { title: "Pixels, held to a higher standard.", note: "every block placed by hand — no lorem ipsum survived" },
+  "frontend-developers": { title: "Pixels, held to a higher standard.", note: "every block placed by hand, no lorem ipsum survived" },
   "backend-developers": { title: "Heavy lifting, quiet wheels.", note: "the rack rides smoothly; the pager stays silent" },
-  "full-stack-developers": { title: "The whole stack, in the air at once.", note: "juggling since the first commit — nothing dropped yet" },
+  "full-stack-developers": { title: "The whole stack, in the air at once.", note: "juggling since the first commit, nothing dropped yet" },
   "mobile-developers": { title: "Weekly releases, one handed.", note: "shipping to both stores while holding a coffee" },
   "devops-qa-engineers": { title: "Deployments this boring, on purpose.", note: "the rocket goes up; the 3am page does not" },
   "svc-index": { title: "Everything a product needs. End to end.", note: "the whole stack, kept in the air with style" },

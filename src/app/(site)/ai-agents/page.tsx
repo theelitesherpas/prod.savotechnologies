@@ -70,7 +70,7 @@ export default function AgentsPage() {
       <DetailCta
         headingId="agents-cta-heading"
         heading="Deploy your first agent."
-        lead="Two to four weeks from scope to supervised live — on your data, inside your infrastructure, with the guardrails already in place."
+        lead="Two to four weeks from scope to supervised live, on your data, inside your infrastructure, with the guardrails already in place."
         location="ai-agents-cta"
         secondaryLabel="Start a Project"
         secondaryHref="/start"

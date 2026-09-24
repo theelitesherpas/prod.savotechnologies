@@ -64,16 +64,16 @@ export default function IndustriesPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 01 — Paper hero: statement, coverage card, sector contents board */}
+      {/* 01: Paper hero: statement, coverage card, sector contents board */}
       <IndustriesHero />
 
-      {/* 02 — The atlas: ten sector rows, each opening its chapter */}
+      {/* 02: The atlas: ten sector rows, each opening its chapter */}
       <IndustryAtlas />
 
-      {/* 03 — The common standard (ink chapter) */}
+      {/* 03: The common standard (ink chapter) */}
       <CommonStandard />
 
-      {/* Closing — the vermilion moment */}
+      {/* Closing, the vermilion moment */}
       <IndustriesCta />
     </>
   );

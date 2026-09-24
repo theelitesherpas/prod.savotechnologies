@@ -113,7 +113,7 @@ export default async function HireRolePage({
       <DetailCta
         headingId={`hire-role-cta-${role.slug}`}
         heading={`Ready to hire ${role.short.toLowerCase()}?`}
-        lead="One 30 minute call — stack, mission, start date. Matched profiles in 48 hours, and the two week trial keeps it reversible."
+        lead="One 30 minute call, stack, mission, start date. Matched profiles in 48 hours, and the two week trial keeps it reversible."
         location={`hire-${role.slug}-cta`}
       />
     </>

@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { absoluteUrl } from "@/lib/env";
 import { openGraphFor } from "@/lib/seo";
 import { Reveal } from "@/components/ui/reveal";
 import { DetailCta } from "@/components/shared/detail-cta";
 import { ARTICLES, getArticle } from "@/constants/insights";
+import { withBasePath } from "@/lib/utils";
 
 /**
  * The reading page — one article, set in the document's reading style:
@@ -29,7 +31,12 @@ export async function generateMetadata({
     description: article.excerpt,
     alternates: { canonical: `/insights/${article.slug}` },
     openGraph: {
-      ...openGraphFor({ title: `${article.title} | Savo Technologies`, description: article.excerpt, url: `/insights/${article.slug}` }),
+      ...openGraphFor({
+        title: `${article.title} | Savo Technologies`,
+        description: article.excerpt,
+        url: `/insights/${article.slug}`,
+        images: [{ url: withBasePath(article.image), width: 1200, height: 750 }],
+      }),
       type: "article",
     },
   };
@@ -79,7 +86,7 @@ export default async function ArticlePage({
           <div aria-hidden="true" className="mb-12 flex items-center gap-4">
             <span className="h-2 w-2 shrink-0 bg-accent" />
             <span className="t-label text-muted">
-              <Link href="/insights" className="transition-colors hover:text-foreground">Resources</Link>
+              <Link href="/insights" className="transition-colors hover:text-foreground">Insights</Link>
               <span className="mx-2.5 text-muted/60">·</span>
               {article.cat}
             </span>
@@ -104,7 +111,23 @@ export default async function ArticlePage({
           </div>
         </header>
 
-        {/* Body — measured reading column */}
+        {/* Editorial image */}
+        <div className="shell">
+          <Reveal>
+            <figure className="relative aspect-[21/9] overflow-hidden border border-border">
+              <Image
+                src={withBasePath(article.image)}
+                alt={`${article.title}: editorial illustration`}
+                fill
+                priority
+                sizes="(max-width: 1536px) 100vw, 1440px"
+                className="duotone object-cover"
+              />
+            </figure>
+          </Reveal>
+        </div>
+
+        {/* Body, measured reading column */}
         <div className="border-t border-border">
           <div className="shell py-16 sm:py-20">
             <div className="mx-auto max-w-[42rem] space-y-7">
@@ -166,7 +189,7 @@ export default async function ArticlePage({
       <DetailCta
         headingId="article-cta-heading"
         heading="Reading is the easy part."
-        lead="Applying it to a real product is where we come in. Bring the brief — first reply within one business day."
+        lead="Applying it to a real product is where we come in. Bring the brief, first reply within one business day."
         location={`article-${article.slug}-cta`}
       />
     </>

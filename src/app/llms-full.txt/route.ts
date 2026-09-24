@@ -23,7 +23,7 @@ export function GET() {
 
   const industries = INDUSTRIES.join(", ");
 
-  const body = `# ${SITE.name} — full site context
+  const body = `# ${SITE.name}, full site context
 # Source: ${base}/ (official website)
 # Retrieved content mirrors the visible homepage; all claims are the company's own.
 
@@ -55,15 +55,15 @@ ${industries}
 - Reference requests: relevant engagements are walkthrough-ready under NDA via the contact page
 
 ## Process (methodology)
-1. Discover — frame the problem and success metrics
-2. Architect — design the system, plan the build
-3. Build — engineer in iterations with visible progress
-4. Measure — instrument, observe, learn from real usage
-5. Grow — improve and scale what works
+1. Discover, frame the problem and success metrics
+2. Architect, design the system, plan the build
+3. Build, engineer in iterations with visible progress
+4. Measure, instrument, observe, learn from real usage
+5. Grow, improve and scale what works
 
 ## AI position
 AI at Savo is production engineering, not demos: agents with guardrails, human
-oversight, observability, permissions, evaluation and fallback behavior —
+oversight, observability, permissions, evaluation and fallback behavior,
 deployed against real business workflows with enterprise security.
 
 ## Contact

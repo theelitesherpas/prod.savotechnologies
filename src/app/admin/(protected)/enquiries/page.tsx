@@ -27,7 +27,7 @@ export default async function EnquiriesPage({
   const sp = await searchParams;
 
   if (!prisma) {
-    return <p className="t-sm text-muted">Database not configured — set DATABASE_URL.</p>;
+    return <p className="t-sm text-muted">Database not configured, set DATABASE_URL.</p>;
   }
 
   const status = sp.status && isEnquiryStatus(sp.status) ? sp.status : undefined;

@@ -73,7 +73,7 @@ function CaseArt({ variant }: { variant: Variant }) {
 
         {variant === "ai" && (
           <>
-            {/* agent graph — central node, satellites, orthogonal links */}
+            {/* agent graph, central node, satellites, orthogonal links */}
             <rect x="356" y="206" width="88" height="88" strokeWidth="1.6" />
             <rect x="374" y="224" width="52" height="52" opacity="0.35" />
             <path d="M400 206V118M400 294v88M356 250h-98M444 250h98" opacity="0.6" />
@@ -91,7 +91,7 @@ function CaseArt({ variant }: { variant: Variant }) {
 
         {variant === "software" && (
           <>
-            {/* operations console — sidebar, panels, table rows */}
+            {/* operations console, sidebar, panels, table rows */}
             <rect x="80" y="70" width="640" height="360" />
             <line x1="216" y1="70" x2="216" y2="430" />
             {[0, 1, 2, 3].map((i) => (
@@ -151,7 +151,7 @@ function CaseArt({ variant }: { variant: Variant }) {
 
         {variant === "growth" && (
           <>
-            {/* ascending series — axes, bars, trend with square markers */}
+            {/* ascending series, axes, bars, trend with square markers */}
             <line x1="120" y1="90" x2="120" y2="404" opacity="0.5" />
             <line x1="120" y1="404" x2="700" y2="404" opacity="0.5" />
             {[168, 244, 320, 396].map((y) => (
@@ -199,7 +199,7 @@ export function CaseStudyCard({
       <div className={`relative overflow-hidden ${aspect}`}>
         <Image
           src={CASE_PHOTO[variant]}
-          alt={`Representative studio imagery — ${variant} case study in preparation`}
+          alt={`Representative studio imagery: ${variant} case study in preparation`}
           fill
           sizes={sizes}
           className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"

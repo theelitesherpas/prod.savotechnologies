@@ -69,7 +69,7 @@ export default function HirePage() {
       <DetailCta
         headingId="hire-cta-heading"
         heading="A senior in your standup within two weeks."
-        lead="Tell us the role, the stack and the mission. Profiles land within 48 hours — and the first two weeks stay reversible."
+        lead="Tell us the role, the stack and the mission. Profiles land within 48 hours, and the first two weeks stay reversible."
         location="hire-cta"
         secondaryLabel="Explore Services"
         secondaryHref="/services"

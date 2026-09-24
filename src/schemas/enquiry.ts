@@ -66,7 +66,7 @@ const budget = z.enum(BUDGET_RANGES).optional().or(z.literal(""));
 const message = z
   .string()
   .trim()
-  .min(20, "Please tell us a little more — at least 20 characters.")
+  .min(20, "Please tell us a little more, at least 20 characters.")
   .max(4000, "Message is too long (max 4000 characters).");
 
 /** Honeypot — humans never see or fill this. The handler short-circuits bots. */

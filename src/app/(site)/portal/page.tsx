@@ -22,9 +22,9 @@ export const metadata: Metadata = {
 };
 
 const PORTAL_SECTIONS = [
-  { title: "Project status", text: "Milestones, decisions and what shipped this week — the same view our delivery leads use." },
+  { title: "Project status", text: "Milestones, decisions and what shipped this week, the same view our delivery leads use." },
   { title: "Deliverables", text: "Documents, environments and handover artefacts, versioned and in one place." },
-  { title: "Invoices & contracts", text: "Billing history, statements and agreements — no email archaeology." },
+  { title: "Invoices & contracts", text: "Billing history, statements and agreements, no email archaeology." },
   { title: "Direct support", text: "Open a ticket with the team that builds your product, not a queue that reads scripts." },
 ];
 
@@ -82,7 +82,7 @@ export default function PortalPage() {
               <Reveal delay={200}>
                 <div className="blueprint relative border border-border bg-surface p-8 sm:p-10">
                   <div className="flex items-center justify-between">
-                    <p className="t-label text-muted">Status — in production</p>
+                    <p className="t-label text-muted">Status, in production</p>
                     <span aria-hidden="true" className="flex gap-1.5">
                       <span className="h-1.5 w-1.5 bg-accent schem-pulse" />
                       <span className="h-1.5 w-1.5 bg-border" />
@@ -96,7 +96,7 @@ export default function PortalPage() {
                     <div className="mt-6 h-2 w-1/3 bg-accent/30" />
                   </div>
                   <p className="t-caption mt-8 text-muted">
-                    We ship what we promise — including our own tools. This page updates the day the portal opens.
+                    We ship what we promise, including our own tools. This page updates the day the portal opens.
                   </p>
                 </div>
               </Reveal>
@@ -109,7 +109,7 @@ export default function PortalPage() {
         <SectionHeader
           id="carries-heading"
           heading="What the portal will carry."
-          lead={<>Four rooms, one login — everything a running engagement produces, where you can actually find it.</>}
+          lead={<>Four rooms, one login, everything a running engagement produces, where you can actually find it.</>}
         />
         <Reveal>
           <ul className="grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-2">
@@ -127,7 +127,7 @@ export default function PortalPage() {
       <DetailCta
         headingId="portal-cta-heading"
         heading="Need something today?"
-        lead="Existing client with a question? Your delivery lead answers directly — that channel never waits for software."
+        lead="Existing client with a question? Your delivery lead answers directly, that channel never waits for software."
         location="portal-cta"
         secondaryLabel="Contact Us"
         secondaryHref="/contact"

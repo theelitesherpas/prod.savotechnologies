@@ -51,7 +51,7 @@ export const WHY_SAVO = [
   },
   {
     title: "AI-Native Thinking",
-    text: "AI is considered as part of the product architecture — not added afterward as a marketing feature.",
+    text: "AI is considered as part of the product architecture, not added afterward as a marketing feature.",
   },
   {
     title: "Built to Scale",
@@ -72,11 +72,11 @@ export const WHY_SAVO = [
  * verifiable figures — false statistics are never rendered.
  */
 export const METRICS = [
-  { value: "—", label: "Projects Delivered" },
-  { value: "—", label: "Digital Products" },
-  { value: "—", label: "Countries Served" },
-  { value: "—", label: "Client Retention" },
-  { value: "—", label: "Years Combined Experience" },
+  { value: "…", label: "Projects Delivered" },
+  { value: "…", label: "Digital Products" },
+  { value: "…", label: "Countries Served" },
+  { value: "…", label: "Client Retention" },
+  { value: "…", label: "Years Combined Experience" },
 ] as const;
 
 export const INDUSTRIES = [
@@ -129,17 +129,17 @@ export const GROWTH_CHANNELS = [
   {
     abbr: "SEO",
     name: "Search Engine Optimization",
-    text: "Being found when people actively search for what you build — technical, structural and content work that compounds.",
+    text: "Being found when people actively search for what you build, technical, structural and content work that compounds.",
   },
   {
     abbr: "AEO",
     name: "Answer Engine Optimization",
-    text: "Being the answer AI assistants cite — structured, unambiguous content that machines can trust and quote.",
+    text: "Being the answer AI assistants cite, structured, unambiguous content that machines can trust and quote.",
   },
   {
     abbr: "GEO",
     name: "Generative Engine Optimization",
-    text: "Presence inside generative search — where an increasing share of buying decisions now begin.",
+    text: "Presence inside generative search, where an increasing share of buying decisions now begin.",
   },
 ] as const;
 

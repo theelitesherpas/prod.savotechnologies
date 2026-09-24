@@ -202,7 +202,7 @@ export function IndustryFlow({ detail }: { detail: IndustryDetail }) {
   return (
     <Section index="The Flow" chapter="ink" labelledBy={headingId}>
       <SectionHeader id={headingId} heading={detail.flow.heading} lead={detail.flow.intro} />
-      <FlowPlate nodes={detail.flow.nodes} caption={`${detail.title} — engineered flow`} />
+      <FlowPlate nodes={detail.flow.nodes} caption={`${detail.title}, engineered flow`} />
     </Section>
   );
 }
@@ -220,12 +220,12 @@ export function IndustryFaqs({ detail }: { detail: IndustryDetail }) {
         lead={
           <>
             The questions buyers and product teams raise before bringing us
-            into this sector — answered plainly.
+            into this sector, answered plainly.
           </>
         }
       />
       <div className="max-w-3xl">
-        <Faq items={detail.faqs} label={`${detail.title} — frequently asked questions`} />
+        <Faq items={detail.faqs} label={`${detail.title}, frequently asked questions`} />
       </div>
     </Section>
   );

@@ -163,9 +163,9 @@ function EnquiryDrawer({
             <div>
               <p className="t-label mb-3 text-muted">
                 {askMode
-                  ? "Ask Savo — reply within one business day"
+                  ? "Ask Savo, reply within one business day"
                   : reason
-                    ? `New project — via ${reason}`
+                    ? `New project, via ${reason}`
                     : "New project"}
               </p>
               <h2 id="enquiry-title" className="t-h2">
@@ -247,7 +247,7 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
       setStatus("error");
       track("enquiry_form_error", { status: res.status });
     } catch {
-      setServerMessage("Network error — please check your connection and try again.");
+      setServerMessage("Network error, please check your connection and try again.");
       setStatus("error");
       track("enquiry_form_error", { status: "network" });
     }
@@ -259,7 +259,7 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
         <span aria-hidden="true" className="mb-6 block h-3 w-3 bg-accent" />
         <p className="t-h3 mb-3">Enquiry received.</p>
         <p className="t-body text-muted">
-          Thank you — a member of the Savo team will review your project and reply
+          Thank you, a member of the Savo team will review your project and reply
           within two business days.
         </p>
       </div>
@@ -294,7 +294,7 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
         defaultValue={initialMessage}
       />
 
-      {/* Honeypot — invisible to humans, irresistible to bots */}
+      {/* Honeypot, invisible to humans, irresistible to bots */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
           Website

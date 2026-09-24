@@ -82,7 +82,7 @@ export const SERVICES: ServiceGroup[] = [
     title: "Software & SaaS",
     ctaName: "software",
     positioning:
-      "Software engineered around real operational requirements — not generic templates.",
+      "Software engineered around real operational requirements, not generic templates.",
     capabilities: [
       "Custom Software",
       "SaaS Platforms",

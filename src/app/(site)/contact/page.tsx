@@ -64,15 +64,15 @@ export default async function ContactPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 01 — Statement opening + response-time specimen */}
+      {/* 01: Statement opening + response-time specimen */}
       <ContactHero />
 
-      {/* 02 — The form, with direct channels and shortcuts alongside */}
+      {/* 02: The form, with direct channels and shortcuts alongside */}
       <Section id="send" index="Message" labelledBy="message-heading">
         <SectionHeader
           id="message-heading"
           heading="Send a message."
-          lead="Takes a minute. Everything reaches a human — no ticket queues, no autoresponders."
+          lead="Takes a minute. Everything reaches a human, no ticket queues, no autoresponders."
         />
 
         <div className="grid gap-10 lg:grid-cols-12">
@@ -124,13 +124,13 @@ export default async function ContactPage() {
         </div>
       </Section>
 
-      {/* Ink band — after-send expectations */}
+      {/* Ink band, after-send expectations */}
       <WhatNext />
 
-      {/* 03 — Global offices */}
+      {/* 03: Global offices */}
       <Offices />
 
-      {/* 04 — The people who answer */}
+      {/* 04: The people who answer */}
       <Team />
     </>
   );

@@ -115,12 +115,12 @@ export default function IndorePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 01 — Position */}
+      {/* 01: Position */}
       <Section id="indore" index="Location" labelledBy="indore-heading">
         <SectionHeader
           id="indore-heading"
           heading="An engineering company based in Indore."
-          lead={`${SITE.name} builds software from Indore, Madhya Pradesh — one of India's fastest growing technology cities. The company operates as ${SITE.legalName} and works with clients across India and worldwide.`}
+          lead={`${SITE.name} builds software from Indore, Madhya Pradesh, one of India's fastest growing technology cities. The company operates as ${SITE.legalName} and works with clients across India and worldwide.`}
         />
         <Reveal className="mt-12 grid gap-px border border-border bg-border sm:grid-cols-3">
           {[
@@ -136,7 +136,7 @@ export default function IndorePage() {
         </Reveal>
       </Section>
 
-      {/* 02 — Services delivered from Indore */}
+      {/* 02: Services delivered from Indore */}
       <Section id="services" index="Services" labelledBy="services-heading">
         <SectionHeader
           id="services-heading"
@@ -158,7 +158,7 @@ export default function IndorePage() {
         </div>
       </Section>
 
-      {/* 03 — Why Indore works for clients */}
+      {/* 03: Why Indore works for clients */}
       <Section id="working" index="Working together" labelledBy="working-heading">
         <SectionHeader
           id="working-heading"
@@ -170,7 +170,7 @@ export default function IndorePage() {
             <h3 className="t-h3">Deep engineering talent, sensible rates</h3>
             <p className="t-body mt-3 text-muted">
               Indore produces strong engineers across web, mobile and data work. Costs stay
-              lower than the metros without compromising seniority — a combination we pass
+              lower than the metros without compromising seniority, a combination we pass
               on in project pricing.
             </p>
           </div>
@@ -184,7 +184,7 @@ export default function IndorePage() {
         </Reveal>
       </Section>
 
-      {/* 04 — FAQ (AEO) */}
+      {/* 04: FAQ (AEO) */}
       <Section id="faq" index="Questions" labelledBy="faq-heading">
         <SectionHeader
           id="faq-heading"
@@ -201,7 +201,7 @@ export default function IndorePage() {
         </div>
       </Section>
 
-      {/* 05 — Contact */}
+      {/* 05: Contact */}
       <Section id="start" index="Start" labelledBy="start-heading">
         <SectionHeader
           id="start-heading"

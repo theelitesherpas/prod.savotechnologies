@@ -113,7 +113,7 @@ export default async function ServicePage({
       <DetailCta
         headingId="service-cta-heading"
         heading={`Need ${detail.title.toLowerCase()} that ships?`}
-        lead="Tell us the problem and the constraints. We'll come back with an approach, a staged plan and an honest number — within days."
+        lead="Tell us the problem and the constraints. We'll come back with an approach, a staged plan and an honest number, within days."
         location={`service-${detail.slug}-cta`}
       />
     </>

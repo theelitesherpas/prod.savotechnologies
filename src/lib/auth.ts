@@ -44,7 +44,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
     const b = Buffer.from(hash);
     return a.length === b.length && timingSafeEqual(a, b);
   } catch {
-    return false; // malformed hash — treat as failed verification, never throw
+    return false; // malformed hash, treat as failed verification, never throw
   }
 }
 

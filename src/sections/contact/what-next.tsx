@@ -17,7 +17,7 @@ export function WhatNext() {
             What happens after you hit send.
           </h2>
           <p className="t-caption max-w-xs text-muted">
-            No autoresponders, no &ldquo;we&apos;ll be in touch&rdquo; — a defined
+            No autoresponders, no &ldquo;we&apos;ll be in touch&rdquo;, a defined
             path from your message to a working engagement.
           </p>
         </div>

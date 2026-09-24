@@ -197,7 +197,7 @@ export const HIRING_STEPS = [
   {
     step: "03",
     title: "Paid pairing session",
-    text: "Two hours on a small real task with the team you would join — compensated, because your time is work.",
+    text: "Two hours on a small real task with the team you would join, compensated, because your time is work.",
   },
   {
     step: "04",
@@ -210,7 +210,7 @@ export const HIRING_STEPS = [
 export const LIFE_POINTS = [
   {
     title: "Real products, real stakes",
-    text: "Hospital systems, payment rails, AI agents in production. Your code ships to users who depend on it — often in regulated industries where correctness is the product.",
+    text: "Hospital systems, payment rails, AI agents in production. Your code ships to users who depend on it, often in regulated industries where correctness is the product.",
   },
   {
     title: "Small senior teams",
@@ -218,7 +218,7 @@ export const LIFE_POINTS = [
   },
   {
     title: "Design × engineering, one room",
-    text: "Designers and engineers decide together, daily. The best interface is the one you stop noticing — and everyone here can argue both halves of that sentence.",
+    text: "Designers and engineers decide together, daily. The best interface is the one you stop noticing, and everyone here can argue both halves of that sentence.",
   },
   {
     title: "Remote first, India",
@@ -226,7 +226,7 @@ export const LIFE_POINTS = [
   },
   {
     title: "Learn in production",
-    text: "Agent fleets with guardrails, healthcare compliance, fintech rails. The hard problems arrive on day one — and you are trusted with them early.",
+    text: "Agent fleets with guardrails, healthcare compliance, fintech rails. The hard problems arrive on day one, and you are trusted with them early.",
   },
 ] as const;
 

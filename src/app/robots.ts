@@ -12,7 +12,7 @@ import { absoluteUrl, INDEXABLE } from "@/lib/env";
  * - Everything public is crawlable in production; API endpoints and the
  *   admin panel are not (they are also protected by auth — robots.txt is a
  *   policy hint, never a security boundary).
- * - AI/answer-engine crawlers are explicitly welcomed (AEO/GEO posture) —
+ * - AI/answer-engine crawlers are explicitly welcomed (AEO/GEO posture),
  *   they are allowed by default, and stating it documents intent.
  */
 export default function robots(): MetadataRoute.Robots {

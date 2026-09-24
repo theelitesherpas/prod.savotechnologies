@@ -37,18 +37,18 @@ export const HIRE_ROLES: HireRole[] = [
     short: "AI & ML",
     tagline: "AI engineers who ship to production",
     heroLead:
-      "Dedicated AI and ML engineers who have deployed agents, RAG systems and predictive models — not researchers with notebooks, engineers with pager duty.",
+      "Dedicated AI and ML engineers who have deployed agents, RAG systems and predictive models, not researchers with notebooks, engineers with pager duty.",
     metaDescription:
       "Hire dedicated AI and ML engineers from Savo Technologies: LLM applications, RAG, predictive models and MLOps. Matched in 48 hours, two week paid trial, transparent monthly rates.",
     intro: [
       "Serious AI work is engineering: retrieval over real data, evaluation suites that catch regressions, guardrails that hold under live traffic, and cost-aware inference that survives its own bill. That is the profile we vet for.",
-      "Start with one engineer or a full pod — architect, engineer and data engineer working as your team, on your roadmap, in your standups. Your data stays in your cloud; you own every model and every line from the first commit.",
+      "Start with one engineer or a full pod, architect, engineer and data engineer working as your team, on your roadmap, in your standups. Your data stays in your cloud; you own every model and every line from the first commit.",
     ],
     monthly: 120000,
     stack: ["Python", "LangChain", "PyTorch", "pgvector", "Airflow", "MLflow", "FastAPI", "AWS"],
     engagements: [
       { title: "Custom AI agents & copilots", text: "Agents grounded in your data with tool calling, guardrails and human escalation designed in." },
-      { title: "RAG knowledge systems", text: "Retrieval pipelines over your documents — answers with sources, hallucination-resistant by design." },
+      { title: "RAG knowledge systems", text: "Retrieval pipelines over your documents, answers with sources, hallucination-resistant by design." },
       { title: "LLM app integration", text: "Language-model features woven into existing products without disrupting what already works." },
       { title: "Forecasting & prediction", text: "Demand, churn and risk models monitored in production, not parked in a notebook." },
       { title: "Recommendation & anomaly detection", text: "Ranking systems and fraud/anomaly signals tied to metrics your business tracks." },
@@ -74,9 +74,9 @@ export const HIRE_ROLES: HireRole[] = [
     ],
     faqs: [
       { q: "How quickly can an AI engineer start?", a: "Typically within two weeks of your first call. Senior profiles are shared within 48 hours, and most clients interview the same week." },
-      { q: "What if the engineer is not a good fit?", a: "The first two weeks are a paid trial. If the fit is wrong, we replace the engineer or you stop — no questions asked." },
+      { q: "What if the engineer is not a good fit?", a: "The first two weeks are a paid trial. If the fit is wrong, we replace the engineer or you stop, no questions asked." },
       { q: "Do they work only for us?", a: "Yes. Dedicated means dedicated: your engineer works exclusively on your product, in your tools and standups." },
-      { q: "Who owns the code and models?", a: "You do, from the first commit — including training code and evaluation sets." },
+      { q: "Who owns the code and models?", a: "You do, from the first commit, including training code and evaluation sets." },
     ],
     iconSlug: "ai-agent-development",
     related: ["full-stack-developers", "backend-developers"],
@@ -91,18 +91,18 @@ export const HIRE_ROLES: HireRole[] = [
     metaDescription:
       "Hire dedicated frontend developers from Savo Technologies: React, Next.js, TypeScript, design systems and Core Web Vitals discipline. Matched in 48 hours with a two week paid trial.",
     intro: [
-      "The frontend is where your product is judged in seconds. Our engineers ship interfaces that stay fast under content, accessible to every user and faithful to the design system they help maintain — with performance budgets enforced in CI, not aspirational.",
+      "The frontend is where your product is judged in seconds. Our engineers ship interfaces that stay fast under content, accessible to every user and faithful to the design system they help maintain, with performance budgets enforced in CI, not aspirational.",
       "Embedded in your team from week one: your repo, your reviews, your Friday demos. They pair with designers in Figma, test on real devices and leave every component more reusable than they found it.",
     ],
     monthly: 85000,
     stack: ["React", "Next.js", "TypeScript", "Tailwind", "Storybook", "Playwright", "Vercel", "Figma"],
     engagements: [
-      { title: "React & Next.js product builds", text: "App router, SSR and edge rendering — or careful migrations out of legacy React." },
+      { title: "React & Next.js product builds", text: "App router, SSR and edge rendering, or careful migrations out of legacy React." },
       { title: "Design systems", text: "Component libraries, tokens and Storybook docs your whole team actually adopts." },
       { title: "Performance rescue", text: "Core Web Vitals budgets diagnosed, enforced in CI and defended release after release." },
       { title: "Accessibility upgrades", text: "WCAG 2.2 AA as a habit: keyboard paths, screen readers, reduced motion." },
       { title: "Headless commerce storefronts", text: "Fast, indexed, conversion-tuned storefronts on headless architecture." },
-      { title: "Dashboard & data UIs", text: "Complex state made legible — tables, charts and flows that stay fast at scale." },
+      { title: "Dashboard & data UIs", text: "Complex state made legible, tables, charts and flows that stay fast at scale." },
     ],
     skills: [
       { title: "React and Next.js", text: "App router, SSR, edge rendering and migrations from legacy React." },
@@ -148,7 +148,7 @@ export const HIRE_ROLES: HireRole[] = [
     stack: ["Node.js", "Python", "PostgreSQL", "Redis", "GraphQL", "Docker", "AWS", "Terraform"],
     engagements: [
       { title: "API design & development", text: "REST and GraphQL services with versioning and docs other teams enjoy consuming." },
-      { title: "Microservices & monolith rescue", text: "Boundaries drawn honestly — including the discipline to keep a monolith when it serves you." },
+      { title: "Microservices & monolith rescue", text: "Boundaries drawn honestly, including the discipline to keep a monolith when it serves you." },
       { title: "Payments & billing integrations", text: "Rails, reconciliation and retries engineered so the numbers always balance." },
       { title: "Database design & tuning", text: "PostgreSQL schemas and queries tuned for real access patterns, not demos." },
       { title: "Auth & security hardening", text: "Least privilege, encryption and the boring hygiene that prevents incidents." },
@@ -173,7 +173,7 @@ export const HIRE_ROLES: HireRole[] = [
       { title: "Transparent rates", text: "One monthly rate per engineer, however hairy the problem." },
     ],
     faqs: [
-      { q: "Which backend stacks do you cover?", a: "Primarily Node.js, Python and Go with PostgreSQL. If your stack differs, tell us — we will say no honestly if we cannot staff it well." },
+      { q: "Which backend stacks do you cover?", a: "Primarily Node.js, Python and Go with PostgreSQL. If your stack differs, tell us, we will say no honestly if we cannot staff it well." },
       { q: "Can they take over an existing service?", a: "Yes. Most engagements begin with a knowledge-transfer week and a stabilisation plan before new features." },
       { q: "How is my data kept safe?", a: "Engineers work in your infrastructure with least-privilege access, NDA signed, and access revoked the day an engagement ends." },
       { q: "Can we start with one and grow?", a: "Most clients do. One engineer proving the model, then a pod of three to five within a quarter." },
@@ -187,7 +187,7 @@ export const HIRE_ROLES: HireRole[] = [
     short: "Full Stack",
     tagline: "Full stack developers who own features end to end",
     heroLead:
-      "Product-minded engineers comfortable from the database to the pixel — React on the front, Node or Python behind, PostgreSQL underneath, deployed on AWS.",
+      "Product-minded engineers comfortable from the database to the pixel: React on the front, Node or Python behind, PostgreSQL underneath, deployed on AWS.",
     metaDescription:
       "Hire dedicated full stack developers from Savo Technologies: React, Next.js, Node.js and PostgreSQL in one head. Feature ownership end to end, 48 hour matching, two week paid trial.",
     intro: [
@@ -197,11 +197,11 @@ export const HIRE_ROLES: HireRole[] = [
     monthly: 95000,
     stack: ["React", "Next.js", "Node.js", "TypeScript", "PostgreSQL", "Docker", "AWS", "Playwright"],
     engagements: [
-      { title: "MVP builds", text: "Zero to launch with a senior who has done it before — no assembled-by-committee first version." },
+      { title: "MVP builds", text: "Zero to launch with a senior who has done it before, no assembled-by-committee first version." },
       { title: "Feature development end to end", text: "One owner per feature: schema, API, UI, tests and the deploy button." },
       { title: "SaaS products", text: "Multi-tenant foundations, billing and onboarding shipped as one coherent system." },
       { title: "Internal tools & admin panels", text: "The operational software your team deserves, built like a product not a spreadsheet." },
-      { title: "Technology migrations", text: "Re-platforming in slices — shipping value along the way, not freezing for a rewrite." },
+      { title: "Technology migrations", text: "Re-platforming in slices, shipping value along the way, not freezing for a rewrite." },
       { title: "Product rescue", text: "Inherit a stalled build, stabilise it, and get it moving again with a plan you can read." },
     ],
     skills: [
@@ -212,7 +212,7 @@ export const HIRE_ROLES: HireRole[] = [
     ],
     process: [
       { name: "Share your needs", text: "Product area and the stack depth needed front versus back." },
-      { name: "Meet matched developers", text: "Shortlist within 48 hours — full stack profiles with shipped products." },
+      { name: "Meet matched developers", text: "Shortlist within 48 hours, full stack profiles with shipped products." },
       { name: "Two week paid trial", text: "One real feature slice, reviewed by your lead." },
       { name: "Onboard and scale", text: "Add specialists around them as the product grows." },
     ],
@@ -242,12 +242,12 @@ export const HIRE_ROLES: HireRole[] = [
       "Hire dedicated mobile developers from Savo Technologies: React Native, Flutter, Swift and Kotlin. Weekly releases, offline-first apps, store operations. 48 hour matching, paid trial.",
     intro: [
       "Mobile is a rhythm discipline: weekly store builds, crashes treated as exceptions, and interfaces that survive real devices, bad networks and one-handed use. Our engineers have shipped fintech wallets, logistics trackers and healthcare apps across regions.",
-      "Cross-platform where it earns its keep, native where the platform insists. Offline-first sync when the field has no signal, store operations handled end to end — listings, reviews, phased rollouts.",
+      "Cross-platform where it earns its keep, native where the platform insists. Offline-first sync when the field has no signal, store operations handled end to end, listings, reviews, phased rollouts.",
     ],
     monthly: 90000,
     stack: ["React Native", "Flutter", "Swift", "Kotlin", "Firebase", "Fastlane", "Detox", "Node.js"],
     engagements: [
-      { title: "iOS & Android development", text: "One codebase, both stores — or full native when the product demands it." },
+      { title: "iOS & Android development", text: "One codebase, both stores, or full native when the product demands it." },
       { title: "Native modules", text: "Swift and Kotlin for camera, payments, BLE and background work." },
       { title: "Offline-first field apps", text: "Sync engines that survive dead zones and reconcile cleanly when signal returns." },
       { title: "App rescue & modernisation", text: "Crash and dependency audit first, then stabilise and resume weekly releases." },
@@ -273,10 +273,10 @@ export const HIRE_ROLES: HireRole[] = [
       { title: "Transparent rates", text: "One monthly rate per engineer, platform agnostic." },
     ],
     faqs: [
-      { q: "React Native, Flutter or native?", a: "Depends on your product. We staff all three and recommend honestly — including a hybrid where only some screens go native." },
+      { q: "React Native, Flutter or native?", a: "Depends on your product. We staff all three and recommend honestly, including a hybrid where only some screens go native." },
       { q: "Can they rescue an existing app?", a: "Frequently. Crash and dependency audit first, then stabilise, modernise and resume weekly releases." },
       { q: "Do they handle store approvals?", a: "Yes: listings, metadata, screenshots, review responses and phased rollouts on both stores." },
-      { q: "Can one developer cover both platforms?", a: "With React Native or Flutter, yes — that is the point. Pure native needs two specialists, which we also staff." },
+      { q: "Can one developer cover both platforms?", a: "With React Native or Flutter, yes, that is the point. Pure native needs two specialists, which we also staff." },
     ],
     iconSlug: "mobile-apps",
     related: ["full-stack-developers", "frontend-developers"],
@@ -287,7 +287,7 @@ export const HIRE_ROLES: HireRole[] = [
     short: "DevOps & QA",
     tagline: "DevOps and QA engineers who delete 3am pages",
     heroLead:
-      "Infrastructure as code, pipelines that deploy on merge, and test suites that catch regressions before your users do. They make releases boring — on purpose.",
+      "Infrastructure as code, pipelines that deploy on merge, and test suites that catch regressions before your users do. They make releases boring, on purpose.",
     metaDescription:
       "Hire dedicated DevOps and QA engineers from Savo Technologies: Terraform, Kubernetes, CI/CD pipelines, Playwright automation and observability. 48 hour matching, paid trial, transparent rates.",
     intro: [
@@ -300,7 +300,7 @@ export const HIRE_ROLES: HireRole[] = [
       { title: "AWS landing zones", text: "Accounts, guardrails and cost controls set up so growth doesn't create chaos." },
       { title: "Kubernetes build & operations", text: "Clusters sized to reality, with the discipline simpler options sometimes beat." },
       { title: "CI/CD pipeline engineering", text: "Trunk-based flows, preview environments and one-click rollbacks." },
-      { title: "Test automation", text: "Playwright suites wired into CI with flake control — tests that gate, not decorate." },
+      { title: "Test automation", text: "Playwright suites wired into CI with flake control, tests that gate, not decorate." },
       { title: "Observability & on-call setup", text: "Dashboards, alerts and runbooks tuned to your actual SLAs." },
       { title: "Cloud cost programmes", text: "Right-sizing and commitment strategy with savings visible in billing cycles." },
     ],
@@ -349,7 +349,7 @@ export const HIRE_MODELS = [
   },
   {
     title: "Squad with QA",
-    text: "A full delivery unit with engineering, QA and a delivery manager — for teams shipping against hard deadlines.",
+    text: "A full delivery unit with engineering, QA and a delivery manager, for teams shipping against hard deadlines.",
   },
 ] as const;
 

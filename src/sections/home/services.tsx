@@ -103,7 +103,7 @@ export function Services() {
                 What we build.
               </h2>
               <p className="t-body mt-6 max-w-sm text-muted">
-                Six disciplines, one connected team — from the first idea to the
+                Six disciplines, one connected team, from the first idea to the
                 real product, and everything after launch.
               </p>
             </Reveal>

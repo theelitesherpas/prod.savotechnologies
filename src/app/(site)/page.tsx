@@ -25,33 +25,33 @@ import { FinalCTA } from "@/sections/home/final-cta";
 export default function HomePage() {
   return (
     <>
-      {/* 01 — Hero: what SAVO is, instantly */}
+      {/* 01: Hero: what SAVO is, instantly */}
       <Hero />
-      {/* 03 — Positioning: one partner from idea to scale */}
+      {/* 03: Positioning: one partner from idea to scale */}
       <Introduction />
-      {/* 04 — Capability divider */}
+      {/* 04: Capability divider */}
       <CapabilityMarquee />
-      {/* 05 — The six disciplines */}
+      {/* 05: The six disciplines */}
       <Services />
-      {/* 06 — AI as serious engineering (ink chapter) */}
+      {/* 06: AI as serious engineering (ink chapter) */}
       <AISystems />
-      {/* 07 — Proof, honestly staged */}
+      {/* 07: Proof, honestly staged */}
       <SelectedWork />
-      {/* 08 — How ideas become products */}
+      {/* 08: How ideas become products */}
       <Methodology />
-      {/* 09 — Technology chosen for the problem */}
+      {/* 09: Technology chosen for the problem */}
       <Technology />
-      {/* 10 — Differentiators that mean something */}
+      {/* 10: Differentiators that mean something */}
       <WhySavo />
-      {/* 11 — Impact, measured honestly (ink band) */}
+      {/* 11: Impact, measured honestly (ink band) */}
       <Metrics />
-      {/* 13 — Where the work applies */}
+      {/* 13: Where the work applies */}
       <Industries />
-      {/* 14 — Discoverability after launch */}
+      {/* 14: Discoverability after launch */}
       <Growth />
-      {/* 15 — Brand moment (ink chapter) */}
+      {/* 15: Brand moment (ink chapter) */}
       <BrandStatement />
-      {/* 16 — Conversion (vermilion chapter) */}
+      {/* 16: Conversion (vermilion chapter) */}
       <FinalCTA />
     </>
   );

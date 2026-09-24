@@ -45,7 +45,7 @@ export function CaseStudiesHero() {
             </Reveal>
             <Reveal delay={120}>
               <p className="t-body-lg mt-8 max-w-xl text-muted">
-                Every engagement we ship earns a dossier here — the challenge,
+                Every engagement we ship earns a dossier here, the challenge,
                 the build, the verified numbers. Until a result can be
                 verified it stays in preparation; what you can read today is
                 where each entry will land.
@@ -78,10 +78,10 @@ export function CaseStudiesHero() {
           </div>
         </div>
 
-        {/* Discipline index board — the cabinet of anchor cells */}
+        {/* Discipline index board, the cabinet of anchor cells */}
         <Reveal delay={140}>
           <nav aria-label="Case studies contents" className="mt-16 sm:mt-20">
-            <p className="t-label mb-5 text-muted">Contents — by discipline</p>
+            <p className="t-label mb-5 text-muted">Contents, by discipline</p>
             <ul className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-3 lg:grid-cols-6">
               {CASE_DISCIPLINES.map((d) => (
                 <li key={d.id}>

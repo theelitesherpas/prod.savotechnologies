@@ -18,7 +18,7 @@ export function HiringProcess() {
       <SectionHeader
         id="hiring-heading"
         heading="Honest hiring, four steps."
-        lead="Every step has a named owner and a date. You always know where you stand — no ghosting, no endless rounds."
+        lead="Every step has a named owner and a date. You always know where you stand, no ghosting, no endless rounds."
       />
 
       <Reveal>

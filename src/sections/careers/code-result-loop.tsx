@@ -191,7 +191,7 @@ export function CodeResultLoop() {
 
   return (
     <div className="blueprint border border-border bg-surface" aria-hidden="true">
-      {/* Editor chrome — tabs track the loop */}
+      {/* Editor chrome, tabs track the loop */}
       <div className="flex items-center justify-between border-b border-border px-5 py-3">
         <div className="flex items-baseline gap-5">
           <span
@@ -217,7 +217,7 @@ export function CodeResultLoop() {
 
       {/* One place, one thing at a time */}
       <div className="relative min-h-[24rem]">
-        {/* Code pane (in flow — sizes the panel) */}
+        {/* Code pane (in flow, sizes the panel) */}
         <div
           className={cn(
             "transition-[opacity,transform] duration-500 ease-[var(--ease-out-expo)]",
@@ -229,7 +229,7 @@ export function CodeResultLoop() {
           </pre>
         </div>
 
-        {/* Result pane — the UI the code renders, built in element by element */}
+        {/* Result pane, the UI the code renders, built in element by element */}
         <div
           className={cn(
             "transition-[opacity,transform] duration-500 ease-[var(--ease-out-expo)]",

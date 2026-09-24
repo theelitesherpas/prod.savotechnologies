@@ -79,7 +79,7 @@ export default async function AiServicePage({ params }: { params: Promise<{ slug
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      {/* Hero — statement + specimen plate + stack marquee */}
+      {/* Hero, statement + specimen plate + stack marquee */}
       <section aria-labelledby={headingId} className="relative overflow-hidden">
         <div className="shell pb-16 pt-[calc(var(--nav-h)+4.5rem)] sm:pb-20">
           <div aria-hidden="true" className="mb-12 flex items-center gap-4 sm:mb-14">
@@ -106,12 +106,12 @@ export default async function AiServicePage({ params }: { params: Promise<{ slug
             </div>
             <div className="lg:col-span-5">
               <Reveal delay={160}>
-                <figure aria-label={`${svc.title} — schematic`} className="blueprint relative aspect-[4/3] border border-border bg-surface">
+                <figure aria-label={`${svc.title}, schematic`} className="blueprint relative aspect-[4/3] border border-border bg-surface">
                   <div className="absolute inset-0 bottom-[3.25rem] p-8 text-foreground/80 sm:p-10">
                     <ServiceSchematic slug={svc.slug === "generative-ai" ? "ai-agent-development" : svc.slug === "machine-learning" ? "data-analytics" : "product-engineering"} />
                   </div>
                   <figcaption className="absolute inset-x-0 bottom-0 flex h-[3.25rem] items-center justify-between border-t border-border px-5">
-                    <span className="t-label text-muted">Specimen — {svc.short}</span>
+                    <span className="t-label text-muted">Specimen: {svc.short}</span>
                     <span aria-hidden="true" className="flex gap-1.5">
                       <span className="h-1.5 w-1.5 bg-accent schem-pulse" />
                       <span className="h-1.5 w-1.5 bg-border" />
@@ -186,13 +186,13 @@ export default async function AiServicePage({ params }: { params: Promise<{ slug
 
       {/* Workbench */}
       <Section index="The Workbench" labelledBy="wb-heading" className="bg-surface-2/60">
-        <SectionHeader id="wb-heading" heading="What we take on." lead={<>The engagements this practice lands most often — select a slot to open it.</>} />
+        <SectionHeader id="wb-heading" heading="What we take on." lead={<>The engagements this practice lands most often, select a slot to open it.</>} />
         <Workbench items={svc.engagements} slotWord={svc.short} includedLabel="Typical engagement" panelId={`wb-${svc.slug}`} />
       </Section>
 
       {/* Process spine (ink) */}
       <Section index="How It Runs" chapter="ink" labelledBy="proc-heading">
-        <SectionHeader id="proc-heading" heading="How the work runs." lead={<>The same delivery rhythm every time — outcomes depend on the problem, never the process.</>} />
+        <SectionHeader id="proc-heading" heading="How the work runs." lead={<>The same delivery rhythm every time, outcomes depend on the problem, never the process.</>} />
         <Reveal>
           <ol className="relative space-y-10 sm:space-y-12">
             <div aria-hidden="true" className="absolute bottom-2 left-[5px] top-2 w-px bg-border" />
@@ -218,12 +218,12 @@ export default async function AiServicePage({ params }: { params: Promise<{ slug
             <div className="lg:sticky lg:top-28">
               <Reveal>
                 <h2 id="faq-heading" className="t-dl max-w-[12ch]">Asked about {svc.short.toLowerCase()}.</h2>
-                <p className="t-body mt-6 max-w-xs text-muted">The questions buyers raise — answered plainly.</p>
+                <p className="t-body mt-6 max-w-xs text-muted">The questions buyers raise, answered plainly.</p>
               </Reveal>
             </div>
           </div>
           <div className="lg:col-span-8">
-            <Faq items={svc.faqs} label={`${svc.title} — frequently asked questions`} />
+            <Faq items={svc.faqs} label={`${svc.title}, frequently asked questions`} />
           </div>
         </div>
       </Section>
@@ -231,7 +231,7 @@ export default async function AiServicePage({ params }: { params: Promise<{ slug
       <DetailCta
         headingId="ai-cta-heading"
         heading="Put AI to work where it pays."
-        lead="Tell us the workflow and the constraint. We will say honestly whether AI earns its place — and map the first build if it does."
+        lead="Tell us the workflow and the constraint. We will say honestly whether AI earns its place, and map the first build if it does."
         location={`ai-${svc.slug}-cta`}
         secondaryLabel="Meet the Fleet"
         secondaryHref="/ai-agents"

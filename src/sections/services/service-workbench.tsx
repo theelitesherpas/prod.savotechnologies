@@ -26,7 +26,7 @@ export function ServiceDeliverables({ detail }: { detail: ServiceDetail }) {
         heading="The workbench."
         lead={
           <>
-            What {detail.title.toLowerCase()} includes — select a slot to
+            What {detail.title.toLowerCase()} includes, select a slot to
             open it. Every engagement is assembled from these parts.
           </>
         }
@@ -94,7 +94,7 @@ export function ServiceDeliverables({ detail }: { detail: ServiceDetail }) {
               </div>
               <div className="mt-10 flex items-center justify-between border-t border-border pt-5">
                 <span className="t-label text-muted">
-                  {detail.short} — slot {SLOT_NAMES[active] ?? ""}
+                  {detail.short}, slot {SLOT_NAMES[active] ?? ""}
                 </span>
                 <div className="flex gap-1.5" aria-hidden="true">
                   {detail.deliverables.map((_, i) => (

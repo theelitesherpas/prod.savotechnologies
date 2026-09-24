@@ -34,7 +34,7 @@ function StatusChip({ status }: { status: string }) {
 export default async function AdminDashboard() {
   if (!prisma) {
     return (
-      <p className="t-sm text-muted">Database not configured — set DATABASE_URL.</p>
+      <p className="t-sm text-muted">Database not configured, set DATABASE_URL.</p>
     );
   }
 
@@ -92,7 +92,7 @@ export default async function AdminDashboard() {
       <div className="border border-border">
         {recent.length === 0 ? (
           <p className="t-sm bg-background p-6 text-muted">
-            No enquiries yet — they will appear here the moment the first one arrives.
+            No enquiries yet, they will appear here the moment the first one arrives.
           </p>
         ) : (
           <ul className="divide-y divide-border">

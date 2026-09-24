@@ -52,7 +52,7 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Interactive system visual — below the pitch on mobile, beside it on desktop */}
+          {/* Interactive system visual, below the pitch on mobile, beside it on desktop */}
           <div className="relative order-last h-[240px] sm:h-[300px] lg:order-none lg:col-span-5 lg:h-[min(52vw,560px)] xl:h-[560px]">
             <HeroCanvas className="absolute inset-0" />
           </div>

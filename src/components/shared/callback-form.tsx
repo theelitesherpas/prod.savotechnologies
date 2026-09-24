@@ -57,7 +57,7 @@ export function CallbackForm() {
         setStatus("error");
       }
     } catch {
-      setError("Network error — please check your connection and try again.");
+      setError("Network error, please check your connection and try again.");
       setStatus("error");
     }
   }

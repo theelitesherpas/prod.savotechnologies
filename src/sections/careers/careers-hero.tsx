@@ -57,7 +57,7 @@ export function CareersHero() {
               </Reveal>
             </div>
 
-            {/* Developer specimen — the code, then the UI it renders, in a loop */}
+            {/* Developer specimen, the code, then the UI it renders, in a loop */}
             <div className="lg:col-span-5">
               <Reveal delay={260}>
                 <CodeResultLoop />

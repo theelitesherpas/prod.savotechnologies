@@ -88,7 +88,7 @@ export function Workbench({
             </div>
             <div className="mt-10 flex items-center justify-between border-t border-border pt-5">
               <span className="t-label text-muted">
-                {slotWord} — slot {slotNames[active] ?? ""}
+                {slotWord}, slot {slotNames[active] ?? ""}
               </span>
               <div className="flex gap-1.5" aria-hidden="true">
                 {items.map((_, i) => (

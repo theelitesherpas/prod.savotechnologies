@@ -9,6 +9,8 @@ export type Article = {
   slug: string;
   title: string;
   cat: "Engineering" | "AI" | "Design" | "Delivery";
+  /** Editorial image shown on the index grid and the reading page. */
+  image: string;
   excerpt: string;
   time: string;
   date: string;
@@ -18,6 +20,7 @@ export type Article = {
 export const ARTICLES: Article[] = [
   {
     slug: "ai-agents-in-production",
+    image: "/images/architecture.webp",
     title: "What we learned shipping AI agents into production",
     cat: "AI",
     excerpt: "The patterns that survived contact with real users, and the ones we retired.",
@@ -41,6 +44,7 @@ export const ARTICLES: Article[] = [
   },
   {
     slug: "core-web-vitals-budgets",
+    image: "/images/code.webp",
     title: "Core Web Vitals: the budgets we ship with",
     cat: "Engineering",
     excerpt: "The exact performance numbers in every Savo web proposal, and how we enforce them in CI.",
@@ -62,6 +66,7 @@ export const ARTICLES: Article[] = [
   },
   {
     slug: "wcag-aa-in-practice",
+    image: "/images/meeting.webp",
     title: "WCAG AA in practice: the testing loop behind every portal",
     cat: "Design",
     excerpt: "Accessibility as a build requirement, not a compliance scramble. Our exact checklist and test loop.",
@@ -83,6 +88,7 @@ export const ARTICLES: Article[] = [
   },
   {
     slug: "offshore-without-the-risk",
+    image: "/images/team.webp",
     title: "How to hire an offshore team without the classic risks",
     cat: "Delivery",
     excerpt: "The questions to ask, the contracts to demand and the warning signs we would flag even about ourselves.",
@@ -92,18 +98,19 @@ export const ARTICLES: Article[] = [
       { p: "Offshore hiring fails in predictable ways: mystery teams, bait and switch seniors, code nobody owns. It succeeds in predictable ways too. The difference is knowing which questions to ask before the contract." },
       { h: "Ask these before signing" },
       { li: [
-        "Who exactly will work on my product — names, interviews, and the right to refuse a profile.",
-        "What happens in the first two weeks if the fit is wrong — in writing, not in a call.",
+        "Who exactly will work on my product, names, interviews, and the right to refuse a profile.",
+        "What happens in the first two weeks if the fit is wrong, in writing, not in a call.",
         "Who owns the repository, infrastructure and credentials from day one.",
-        "How senior is senior — ask for shipped work, not years.",
+        "How senior is senior, ask for shipped work, not years.",
       ] },
       { h: "The warning signs" },
       { p: "Rates quoted before anyone understands the work. A trial that costs money with no escape. Team composition that changes after the contract. Any answer to the ownership question that is not an immediate yes." },
-      { p: "We would flag all of these even about ourselves — that is the standard the questions set. The right partner answers them before you finish asking." },
+      { p: "We would flag all of these even about ourselves, that is the standard the questions set. The right partner answers them before you finish asking." },
     ],
   },
   {
     slug: "offline-first-field-apps",
+    image: "/images/mobile.webp",
     title: "Offline first field apps that drivers actually keep using",
     cat: "Engineering",
     excerpt: "The sync patterns behind field tools that survive dead zones, bad mounts and long shifts.",
@@ -118,12 +125,13 @@ export const ARTICLES: Article[] = [
         "Conflicts resolve by explicit rules the operator chose in advance, never by last write wins.",
       ] },
       { h: "Design for the cab" },
-      { p: "Big targets, high contrast, glanceable state — designed for gloves, glare and a mount vibrating at 80 kilometers an hour. The best sync engine in the world fails behind a button a driver cannot hit." },
+      { p: "Big targets, high contrast, glanceable state, designed for gloves, glare and a mount vibrating at 80 kilometers an hour. The best sync engine in the world fails behind a button a driver cannot hit." },
       { p: "The measure of a field app is what the driver does on day thirty, not what the demo showed on day one. Offline first is how day thirty survives." },
     ],
   },
   {
     slug: "estimating-software-honestly",
+    image: "/images/studio.webp",
     title: "Why software estimates are always wrong, and how to plan anyway",
     cat: "Delivery",
     excerpt: "A calmer way to budget software: ranges, milestones and the conversations estimates should trigger.",
@@ -138,7 +146,7 @@ export const ARTICLES: Article[] = [
         "Every milestone ends with working software you can stop at.",
         "When reality diverges from the range, the conversation happens that week, not at delivery.",
       ] },
-      { p: "The purpose of an estimate is not prediction. It is deciding what to build first — and making the number honest enough to plan a business on." },
+      { p: "The purpose of an estimate is not prediction. It is deciding what to build first, and making the number honest enough to plan a business on." },
     ],
   },
 ];

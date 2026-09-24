@@ -22,7 +22,7 @@ export const AGENTS: Agent[] = [
     slug: "salesbot",
     name: "Savo SalesBot",
     short: "Sales",
-    desc: "Talks to every visitor the moment they arrive — answers product questions, scores intent and books meetings straight into your CRM.",
+    desc: "Talks to every visitor the moment they arrive, answers product questions, scores intent and books meetings straight into your CRM.",
     detail:
       "SalesBot answers product questions from your approved knowledge base, scores intent against your ideal customer profile, and books qualified meetings directly into your reps' calendars. Unqualified traffic is nurtured instead of lost.",
     deliverables: [
@@ -52,7 +52,7 @@ export const AGENTS: Agent[] = [
     slug: "recruitai",
     name: "Savo RecruitAI",
     short: "Recruiting",
-    desc: "Screens resumes, runs structured first-round chats and ranks candidates against your scorecard — bias audited.",
+    desc: "Screens resumes, runs structured first-round chats and ranks candidates against your scorecard, bias audited.",
     detail:
       "RecruitAI reads every resume against your scorecard, runs structured first-round conversations, and delivers a ranked shortlist with evidence for every decision. Bias audits run on each cohort so your process stays defensible and fair.",
     deliverables: [
@@ -82,7 +82,7 @@ export const AGENTS: Agent[] = [
     slug: "contentagent",
     name: "Savo ContentAgent",
     short: "Content",
-    desc: "Drafts brand-aligned marketing copy, SEO pages and social posts in your voice — with human approval built in.",
+    desc: "Drafts brand-aligned marketing copy, SEO pages and social posts in your voice, with human approval built in.",
     detail:
       "ContentAgent learns your brand voice from your best-performing material, then drafts landing pages, SEO articles and social campaigns that sound like you on the first pass. Nothing publishes without human approval, and every draft carries its sources.",
     deliverables: [
@@ -97,7 +97,7 @@ export const AGENTS: Agent[] = [
     slug: "opsagent",
     name: "Savo OpsAgent",
     short: "Operations",
-    desc: "Triages incidents, runs remediation runbooks and posts status updates to your channels — including at 3 a.m.",
+    desc: "Triages incidents, runs remediation runbooks and posts status updates to your channels, including at 3 a.m.",
     detail:
       "OpsAgent watches your stack, triages alerts by blast radius, and executes the runbooks you trust while paging a human only when it matters. It posts status updates in plain language, so incidents get handled before customers notice.",
     deliverables: [
@@ -112,7 +112,7 @@ export const AGENTS: Agent[] = [
 
 /** Deployment path — the published 2–4 week promise. */
 export const AGENT_DEPLOY_STEPS = [
-  { name: "Scope the job", text: "The workflow, data, tools and escalation rules the agent will operate within — written down first." },
+  { name: "Scope the job", text: "The workflow, data, tools and escalation rules the agent will operate within, written down first." },
   { name: "Ground it", text: "Retrieval and integrations built over your real systems, permissions scoped to the agent's role." },
   { name: "Guard & evaluate", text: "Guardrails, approval gates and test suites that measure quality before and after every change." },
   { name: "Supervised live", text: "The agent starts supervised, earns autonomy with evidence, and keeps a human escalation path forever." },
@@ -121,6 +121,6 @@ export const AGENT_DEPLOY_STEPS = [
 export const AGENT_FAQS = [
   { q: "How fast can an agent go live?", a: "A focused first workflow typically deploys in two to four weeks: scope, ground, guard, then supervised live. Complexity of integrations is the honest variable." },
   { q: "Where does our data live?", a: "In your infrastructure. Agents connect to your systems with scoped credentials; nothing about your data needs to leave your cloud." },
-  { q: "What stops an agent doing something wrong?", a: "Explicit permission boundaries, confidence gates, human-approval steps for sensitive actions, and full audit logs. An agent's credentials are scoped like an employee's — and revocable." },
-  { q: "Can agents work together?", a: "Yes — agents compose into workflows, with one orchestrating and others executing, each still guarded by its own rules and escalation paths." },
+  { q: "What stops an agent doing something wrong?", a: "Explicit permission boundaries, confidence gates, human-approval steps for sensitive actions, and full audit logs. An agent's credentials are scoped like an employee's, and revocable." },
+  { q: "Can agents work together?", a: "Yes, agents compose into workflows, with one orchestrating and others executing, each still guarded by its own rules and escalation paths." },
 ] as const;

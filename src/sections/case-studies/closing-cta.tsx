@@ -25,7 +25,7 @@ export function CaseStudiesCta() {
             <Reveal delay={120}>
               <p className="t-body-lg mt-6 max-w-xl text-muted">
                 Bring us the brief. When the results verify, your project
-                takes its place in the cabinet — name, numbers and all.
+                takes its place in the cabinet, name, numbers and all.
               </p>
             </Reveal>
           </div>

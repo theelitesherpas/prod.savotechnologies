@@ -91,7 +91,7 @@ export function Growth() {
         lead={
           <>
             A great product still needs to be discovered. Savo combines
-            engineering with modern digital discoverability — because search
+            engineering with modern digital discoverability, because search
             engines still matter, and AI-powered discovery increasingly decides
             who gets found.
           </>

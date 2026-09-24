@@ -40,7 +40,7 @@ export const CASE_DISCIPLINES: CaseDiscipline[] = [
     id: "web",
     index: "02",
     title: "Web development",
-    lead: "Marketing platforms, customer portals, headless storefronts and full web applications — engineered for speed, search and conversion. Engagements file here as they complete and their results verify.",
+    lead: "Marketing platforms, customer portals, headless storefronts and full web applications, engineered for speed, search and conversion. Engagements file here as they complete and their results verify.",
     hint: "Platforms · portals · storefronts",
     capabilities: [
       "Corporate Websites",
@@ -81,7 +81,7 @@ export const CASE_DISCIPLINES: CaseDiscipline[] = [
     id: "mobile",
     index: "03",
     title: "Mobile products",
-    lead: "iOS and Android products that feel native and hold up in daily use — Flutter, React Native or fully native, chosen by the problem rather than by habit.",
+    lead: "iOS and Android products that feel native and hold up in daily use: Flutter, React Native or fully native, chosen by the problem rather than by habit.",
     hint: "iOS · Android · cross-platform",
     capabilities: [
       "iOS & Android",
@@ -122,7 +122,7 @@ export const CASE_DISCIPLINES: CaseDiscipline[] = [
     id: "ai",
     index: "04",
     title: "AI & intelligent systems",
-    lead: "Agents, RAG systems and copilots that perform real work inside business workflows — built with guardrails, human oversight and evaluation from the first sprint.",
+    lead: "Agents, RAG systems and copilots that perform real work inside business workflows, built with guardrails, human oversight and evaluation from the first sprint.",
     hint: "Agents · RAG · copilots",
     capabilities: [
       "AI Agents",
@@ -163,7 +163,7 @@ export const CASE_DISCIPLINES: CaseDiscipline[] = [
     id: "software",
     index: "05",
     title: "Software & SaaS",
-    lead: "Custom platforms, SaaS products and internal systems shaped around real operations — multi-tenant by design, and boring in exactly the right places.",
+    lead: "Custom platforms, SaaS products and internal systems shaped around real operations, multi-tenant by design, and boring in exactly the right places.",
     hint: "SaaS · operations systems",
     capabilities: [
       "Custom Software",
@@ -196,7 +196,7 @@ export const CASE_DISCIPLINES: CaseDiscipline[] = [
     id: "design",
     index: "06",
     title: "Product & experience design",
-    lead: "Research, interface systems and prototypes that make complex products obvious — design judged by what users accomplish, never by decoration.",
+    lead: "Research, interface systems and prototypes that make complex products obvious, design judged by what users accomplish, never by decoration.",
     hint: "UX · design systems",
     capabilities: [
       "UX Research",
@@ -229,7 +229,7 @@ export const CASE_DISCIPLINES: CaseDiscipline[] = [
     id: "growth",
     index: "07",
     title: "Growth",
-    lead: "Search, answer engines and conversion work that compounds after launch — measured against pipeline and revenue, not vanity metrics.",
+    lead: "Search, answer engines and conversion work that compounds after launch, measured against pipeline and revenue, not vanity metrics.",
     hint: "SEO · AEO · conversion",
     capabilities: [
       "SEO",

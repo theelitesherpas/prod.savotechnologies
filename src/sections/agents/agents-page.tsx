@@ -84,7 +84,7 @@ export function AgentsHero() {
             <Reveal delay={120}>
               <p className="t-body-lg mt-8 max-w-xl text-muted">
                 Six production-ready personas, trained on your data, guarded
-                by enterprise security — deployed in two to four weeks and
+                by enterprise security, deployed in two to four weeks and
                 supervised like the employees they are.
               </p>
             </Reveal>
@@ -113,7 +113,7 @@ export function AgentsHero() {
         {/* Fleet board */}
         <Reveal delay={140}>
           <nav aria-label="The fleet" className="mt-16 sm:mt-20">
-            <p className="t-label mb-5 text-muted">The fleet — six personas</p>
+            <p className="t-label mb-5 text-muted">The fleet, six personas</p>
             <ul className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-3 lg:grid-cols-6">
               {AGENTS.map((agent, i) => (
                 <li key={agent.slug}>
@@ -156,7 +156,7 @@ export function AgentChapters() {
         lead={
           <>
             Each persona is a focused operator with its own tools, rules
-            and escalation path — open one to read its file.
+            and escalation path, open one to read its file.
           </>
         }
       />
@@ -236,7 +236,7 @@ export function AgentDeploy() {
         heading="Live in two to four weeks."
         lead={
           <>
-            The same deployment path every time — scoped, grounded,
+            The same deployment path every time, scoped, grounded,
             guarded, then supervised live with evidence.
           </>
         }
@@ -287,7 +287,7 @@ export function AgentsFaqs() {
           </div>
         </div>
         <div className="lg:col-span-8">
-          <Faq items={[...AGENT_FAQS]} label="AI agents — frequently asked questions" />
+          <Faq items={[...AGENT_FAQS]} label="AI agents, frequently asked questions" />
         </div>
       </div>
     </Section>

@@ -23,7 +23,7 @@ export function EditorialPolicy() {
         lead={
           <>
             Every claim on this page must survive scrutiny. That standard is
-            why most entries still read &ldquo;in preparation&rdquo; — and
+            why most entries still read &ldquo;in preparation&rdquo;, and
             why that changes only when the numbers do.
           </>
         }
@@ -55,7 +55,7 @@ export function EditorialPolicy() {
               <p className="t-label text-muted">Need proof now?</p>
               <p className="t-body mt-4 text-muted">
                 Ask directly. We will walk you through relevant engagements
-                under NDA — with the numbers clients allow us to share, and
+                under NDA, with the numbers clients allow us to share, and
                 the references to match.
               </p>
               <Link

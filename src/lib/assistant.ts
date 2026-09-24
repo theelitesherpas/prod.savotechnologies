@@ -36,7 +36,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     keywords: ["build", "do you do", "what do you", "what does savo", "services", "capabilities", "offer"],
     paragraphs: [
       "Six disciplines, one connected team: web experiences, mobile products, AI & intelligent systems, software & SaaS, product & experience design, and growth.",
-      "Websites and web apps on Next.js and React; iOS and Android apps in Flutter or React Native; AI agents, RAG systems and copilots in production — plus the design and growth work that keeps them improving after launch.",
+      "Websites and web apps on Next.js and React; iOS and Android apps in Flutter or React Native; AI agents, RAG systems and copilots in production, plus the design and growth work that keeps them improving after launch.",
     ],
     links: [
       { label: "Explore services", href: "/#services" },
@@ -49,7 +49,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Do you build AI agents?",
     keywords: ["ai", "agent", "agents", "llm", "genai", "generative", "rag", "copilot", "chatbot", "automation", "machine", "learning", "ml"],
     paragraphs: [
-      "Yes — AI at Savo is production engineering, not demos. Support agents, knowledge agents, document intelligence pipelines and analytics copilots, connected to your real systems with guardrails, human oversight and evaluation from the first sprint.",
+      "Yes: AI at Savo is production engineering, not demos. Support agents, knowledge agents, document intelligence pipelines and analytics copilots, connected to your real systems with guardrails, human oversight and evaluation from the first sprint.",
       "A first agent typically deploys in 2 to 4 weeks, trained on your data.",
     ],
     links: [
@@ -63,7 +63,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Do you build websites and web apps?",
     keywords: ["website", "web", "site", "portal", "next", "react", "ecommerce", "store", "shop", "landing", "pwa", "headless"],
     paragraphs: [
-      "Corporate platforms, marketing sites, customer portals, headless storefronts and full web applications — engineered on Next.js, React and TypeScript for speed, search and conversion.",
+      "Corporate platforms, marketing sites, customer portals, headless storefronts and full web applications, engineered on Next.js, React and TypeScript for speed, search and conversion.",
       "Every build ships with the growth layer in place: technical SEO, structured data and analytics.",
     ],
     links: [{ label: "Web development", href: "/services/web-development/" }],
@@ -74,7 +74,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Do you build mobile apps?",
     keywords: ["mobile", "app", "apps", "ios", "android", "flutter", "react native", "phone", "apple", "play store"],
     paragraphs: [
-      "iOS and Android products that feel native and hold up in daily use — Flutter, React Native or fully native, chosen by the problem rather than by habit.",
+      "iOS and Android products that feel native and hold up in daily use: Flutter, React Native or fully native, chosen by the problem rather than by habit.",
       "Payments, maps, notifications, offline-first data and full API integrations are standard parts of our mobile work.",
     ],
     links: [{ label: "Mobile app development", href: "/services/mobile-apps/" }],
@@ -85,7 +85,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Do you do UI/UX design?",
     keywords: ["design", "ui", "ux", "figma", "prototype", "research", "design system", "interface", "usability"],
     paragraphs: [
-      "Research, information architecture, interface systems and prototypes that make complex products obvious — judged by what users accomplish, never by decoration.",
+      "Research, information architecture, interface systems and prototypes that make complex products obvious, judged by what users accomplish, never by decoration.",
       "Design and engineering sit in one team here, so design decisions are made with implementation in mind.",
     ],
     links: [{ label: "Product & experience design", href: "/services/ui-ux/" }],
@@ -96,7 +96,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Can we hire dedicated developers?",
     keywords: ["hire", "dedicated", "developer", "developers", "resource", "resources", "team", "staff", "augment", "engineer", "full stack", "frontend", "backend", "devops"],
     paragraphs: [
-      "Yes — vetted engineers join your standup within two weeks: AI & ML, frontend, backend, full stack, mobile, DevOps and QA.",
+      "Yes, vetted engineers join your standup within two weeks: AI & ML, frontend, backend, full stack, mobile, DevOps and QA.",
       "Transparent monthly rates and a two-week trial on every engagement.",
     ],
     links: [{ label: "Hire resources", href: "/hire" }],
@@ -109,8 +109,8 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "How much does a project cost?",
     keywords: ["cost", "price", "pricing", "much", "budget", "quote", "estimate", "charge", "fee", "money", "$", "rate"],
     paragraphs: [
-      "It depends on scope — and we are straight about it. Most engagements fall between $5k and $100k+, and you always see a fixed-scope proposal with a fixed price before any work starts.",
-      "Tell us what you are building and a senior consultant replies within one business day with a realistic range — no discovery paywall.",
+      "It depends on scope, and we are straight about it. Most engagements fall between $5k and $100k+, and you always see a fixed-scope proposal with a fixed price before any work starts.",
+      "Tell us what you are building and a senior consultant replies within one business day with a realistic range, no discovery paywall.",
     ],
     links: [{ label: "Start a project", href: "/#start" }],
   },
@@ -120,7 +120,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "How fast can we start?",
     keywords: ["fast", "start", "begin", "when", "timeline", "soon", "quickly", "long", "kickoff", "launch", "week"],
     paragraphs: [
-      "First reply within one business day — every message reaches a human, never a ticket queue. From there: a discovery call, then a fixed-scope proposal.",
+      "First reply within one business day, every message reaches a human, never a ticket queue. From there: a discovery call, then a fixed-scope proposal.",
       "AI agents deploy in 2 to 4 weeks; hired engineers join your standup within 2 weeks.",
     ],
     links: [{ label: "Contact us", href: "/contact" }],
@@ -132,7 +132,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     keywords: ["process", "method", "methodology", "how do you work", "steps", "approach", "workflow", "discovery", "sprint"],
     paragraphs: [
       "Five steps: Discover (frame the problem and success metrics), Define (requirements, architecture, direction), Design (journeys, interfaces, systems), Build (engineer in iterations with visible progress), Grow (measure, improve, scale).",
-      "You see working software early and often — no black-box phases.",
+      "You see working software early and often, no black-box phases.",
     ],
     links: [{ label: "Our methodology", href: "/#methodology" }],
   },
@@ -142,7 +142,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "What if the scope changes mid-project?",
     keywords: ["scope", "change", "changes", "mid-project", "new ideas", "extra", "added", "flexible"],
     paragraphs: [
-      "The agreed price never moves mid-scope. New ideas go into a follow-up scope with its own fixed price — agreed before work starts, in writing.",
+      "The agreed price never moves mid-scope. New ideas go into a follow-up scope with its own fixed price, agreed before work starts, in writing.",
     ],
     links: [{ label: "Start a project", href: "/#start" }],
   },
@@ -154,7 +154,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Who is Savo Technologies?",
     keywords: ["who is savo", "about", "savo", "agency", "background", "history", "experience", "old"],
     paragraphs: [
-      "An independent digital product and technology company — web platforms, mobile apps and AI systems, engineered by one accountable team since 2016.",
+      "An independent digital product and technology company, web platforms, mobile apps and AI systems, engineered by one accountable team since 2016.",
       "Ten years of global delivery from India, for clients across India, Switzerland, the Gulf, the UK, the USA and Australia.",
     ],
     links: [{ label: "Case studies", href: "/case-studies" }],
@@ -166,7 +166,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     keywords: ["where", "located", "location", "office", "offices", "address", "india", "switzerland", "zurich", "usa", "uk", "london", "australia", "sydney", "saudi", "dubai", "gcc", "headquarters"],
     paragraphs: [
       "The engineering headquarters is in Indore, India. The registered head office is at Bahnhofstrasse 10, Zürich, Switzerland (+41 44 500 12 12).",
-      "Offices in Riyadh (covering the GCC), London, Sydney and the USA complete the network — wherever you are, someone senior is awake.",
+      "Offices in Riyadh (covering the GCC), London, Sydney and the USA complete the network, wherever you are, someone senior is awake.",
     ],
     links: [{ label: "Offices", href: "/contact/#offices" }],
   },
@@ -176,7 +176,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Can I see your work or case studies?",
     keywords: ["work", "portfolio", "case", "study", "studies", "projects", "clients", "references", "examples", "proof", "results"],
     paragraphs: [
-      "The case-study dossier is organized by discipline — web, mobile, AI, software, design and growth — and entries publish only with verified outcomes, which is why most still read 'in preparation'.",
+      "The case-study dossier is organized by discipline, web, mobile, AI, software, design and growth, and entries publish only with verified outcomes, which is why most still read 'in preparation'.",
       "Need proof sooner? Ask directly and we will walk you through relevant engagements under NDA, with the numbers clients allow us to share.",
     ],
     links: [
@@ -202,7 +202,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Are you hiring?",
     keywords: ["hiring", "job", "jobs", "career", "careers", "vacancy", "openings", "positions", "apply", "role"],
     paragraphs: [
-      "We hire engineers and designers who are curious, ship weekly and check their ego in — remote first across India, INR salaries.",
+      "We hire engineers and designers who are curious, ship weekly and check their ego in, remote first across India, INR salaries.",
       "Applications get an engineer-read review and a personal reply within two business days. Four steps to a written offer, including a paid pairing session.",
     ],
     links: [

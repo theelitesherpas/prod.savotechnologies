@@ -86,7 +86,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
     title: "Logistics & Supply Chain",
     boardLabel: "Logistics",
     hint: "Fleet · freight · warehousing",
-    lead: "Fleet, freight and warehouse systems that turn movement into data — tracked, routed and predicted in real time, from first mile to last.",
+    lead: "Fleet, freight and warehouse systems that turn movement into data, tracked, routed and predicted in real time, from first mile to last.",
     capabilities: [
       "Fleet Tracking",
       "Route Optimisation",
@@ -103,7 +103,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
     title: "Real Estate",
     boardLabel: "Real Estate",
     hint: "Listings · tours · agent tools",
-    lead: "Listing platforms, search and virtual-tour experiences that make property discovery feel effortless — with agent tools that keep every lead moving.",
+    lead: "Listing platforms, search and virtual-tour experiences that make property discovery feel effortless, with agent tools that keep every lead moving.",
     capabilities: [
       "Listing Platforms",
       "Search & Filters",
@@ -120,7 +120,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
     title: "Education & EdTech",
     boardLabel: "Education",
     hint: "Learning · assessment · analytics",
-    lead: "Learning platforms, course systems and assessment tools designed for engagement at scale — on any device, in any classroom or out of one.",
+    lead: "Learning platforms, course systems and assessment tools designed for engagement at scale, on any device, in any classroom or out of one.",
     capabilities: [
       "Learning Platforms",
       "Course Systems",
@@ -137,7 +137,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
     title: "Travel & Hospitality",
     boardLabel: "Travel",
     hint: "Booking · properties · guests",
-    lead: "Booking engines, property systems and guest experiences built for the way people plan, book and remember travel — and the operations behind each stay.",
+    lead: "Booking engines, property systems and guest experiences built for the way people plan, book and remember travel, and the operations behind each stay.",
     capabilities: [
       "Booking Engines",
       "Property Management",
@@ -171,7 +171,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
     title: "Government",
     boardLabel: "Government",
     hint: "Citizen services · digitisation",
-    lead: "Public-sector platforms where accessibility, transparency and multilingual service are requirements, not features — procurement-grade documentation included.",
+    lead: "Public-sector platforms where accessibility, transparency and multilingual service are requirements, not features, procurement-grade documentation included.",
     capabilities: [
       "Citizen Portals",
       "Service Digitisation",
@@ -188,7 +188,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
     title: "Energy & Utilities",
     boardLabel: "Energy",
     hint: "Field · grid · billing",
-    lead: "Field operations, consumption analytics and customer platforms for the energy economy — from grid-scale operations to the household bill.",
+    lead: "Field operations, consumption analytics and customer platforms for the energy economy, from grid-scale operations to the household bill.",
     capabilities: [
       "Field Service Apps",
       "Consumption Analytics",
@@ -210,7 +210,7 @@ export const INDUSTRY_FOUNDATIONS = [
   },
   {
     title: "Systems of record",
-    text: "ERP, CRM, payments, health records, logistics APIs — products are built to join what already runs the business, not to replace it in secret.",
+    text: "ERP, CRM, payments, health records, logistics APIs, products are built to join what already runs the business, not to replace it in secret.",
     points: ["ERP & CRM", "Payment rails", "Legacy bridges"],
   },
   {
@@ -220,7 +220,7 @@ export const INDUSTRY_FOUNDATIONS = [
   },
   {
     title: "Security by design",
-    text: "Least privilege, encryption in transit and at rest, dependency hygiene and tested recovery — reviewed as part of the build, not after it.",
+    text: "Least privilege, encryption in transit and at rest, dependency hygiene and tested recovery, reviewed as part of the build, not after it.",
     points: ["Encryption", "Least privilege", "Recovery drills"],
   },
 ] as const;

@@ -150,7 +150,7 @@ export function HireModels() {
         heading="Three ways to engage."
         lead={
           <>
-            From one embedded engineer to a full delivery squad — sized to
+            From one embedded engineer to a full delivery squad, sized to
             the work, resizable as it changes.
           </>
         }
@@ -184,7 +184,7 @@ export function HireSteps() {
         heading="From call to first commit."
         lead={
           <>
-            The same path every time — fast where it can be, careful where
+            The same path every time, fast where it can be, careful where
             it must be.
           </>
         }
