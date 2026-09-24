@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CAREERS_TYPES } from "@/constants/careers";
 
 /** Shared client + server validation for the project enquiry form. */
 
@@ -23,6 +24,15 @@ export const BUDGET_RANGES = [
   "To be discussed",
 ] as const;
 
+/** Topic chips on the contact page (version-1 content). Stored in the
+ *  same projectType column, so the admin inbox sees one pipeline. */
+export const CONTACT_TOPICS = [
+  "New project",
+  "Hire a team",
+  "Support",
+  "Careers",
+  "Something else",
+] as const;
 const name = z
   .string()
   .trim()
@@ -38,7 +48,16 @@ const email = z
 
 const company = z.string().trim().max(120, "Company name is too long.").optional().or(z.literal(""));
 
-const projectType = z.enum(PROJECT_TYPES, {
+/** Optional phone — contact page only. Loose format check; the callback
+ *  form applies stricter country-aware rules when a call back is booked. */
+const phone = z
+  .string()
+  .trim()
+  .regex(/^\+?[0-9 ()\-]{6,24}$/, "Please enter a valid phone number.")
+  .optional()
+  .or(z.literal(""));
+
+const projectType = z.enum([...PROJECT_TYPES, ...CONTACT_TOPICS, ...CAREERS_TYPES], {
   message: "Please choose a project type.",
 });
 
@@ -57,6 +76,7 @@ export const enquirySchema = z.object({
   name,
   email,
   company,
+  phone,
   projectType,
   budget,
   message,

@@ -25,7 +25,7 @@ for (const width of WIDTHS) {
   const errors = [];
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   page.on("pageerror", (e) => errors.push(String(e)));
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto(BASE, { waitUntil: "load" });
   await page.waitForTimeout(1200);
   const overflow = await page.evaluate(() => {
     const doc = document.documentElement;
@@ -54,7 +54,7 @@ if (!process.exitCode) pass("no console errors");
 /* ---- 2. Structure, fonts, sections ---- */
 {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto(BASE, { waitUntil: "load" });
   // Scroll through the page so lazy images request + decode, then wait for them
   await page.evaluate(async () => {
     const step = window.innerHeight * 0.8;
@@ -102,7 +102,7 @@ if (!process.exitCode) pass("no console errors");
 
   /* Mobile menu behavior */
   const mm = await browser.newPage({ viewport: { width: 390, height: 844 } });
-  await mm.goto(BASE, { waitUntil: "networkidle" });
+  await mm.goto(BASE, { waitUntil: "load" });
   const burger = mm.getByRole("button", { name: "Open menu" });
   await burger.click();
   await mm.waitForTimeout(700);
@@ -123,7 +123,7 @@ if (!process.exitCode) pass("no console errors");
 
   /* Enquiry dialog */
   const dp = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  await dp.goto(BASE, { waitUntil: "networkidle" });
+  await dp.goto(BASE, { waitUntil: "load" });
   await dp.getByRole("button", { name: "Start a Project" }).first().click();
   await dp.waitForTimeout(700);
   const dlg = dp.getByRole("dialog");
@@ -141,7 +141,7 @@ if (!process.exitCode) pass("no console errors");
 
   /* Keyboard: services accordion */
   const sv = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  await sv.goto(BASE, { waitUntil: "networkidle" });
+  await sv.goto(BASE, { waitUntil: "load" });
   await sv.locator("#services button[aria-controls]").nth(1).focus();
   await sv.keyboard.press("Enter");
   await sv.waitForTimeout(400);

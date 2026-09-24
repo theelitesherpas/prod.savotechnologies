@@ -38,7 +38,7 @@ export function Methodology() {
   }, []);
 
   return (
-    <Section id="process" index="08 — Method" labelledBy="process-heading">
+    <Section id="process" index="Method" labelledBy="process-heading">
       <div className="mb-14 sm:mb-20">
         <Reveal>
           <h2 id="process-heading" className="t-dl max-w-[16ch]">
@@ -60,8 +60,8 @@ export function Methodology() {
           {METHODOLOGY.map((step, i) => (
             <li key={step.index} className="group">
               <Reveal delay={i * 90}>
-                <div className="flex items-baseline gap-4">
-                  <span className="t-label tnum text-accent">{step.index}</span>
+                <div className="flex items-center gap-4">
+                  <span aria-hidden="true" className="h-2 w-2 shrink-0 bg-accent" />
                   <span aria-hidden="true" className="h-px flex-1 bg-border" />
                 </div>
                 <h3 className="t-h3 mt-5">{step.name}</h3>

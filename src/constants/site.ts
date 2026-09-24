@@ -25,13 +25,52 @@ export const SOCIAL_LINKS = [
   { label: "YouTube", href: "https://www.youtube.com/" },
 ] as const;
 
-/** Delivery regions (version-1 footer). */
+/**
+ * Global offices (company truth): India is the engineering headquarters (Indore),
+ * Switzerland the registered head office (Zürich), and every other
+ * region is a company office. Address and mobile shown only where
+ * verified — bracketed slots stay until the company supplies real values
+ * (never invented, per the hard content rule).
+ */
 export const OFFICES = [
-  { region: "India · HQ", lines: ["Savo Technologies Pvt. Ltd.", "Indore · Ahmedabad"] },
-  { region: "USA", lines: ["Delivery & client success", "North America"] },
-  { region: "Saudi Arabia & GCC", lines: ["Delivery & client success", "Riyadh · Dubai · Manama"] },
-  { region: "United Kingdom", lines: ["Delivery & client success", "London"] },
-  { region: "Australia", lines: ["Delivery & client success", "Sydney"] },
+  {
+    id: "india",
+    region: "India · Headquarters",
+    address: ["Savo Technologies Pvt. Ltd.", "Indore, India"] as const,
+    mobile: "+91 75029 01234",
+    mobileE164: "+917502901234",
+  },
+  {
+    id: "switzerland",
+    region: "Switzerland · Head Office",
+    address: ["Bahnhofstrasse 10", "8001 Zürich, Switzerland"] as const,
+    mobile: "+41 44 500 12 12",
+    mobileE164: "+41445001212",
+  },
+  {
+    id: "saudi-arabia",
+    region: "Saudi Arabia & GCC · Office",
+    address: ["Riyadh · Dubai · Manama"] as const,
+    mobile: null,
+  },
+  {
+    id: "australia",
+    region: "Australia · Office",
+    address: ["Sydney, Australia"] as const,
+    mobile: null,
+  },
+  {
+    id: "united-kingdom",
+    region: "United Kingdom · Office",
+    address: ["London, United Kingdom"] as const,
+    mobile: null,
+  },
+  {
+    id: "usa",
+    region: "USA · Office",
+    address: ["[Address pending]"] as const,
+    mobile: null,
+  },
 ] as const;
 
 /** Compliance badges (version-1 footer claims). */

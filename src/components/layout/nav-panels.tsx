@@ -8,15 +8,16 @@ import { cn } from "@/lib/utils";
  * v6 mega-panel pieces, rendered inside the ink panel bar under the header.
  */
 
-export function PanelLink({ link, index }: { link: NavLink; index: number }) {
+export function PanelLink({ link }: { link: NavLink }) {
   return (
     <Link
       href={link.href}
       className="group/panel-link flex items-center gap-3 py-2.5 text-[0.9375rem] font-medium text-foreground/75 transition-colors hover:text-foreground"
     >
-      <span className="t-label tnum text-muted/70 transition-colors group-hover/panel-link:text-accent">
-        {String(index + 1).padStart(2, "0")}
-      </span>
+      <span
+        aria-hidden="true"
+        className="h-1.5 w-1.5 shrink-0 scale-0 bg-accent transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover/panel-link:scale-100"
+      />
       <span className="transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover/panel-link:translate-x-1">
         {link.label}
       </span>
@@ -139,16 +140,16 @@ export function MegaBar({
     <div
       id={id}
       className={cn(
-        "chapter-ink absolute inset-x-0 top-full hidden border-b border-border bg-background shadow-[0_24px_60px_rgb(10_10_14/0.28)] lg:block",
+        "chapter-ink absolute inset-x-0 top-full hidden border-y border-border bg-background/85 shadow-[0_24px_60px_rgb(10_10_14/0.28)] backdrop-blur-xl lg:block",
       )}
     >
       <div className="shell grid gap-10 py-9 lg:grid-cols-12">
         <div className={cn(twoCols ? "lg:col-span-7" : "lg:col-span-5")}>
           <p className="t-label mb-5 text-muted">{label}</p>
           <ul className={cn(twoCols && "grid grid-cols-2 gap-x-10")}>
-            {links.map((link, i) => (
+            {links.map((link) => (
               <li key={link.href} className="border-b border-border/60">
-                <PanelLink link={link} index={i} />
+                <PanelLink link={link} />
               </li>
             ))}
           </ul>

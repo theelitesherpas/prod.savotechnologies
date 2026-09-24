@@ -84,7 +84,7 @@ function ConvergenceDiagram() {
 
 export function Growth() {
   return (
-    <Section id="growth" index="13 — Discoverability" labelledBy="growth-heading" className="bg-surface-2/70">
+    <Section id="growth" index="Discoverability" labelledBy="growth-heading" className="bg-surface-2/70">
       <SectionHeader
         id="growth-heading"
         heading="Built to perform. Built to be found."

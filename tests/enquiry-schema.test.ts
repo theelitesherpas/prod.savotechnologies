@@ -38,4 +38,40 @@ describe("enquirySchema", () => {
     const r = enquirySchema.safeParse({ ...valid, website: "x".repeat(600) });
     expect(r.success).toBe(false);
   });
+
+  /* Contact page additions — topics and optional phone */
+
+  it("accepts every contact topic as a project type", () => {
+    for (const topic of ["New project", "Hire a team", "Support", "Careers", "Something else"]) {
+      expect(enquirySchema.safeParse({ ...valid, projectType: topic }).success).toBe(true);
+    }
+  });
+
+  it("accepts a well-formed optional phone and trims it", () => {
+    const r = enquirySchema.safeParse({ ...valid, phone: " +91 98765 43210 " });
+    expect(r.success).toBe(true);
+    expect(r.success && r.data.phone).toBe("+91 98765 43210");
+  });
+
+  it("accepts an empty phone but rejects garbage", () => {
+    expect(enquirySchema.safeParse({ ...valid, phone: "" }).success).toBe(true);
+    expect(enquirySchema.safeParse({ ...valid, phone: "call me maybe" }).success).toBe(false);
+  });
+
+  /* Careers additions — role titles as project types */
+
+  it("accepts every open role title and the general application", () => {
+    const titles = [
+      ...["Senior Frontend Engineer", "Backend Engineer", "AI / ML Engineer", "Mobile Engineer", "DevOps Engineer", "UI/UX Designer"],
+      "General application",
+    ];
+    for (const title of titles) {
+      const r = enquirySchema.safeParse({ ...valid, projectType: title, message: "x".repeat(20) });
+      expect(r.success).toBe(true);
+    }
+  });
+
+  it("still rejects an unknown role title", () => {
+    expect(enquirySchema.safeParse({ ...valid, projectType: "Chief Vibes Officer" }).success).toBe(false);
+  });
 });

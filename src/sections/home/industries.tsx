@@ -2,10 +2,11 @@ import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { INDUSTRIES } from "@/constants/content";
+import Link from "next/link";
 
 export function Industries() {
   return (
-    <Section id="industries" index="12 — Industries" labelledBy="industries-heading">
+    <Section id="industries" index="Industries" labelledBy="industries-heading">
       <SectionHeader
         id="industries-heading"
         heading="Technology without industry boundaries."
@@ -31,6 +32,28 @@ export function Industries() {
             </li>
           ))}
         </ul>
+      </Reveal>
+
+      <Reveal delay={240}>
+        <div className="mt-10 flex items-center gap-4">
+          <Link
+            href="/industries/"
+            className="link-underline t-h4 inline-flex items-center gap-2.5 text-foreground"
+          >
+            Explore all industries
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 14 14"
+              className="h-3.5 w-3.5 text-accent"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            >
+              <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
+            </svg>
+          </Link>
+          <span aria-hidden="true" className="h-px flex-1 bg-border" />
+        </div>
       </Reveal>
     </Section>
   );

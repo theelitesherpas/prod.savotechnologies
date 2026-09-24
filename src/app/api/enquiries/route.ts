@@ -59,6 +59,7 @@ export async function POST(req: Request) {
         name: data.name,
         email: data.email,
         company: data.company ?? null,
+        phone: data.phone || null,
         projectType: data.projectType,
         budget: data.budget ?? null,
         message: data.message,

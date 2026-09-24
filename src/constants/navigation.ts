@@ -119,9 +119,9 @@ export const HEADER_NAV: NavItem[] = [
       href: "/industries/",
     },
   },
-  { label: "Case Study", href: "/#work" },
+  { label: "Case Study", href: "/case-studies/" },
   { label: "Careers", href: "/careers/" },
-  { label: "Contact Us", href: "/contact/", action: "dialog" },
+  { label: "Contact Us", href: "/contact/" },
 ];
 
 /* ----------------------------- Footer nav ----------------------------- */
@@ -140,13 +140,13 @@ export const FOOTER_NAV = {
     { label: "Case Studies", href: "/case-studies/" },
     { label: "Resources & Blog", href: "/resources/" },
     { label: "Careers", href: "/careers/" },
-    { label: "Contact Us", href: "/contact/", action: "dialog" },
+    { label: "Contact Us", href: "/contact/" },
   ],
   quick: [
     { label: "Client Login", href: "/portal/" },
     { label: "Hire Developers", href: "/hire/" },
     { label: "AI Agents", href: "/ai-agents/", pro: true },
-    { label: "Get a Quote", href: "/#start", action: "dialog" },
+    { label: "Get a Quote", href: "/start/" },
     { label: "Ask Savo Assistant", href: "/#ai" },
   ],
 } as const satisfies Record<string, readonly (NavLink & { action?: "dialog" })[]>;

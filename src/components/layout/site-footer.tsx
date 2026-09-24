@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BADGES, LEGAL_LINKS, OFFICES, SITE, SOCIAL_LINKS } from "@/constants/site";
 import { FOOTER_NAV } from "@/constants/navigation";
 import { SavoLogo } from "@/components/shared/savo-logo";
+import { RegionArt } from "@/components/shared/region-art";
 import { CallbackForm } from "@/components/shared/callback-form";
 import { DialogLink } from "./dialog-link";
 
@@ -81,21 +82,38 @@ export function SiteFooter({
         </div>
       </div>
 
-      {/* Row 2 — global presence + direct contact */}
+      {/* Row 2 — global offices (identity vectors, address + mobile) + direct contact */}
       <div className="shell grid gap-px border-b border-border bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {OFFICES.map((office) => (
-          <div key={office.region} className="bg-background p-5">
+          <div key={office.id} className="flex flex-col bg-background p-5">
+            <RegionArt id={office.id} className="mb-4 h-9 w-14 shrink-0" />
             <p className="t-label text-accent">{office.region}</p>
-            <p className="t-caption mt-2.5 leading-relaxed text-muted">
-              {office.lines[0]}
-              <br />
-              {office.lines[1]}
+            <p className="t-caption mt-2.5 flex-1 leading-relaxed text-muted">
+              {office.address.map((line) => (
+                <span key={line} className="block">
+                  {line}
+                </span>
+              ))}
             </p>
+            {office.mobile && office.mobileE164 ? (
+              <a
+                href={`tel:${office.mobileE164}`}
+                className="mt-3 flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
+              >
+                <PhoneGlyph />
+                {office.mobile}
+              </a>
+            ) : (
+              <p className="t-caption mt-3 flex items-center gap-2 text-muted/70">
+                <PhoneGlyph />
+                [Local mobile pending]
+              </p>
+            )}
           </div>
         ))}
-        <div className="bg-background p-5">
+        <div className="bg-background p-5 sm:col-span-2 lg:col-span-3 xl:col-span-6">
           <p className="t-label text-accent">Talk to us</p>
-          <div className="mt-2.5 space-y-1.5">
+          <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:mt-2.5 lg:gap-6">
             <a href={`mailto:${contact.email}`} className="flex items-center gap-2 text-[0.875rem] font-medium text-foreground/85 transition-colors hover:text-accent">
               <MailGlyph />
               {contact.email}
@@ -121,13 +139,13 @@ export function SiteFooter({
             within two business hours.
           </p>
         </div>
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 min-w-0">
           <CallbackForm />
         </div>
       </div>
 
-      {/* Row 4 — badges + legal */}
-      <div className="shell flex flex-col gap-6 py-8 lg:flex-row lg:items-center lg:justify-between">
+      {/* Row 4 — badges + legal (extra bottom clearance for the Ask Savo bar) */}
+      <div className="shell flex flex-col gap-6 pb-24 pt-8 lg:flex-row lg:items-center lg:justify-between">
         <ul className="flex flex-wrap gap-x-7 gap-y-3" aria-label="Compliance and security">
           {BADGES.map((badge) => (
             <li key={badge} className="flex items-center gap-2 text-muted">

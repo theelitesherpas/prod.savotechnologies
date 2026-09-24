@@ -5,8 +5,10 @@ import { COUNTRY_PHONE_RULES, CALLBACK_COUNTRIES } from "@/lib/phone";
 import { track } from "@/lib/analytics";
 
 /**
- * Footer call-back request (ported from version 1): country + phone.
- * Posts to /api/callback, which stores it beside project enquiries.
+ * Footer call-back request: one attached control — country select (flag +
+ * ISD) joined to the national number input on a shared baseline. Posts to
+ * /api/callback, which validates against the same rules server-side and
+ * stores it beside project enquiries.
  */
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -23,6 +25,7 @@ export function CallbackForm() {
   const rule = COUNTRY_PHONE_RULES[countryNameSafe];
   const digits = phone.replace(/\D/g, "").slice(0, rule.max);
   const valid = digits.length >= rule.min && digits.length <= rule.max;
+  const digitsHint = rule.min === rule.max ? `${rule.min} digits` : `${rule.min}–${rule.max} digits`;
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -64,86 +67,104 @@ export function CallbackForm() {
         <span aria-hidden="true" className="mb-4 block h-2.5 w-2.5 bg-accent" />
         <p className="t-h4">Request received.</p>
         <p className="t-sm mt-2 text-muted">
-          A senior consultant will call {rule.dial} {digits} within two business hours.
+          A senior consultant will call {rule.flag} {rule.dial} {digits} within two business hours.
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={submit} noValidate className="grid gap-5 sm:grid-cols-2">
-      <div>
-        <label htmlFor="cb-country" className="t-label mb-1 block text-muted">
-          Country
+    <form onSubmit={submit} noValidate className="grid min-w-0 gap-6">
+      {/* Attached country + number control on one shared baseline */}
+      <div className="min-w-0">
+        <label htmlFor="cb-country" className="t-label mb-1.5 block text-muted">
+          Country &amp; phone <span aria-hidden="true" className="text-accent">*</span>
         </label>
-        <div className="relative">
-          <select
-            id="cb-country"
-            className="field pr-8"
-            value={countryName}
-            onChange={(e) => setCountryName(e.target.value)}
-          >
-            {CALLBACK_COUNTRIES.map((name) => (
-              <option key={name} value={name}>
-                {name} ({COUNTRY_PHONE_RULES[name].dial})
-              </option>
-            ))}
-          </select>
-          <svg aria-hidden="true" viewBox="0 0 12 12" className="pointer-events-none absolute right-1 top-1/2 h-3 w-3 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M2 4l4 4 4-4" />
-          </svg>
+        <div
+          className={`flex items-stretch border-b transition-colors duration-300 ${
+            touched && !valid ? "border-error" : "border-border focus-within:border-accent hover:border-foreground/30"
+          }`}
+        >
+          <div className="relative flex w-[13.5rem] max-w-[55vw] shrink-0 items-center">
+            <select
+              id="cb-country"
+              aria-label="Country"
+              className="w-full cursor-pointer appearance-none truncate bg-transparent py-2.5 pl-0 pr-7 text-[0.9375rem] font-semibold text-foreground"
+              value={countryName}
+              onChange={(e) => {
+                setCountryName(e.target.value);
+                setTouched(false);
+              }}
+            >
+              {CALLBACK_COUNTRIES.map((name) => {
+                const r = COUNTRY_PHONE_RULES[name];
+                return (
+                  <option key={name} value={name}>
+                    {r.flag} {name} ({r.dial})
+                  </option>
+                );
+              })}
+            </select>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 12 12"
+              className="pointer-events-none absolute right-1.5 h-3 w-3 text-muted"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path d="M2 4l4 4 4-4" />
+            </svg>
+            <span aria-hidden="true" className="mx-3 h-5 w-px shrink-0 bg-border" />
+          </div>
+          <input
+            id="cb-phone"
+            name="cb-phone"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel-national"
+            aria-label="Phone number"
+            className="min-w-0 flex-1 bg-transparent py-2.5 pr-1 tnum text-[0.9375rem] text-foreground placeholder:text-muted/70 focus:outline-none"
+            placeholder={`${rule.flag} ${rule.dial} · ${digitsHint}`}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            aria-invalid={touched && !valid}
+            aria-describedby={touched && !valid ? "cb-phone-error" : undefined}
+          />
         </div>
-      </div>
-
-      <div>
-        <label htmlFor="cb-phone" className="t-label mb-1 block text-muted">
-          Phone <span aria-hidden="true" className="text-accent">*</span>
-        </label>
-        <input
-          id="cb-phone"
-          name="cb-phone"
-          type="tel"
-          inputMode="numeric"
-          autoComplete="tel"
-          className="field tnum"
-          placeholder={`${rule.dial} · ${rule.min === rule.max ? rule.min : `${rule.min}–${rule.max}`} digits`}
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          aria-invalid={touched && !valid}
-          aria-describedby={touched && !valid ? "cb-phone-error" : undefined}
-        />
         {touched && !valid ? (
           <p id="cb-phone-error" className="t-caption mt-1.5 text-error">
-            {countryNameSafe}: {rule.min === rule.max ? `${rule.min} digits` : `${rule.min} to ${rule.max} digits`}.
+            {countryNameSafe} numbers have {digitsHint} after {rule.dial}.
           </p>
         ) : null}
       </div>
 
-      <div>
-        <label htmlFor="cb-name" className="t-label mb-1 block text-muted">
-          Your name
-        </label>
-        <input
-          id="cb-name"
-          name="cb-name"
-          type="text"
-          autoComplete="name"
-          className="field"
-          placeholder="Optional"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </div>
+      {/* Name + submit */}
+      <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div>
+          <label htmlFor="cb-name" className="t-label mb-1 block text-muted">
+            Your name
+          </label>
+          <input
+            id="cb-name"
+            name="cb-name"
+            type="text"
+            autoComplete="name"
+            className="field"
+            placeholder="Optional"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
 
-      {/* Honeypot */}
-      <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
-        <label>
-          Website
-          <input type="text" name="cb-website" tabIndex={-1} autoComplete="off" />
-        </label>
-      </div>
+        {/* Honeypot */}
+        <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+          <label>
+            Website
+            <input type="text" name="cb-website" tabIndex={-1} autoComplete="off" />
+          </label>
+        </div>
 
-      <div className="flex items-end">
         <button
           type="submit"
           disabled={status === "submitting"}
@@ -157,7 +178,7 @@ export function CallbackForm() {
       </div>
 
       {status === "error" ? (
-        <p role="alert" className="t-caption text-error sm:col-span-2">
+        <p role="alert" className="t-caption text-error">
           {error}
         </p>
       ) : null}

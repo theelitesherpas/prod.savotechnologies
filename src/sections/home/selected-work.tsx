@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -141,7 +142,7 @@ export function SelectedWork() {
   const [featured, ...rest] = WORK_PLACEHOLDERS;
 
   return (
-    <Section id="work" index="06 — Selected Work" labelledBy="work-heading">
+    <Section id="work" index="Selected Work" labelledBy="work-heading">
       <SectionHeader
         id="work-heading"
         heading="Selected work."
@@ -170,6 +171,25 @@ export function SelectedWork() {
           ))}
         </div>
       </div>
+
+      <Reveal className="mt-12">
+        <Link
+          href="/case-studies/"
+          className="group/link t-sm -ml-1 inline-flex items-center gap-2 py-3 font-semibold text-foreground transition-colors hover:text-accent"
+        >
+          Browse the full dossier — all disciplines
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 14 14"
+            className="h-3 w-3 transition-transform duration-300 group-hover/link:translate-x-[3px]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          >
+            <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
+          </svg>
+        </Link>
+      </Reveal>
     </Section>
   );
 }

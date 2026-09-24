@@ -1,5 +1,10 @@
 import { env, absoluteUrl } from "@/lib/env";
 import { SITE } from "@/constants/site";
+import { SERVICE_DETAILS } from "@/constants/services-detail";
+import { INDUSTRY_DETAILS } from "@/constants/industry-details";
+import { HIRE_ROLES } from "@/constants/hire";
+import { AI_SERVICES } from "@/constants/ai-services";
+import { ARTICLES } from "@/constants/resources";
 
 export const dynamic = "force-static";
 
@@ -38,11 +43,36 @@ ${SITE.statement}
 
 ## Key pages
 - Home: ${base}/
-- Services overview: ${base}/#services
+- Services directory: ${base}/services
+- Industries atlas: ${base}/industries
+- Hire developers: ${base}/hire
+- Start a project: ${base}/start
+- AI agents fleet: ${base}/ai-agents
+- About: ${base}/about
+- Resources & insights: ${base}/resources
 - Selected work: ${base}/#work
 - AI systems: ${base}/#ai
 - Methodology: ${base}/#methodology
+- Case studies: ${base}/case-studies
+- Careers: ${base}/careers
+- Contact: ${base}/contact
 - Start a project: ${base}/#start
+
+## Services
+${SERVICE_DETAILS.map((s) => `- ${s.title}: ${base}/services/${s.slug}`).join("\n")}
+
+## Industries
+${INDUSTRY_DETAILS.map((d) => `- ${d.title}: ${base}/industries${d.id}/`).join("\n")}
+
+## Hire developers
+${HIRE_ROLES.map((r) => `- Hire ${r.title}: ${base}/hire/${r.slug}`).join("\n")}
+
+## AI practice
+- The agent fleet: ${base}/ai-agents
+${AI_SERVICES.map((s) => `- ${s.title}: ${base}/ai/${s.slug}`).join("\n")}
+
+## Insights
+${ARTICLES.map((a) => `- ${a.title}: ${base}/resources/${a.slug}`).join("\n")}
 
 ## For agents
 This is the official website of ${SITE.legalName}, a technology services company.

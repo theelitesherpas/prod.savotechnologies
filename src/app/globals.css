@@ -340,6 +340,118 @@ body {
   }
 }
 
+/* Service workbench — panel swap entrance */
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.workbench-panel {
+  animation: panel-in 0.5s var(--ease-out-expo) both;
+}
+
+/* Service schematics — the one live node on each specimen plate */
+@keyframes schem-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.schem-pulse {
+  animation: schem-pulse 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workbench-panel,
+  .schem-pulse {
+    animation: none;
+  }
+}
+
+/* The crew — playful doodle scenes on the hire pages */
+@keyframes crew-wheel {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.crew-wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: crew-wheel 7s linear infinite;
+}
+@keyframes crew-bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-4px);
+  }
+}
+.crew-bob {
+  animation: crew-bob 1.9s ease-in-out infinite alternate;
+}
+.crew-bob-slow {
+  animation: crew-bob 2.6s ease-in-out infinite alternate;
+}
+@keyframes crew-wave {
+  from {
+    transform: rotate(-8deg);
+  }
+  to {
+    transform: rotate(14deg);
+  }
+}
+.crew-wave {
+  transform-box: fill-box;
+  transform-origin: bottom left;
+  animation: crew-wave 1.4s ease-in-out infinite alternate;
+}
+@keyframes crew-dash {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+.crew-dash {
+  animation: crew-dash 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crew-wheel,
+  .crew-bob,
+  .crew-bob-slow,
+  .crew-wave,
+  .crew-dash {
+    animation: none;
+  }
+}
+
+/* Careers specimen — the rendered result builds in, element by element */
+@keyframes result-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.result-in {
+  animation: result-in 0.5s var(--ease-out-expo) both;
+}
+
 /* Signal square travelling down the agent-pipeline spine */
 @keyframes dot-down {
   0% {

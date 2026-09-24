@@ -27,7 +27,8 @@ src/
 │   ├── (site)/                  # PUBLIC EXPERIENCE
 │   │   ├── layout.tsx           #   chrome: header(nav data) · footer(settings)
 │   │   │                        #   + skip link + Organization/WebSite JSON-LD
-│   │   └── page.tsx             #   homepage (static)
+│   │   ├── page.tsx             #   homepage (static)
+│   │   └── case-studies/        #   dossier by discipline (placeholders until verified)
 │   ├── admin/                   # OPERATIONS EXPERIENCE (noindex)
 │   │   ├── login/               #   page + server action (rate-limited)
 │   │   └── (protected)/         #   auth-checked shell

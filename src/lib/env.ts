@@ -38,7 +38,14 @@ export const env = { ...clientSchema.parse(processEnv), ...(isServer ? serverSch
   NODE_ENV: "development" | "test" | "production";
 };
 
-/** Absolute URL helper for metadata, sitemaps and JSON-LD. */
+/**
+ * Absolute URL helper for metadata, sitemaps and JSON-LD.
+ * Path trailing slashes are normalized away (except the root) so every
+ * emitted URL — canonical, sitemap entry, JSON-LD — matches the served
+ * 200 URL instead of a 308 redirect.
+ */
 export function absoluteUrl(path = "/"): string {
-  return `${env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}${path}`;
+  const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  const normalized = path === "/" || !path.endsWith("/") ? path : path.replace(/\/+$/, "");
+  return `${base}${normalized}`;
 }

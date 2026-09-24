@@ -23,7 +23,7 @@ import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 type EnquiryContextValue = {
-  open: (reason?: string) => void;
+  open: (reason?: string, prefillMessage?: string) => void;
 };
 
 const EnquiryContext = createContext<EnquiryContextValue>({ open: () => {} });
@@ -39,11 +39,13 @@ const FOCUSABLE =
 export function EnquiryProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [reason, setReason] = useState<string | undefined>();
+  const [prefill, setPrefill] = useState<string | undefined>();
   const openerRef = useRef<HTMLElement | null>(null);
 
-  const open = useCallback((r?: string) => {
+  const open = useCallback((r?: string, prefillMessage?: string) => {
     openerRef.current = document.activeElement as HTMLElement | null;
     setReason(r);
+    setPrefill(prefillMessage);
     setIsOpen(true);
     track("start_project_click", { location: r ?? "unspecified" });
   }, []);
@@ -58,7 +60,7 @@ export function EnquiryProvider({ children }: { children: ReactNode }) {
   return (
     <EnquiryContext.Provider value={value}>
       {children}
-      <EnquiryDrawer isOpen={isOpen} onClose={close} reason={reason} />
+      <EnquiryDrawer isOpen={isOpen} onClose={close} reason={reason} prefill={prefill} />
     </EnquiryContext.Provider>
   );
 }
@@ -83,13 +85,16 @@ function EnquiryDrawer({
   isOpen,
   onClose,
   reason,
+  prefill,
 }: {
   isOpen: boolean;
   onClose: () => void;
   reason?: string;
+  prefill?: string;
 }) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const startedRef = useRef(false);
+  const askMode = reason === "ask-savo";
 
   useEffect(() => {
     if (!isOpen) return;
@@ -147,7 +152,7 @@ function EnquiryDrawer({
         aria-modal="true"
         aria-labelledby="enquiry-title"
         className={cn(
-          "chapter-ink absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col border-t border-border bg-background text-foreground shadow-[0_-24px_80px_rgb(0_0_0/0.35)] transition-transform duration-500 ease-[var(--ease-out-expo)] sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none sm:w-[34rem] sm:border-t-0 sm:border-l",
+          "chapter-ink absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col border-t border-border bg-background/90 text-foreground shadow-[0_-24px_80px_rgb(0_0_0/0.35)] backdrop-blur-2xl transition-transform duration-500 ease-[var(--ease-out-expo)] sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none sm:w-[34rem] sm:border-t-0 sm:border-l",
           isOpen
             ? "translate-y-0 sm:translate-x-0"
             : "translate-y-full sm:translate-y-0 sm:translate-x-full",
@@ -157,10 +162,14 @@ function EnquiryDrawer({
           <div className="mb-8 flex items-start justify-between gap-6">
             <div>
               <p className="t-label mb-3 text-muted">
-                {reason ? `New project — via ${reason}` : "New project"}
+                {askMode
+                  ? "Ask Savo — reply within one business day"
+                  : reason
+                    ? `New project — via ${reason}`
+                    : "New project"}
               </p>
               <h2 id="enquiry-title" className="t-h2">
-                Tell us what you&apos;re building.
+                {askMode ? "Ask us anything." : "Tell us what you're building."}
               </h2>
             </div>
             <button
@@ -171,7 +180,7 @@ function EnquiryDrawer({
               ESC ✕
             </button>
           </div>
-          <EnquiryForm onStarted={() => (startedRef.current = true)} />
+          <EnquiryForm key={prefill ?? "standard"} onStarted={() => (startedRef.current = true)} initialMessage={prefill} />
         </div>
       </div>
     </div>
@@ -184,7 +193,10 @@ function EnquiryDrawer({
 
 type Status = "idle" | "submitting" | "success" | "error";
 
-function EnquiryForm({ onStarted }: { onStarted: () => void }) {
+function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; initialMessage?: string }) {
+  const placeholder = initialMessage
+    ? "What would you like to know? A senior consultant replies within one business day."
+    : "What are you building? What does success look like?";
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<EnquiryFieldErrors>({});
   const [serverMessage, setServerMessage] = useState("");
@@ -277,8 +289,9 @@ function EnquiryForm({ onStarted }: { onStarted: () => void }) {
         name="message"
         errors={errors}
         onFocus={onStarted}
-        placeholder="What are you building? What does success look like?"
+        placeholder={placeholder}
         textarea
+        defaultValue={initialMessage}
       />
 
       {/* Honeypot — invisible to humans, irresistible to bots */}
@@ -326,6 +339,7 @@ type FieldProps = {
   autoComplete?: string;
   textarea?: boolean;
   required?: boolean;
+  defaultValue?: string;
 };
 
 function Field({
@@ -338,6 +352,7 @@ function Field({
   autoComplete,
   textarea,
   required = true,
+  defaultValue,
 }: FieldProps) {
   const errorId = `${name}-error`;
   const error = errors[name];
@@ -357,6 +372,7 @@ function Field({
           aria-describedby={error ? errorId : undefined}
           onFocus={onFocus}
           rows={4}
+          defaultValue={defaultValue}
         />
       ) : (
         <input

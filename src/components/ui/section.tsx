@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 type SectionProps = {
   id?: string;
-  /** Narrative index rendered as document wayfinding, e.g. "04 — Services". */
+  /** Narrative wayfinding label rendered with the rail, e.g. "Services". */
   index?: string;
   chapter?: "paper" | "ink" | "accent";
   className?: string;
@@ -19,7 +19,8 @@ const chapterClass: Record<NonNullable<SectionProps["chapter"]>, string> = {
 
 /**
  * Section shell: establishes the chapter (token scope), vertical rhythm
- * and the document-style index rail. Content stays semantic <section>.
+ * and the document-style rail — a square node, the section name, then a
+ * hairline. Content stays semantic <section>.
  */
 export function Section({
   id,
@@ -41,7 +42,7 @@ export function Section({
             aria-hidden="true"
             className="mb-12 flex items-center gap-4 sm:mb-16"
           >
-            <span className="t-label text-muted tnum">{index}</span>
+            <span className="t-label text-muted">{index}</span>
             <span className="h-px flex-1 bg-border" />
           </div>
         ) : null}

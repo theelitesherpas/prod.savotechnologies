@@ -160,8 +160,11 @@ line at 320px. Body measure ≤ ~34rem; `.tnum` for figures.
 - Section rhythm `py-20 sm:py-28 lg:py-36`; **SectionHeader** standardizes
   every section opening: serif heading on the left rail (7 cols), lead copy
   right-aligned on the right rail (5 cols), shared baseline.
-- Index rail opens each section (`NN — Name` mono + hairline) — narrative
-  wayfinding, not decoration.
+- Name rail opens each section (accent square node + `Name` mono label +
+  hairline) — narrative wayfinding, not decoration. No numeric indices
+  anywhere (user-pinned: the site must not read as numbered); ordinal
+  meaning is carried by order, nodes and hairlines, and `.tnum` survives
+  only on real figures (salaries, dates, data).
 - Editorial 12-col grids; accordions and hairline rows instead of card grids;
   `gap-px` grids for metrics/growth; sticky rails (services index, AI
   pipeline, studio image) at `top-28`.
@@ -207,7 +210,7 @@ chrome for operators, not a chapter of the document.
   feature), Services / Hire Resources / Industries dropdowns (10/6/10 links
   + feature cards + "All …" link), Case Study, Careers, Contact Us (opens
   the enquiry drawer). Panels are full-width ink bars under the header with
-  mono titles, indexed links, PRO chips, square-node feature art. Hover
+  mono titles, node-marked links (accent square on hover), PRO chips, square-node feature art. Hover
   opens with a 160ms grace timer; click opens; Esc / outside / hover-leave
   closes. Mobile: full-screen ink menu with numbered accordion sections.
   Future routes resolve to the designed 404 ("still in production").
@@ -237,8 +240,12 @@ chrome for operators, not a chapter of the document.
 - Do hold photography in duotone until hover; don't scatter full-color
   photos across paper chapters.
 - Do use the square node where a mark is needed; no circles, gradients,
-  glows, glass, or extra accent colors.
-- Don't add eyebrows/kickers; the index rail is the only label instrument.
+  glows, or extra accent colors.
+- Glass is allowed only on floating chrome over scrolling content — the
+  scrolled header bar, nav mega-panels, the enquiry drawer, the assistant
+  bar — always the chapter's own tokens at 80–90% opacity plus
+  `backdrop-blur`. Never on paper-chapter cards or section grounds.
+- Don't add eyebrows/kickers; the name rail is the only label instrument.
 - Don't publish invented figures, quotes, clients, or claims — placeholders
   are the honest state until verified content arrives.
 - Don't soften the vermilion moment; it is the page's single shout.

@@ -94,7 +94,7 @@ export function Services() {
   const { open } = useEnquiry();
 
   return (
-    <Section id="services" index="04 — Services" labelledBy="services-heading">
+    <Section id="services" index="Services" labelledBy="services-heading">
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-4">
           <div className="lg:sticky lg:top-28">
@@ -129,16 +129,8 @@ export function Services() {
                           setOpenId(next);
                           if (next) track("service_open", { service: service.title });
                         }}
-                        className="group grid w-full grid-cols-[auto_3.25rem_1fr_auto] items-center gap-4 py-6 text-left sm:grid-cols-[auto_4rem_1fr_auto] sm:py-7"
+                        className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 py-6 text-left sm:grid-cols-[4rem_minmax(0,1fr)_auto] sm:py-7"
                       >
-                        <span
-                          className={cn(
-                            "t-label tnum transition-colors duration-300",
-                            isOpen ? "text-accent" : "text-muted",
-                          )}
-                        >
-                          {service.index}
-                        </span>
                         <span
                           className={cn(
                             "h-7 w-7 shrink-0 transition-colors duration-300",

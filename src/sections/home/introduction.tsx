@@ -8,7 +8,7 @@ const CHAIN = ["Strategy", "Design", "Technology", "Intelligence", "Growth"] as 
 
 export function Introduction() {
   return (
-    <Section id="studio" index="02 — The Studio" labelledBy="studio-heading">
+    <Section id="studio" index="The Studio" labelledBy="studio-heading">
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-7">
           <Reveal>
@@ -68,13 +68,14 @@ export function Introduction() {
         >
           {CHAIN.map((step, i) => (
             <li key={step} className="flex items-center gap-4">
-              <span className="t-label tnum text-muted">{String(i + 1).padStart(2, "0")}</span>
+              <span
+                aria-hidden="true"
+                className={"h-1.5 w-1.5 shrink-0 " + (i === CHAIN.length - 1 ? "bg-accent" : "bg-foreground/30")}
+              />
               <span className="t-h4">{step}</span>
               {i < CHAIN.length - 1 ? (
                 <span aria-hidden="true" className="ml-2 h-px w-8 bg-border sm:w-12" />
-              ) : (
-                <span aria-hidden="true" className="ml-2 h-2 w-2 bg-accent" />
-              )}
+              ) : null}
             </li>
           ))}
         </ol>

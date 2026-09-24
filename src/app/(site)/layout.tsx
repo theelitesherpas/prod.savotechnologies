@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { EnquiryProvider } from "@/components/shared/enquiry-dialog";
+import { AskSavoBar } from "@/components/shared/ask-savo-bar";
 import { HEADER_NAV, type NavItem } from "@/constants/navigation";
 import { SITE, SOCIAL_LINKS, OFFICES } from "@/constants/site";
 import { absoluteUrl } from "@/lib/env";
@@ -113,6 +114,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <SiteFooter
         contact={{ email: settings.contactEmail, phone: settings.contactPhone, phoneE164: SITE.phoneE164 }}
       />
+      <AskSavoBar />
     </EnquiryProvider>
   );
 }

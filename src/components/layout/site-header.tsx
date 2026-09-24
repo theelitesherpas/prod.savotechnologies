@@ -131,11 +131,11 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
     <header
       ref={headerRef}
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color] duration-500 ease-[var(--ease-out-expo)]",
+        "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,color] duration-500 ease-[var(--ease-out-expo)]",
         mobileOpen && "chapter-ink border-b border-border bg-background",
         !mobileOpen &&
           (scrolled || openPanel
-            ? "border-b border-border bg-[color-mix(in_oklab,var(--background)_88%,transparent)] backdrop-blur-md"
+            ? "border-b border-border bg-[color-mix(in_oklab,var(--background)_80%,transparent)] backdrop-blur-lg"
             : "border-b border-transparent"),
       )}
     >
@@ -189,7 +189,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                     </svg>
                   </button>
                 </li>
-              ) : (
+              ) : item.action === "dialog" ? (
                 <li key={item.label}>
                   <button
                     onClick={() => activate(item)}
@@ -197,6 +197,19 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                   >
                     {item.label}
                   </button>
+                </li>
+              ) : (
+                <li key={item.label}>
+                  <Link
+                    href={item.href ?? "/"}
+                    /* Plain top-level links skip prefetch — future routes
+                       (careers) would prefetch a 404 and log console noise. */
+                    prefetch={false}
+                    onClick={() => track("nav_link_click", { label: item.label })}
+                    className="t-sm px-3 py-2 font-medium text-foreground/75 transition-colors hover:text-foreground"
+                  >
+                    {item.label}
+                  </Link>
                 </li>
               ),
             )}
@@ -295,12 +308,11 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                 {item.children ? (
                   <div>
                     <button
-                      className="group flex w-full items-baseline gap-5 py-4 text-left"
+                      className="group flex w-full items-center gap-4 py-4 text-left"
                       aria-expanded={mobileAcc === item.label}
                       aria-controls={`acc-${panelId(item.label)}`}
                       onClick={() => setMobileAcc((cur) => (cur === item.label ? null : item.label))}
                     >
-                      <span className="t-label tnum text-accent">{String(i + 1).padStart(2, "0")}</span>
                       <span className="t-h2 flex-1">{item.label}</span>
                       <span
                         aria-hidden="true"
@@ -321,7 +333,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                       )}
                     >
                       <div className="overflow-hidden">
-                        <ul className="pb-4 pl-[3.4rem]">
+                        <ul className="pb-4 pl-5">
                           {item.children.map((link) => (
                             <li key={link.href}>
                               <Link
@@ -330,8 +342,12 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                                   setMobileOpen(false);
                                   track("nav_link_click", { label: link.label, mobile: true });
                                 }}
-                                className="flex items-center gap-2 py-2 text-sm font-medium text-foreground/70 transition-colors hover:text-accent"
+                                className="group/m flex items-center gap-2.5 py-2 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground"
                               >
+                                <span
+                                  aria-hidden="true"
+                                  className="h-1.5 w-1.5 shrink-0 scale-0 bg-accent transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover/m:scale-100"
+                                />
                                 {link.label}
                                 {link.pro ? (
                                   <span className="t-label rounded-[2px] border border-accent/40 px-1.5 py-0.5 text-accent">PRO</span>
@@ -356,7 +372,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                   </div>
                 ) : (
                   <button
-                    className="group flex w-full items-baseline gap-5 py-4 text-left"
+                    className="group flex w-full items-center gap-4 py-4 text-left"
                     onClick={() => {
                       if (item.action === "dialog") {
                         setMobileOpen(false);
@@ -369,7 +385,6 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                       }
                     }}
                   >
-                    <span className="t-label tnum text-accent">{String(i + 1).padStart(2, "0")}</span>
                     <span className="t-h2">{item.label}</span>
                   </button>
                 )}

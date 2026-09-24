@@ -7,7 +7,7 @@ import { WHY_SAVO } from "@/constants/content";
 
 export function WhySavo() {
   return (
-    <Section id="why" index="10 — Why Savo" labelledBy="why-heading">
+    <Section id="why" index="Why Savo" labelledBy="why-heading">
       <SectionHeader id="why-heading" heading="Why businesses choose Savo." />
 
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
@@ -15,20 +15,19 @@ export function WhySavo() {
         <div className="lg:col-span-8">
           <Reveal delay={120}>
             <ul className="border-t border-border">
-              {WHY_SAVO.map((reason, i) => (
+              {WHY_SAVO.map((reason) => (
                 <li
                   key={reason.title}
                   className="group grid gap-3 border-b border-border py-7 transition-colors sm:grid-cols-12 sm:gap-8 sm:py-8"
                 >
-                  <div className="flex items-baseline gap-5 sm:col-span-6">
-                    <span className="t-label tnum text-muted transition-colors group-hover:text-accent">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
+                  <div className="flex items-center gap-3.5 sm:col-span-5">
+                    <span
+                      aria-hidden="true"
+                      className="h-2 w-2 shrink-0 scale-0 bg-accent transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:scale-100"
+                    />
                     <h3 className="t-h3">{reason.title}</h3>
                   </div>
-                  <p className="t-body pl-[3.4rem] text-muted sm:col-span-6 sm:pl-0 sm:pt-1">
-                    {reason.text}
-                  </p>
+                  <p className="t-body text-muted sm:col-span-7 sm:pt-1">{reason.text}</p>
                 </li>
               ))}
             </ul>

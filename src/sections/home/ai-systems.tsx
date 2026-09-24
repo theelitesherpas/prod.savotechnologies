@@ -5,7 +5,7 @@ import { AI_PIPELINE, AI_TRUST_POINTS, AI_USE_CASES } from "@/constants/content"
 
 export function AISystems() {
   return (
-    <Section id="ai" index="05 — Intelligence" chapter="ink" labelledBy="ai-heading">
+    <Section id="ai" index="Intelligence" chapter="ink" labelledBy="ai-heading">
       <TrackView event="ai_section_engagement">
         <div className="grid gap-16 lg:grid-cols-12 lg:gap-12">
           {/* Copy column */}
@@ -27,14 +27,15 @@ export function AISystems() {
               <div className="mt-14">
                 <p className="t-label mb-6 text-muted">Selected use cases</p>
                 <ul className="divide-y divide-border border-y border-border">
-                  {AI_USE_CASES.map((useCase, i) => (
+                  {AI_USE_CASES.map((useCase) => (
                     <li
                       key={useCase}
-                      className="group flex items-baseline gap-5 py-4 transition-colors"
+                      className="group flex items-center gap-3.5 py-4 transition-colors"
                     >
-                      <span className="t-label tnum text-accent">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="h-2 w-2 shrink-0 scale-0 bg-accent transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:scale-100"
+                      />
                       <span className="t-h4 transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:translate-x-1">
                         {useCase}
                       </span>

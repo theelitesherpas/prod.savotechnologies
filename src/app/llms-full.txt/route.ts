@@ -3,6 +3,8 @@ import { SITE } from "@/constants/site";
 import { SERVICES } from "@/constants/services";
 import { MARQUEE_ITEMS } from "@/constants/services";
 import { INDUSTRIES } from "@/constants/content";
+import { ROLES } from "@/constants/careers";
+import { CASE_DISCIPLINES } from "@/constants/case-studies";
 
 export const dynamic = "force-static";
 
@@ -31,7 +33,7 @@ export function GET() {
 - Description: ${SITE.description}
 - Email: ${SITE.email}
 - Phone: ${SITE.phone}
-- Regions served: India (HQ), USA, Saudi Arabia & GCC, United Kingdom, Australia
+- Regions served: India (headquarters), Switzerland (head office), Saudi Arabia, Australia, United Kingdom, USA
 
 ## Statement
 ${SITE.statement}
@@ -45,6 +47,13 @@ ${MARQUEE_ITEMS.join(" · ")}
 ## Industries served
 ${industries}
 
+## Case studies
+- Case studies page: ${absoluteUrl("/case-studies")}
+- Organized by discipline: ${CASE_DISCIPLINES.map((d) => d.title).join(", ")}
+- Editorial policy: entries publish only with verified outcomes; until then they are listed as in preparation with no client names, figures, or claims
+- Every published dossier carries: client and sector, the challenge, approach and architecture, technology stack, timeline and team, and verified outcomes
+- Reference requests: relevant engagements are walkthrough-ready under NDA via the contact page
+
 ## Process (methodology)
 1. Discover — frame the problem and success metrics
 2. Architect — design the system, plan the build
@@ -57,8 +66,23 @@ AI at SAVO is production engineering, not demos: agents with guardrails, human
 oversight, observability, permissions, evaluation and fallback behavior —
 deployed against real business workflows with enterprise security.
 
+## Contact
+- Contact page: ${absoluteUrl("/contact")}
+- Response promise: first reply within one business day; every message reaches a human
+- Channels: contact form, email (${SITE.email}), phone (${SITE.phone}), WhatsApp chat from the contact page
+- Offices: India headquarters (Savo Technologies Pvt. Ltd., Indore, +91 75029 01234), Switzerland head office (Bahnhofstrasse 10, 8001 Zürich, +41 44 500 12 12), Saudi Arabia & GCC office (Riyadh · Dubai · Manama), Australia office (Sydney), United Kingdom office (London), USA office (address pending). Local mobile numbers publish as each office supplies a verified line.
+- After you write: senior consultant replies → discovery call → fixed-scope proposal (NDA on request)
+
+## Careers
+- Careers page: ${absoluteUrl("/careers")} · Apply: ${absoluteUrl("/careers/apply")}
+- Hiring promise: engineer-read applications, personal reply within two business days, four steps to a written offer (technical conversation, paid pairing session)
+- Work model: full time, remote first across India (Indore), INR salaries
+- Open roles (experience · band): ${ROLES.map((r) => `${r.title} (${r.exp} · ${r.band})`).join("; ")}
+- Applications: careers@ contact or the apply form; no matching role → general application accepted
+
 ## Start a project
-Use the enquiry drawer at ${absoluteUrl("/#start")} or the footer callback form.
+Use the enquiry drawer at ${absoluteUrl("/#start")}, the contact page at
+${absoluteUrl("/contact")}, or the footer callback form.
 `;
 
   return new Response(body, {

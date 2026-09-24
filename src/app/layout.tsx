@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Source_Serif_4, Fragment_Mono } from "next/font/google";
 import Script from "next/script";
 import { SITE } from "@/constants/site";
+import { openGraphFor } from "@/lib/seo";
 import { env } from "@/lib/env";
 import "./globals.css";
 
@@ -49,14 +50,11 @@ export const metadata: Metadata = {
     "digital product company",
   ],
   alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    siteName: SITE.name,
+  openGraph: openGraphFor({
     title: "SAVO Technologies | Web, Mobile, AI & Digital Product Development",
     description: SITE.description,
     url: "/",
-    locale: "en_US",
-  },
+  }),
   twitter: {
     card: "summary_large_image",
     title: "SAVO Technologies | Web, Mobile, AI & Digital Product Development",
