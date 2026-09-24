@@ -135,7 +135,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
         mobileOpen && "chapter-ink border-b border-border bg-background",
         !mobileOpen &&
           (scrolled || openPanel
-            ? "border-b border-border bg-[color-mix(in_oklab,var(--background)_80%,transparent)] backdrop-blur-lg"
+            ? "border-b border-border bg-background"
             : "border-b border-transparent"),
       )}
     >

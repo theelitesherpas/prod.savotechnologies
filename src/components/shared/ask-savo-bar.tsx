@@ -229,7 +229,7 @@ export function AskSavoBar() {
       {/* Broad glass frame — the window and the bar live inside it */}
       <div
         className={cn(
-          "pointer-events-auto w-[min(44rem,calc(100%-1.5rem))] rounded-[14px] border border-foreground/10 bg-background/55 p-[7px] shadow-[0_24px_70px_rgb(10_10_14/0.22)] backdrop-blur-xl transition-[transform,opacity] duration-500 ease-[var(--ease-out-expo)]",
+          "pointer-events-auto w-[min(44rem,calc(100%-1.5rem))] rounded-[14px] border border-foreground/10 bg-background p-[7px] shadow-[0_24px_70px_rgb(10_10_14/0.22)] transition-[transform,opacity] duration-500 ease-[var(--ease-out-expo)]",
           shown ? "translate-y-0 opacity-100" : "translate-y-[150%] opacity-0",
         )}
       >

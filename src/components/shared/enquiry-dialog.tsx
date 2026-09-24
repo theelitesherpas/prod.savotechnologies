@@ -152,7 +152,7 @@ function EnquiryDrawer({
         aria-modal="true"
         aria-labelledby="enquiry-title"
         className={cn(
-          "chapter-ink absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col border-t border-border bg-background/90 text-foreground shadow-[0_-24px_80px_rgb(0_0_0/0.35)] backdrop-blur-2xl transition-transform duration-500 ease-[var(--ease-out-expo)] sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none sm:w-[34rem] sm:border-t-0 sm:border-l",
+          "chapter-ink absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col border-t border-border bg-background text-foreground shadow-[0_-24px_80px_rgb(0_0_0/0.35)] transition-transform duration-500 ease-[var(--ease-out-expo)] sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none sm:w-[34rem] sm:border-t-0 sm:border-l",
           isOpen
             ? "translate-y-0 sm:translate-x-0"
             : "translate-y-full sm:translate-y-0 sm:translate-x-full",

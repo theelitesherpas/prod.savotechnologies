@@ -140,7 +140,7 @@ export function MegaBar({
     <div
       id={id}
       className={cn(
-        "chapter-ink absolute inset-x-0 top-full hidden border-y border-border bg-background/85 shadow-[0_24px_60px_rgb(10_10_14/0.28)] backdrop-blur-xl lg:block",
+        "chapter-ink absolute inset-x-0 top-full hidden border-y border-border bg-background shadow-[0_24px_60px_rgb(10_10_14/0.28)] lg:block",
       )}
     >
       <div className="shell grid gap-10 py-9 lg:grid-cols-12">
