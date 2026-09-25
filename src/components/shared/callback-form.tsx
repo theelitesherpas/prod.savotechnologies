@@ -37,10 +37,9 @@ export function CallbackForm() {
   const valid = !!rule && digits.length >= rule.min;
   const digitsHint = rule ? (rule.min === rule.max ? `${rule.min} digits` : `${rule.min}–${rule.max} digits`) : "";
 
-  /* Fresh, focused search each time the menu opens. */
+  /* Focus the search as soon as the menu opens. */
   useEffect(() => {
     if (!open) return;
-    setQuery("");
     requestAnimationFrame(() => searchRef.current?.focus());
   }, [open]);
 
