@@ -29,7 +29,16 @@ type ParsedItem = {
   slug: string;
   order: number;
   active: boolean;
+  contentStatus: ContentLifecycle;
   data: Record<string, unknown>;
+};
+
+/** Content lifecycle (demo content policy) — publication is explicit. */
+const LIFECYCLE = ["draft", "demo", "review", "verified", "published"] as const;
+export type ContentLifecycle = (typeof LIFECYCLE)[number];
+const parseLifecycle = (v: FormDataEntryValue | null): ContentLifecycle => {
+  const s = typeof v === "string" ? v : "";
+  return (LIFECYCLE as readonly string[]).includes(s) ? (s as ContentLifecycle) : "draft";
 };
 
 function parseItemForm(collection: CollectionKey, formData: FormData): ParsedItem | null {
@@ -109,8 +118,9 @@ function parseItemForm(collection: CollectionKey, formData: FormData): ParsedIte
 
   const order = z.coerce.number().int().min(0).max(999).catch(0).parse(formData.get("order") ?? 0);
   const active = formData.get("active") === "on" || formData.get("active") === "true";
+  const contentStatus = parseLifecycle(formData.get("contentStatus"));
 
-  return { title, slug, order, active, data };
+  return { title, slug, order, active, contentStatus, data };
 }
 
 async function readCollection(formData: FormData): Promise<CollectionKey | null> {
@@ -135,6 +145,8 @@ export async function createItemAction(formData: FormData): Promise<void> {
         title: parsed.title,
         order: parsed.order,
         active: parsed.active,
+        contentStatus: parsed.contentStatus,
+        publishedAt: parsed.contentStatus === "published" ? new Date() : null,
         data: parsed.data as Prisma.InputJsonValue,
       },
     });
@@ -165,6 +177,8 @@ export async function updateItemAction(formData: FormData): Promise<void> {
         title: parsed.title,
         order: parsed.order,
         active: parsed.active,
+        contentStatus: parsed.contentStatus,
+        ...(parsed.contentStatus === "published" ? { publishedAt: new Date() } : {}),
         data: parsed.data as Prisma.InputJsonValue,
       },
     });

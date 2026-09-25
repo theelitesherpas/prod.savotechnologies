@@ -4,6 +4,7 @@ import Script from "next/script";
 import { SITE } from "@/constants/site";
 import { openGraphFor } from "@/lib/seo";
 import { canonicalOrigin, INDEXABLE, env } from "@/lib/env";
+import { IS_DEMO } from "@/lib/content-mode";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -55,7 +56,7 @@ export const metadata: Metadata = {
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,
   },
-  robots: INDEXABLE
+  robots: INDEXABLE && !IS_DEMO
     ? {
         index: true,
         follow: true,

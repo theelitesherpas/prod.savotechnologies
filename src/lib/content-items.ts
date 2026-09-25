@@ -36,12 +36,19 @@ type ItemRow = {
   updatedAt: Date;
 };
 
-/** Read a collection's rows; null means "DB unavailable or empty". */
+/** Read a collection's rows; null means "DB unavailable or empty".
+ *
+ * Publication is explicit (demo content policy): public reads return only
+ * rows whose content lifecycle reached "published". Rows still in
+ * draft/demo/review — or seeded without a lifecycle — never render; the
+ * constants fallback covers the public site instead. */
 async function readItems(collection: CollectionKey, includeInactive = false): Promise<ItemRow[] | null> {
   if (!prisma) return null;
   try {
     return await prisma.contentItem.findMany({
-      where: includeInactive ? { collection } : { collection, active: true },
+      where: includeInactive
+        ? { collection }
+        : { collection, active: true, contentStatus: "published" },
       orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
       select: { id: true, slug: true, title: true, data: true, order: true, active: true, updatedAt: true },
     });

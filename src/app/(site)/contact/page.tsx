@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 import { SITE, OFFICES } from "@/constants/site";
+import { IS_DEMO } from "@/lib/content-mode";
 import { absoluteUrl } from "@/lib/env";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
@@ -22,7 +23,7 @@ import { openGraphFor } from "@/lib/seo";
  */
 
 const DESCRIPTION =
-  "Talk to the engineers who will build it. Message Savo Technologies, book a call back, or reach the offices in Indore, Zürich, Riyadh, London and Sydney. One business day reply.";
+  "Talk to the engineers who will build it. Message Savo Technologies, book a call back, or reach the team in Indore, India — serving clients across India and worldwide. One business day reply.";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -52,7 +53,9 @@ export default async function ContactPage() {
         email: settings.contactEmail,
         telephone: SITE.phoneE164,
         availableLanguage: ["en"],
-        areaServed: OFFICES.map((o) => o.region),
+        areaServed: IS_DEMO
+          ? OFFICES.map((o) => o.region)
+          : ["India", "Worldwide"],
       },
     },
   };

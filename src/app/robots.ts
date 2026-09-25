@@ -1,13 +1,15 @@
 import type { MetadataRoute } from "next";
 import { absoluteUrl, INDEXABLE } from "@/lib/env";
+import { IS_DEMO } from "@/lib/content-mode";
 
 /**
  * Crawler policy.
  *
- * Indexing gate: only the production deployment (NEXT_PUBLIC_INDEXABLE=true)
- * is crawlable. Every other environment — local dev, Vercel test and preview
- * deployments — serves `Disallow: /` so testing URLs can never compete with
- * https://savotechnologies.com.
+ * Indexing gate: only the production deployment (NEXT_PUBLIC_INDEXABLE=true
+ * AND CONTENT_MODE=production) is crawlable. Every other environment —
+ * local dev, Vercel test and preview deployments, and any demo-content
+ * build — serves `Disallow: /` so demo staging content can never be
+ * indexed or compete with https://savotechnologies.com.
  *
  * - Everything public is crawlable in production; API endpoints and the
  *   admin panel are not (they are also protected by auth — robots.txt is a
@@ -16,7 +18,7 @@ import { absoluteUrl, INDEXABLE } from "@/lib/env";
  *   they are allowed by default, and stating it documents intent.
  */
 export default function robots(): MetadataRoute.Robots {
-  if (!INDEXABLE) {
+  if (!INDEXABLE || IS_DEMO) {
     return { rules: [{ userAgent: "*", disallow: "/" }] };
   }
 

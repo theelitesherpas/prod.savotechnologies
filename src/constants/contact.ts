@@ -1,10 +1,17 @@
 /** Contact page content — carried from version 1 (/newdesign/contact). */
 
+import type { ContentStatus } from "@/lib/content-mode";
+import { IS_DEMO } from "@/lib/content-mode";
+
 /**
- * The people who answer. Portraits live in /public/team (ported from v1);
- * each entry links to the person's LinkedIn profile.
+ * DEMO TEAM ROSTER — NOT VERIFIED.
+ * The six members below are version-1 placeholder identities: invented
+ * names, roles, bios, placeholder portraits and LinkedIn slugs that are
+ * NOT confirmed Savo-controlled profiles. Rendered in demo mode only
+ * (see sections/contact/team.tsx); production suppresses the section
+ * until the real roster is supplied. DEMO — REPLACE BEFORE PRODUCTION.
  */
-export const CONTACT_TEAM = [
+const CONTACT_TEAM_SEED = [
   {
     name: "Aarav Mehta",
     role: "Founder & CEO",
@@ -48,6 +55,12 @@ export const CONTACT_TEAM = [
     linkedin: "ananya-iyer",
   },
 ] as const;
+
+/** Typed demo view of the roster — empty in production (the gate in
+ * sections/contact/team.tsx suppresses the section entirely). */
+export const CONTACT_TEAM: ({ status: ContentStatus } & (typeof CONTACT_TEAM_SEED)[number])[] = IS_DEMO
+  ? CONTACT_TEAM_SEED.map((m) => ({ ...m, status: "demo" as const }))
+  : [];
 
 /** What happens after the message is sent — sets expectations honestly. */
 export const WHAT_HAPPENS_NEXT = [

@@ -1,10 +1,12 @@
 import { Reveal } from "@/components/ui/reveal";
 import { METRICS } from "@/constants/content";
+import { IS_DEMO } from "@/lib/content-mode";
 
 /**
- * Impact metrics. Values are deliberately rendered as pending marks,
- * SAVO publishes figures only when they can be verified. No invented
- * statistics, ever.
+ * Impact metrics — CONTENT_MODE gated. Demo mode renders polished design
+ * figures (DEMO DATA — NOT VERIFIED, never in JSON-LD/SEO); production
+ * renders honest pending marks until SAVO publishes verifiable numbers.
+ * No invented statistics, ever.
  */
 export function Metrics() {
   return (
@@ -15,8 +17,9 @@ export function Metrics() {
             Impact, measured honestly.
           </h2>
           <p className="t-caption max-w-xs text-muted">
-            Figures appear here only once they can be verified. We don&apos;t
-            publish numbers we can&apos;t prove.
+            {IS_DEMO
+              ? "Preview figures shown for design evaluation — verified numbers replace them at launch."
+              : "Figures appear here only once they can be verified. We don't publish numbers we can't prove."}
           </p>
         </div>
 
@@ -25,9 +28,15 @@ export function Metrics() {
             {METRICS.map((metric) => (
               <div key={metric.label} className="flex flex-col bg-background p-6 sm:p-7">
                 <dt className="t-label order-2 mt-4 text-muted">{metric.label}</dt>
-                <dd className="order-1 t-dl flex items-start text-foreground/30">
-                  <span aria-label="figure pending verification">…</span>
-                  <span aria-hidden="true" className="mt-2 ml-1 h-2 w-2 shrink-0 bg-accent/70" />
+                <dd className="order-1 t-dl flex items-start text-foreground/85">
+                  {IS_DEMO ? (
+                    metric.value
+                  ) : (
+                    <>
+                      <span aria-label="figure pending verification">{metric.value}</span>
+                      <span aria-hidden="true" className="mt-2 ml-1 h-2 w-2 shrink-0 bg-accent/70" />
+                    </>
+                  )}
                 </dd>
               </div>
             ))}

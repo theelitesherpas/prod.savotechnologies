@@ -4,13 +4,37 @@ import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { WORK_PLACEHOLDERS } from "@/constants/content";
+import { DEMO_CASE_STUDIES, DEMO_TESTIMONIAL } from "@/content/demo";
+import { IS_DEMO } from "@/lib/content-mode";
 
 /**
- * Placeholder case-study cards. Photography is representative studio imagery
- * (duotone, inside the document's ink); wireframes mark each card as
- * in-development. Nothing is presented as a real client until verified
- * case studies arrive.
+ * Selected work — CONTENT_MODE gated. Demo mode renders fictional design
+ * projects (Meridian Commerce / NovaFlow / Aster Health) so the cards,
+ * typography and responsive grid stay complete for review; production
+ * renders the honest in-preparation placeholders until verified case
+ * studies arrive. Demo cards use the same abstract wireframe art — never
+ * real logos or disguised real companies.
  */
+
+type WorkItem = {
+  name: string;
+  industry: string;
+  services: string;
+  stack: string;
+  outcome: string;
+  variant: "a" | "b" | "c";
+};
+
+const DEMO_WORK_ITEMS: WorkItem[] = DEMO_CASE_STUDIES.slice(0, 3).map((c) => ({
+  name: c.name,
+  industry: c.industry,
+  services: c.services,
+  stack: c.stack.join(" · "),
+  outcome: c.results.map((r) => `${r.value} ${r.label}`).join(" · ") + " — demo figures",
+  variant: c.variant,
+}));
+
+const WORK_ITEMS: WorkItem[] = IS_DEMO ? DEMO_WORK_ITEMS : [...WORK_PLACEHOLDERS];
 const PHOTO_BY_VARIANT = {
   a: "/images/meeting.webp",
   b: "/images/code.webp",
@@ -92,7 +116,7 @@ function WorkCard({
   aspect,
   sizes,
 }: {
-  item: (typeof WORK_PLACEHOLDERS)[number];
+  item: WorkItem;
   aspect: string;
   sizes: string;
 }) {
@@ -101,7 +125,11 @@ function WorkCard({
       <div className={`relative overflow-hidden ${aspect}`}>
         <Image
           src={PHOTO_BY_VARIANT[item.variant]}
-          alt="Representative studio imagery, case study in preparation"
+          alt={
+            IS_DEMO
+              ? `Design concept: ${item.name} — fictional demo project`
+              : "Representative studio imagery, case study in preparation"
+          }
           fill
           sizes={sizes}
           className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
@@ -112,7 +140,7 @@ function WorkCard({
         />
         <WorkArt variant={item.variant} />
         <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.45)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
-          In preparation
+          {IS_DEMO ? "Design concept" : "In preparation"}
         </span>
       </div>
       <div className="flex flex-wrap items-start justify-between gap-4 border-t border-border p-6 sm:p-8">
@@ -139,7 +167,7 @@ function WorkCard({
 }
 
 export function SelectedWork() {
-  const [featured, ...rest] = WORK_PLACEHOLDERS;
+  const [featured, ...rest] = WORK_ITEMS;
 
   return (
     <Section id="work" index="Selected Work" labelledBy="work-heading">
@@ -147,11 +175,20 @@ export function SelectedWork() {
         id="work-heading"
         heading="Selected work."
         lead={
-          <>
-            Digital products designed around real business objectives. Case
-            studies are being prepared, nothing is published here until its
-            results can be verified.
-          </>
+          IS_DEMO ? (
+            <>
+              Digital products designed around real business objectives. The
+              engagements below are polished design concepts — fictional
+              projects shown so the case-study format can be evaluated before
+              verified work is published.
+            </>
+          ) : (
+            <>
+              Digital products designed around real business objectives. Case
+              studies are being prepared, nothing is published here until its
+              results can be verified.
+            </>
+          )
         }
       />
 
@@ -165,12 +202,32 @@ export function SelectedWork() {
         </Reveal>
         <div className="grid gap-8 md:grid-cols-2">
           {rest.map((item, i) => (
-            <Reveal key={item.variant} delay={i * 120}>
+            <Reveal key={item.name} delay={i * 120}>
               <WorkCard item={item} aspect="aspect-[16/10]" sizes="(max-width: 768px) 100vw, 640px" />
             </Reveal>
           ))}
         </div>
       </div>
+
+      {/* DEMO TESTIMONIAL — layout preview only, never a fabricated endorsement.
+          Suppressed entirely in production until an approved quote exists. */}
+      {IS_DEMO ? (
+        <Reveal className="mt-16">
+          <figure className="border border-border bg-surface p-8 sm:p-12" aria-label="Client testimonial preview">
+            <p className="t-label text-accent">{DEMO_TESTIMONIAL.kicker}</p>
+            <blockquote className="t-serif-italic mt-6 max-w-3xl text-2xl leading-snug text-foreground/90 sm:text-3xl">
+              &ldquo;{DEMO_TESTIMONIAL.quote}&rdquo;
+            </blockquote>
+            <figcaption className="mt-8 flex items-center gap-4 border-t border-border pt-6">
+              <span aria-hidden="true" className="h-2 w-2 shrink-0 bg-accent" />
+              <div>
+                <p className="t-sm font-semibold">{DEMO_TESTIMONIAL.name}</p>
+                <p className="t-caption mt-0.5 text-muted">{DEMO_TESTIMONIAL.role}</p>
+              </div>
+            </figcaption>
+          </figure>
+        </Reveal>
+      ) : null}
 
       <Reveal className="mt-12">
         <Link

@@ -6,6 +6,7 @@ import { HEADER_NAV, type NavItem } from "@/constants/navigation";
 import { SITE, SOCIAL_LINKS } from "@/constants/site";
 import { absoluteUrl } from "@/lib/env";
 import { getSettings } from "@/lib/settings";
+import { IS_DEMO } from "@/lib/content-mode";
 import {
   getManagedServices,
   getManagedIndustries,
@@ -37,17 +38,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   // One canonical entity graph: Organization (Savo Technologies = Savo =
   // Savo Technologies Private Limited = Savo Technologies Pvt Ltd) and the
   // WebSite it publishes. Every page references these @ids — no duplicate
-  // entities. Countries the company genuinely serves per the v1 office map.
-  const AREA_SERVED_COUNTRIES = [
-    "India",
-    "Switzerland",
-    "Saudi Arabia",
-    "United Arab Emirates",
-    "Bahrain",
-    "Australia",
-    "United Kingdom",
-    "United States",
-  ];
+  // entities. Structured data stays factual in BOTH modes: areaServed is
+  // restricted to the verified home market (demo market-presence cards are
+  // visual staging content and never enter machine-readable claims; the
+  // verified multi-market list is restored when Savo confirms it).
+  const AREA_SERVED_COUNTRIES = ["India"];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -143,6 +138,19 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
             <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-accent" />
             <span className="min-w-0 flex-1 truncate">{settings.announcement}</span>
           </p>
+        </div>
+      ) : null}
+
+      {/* Staging identifier — demo builds only, never in production.
+          Marks the environment to reviewers so demo content cannot be
+          mistaken for approved corporate information. */}
+      {IS_DEMO ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed bottom-4 left-4 z-[150] flex items-center gap-2 border border-border bg-[rgb(16_19_25/0.92)] px-3 py-1.5 text-white/90 backdrop-blur-[2px]"
+        >
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+          <span className="t-label">Development Preview</span>
         </div>
       ) : null}
 

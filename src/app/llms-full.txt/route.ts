@@ -73,7 +73,7 @@ deployed against real business workflows with enterprise security.
 - Contact page: ${absoluteUrl("/contact")}
 - Response promise: first reply within one business day; every message reaches a human
 - Channels: contact form, email (${SITE.email}), phone (${SITE.phone}), WhatsApp chat from the contact page
-- Offices: India headquarters (Savo Technologies Pvt. Ltd., Indore, +91 75029 01234), Switzerland head office (Bahnhofstrasse 10, 8001 Zürich, +41 44 500 12 12), Saudi Arabia & GCC office (Riyadh · Dubai · Manama), Australia office (Sydney), United Kingdom office (London), USA office (address pending). Local mobile numbers publish as each office supplies a verified line.
+- Offices: India headquarters — the verified engineering operations (Indore, +91 75029 01234). Every other region (Switzerland & Europe, Saudi Arabia & GCC, Australia, United Kingdom, United States) is a market/service presence, not a claimed physical office; confirmed office addresses publish only as each region supplies a verified line.
 - After you write: senior consultant replies → discovery call → fixed-scope proposal (NDA on request)
 
 ## Careers

@@ -428,6 +428,8 @@ export type CollectionFormItem = {
   data: Record<string, unknown>;
   order: number;
   active: boolean;
+  /** Content lifecycle (demo content policy); defaults to draft. */
+  contentStatus?: string;
   updatedAt?: string;
 };
 
@@ -590,6 +592,23 @@ export function CollectionForm({
             />
             Published
           </label>
+        </div>
+        <div className="flex items-center gap-3">
+          <label htmlFor="item-content-status" className="adm-label">
+            Lifecycle
+          </label>
+          <select
+            id="item-content-status"
+            name="contentStatus"
+            defaultValue={item?.contentStatus ?? "draft"}
+            className="adm-select h-9 py-1"
+          >
+            <option value="draft">Draft</option>
+            <option value="demo">Demo</option>
+            <option value="review">Review</option>
+            <option value="verified">Verified</option>
+            <option value="published">Published</option>
+          </select>
         </div>
         <div className="flex items-center gap-3">
           <label htmlFor="item-order" className="adm-label">

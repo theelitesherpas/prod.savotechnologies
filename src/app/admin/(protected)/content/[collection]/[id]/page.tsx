@@ -50,6 +50,7 @@ export default async function EditItemPage({
           data,
           order: item.order,
           active: item.active,
+          contentStatus: item.contentStatus,
           updatedAt: item.updatedAt.toISOString(),
         }}
       />

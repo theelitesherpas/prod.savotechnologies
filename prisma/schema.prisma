@@ -119,6 +119,11 @@ model ContentItem {
   data       Json
   order      Int      @default(0)
   active     Boolean  @default(true)
+  /// Content lifecycle (demo content policy): draft → demo → review →
+  /// verified → published. A record is production-visible ONLY at
+  /// "published" — existence in PostgreSQL is never publication.
+  contentStatus String    @default("draft") @map("content_status")
+  publishedAt   DateTime? @map("published_at")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 

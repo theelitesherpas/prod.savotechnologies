@@ -63,55 +63,38 @@ export const SOCIAL_LINKS = [
 ] as const;
 
 /**
- * Global offices (company truth): India is the engineering headquarters (Indore),
- * Switzerland the registered head office (Zürich), and every other
- * region is a company office. Address and mobile shown only where
- * verified — bracketed slots stay until the company supplies real values
- * (never invented, per the hard content rule).
+ * Global presence (CONTENT_MODE gated — see src/lib/content-mode.ts).
+ *
+ * VERIFIED: India is the engineering headquarters (Indore). Everything
+ * else is a market/service presence, not a physical office claim:
+ * the former "Bahnhofstrasse 10, Zürich" head-office address and the
+ * +41 mobile were fabricated placeholders (never a real Savo location)
+ * and have been removed — city-level lines and general market wording
+ * only, pending Savo confirmation. Demo market cards render in demo mode;
+ * production shows the verified HQ plus truthful non-specific wording.
  */
-export const OFFICES = [
-  {
-    id: "india",
-    region: "India · Headquarters",
-    address: ["Savo Technologies Pvt Ltd", "Indore, Madhya Pradesh, India"] as const,
-    mobile: "+91 75029 01234",
-    mobileE164: "+917502901234",
-  },
-  {
-    id: "switzerland",
-    region: "Switzerland · Head Office",
-    address: ["Bahnhofstrasse 10", "8001 Zürich, Switzerland"] as const,
-    mobile: "+41 44 500 12 12",
-    mobileE164: "+41445001212",
-  },
-  {
-    id: "saudi-arabia",
-    region: "Saudi Arabia & GCC · Office",
-    address: ["Riyadh · Dubai · Manama"] as const,
-    mobile: null,
-  },
-  {
-    id: "australia",
-    region: "Australia · Office",
-    address: ["Sydney, Australia"] as const,
-    mobile: null,
-  },
-  {
-    id: "united-kingdom",
-    region: "United Kingdom · Office",
-    address: ["London, United Kingdom"] as const,
-    mobile: null,
-  },
-  {
-    id: "usa",
-    region: "USA · Office",
-    address: ["[Address pending]"] as const,
-    mobile: null,
-  },
-] as const;
+import { IS_DEMO } from "@/lib/content-mode";
+import { HQ_PRESENCE, DEMO_MARKET_PRESENCE } from "@/content/demo";
 
-/** Compliance badges (version-1 footer claims). */
-export const BADGES = ["GDPR Compliant", "SSL Secured", "PCI DSS Ready", "ISO 27001 Aligned"] as const;
+export type Presence = typeof HQ_PRESENCE;
+
+export const OFFICES: Presence[] = IS_DEMO
+  ? [HQ_PRESENCE, ...DEMO_MARKET_PRESENCE]
+  : [HQ_PRESENCE];
+
+/** Honest production line when only the HQ is verified. */
+export const PRESENCE_FALLBACK_NOTE =
+  "Engineering, design and delivery run from Indore, India, with engagements across India and worldwide.";
+
+/**
+ * Trust strip — NON-CERTIFICATION capability labels (safe in both modes).
+ * The v1 claims ("GDPR Compliant", "PCI DSS Ready", "ISO 27001 Aligned")
+ * were unheld certifications and are removed: capability wording only,
+ * never formal certification claims. See src/content/demo/index.ts.
+ */
+import { TRUST_CAPABILITY_LABELS } from "@/content/demo";
+
+export const BADGES = TRUST_CAPABILITY_LABELS;
 
 export const LEGAL_LINKS = [
   { label: "Privacy Policy", href: "/privacy-policy" },

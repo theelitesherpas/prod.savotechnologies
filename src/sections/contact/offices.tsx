@@ -2,26 +2,32 @@ import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { RegionArt } from "@/components/shared/region-art";
-import { OFFICES } from "@/constants/site";
+import { OFFICES, PRESENCE_FALLBACK_NOTE } from "@/constants/site";
+import { IS_DEMO } from "@/lib/content-mode";
 
 /**
- * Global offices — hairline grid on the sand band, one identity vector
+ * Global presence — hairline grid on the sand band, one identity vector
  * per region. The strokes ink themselves in on scroll (pathLength trick),
- * like every v6 infographic. Cards carry designation, address and mobile
- * where verified; bracketed slots stay until the company supplies them.
+ * like every v6 infographic. Verified HQ first; market presences are
+ * clearly worded as markets (demo content, gated by CONTENT_MODE) — never
+ * a fabricated street address or an invented office phone.
  */
 export function Offices() {
   return (
     <Section
       id="offices"
-      index="Offices"
+      index="Presence"
       labelledBy="offices-heading"
       className="bg-surface-2/60"
     >
       <SectionHeader
         id="offices-heading"
-        heading="Six regions, one accountable team."
-        lead="Strategy and engineering run from the India headquarters; the head office sits in Zürich. Offices in Riyadh, London, Sydney and the USA cover their regions, wherever you are, someone senior is awake."
+        heading={IS_DEMO ? "Six regions, one accountable team." : "One accountable team, worldwide."}
+        lead={
+          IS_DEMO
+            ? "Engineering, design and delivery run from the Indore headquarters, with market presence across Switzerland, the GCC, Australia, the UK and the US — wherever you are, someone senior is awake."
+            : PRESENCE_FALLBACK_NOTE
+        }
       />
 
       <div className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -30,12 +36,11 @@ export function Offices() {
             <div className="flex h-full flex-col p-6 sm:p-7">
               <RegionArt id={office.id} draw className="mb-6 h-11 w-16" />
               <h3 className="t-h4">{office.region}</h3>
+              <p className="t-label mt-2 text-accent">
+                {office.kind === "hq" ? "Primary Operations" : office.cityLine}
+              </p>
               <p className="t-caption mt-2.5 flex-1 leading-relaxed text-muted">
-                {office.address.map((line) => (
-                  <span key={line} className="block">
-                    {line}
-                  </span>
-                ))}
+                {office.description}
               </p>
               {office.mobile && office.mobileE164 ? (
                 <a

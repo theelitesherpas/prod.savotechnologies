@@ -7,6 +7,8 @@ import { Reveal } from "@/components/ui/reveal";
 import { ImageReveal } from "@/components/ui/image-reveal";
 import { DetailCta } from "@/components/shared/detail-cta";
 import { OFFICES, SITE } from "@/constants/site";
+import { IS_DEMO } from "@/lib/content-mode";
+import { DEMO_METRICS } from "@/content/demo";
 import { cn, withBasePath } from "@/lib/utils";
 import { openGraphFor } from "@/lib/seo";
 
@@ -16,7 +18,11 @@ import { openGraphFor } from "@/lib/seo";
  * portraits; every claim is the company's own published story.
  */
 
-const MILESTONES = [
+/** DEMO MILESTONES — NOT VERIFIED. Invented company history carried from
+ * version 1 (dates, client outcomes, scale figures). Demo mode only;
+ * suppressed in production until Savo confirms the real timeline.
+ * DEMO — REPLACE BEFORE PRODUCTION. */
+const MILESTONES_SEED = [
   { year: "2016", t: "Two engineers, one promise", d: "Savo starts in a Jaipur office with a simple rule: every client talks to the people building their software." },
   { year: "2018", t: "First platform at scale", d: "A logistics platform crosses 5,000 daily users and stays up through its first peak season. The reliability playbook we still use is written that winter." },
   { year: "2020", t: "Remote, fully", d: "We go remote first and turn it into an advantage: senior engineers across India, one delivery standard, zero geography tax on clients." },
@@ -24,6 +30,8 @@ const MILESTONES = [
   { year: "2024", t: "Across three regions", d: "Wallets in the GCC, banking dashboards in the UK, education for 200,000 students in India. Same model: matched in 48 hours, two week trial." },
   { year: "2026", t: "Still accountable", d: "Forty people, ten industries, one rule unchanged: you always know exactly who is building your software and why." },
 ];
+
+const MILESTONES = IS_DEMO ? MILESTONES_SEED : [];
 
 const VALUES = [
   { t: "Say the hard thing early", d: "Bad news travels fastest here. A risk named in week one is a plan; the same risk named at launch is an apology." },
@@ -34,19 +42,31 @@ const VALUES = [
   { t: "Craft is respect", d: "Accessible, fast, documented software is how we respect the people who use it and the ones who maintain it." },
 ];
 
-const LEADERSHIP = [
+/** DEMO LEADERSHIP ROSTER — NOT VERIFIED. Invented identities (names,
+ * roles, bios, portraits, profile slugs) carried from version 1. Rendered
+ * in demo mode only; suppressed in production until Savo supplies the
+ * real leadership team. DEMO — REPLACE BEFORE PRODUCTION
+ * (see DEMO_CONTENT_REPLACEMENT.md). */
+const LEADERSHIP_SEED = [
   { name: "Aarav Mehta", role: "Founder & CEO", bio: "Ex fintech architect. Still reviews every proposal personally.", img: "/images/team/aarav.webp", in: "aarav-mehta", mail: "aarav@savotechnologies.com" },
   { name: "Priya Nair", role: "Head of Engineering", bio: "Runs the delivery standard. Has shipped platforms in all three regions we serve.", img: "/images/team/priya.webp", in: "priya-nair", mail: "priya@savotechnologies.com" },
   { name: "Rohan Desai", role: "Head of AI", bio: "Built our first production copilot. Believes guardrails are a feature, not a limit.", img: "/images/team/rohan.webp", in: "rohan-desai", mail: "rohan@savotechnologies.com" },
   { name: "Sara Khan", role: "Head of Design", bio: "Champions WCAG AA and research led product design across every engagement.", img: "/images/team/sara.webp", in: "sara-khan", mail: "sara@savotechnologies.com" },
 ];
 
-const FACTS = [
-  { v: "40+", l: "people" },
-  { v: "200+", l: "projects shipped" },
-  { v: "3", l: "regions served" },
-  { v: "92%", l: "client retention" },
-];
+const LEADERSHIP = IS_DEMO ? LEADERSHIP_SEED : [];
+
+/** Company facts — CONTENT_MODE gated. Demo values are DESIGN DATA ONLY
+ * (never verified, never in production/SEO); production shows honest
+ * pending slots until Savo supplies verified figures. */
+const FACTS = IS_DEMO
+  ? DEMO_METRICS.map((m) => ({ v: m.value, l: m.label }))
+  : [
+      { v: "…", l: "Projects Delivered" },
+      { v: "…", l: "Clients Supported" },
+      { v: "…", l: "Industries Served" },
+      { v: "…", l: "Markets Reached" },
+    ];
 
 const DESCRIPTION = `About Savo Technologies: one accountable team engineering AI agents, web platforms and mobile apps since 2016. Our story, values, leadership and how we work.`;
 
@@ -103,9 +123,9 @@ export default function AboutPage() {
               </Reveal>
               <Reveal delay={120}>
                 <p className="t-body-lg mt-8 max-w-xl text-muted">
-                  {SITE.name} is forty engineers, designers and consultants
-                  who believe software outsourcing should feel like an
-                  in-house team that simply never sleeps.
+                  {SITE.name} is a team of engineers, designers and
+                  consultants who believe software outsourcing should feel
+                  like an in-house team that simply never sleeps.
                 </p>
               </Reveal>
               <Reveal delay={200}>
@@ -113,7 +133,7 @@ export default function AboutPage() {
                   Savo Technologies, also known as Savo, is a software
                   development and technology company based in Indore, Madhya
                   Pradesh, India. The incorporated company operates as Savo
-                  Technologies Private Limited. Ten years on, the founding rule
+                  Technologies Private Limited. Since {SITE.registration.foundedYear}, the founding rule
                   still holds: every engagement starts with a senior consultant,
                   every architecture is reviewed by a lead, and every client can
                   name the engineer who wrote the code they depend on.
@@ -149,7 +169,7 @@ export default function AboutPage() {
                   />
                 </ImageReveal>
                 <div className="mt-4 border-l-2 border-accent pl-4">
-                  <p className="t-sm font-semibold">Jaipur to everywhere</p>
+                  <p className="t-sm font-semibold">{IS_DEMO ? "Jaipur to everywhere" : "Indore to everywhere"}</p>
                   <p className="t-caption text-muted">Remote first since 2020, delivery standard unchanged.</p>
                 </div>
               </Reveal>
@@ -158,7 +178,8 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ---------- Timeline: ink chapter ---------- */}
+      {/* ---------- Timeline: ink chapter (demo history, gated) ---------- */}
+      {MILESTONES.length > 0 ? (
       <Section index="The Story" chapter="ink" labelledBy="story-heading">
         <SectionHeader
           id="story-heading"
@@ -189,6 +210,7 @@ export default function AboutPage() {
           </ol>
         </Reveal>
       </Section>
+      ) : null}
 
       {/* ---------- Values: sand band ---------- */}
       <Section index="How We Think" labelledBy="values-heading" className="bg-surface-2/60">
@@ -210,7 +232,8 @@ export default function AboutPage() {
         </Reveal>
       </Section>
 
-      {/* ---------- Leadership: the team cards ---------- */}
+      {/* ---------- Leadership: the team cards (demo roster, gated) ---------- */}
+      {LEADERSHIP.length > 0 ? (
       <Section index="Leadership" labelledBy="team-heading">
         <SectionHeader
           id="team-heading"
@@ -273,23 +296,25 @@ export default function AboutPage() {
           ))}
         </ul>
       </Section>
+      ) : null}
 
       {/* ---------- Presence: ink strip ---------- */}
       <Section index="Where We Are" chapter="ink" labelledBy="presence-heading">
         <SectionHeader
           id="presence-heading"
           heading="Where we are."
-          lead={<>A distributed team with registered presence across regions, and one delivery standard everywhere.</>}
+          lead={<>Engineering, design and delivery from the Indore headquarters, with market presence across regions — one delivery standard everywhere.</>}
         />
         <Reveal>
           <ul className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
             {OFFICES.map((office) => (
               <li key={office.id} className="flex flex-col gap-2 bg-background p-7">
                 <p className="t-label text-muted">{office.region}</p>
-                {office.address.map((line) => (
-                  <p key={line} className="t-sm font-medium text-foreground/90">{line}</p>
-                ))}
-                <p className="t-caption tnum mt-2 text-muted">{office.mobile}</p>
+                <p className="t-sm font-medium text-foreground/90">{office.cityLine}</p>
+                <p className="t-caption text-muted">{office.description}</p>
+                {office.mobile ? (
+                  <p className="t-caption tnum mt-2 text-muted">{office.mobile}</p>
+                ) : null}
               </li>
             ))}
           </ul>

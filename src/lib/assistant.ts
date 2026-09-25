@@ -9,6 +9,8 @@
  * Pure module — unit-tested in tests/assistant.test.ts.
  */
 
+import { IS_DEMO } from "@/lib/content-mode";
+
 export type AssistantLink = { label: string; href: string };
 
 export type AssistantEntry = {
@@ -164,10 +166,15 @@ export const KNOWLEDGE: AssistantEntry[] = [
     category: "Company",
     question: "Where are you located?",
     keywords: ["where", "located", "location", "office", "offices", "address", "india", "switzerland", "zurich", "usa", "uk", "london", "australia", "sydney", "saudi", "dubai", "gcc", "headquarters"],
-    paragraphs: [
-      "The engineering headquarters is in Indore, India. The registered head office is at Bahnhofstrasse 10, Zürich, Switzerland (+41 44 500 12 12).",
-      "Offices in Riyadh (covering the GCC), London, Sydney and the USA complete the network, wherever you are, someone senior is awake.",
-    ],
+    paragraphs: IS_DEMO
+      ? [
+          "The engineering headquarters is in Indore, India — that is where the team works every day.",
+          "Beyond India, Savo supports engagements across Switzerland and Europe, Saudi Arabia and the GCC, Australia, the United Kingdom and the United States. These are market/service presences — confirmed office locations publish as each region supplies a verified address.",
+        ]
+      : [
+          "The engineering headquarters is in Indore, India — that is where the team works every day.",
+          "Beyond India, Savo serves clients worldwide. Confirmed office locations publish as each region supplies a verified address.",
+        ],
     links: [{ label: "Offices", href: "/contact/#offices" }],
   },
   {

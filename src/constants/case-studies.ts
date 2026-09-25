@@ -9,6 +9,9 @@
  * explicitly — "In preparation" is the honest state, not a defect.
  */
 
+import { IS_DEMO } from "@/lib/content-mode";
+import { DEMO_CASE_STUDIES } from "@/content/demo";
+
 export type CaseEntry = {
   featured: boolean;
   /** Bracketed until a verified engagement is published. */
@@ -35,7 +38,7 @@ export type CaseDiscipline = {
 const PENDING_OUTCOME = "[Verified project result required]";
 const PENDING_NAME = "[Project Name]";
 
-export const CASE_DISCIPLINES: CaseDiscipline[] = [
+const CASE_DISCIPLINES_BASE: CaseDiscipline[] = [
   {
     id: "web",
     index: "02",
@@ -279,3 +282,26 @@ export const DOSSIER_CONTENTS = [
   "Timeline & team",
   "Verified outcomes",
 ] as const;
+
+/**
+ * CONTENT_MODE gate — demo mode files a fictional design project as the
+ * featured specimen of its discipline (Meridian Commerce → web,
+ * NovaFlow → ai, Aster Health → mobile, Northstar Logistics → software)
+ * so the dossier boards stay visually complete. DEMO DATA — NOT VERIFIED:
+ * never renders in production, never in sitemap/structured data.
+ * Production keeps the honest pending specimen slots below.
+ */
+export const CASE_DISCIPLINES: CaseDiscipline[] = CASE_DISCIPLINES_BASE.map((d) => {
+  if (!IS_DEMO) return d;
+  const demo = DEMO_CASE_STUDIES.find((c) => c.discipline === d.id);
+  if (!demo) return d;
+  const demoEntry: CaseEntry = {
+    featured: true,
+    name: demo.name,
+    sector: demo.industry,
+    services: demo.services,
+    stack: demo.stack.join(" · "),
+    outcome: demo.results.map((r) => `${r.value} ${r.label}`).join(" · ") + " — demo figures",
+  };
+  return { ...d, entries: [demoEntry, ...d.entries.filter((e) => !e.featured)] };
+});

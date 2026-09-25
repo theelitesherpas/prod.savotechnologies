@@ -88,12 +88,9 @@ export function SiteFooter({
           <div key={office.id} className="flex flex-col bg-background p-5">
             <RegionArt id={office.id} className="mb-4 h-9 w-14 shrink-0" />
             <p className="t-label text-accent">{office.region}</p>
+            <p className="t-caption mt-1 font-medium text-foreground/90">{office.cityLine}</p>
             <p className="t-caption mt-2.5 flex-1 leading-relaxed text-muted">
-              {office.address.map((line) => (
-                <span key={line} className="block">
-                  {line}
-                </span>
-              ))}
+              {office.description}
             </p>
             {office.mobile && office.mobileE164 ? (
               <a
@@ -146,7 +143,7 @@ export function SiteFooter({
 
       {/* Row 4, badges + legal (extra bottom clearance for the Ask Savo bar) */}
       <div className="shell flex flex-col gap-6 pb-24 pt-8 lg:flex-row lg:items-center lg:justify-between">
-        <ul className="flex flex-wrap gap-x-7 gap-y-3" aria-label="Compliance and security">
+        <ul className="flex flex-wrap gap-x-7 gap-y-3" aria-label="Engineering practices">
           {BADGES.map((badge) => (
             <li key={badge} className="flex items-center gap-2 text-muted">
               <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.4">

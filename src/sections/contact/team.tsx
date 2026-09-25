@@ -3,13 +3,18 @@ import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { CONTACT_TEAM } from "@/constants/contact";
+import { IS_DEMO } from "@/lib/content-mode";
 
 /**
- * "The people who answer" — version-1 team content. Portraits carry the
- * v6 duotone treatment and ease toward colour on hover, like every
- * photograph in the document.
+ * "The people who answer" — DEMO team content (invented members with
+ * placeholder portraits and LinkedIn slugs that may not be Savo-controlled).
+ * Renders in demo mode so the layout stays complete for design review;
+ * suppressed in production until Savo supplies the real team roster.
+ * DEMO — REPLACE BEFORE PRODUCTION (see DEMO_CONTENT_REPLACEMENT.md)
  */
 export function Team() {
+  if (!IS_DEMO) return null;
+
   return (
     <Section id="team" index="Team" labelledBy="team-heading">
       <SectionHeader

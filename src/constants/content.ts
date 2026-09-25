@@ -68,16 +68,26 @@ export const WHY_SAVO = [
 ] as const;
 
 /**
- * Impact metrics. Values stay as pending placeholders until SAVO supplies
- * verifiable figures — false statistics are never rendered.
+ * Impact metrics — CONTENT_MODE gated (see src/lib/content-mode.ts).
+ *
+ * demo mode:  polished DEMO values (src/content/demo/company.ts) so the
+ *             statistics band stays visually complete for design review.
+ *             DEMO DATA — NOT VERIFIED, never in JSON-LD/SEO/metadata.
+ * production: honest pending slots ("…") — false statistics are never
+ *             rendered; verified figures replace them when Savo supplies
+ *             them via the admin-managed company configuration.
  */
-export const METRICS = [
-  { value: "…", label: "Projects Delivered" },
-  { value: "…", label: "Digital Products" },
-  { value: "…", label: "Countries Served" },
-  { value: "…", label: "Client Retention" },
-  { value: "…", label: "Years Combined Experience" },
-] as const;
+import { IS_DEMO } from "@/lib/content-mode";
+import { DEMO_METRICS } from "@/content/demo";
+
+export const METRICS = IS_DEMO
+  ? DEMO_METRICS.map(({ value, label }) => ({ value, label }))
+  : ([
+      { value: "…", label: "Projects Delivered" },
+      { value: "…", label: "Clients Supported" },
+      { value: "…", label: "Industries Served" },
+      { value: "…", label: "Markets Reached" },
+    ] as const);
 
 export const INDUSTRIES = [
   "Retail & eCommerce",
