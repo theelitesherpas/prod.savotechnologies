@@ -7,6 +7,7 @@ import type { Article } from "@/constants/insights";
 import type { Role } from "@/constants/careers";
 import { CASE_DISCIPLINES, CASE_DISCIPLINES_BASE, type CaseDiscipline } from "@/constants/case-studies";
 import { getCaseStudies } from "@/lib/case-studies";
+import { resolveCaseImages } from "@/lib/case-study-schema";
 import type { HireRole } from "@/constants/hire";
 import type { AiService } from "@/constants/ai-services";
 import type { Agent } from "@/constants/agents";
@@ -147,7 +148,9 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
   return CASE_DISCIPLINES_BASE.map((d) => {
     const mine = studies.filter((s) => s.discipline === d.id);
     if (mine.length === 0) return d;
-    const mapped = mine.map((s, i) => ({
+    const mapped = mine.map((s, i) => {
+      const resolved = resolveCaseImages(s);
+      return ({
       featured: s.featured || i === 0,
       name: s.displayClientName || s.title,
       sector: s.industry ?? "",
@@ -157,7 +160,12 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
         (s.results ?? []).map((r) => `${r.value} ${r.label}`).join(" · ") +
         (s.status === "demo" && (s.results?.length ?? 0) > 0 ? " — demo figures" : ""),
       slug: s.slug,
-    }));
+      images: {
+        cardWide: resolved.cardWide ? { dataUrl: resolved.cardWide.dataUrl, alt: resolved.cardWide.alt } : null,
+        card: resolved.card ? { dataUrl: resolved.card.dataUrl, alt: resolved.card.alt } : null,
+      },
+      });
+    });
     const pendingRest = d.entries.filter((e) => !e.featured);
     return { ...d, entries: [...mapped, ...pendingRest] };
   });

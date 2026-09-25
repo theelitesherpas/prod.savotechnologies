@@ -9,6 +9,7 @@ import { DetailCta } from "@/components/shared/detail-cta";
 import { ProjectShowcase } from "@/components/shared/project-showcase";
 import { ProjectMockup } from "@/components/shared/project-mockup";
 import { getCaseStudies, getCaseStudy } from "@/lib/case-studies";
+import { resolveCaseImages } from "@/lib/case-study-schema";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
 
 /**
@@ -69,6 +70,7 @@ export default async function CaseStudyPage({
   const isDemo = study.status === "demo";
   const shownResults = isDemo ? study.results : study.results.filter((r) => r.verified);
   const displayName = study.displayClientName || study.title;
+  const showcaseImage = resolveCaseImages(study).showcase;
 
   const facts = [
     { k: "Discipline", v: discipline?.title ?? study.discipline },
@@ -122,12 +124,12 @@ export default async function CaseStudyPage({
       <ProjectShowcase
         discipline={study.discipline}
         palette={study.palette}
-        heroImage={study.heroImage}
+        heroImage={showcaseImage}
         isDemo={isDemo}
         title={displayName}
         caption={
-          study.heroImage
-            ? study.heroImage.alt || "Project visual"
+          showcaseImage
+            ? showcaseImage.alt || "Project visual"
             : study.discipline === "mobile"
               ? "Key screens — home, detail and conversation"
               : study.discipline === "web" || study.discipline === "design"

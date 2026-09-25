@@ -5,8 +5,11 @@
  *
  * Each image slot declares FIXED target dimensions (e.g. 1600 × 1280).
  * The attached photo is shown inside the exact target aspect frame; drag
- * to reposition and zoom to scale, then the canvas exports the crop at the
- * required pixel size — proportionally wrong uploads become exactly right.
+ * to reposition and zoom to scale; the canvas then exports EXACTLY the
+ * framed region at the required pixel size — what you see is what saves.
+ *
+ * The crop works in PROPORTIONS: the frame maps 1:1 onto the target
+ * rectangle, so the preview and the export can never disagree.
  *
  * Output is a JPEG data URL stored inside the record's JSON, so the image
  * travels with the database row everywhere it goes.
@@ -22,9 +25,9 @@ export type AttachedImage = {
   alt: string;
 };
 
-const MAX_SOURCE_BYTES = 12 * 1024 * 1024; // 12 MB source file guard
-const JPEG_QUALITY = 0.85;
+const MAX_SOURCE_BYTES = 25 * 1024 * 1024; // 25 MB source file guard
 const TARGET_BYTES_MAX = 4_000_000; // schema guard (data URL length)
+const EXPORT_QUALITIES = [0.85, 0.75, 0.65, 0.55]; // fallback ladder for heavy files
 
 export function ImageCropField({
   label,
@@ -42,6 +45,7 @@ export function ImageCropField({
   onChange: (next: AttachedImage | null) => void;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
   const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
@@ -64,7 +68,8 @@ export function ImageCropField({
     return () => ro.disconnect();
   }, [sourceUrl]);
 
-  /* Display geometry: cover the frame, then zoom. */
+  /* Display geometry: cover the frame, then zoom. All in proportions of
+     the same "scale" — preview and export share it exactly. */
   const base = natural && frameSize ? Math.max(frameSize.w / natural.w, frameSize.h / natural.h) : 1;
   const scale = base * zoom;
   const dispW = natural ? natural.w * scale : 0;
@@ -81,12 +86,12 @@ export function ImageCropField({
     [frameSize, dispW, dispH],
   );
 
-  /* Keep the crop covering the frame when zoom or frame changes. */
+  /* Keep the crop covering the frame when geometry changes. */
   useEffect(() => {
     setOffset((o) => clamp(o.x, o.y));
   }, [clamp]);
 
-  /* Center a fresh cover crop once geometry is known. */
+  /* Center a fresh cover crop once dimensions are known. */
   useEffect(() => {
     if (!natural || !frameSize) return;
     setOffset({
@@ -96,6 +101,26 @@ export function ImageCropField({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [natural, frameSize]);
 
+  /* Zoom that keeps the framed center point fixed (no jump to a corner). */
+  const zoomAroundCenter = (nextZoom: number) => {
+    const frame = frameRef.current;
+    if (!frame || !natural) {
+      setZoom(nextZoom);
+      return;
+    }
+    const oldScale = base * zoom;
+    const newScale = base * nextZoom;
+    const cx = frame.clientWidth / 2;
+    const cy = frame.clientHeight / 2;
+    setOffset((o) => {
+      // Frame center → source pixels (unchanged by zoom), → back at new scale.
+      const px = (cx - o.x) / oldScale;
+      const py = (cy - o.y) / oldScale;
+      return clamp(cx - px * newScale, cy - py * newScale);
+    });
+    setZoom(nextZoom);
+  };
+
   const loadFile = (file: File) => {
     setError(null);
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
@@ -103,7 +128,7 @@ export function ImageCropField({
       return;
     }
     if (file.size > MAX_SOURCE_BYTES) {
-      setError("That file is larger than 12 MB — export a smaller copy first.");
+      setError("That file is larger than 25 MB — export a smaller copy first.");
       return;
     }
     const reader = new FileReader();
@@ -126,28 +151,38 @@ export function ImageCropField({
   };
   const pointerUp = () => setDragging(false);
 
+  /**
+   * Export — the frame region in SOURCE pixels maps exactly onto the
+   * target rectangle. dest is always the full canvas, so the saved file
+   * is precisely what the frame shows (proportion-true, any file size).
+   */
   const applyCrop = () => {
-    const img = frameRef.current?.querySelector("img");
+    const img = imgRef.current;
     if (!img || !frameSize || !natural) return;
     const canvas = document.createElement("canvas");
     canvas.width = targetWidth;
     canvas.height = targetHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
     ctx.fillStyle = "#ffffff"; // flatten transparency onto white for JPEG
     ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-    // Frame px → source px → target px.
     const sx = -offset.x / scale;
     const sy = -offset.y / scale;
     const sw = frameSize.w / scale;
     const sh = frameSize.h / scale;
-    const k = targetWidth / frameSize.w;
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw * k, sh * k);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetWidth, targetHeight);
 
-    const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+    // Quality ladder: keep heavy photos under the storage guard.
+    let dataUrl = "";
+    for (const q of EXPORT_QUALITIES) {
+      dataUrl = canvas.toDataURL("image/jpeg", q);
+      if (dataUrl.length <= TARGET_BYTES_MAX) break;
+    }
     if (dataUrl.length > TARGET_BYTES_MAX) {
-      setError("The cropped image is too heavy — reduce the zoom or use a simpler photo.");
+      setError("The cropped image is still too heavy — try a simpler photo or lower zoom.");
       return;
     }
     onChange({ dataUrl, width: targetWidth, height: targetHeight, alt: "" });
@@ -212,6 +247,7 @@ export function ImageCropField({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              ref={imgRef}
               src={sourceUrl}
               alt="Crop source"
               draggable={false}
@@ -244,7 +280,7 @@ export function ImageCropField({
                 max={3}
                 step={0.01}
                 value={zoom}
-                onChange={(e) => setZoom(Number(e.target.value))}
+                onChange={(e) => zoomAroundCenter(Number(e.target.value))}
                 className="w-40 accent-[var(--accent)]"
                 aria-label="Zoom"
               />
@@ -290,7 +326,7 @@ export function ImageCropField({
 
       {!sourceUrl && !value ? (
         <p className="t-caption text-muted">
-          Wrong proportions are fine — position and zoom inside the frame; the crop exports at the exact required size.
+          Wrong proportions are fine — position and zoom inside the frame; the crop saves exactly what the frame shows.
         </p>
       ) : null}
       {error && !sourceUrl ? <p className="t-caption text-[var(--error)]">{error}</p> : null}

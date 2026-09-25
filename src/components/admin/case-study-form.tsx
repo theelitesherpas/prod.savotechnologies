@@ -17,6 +17,7 @@ import { CASE_DISCIPLINES } from "@/constants/case-studies";
 import { SubmitButton } from "./form";
 import { ProjectMockup } from "@/components/shared/project-mockup";
 import { ImageCropField, type AttachedImage } from "./image-crop-field";
+import { CASE_IMAGE_SLOTS, resolveCaseImages, type SlotKey } from "@/lib/case-study-schema";
 
 const secondaryBtn =
   "inline-flex h-10 items-center justify-center rounded-lg border border-border px-5 text-[0.875rem] font-medium text-foreground transition-colors hover:border-foreground/40 disabled:pointer-events-none disabled:opacity-60";
@@ -69,11 +70,12 @@ export function CaseStudyForm({
   const [tName, setTName] = useState(r?.testimonial?.name ?? "");
   const [tRole, setTRole] = useState(r?.testimonial?.role ?? "");
   const [featured, setFeatured] = useState(r?.featured ?? false);
-  const [heroImage, setHeroImage] = useState<AttachedImage | null>(
-    r?.heroImage
-      ? { dataUrl: r.heroImage.dataUrl, width: r.heroImage.width, height: r.heroImage.height, alt: r.heroImage.alt ?? "" }
-      : null,
-  );
+  const legacyHero = r?.heroImage ?? null;
+  const [images, setImages] = useState<Record<SlotKey, AttachedImage | null>>({
+    showcase: r?.images?.showcase ?? legacyHero ?? null,
+    cardWide: r?.images?.cardWide ?? null,
+    card: r?.images?.card ?? null,
+  });
   const [contentStatus, setContentStatus] = useState(item?.contentStatus ?? "draft");
 
   const disciplineCaps = useMemo(
@@ -111,9 +113,11 @@ export function CaseStudyForm({
     duration,
     teamSize,
     testimonial: hasTestimonial && tQuote && tName && tRole ? { quote: tQuote, name: tName, role: tRole } : null,
-    heroImage: heroImage
-      ? { dataUrl: heroImage.dataUrl, width: heroImage.width, height: heroImage.height, alt: heroImage.alt }
-      : null,
+    images: {
+      showcase: images.showcase,
+      cardWide: images.cardWide,
+      card: images.card,
+    },
     featured,
     status: contentStatus === "published" ? "verified" : "demo",
   });
@@ -159,36 +163,34 @@ export function CaseStudyForm({
         </p>
       </div>
 
-      {/* Live product preview — restyles with the discipline and palette;
-          an attached hero image takes over from the generated mockup */}
+      {/* Live previews — every surface the images render on, with fallbacks */}
       <div className="adm-card p-5">
         <div className="mb-4 flex items-center justify-between">
-          <p className="adm-label">Detail-page visual (live preview)</p>
-          <p className="t-caption text-muted">{heroImage ? "Attached image" : "Browser · phones · dashboard, tinted from the palette"}</p>
+          <p className="adm-label">Where these images appear (live preview)</p>
+          <p className="t-caption text-muted">Empty slots fall back: card → featured → showcase → generated mockup</p>
         </div>
-        <div className="aspect-[5/3] overflow-hidden rounded-[2px] border border-border bg-[var(--surface)]">
-          {heroImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={heroImage.dataUrl} alt="Hero visual preview" className="h-full w-full object-cover" />
-          ) : (
-            <ProjectMockup
-              discipline={discipline}
-              palette={palette.length ? palette : [{ name: "Ink", hex: "#14161c" }, { name: "Surface", hex: "#f4f2ec" }, { name: "Accent", hex: "#e8490f" }]}
-            />
-          )}
-        </div>
+        <PreviewSurfaces images={images} discipline={discipline} palette={palette} title={title} />
       </div>
 
-      {/* Hero image attach + crop */}
-      <div className="adm-card p-5">
-        <ImageCropField
-          label="Hero image"
-          hint="Shown at the top of the detail page. If unset, the generated product mockup renders instead."
-          targetWidth={1600}
-          targetHeight={1280}
-          value={heroImage}
-          onChange={setHeroImage}
-        />
+      {/* Image slots — one crop studio per surface */}
+      <div className="adm-card space-y-8 p-5">
+        <div>
+          <p className="adm-label mb-1">Project images</p>
+          <p className="t-caption text-muted">
+            Upload separate images per surface when one photo does not fit all — each studio crops to that surface’s exact size.
+          </p>
+        </div>
+        {(Object.keys(CASE_IMAGE_SLOTS) as SlotKey[]).map((slot) => (
+          <ImageCropField
+            key={slot}
+            label={`${CASE_IMAGE_SLOTS[slot].label} — ${CASE_IMAGE_SLOTS[slot].width} × ${CASE_IMAGE_SLOTS[slot].height}`}
+            hint={`${CASE_IMAGE_SLOTS[slot].where} · ${CASE_IMAGE_SLOTS[slot].hint}. If unset, falls back to a wider slot${slot === "showcase" ? " or the generated mockup" : ""}.`}
+            targetWidth={CASE_IMAGE_SLOTS[slot].width}
+            targetHeight={CASE_IMAGE_SLOTS[slot].height}
+            value={images[slot]}
+            onChange={(next) => setImages((prev) => ({ ...prev, [slot]: next }))}
+          />
+        ))}
       </div>
 
       {/* Identity */}
@@ -449,5 +451,52 @@ export function CaseStudyForm({
         </a>
       </div>
     </form>
+  );
+}
+
+/** Mini previews of every rendering surface, honoring the fallback chain. */
+function PreviewSurfaces({
+  images,
+  discipline,
+  palette,
+  title,
+}: {
+  images: Record<SlotKey, AttachedImage | null>;
+  discipline: CaseStudyRecord["discipline"];
+  palette: { name: string; hex: string }[];
+  title: string;
+}) {
+  const resolved = resolveCaseImages({ images });
+  const safePalette = palette.length ? palette : [{ name: "Ink", hex: "#14161c" }, { name: "Surface", hex: "#f4f2ec" }, { name: "Accent", hex: "#e8490f" }];
+
+  const Frame = ({ slot, aspect, label, where }: { slot: SlotKey; aspect: string; label: string; where: string }) => (
+    <div>
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="t-caption font-semibold">{label}</p>
+        <p className="t-caption text-muted">{where}</p>
+      </div>
+      <div className={`overflow-hidden rounded-[2px] border border-border ${aspect} bg-[var(--surface)]`}>
+        {resolved[slot] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={resolved[slot]!.dataUrl} alt={`${label} preview`} className="h-full w-full object-cover" />
+        ) : slot === "showcase" ? (
+          <ProjectMockup discipline={discipline} palette={safePalette} />
+        ) : (
+          <div className="flex h-full items-center justify-center px-4 text-center">
+            <p className="t-caption text-muted/70">Falls back to the {slot === "card" ? "featured card" : "showcase"} image</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="grid gap-5 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <Frame slot="showcase" aspect="aspect-[16/9]" label="Showcase" where={`Detail page — ${title || "Project"} big band`} />
+      </div>
+      <Frame slot="cardWide" aspect="aspect-[16/9]" label="Featured card" where="Homepage · dossier index" />
+      <Frame slot="card" aspect="aspect-[16/10]" label="Standard card" where="Homepage · dossier index" />
+    </div>
   );
 }

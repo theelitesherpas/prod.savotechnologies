@@ -196,25 +196,40 @@ export function CaseStudyCard({
   sizes: string;
 }) {
   const hasDetail = typeof entry.slug === "string" && entry.slug.length > 0;
+  const art = (entry.featured ? entry.images?.cardWide : entry.images?.card) ?? entry.images?.cardWide ?? entry.images?.card;
+  const hero = art?.dataUrl;
   return (
     <article className="group relative border border-border bg-surface transition-colors duration-500 hover:border-foreground/30">
       <div className={`relative overflow-hidden ${aspect}`}>
-        <Image
-          src={CASE_PHOTO[variant]}
-          alt={
-            hasDetail
-              ? `Design concept: ${entry.name} — fictional demo project`
-              : `Representative studio imagery: ${variant} case study in preparation`
-          }
-          fill
-          sizes={sizes}
-          className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
-        />
+        {hero ? (
+          // Attached visual (admin crop studio, slot-matched to this card)
+          // — the same image family the detail-page showcase renders.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={hero}
+            alt={art?.alt || `${entry.name} — project visual`}
+            className="h-full w-full object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
+          />
+        ) : (
+          <>
+            <Image
+              src={CASE_PHOTO[variant]}
+              alt={
+                hasDetail
+                  ? `Design concept: ${entry.name} — fictional demo project`
+                  : `Representative studio imagery: ${variant} case study in preparation`
+              }
+              fill
+              sizes={sizes}
+              className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
+            />
+            <CaseArt variant={variant} />
+          </>
+        )}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[rgb(16_19_25/0.38)] transition-colors duration-700 group-hover:bg-[rgb(16_19_25/0.22)]"
+          className="absolute inset-0 bg-[rgb(16_19_25/0.28)] transition-colors duration-700 group-hover:bg-[rgb(16_19_25/0.14)]"
         />
-        <CaseArt variant={variant} />
         <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.45)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
           {hasDetail ? "Design concept" : "In preparation"}
         </span>

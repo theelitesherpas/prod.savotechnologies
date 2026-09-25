@@ -6,6 +6,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { WORK_PLACEHOLDERS } from "@/constants/content";
 import { DEMO_TESTIMONIAL } from "@/content/demo";
 import { getCaseStudies } from "@/lib/case-studies";
+import { resolveCaseImages } from "@/lib/case-study-schema";
 import { IS_DEMO } from "@/lib/content-mode";
 
 /**
@@ -25,15 +26,20 @@ type WorkItem = {
   variant: "a" | "b" | "c";
   /** Detail-page link when the item has one (demo/verified). */
   slug?: string;
+  /** Attached visual slot-matched to this card (featured vs standard). */
+  image?: { dataUrl: string; alt?: string } | null;
 };
 
 /** Variant rotates across the three wireframe art sets. */
 const VARIANT_BY_INDEX = ["a", "b", "c"] as const;
 
 async function workItems(): Promise<WorkItem[]> {
-  if (IS_DEMO) {
+    if (IS_DEMO) {
     const studies = await getCaseStudies();
-    return studies.slice(0, 3).map((c, i) => ({
+    return studies.slice(0, 3).map((c, i) => {
+      const resolved = resolveCaseImages(c);
+      const slot = i === 0 ? resolved.cardWide : resolved.card;
+      return {
       name: c.displayClientName || c.title,
       industry: c.industry ?? "",
       services: (c.services ?? []).slice(0, 2).join(" · ") || (c.industry ?? ""),
@@ -43,7 +49,9 @@ async function workItems(): Promise<WorkItem[]> {
         ((c.results?.length ?? 0) > 0 ? " — demo figures" : ""),
       variant: VARIANT_BY_INDEX[i % 3],
       slug: c.slug,
-    }));
+      image: slot ? { dataUrl: slot.dataUrl, alt: slot.alt } : null,
+      };
+    });
   }
   return WORK_PLACEHOLDERS.map((w) => ({ ...w }));
 }
@@ -136,22 +144,35 @@ function WorkCard({
   return (
     <article className="group relative border border-border bg-surface transition-colors duration-500 hover:border-foreground/30">
       <div className={`relative overflow-hidden ${aspect}`}>
-        <Image
-          src={PHOTO_BY_VARIANT[item.variant]}
-          alt={
-            IS_DEMO
-              ? `Design concept: ${item.name} — fictional demo project`
-              : "Representative studio imagery, case study in preparation"
-          }
-          fill
-          sizes={sizes}
-          className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
-        />
+        {item.image?.dataUrl ? (
+          // Attached visual — slot-matched to this card class (featured vs
+          // standard), cropped to its exact aspect in the admin studio.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.image.dataUrl}
+            alt={item.image.alt || `${item.name} — project visual`}
+            className="h-full w-full object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
+          />
+        ) : (
+          <>
+            <Image
+              src={PHOTO_BY_VARIANT[item.variant]}
+              alt={
+                IS_DEMO
+                  ? `Design concept: ${item.name} — fictional demo project`
+                  : "Representative studio imagery, case study in preparation"
+              }
+              fill
+              sizes={sizes}
+              className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
+            />
+            <WorkArt variant={item.variant} />
+          </>
+        )}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[rgb(16_19_25/0.38)] transition-colors duration-700 group-hover:bg-[rgb(16_19_25/0.22)]"
+          className="absolute inset-0 bg-[rgb(16_19_25/0.28)] transition-colors duration-700 group-hover:bg-[rgb(16_19_25/0.14)]"
         />
-        <WorkArt variant={item.variant} />
         <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.45)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
           {IS_DEMO ? "Design concept" : "In preparation"}
         </span>
