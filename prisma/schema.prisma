@@ -290,3 +290,23 @@ model Invoice {
   @@index([clientId])
   @@map("invoices")
 }
+
+/// First-party web analytics (privacy-friendly by design: no raw IPs or
+/// user agents are stored — only a salted daily hash for rough uniques).
+/// type: "pageview" | "event"; events mirror the GA4 dataLayer names.
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  type        String
+  path        String
+  eventName   String?  @map("event_name")
+  referrer    String?
+  device      String?
+  visitorHash String?  @map("visitor_hash")
+  meta        Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([type, createdAt])
+  @@index([path, createdAt])
+  @@index([eventName, createdAt])
+  @@map("analytics_events")
+}

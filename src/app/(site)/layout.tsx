@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { EnquiryProvider } from "@/components/shared/enquiry-dialog";
 import { AskSavoBar } from "@/components/shared/ask-savo-bar";
+import { AnalyticsBeacon } from "@/components/shared/analytics-beacon";
 import { HEADER_NAV, type NavItem } from "@/constants/navigation";
 import { SITE, SOCIAL_LINKS } from "@/constants/site";
 import { absoluteUrl } from "@/lib/env";
@@ -119,6 +120,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
   return (
     <EnquiryProvider>
+      <AnalyticsBeacon />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:bg-foreground focus:px-4 focus:py-2 focus:text-background"

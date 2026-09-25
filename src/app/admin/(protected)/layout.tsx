@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 
 const CRUMB_LABELS: Record<string, string> = {
   enquiries: "Enquiries",
+  analytics: "Analytics",
   services: "Services",
   industries: "Industries",
   content: "Content",
@@ -62,6 +63,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const nav: AdminNavNode[] = [
     { key: "overview", label: "Dashboard", icon: "gauge", href: "/admin" },
+    { key: "analytics", label: "Analytics", icon: "trend", href: "/admin/analytics" },
     {
       key: "leads",
       label: "Enquiries",
