@@ -1,28 +1,26 @@
 /**
  * Transactional email templates — every automated action on the site.
  *
- * DESIGN — studio letterhead, Savo's own document world:
- *   the site's editorial voice carried into the inbox. Serif display
- *   headlines (Georgia — universal, warm, nothing like generic SaaS
- *   sans), mono reference labels (the Fragment-mono voice), hairline
- *   rules and a double-rule letterhead under the wordmark, the
- *   vermilion square motif, sharp 2px corners like the site's buttons,
- *   warm-paper highlight panels, and human letter closings per
- *   template — correspondence, not dashboards.
+ * DESIGN — the modern SaaS transactional standard, in Savo's voice:
+ *   centered wordmark, centered greeting, statement headings and
+ *   buttons on the center axis; details as quiet stacked pairs rather
+ *   than ledgers; one generous serif amount where money matters; a
+ *   small centered colophon. Brand fonts (Source Serif 4 · Manrope ·
+ *   Fragment Mono) self-hosted with graceful fallbacks for clients
+ *   that strip webfonts (Gmail → Georgia/system/mono).
  *
- * Email-client reality: tables + inline styles, 600px, PNG wordmark
- * (SVG unsupported in Gmail/Outlook), plain-text twin per template,
- * preheader, dark-mode-safe neutrals. Promises mirror the website
- * copy exactly; nothing is fabricated.
+ * Email-client reality: tables + inline styles, 600px, PNG wordmark,
+ * plain-text twin per template, preheader, dark-mode-safe neutrals.
+ * Promises mirror the website copy exactly; nothing is fabricated.
  */
 
 import { createHmac } from "node:crypto";
 import { SITE } from "@/constants/site";
 
 const PAPER = "#f5f4f0";
-const SOFT = "#faf4ee"; // warm paper tint for highlight panels
+const SOFT = "#faf4ee";
 const INK = "#14161c";
-const BODY = "#33363c"; // reading ink, softer than headings
+const BODY = "#33363c";
 const MUTED = "#6a6e75";
 const FAINT = "#9a9ea4";
 const ACCENT = "#d9480f";
@@ -32,29 +30,6 @@ const CARD = "#ffffff";
 const SERIF = "'Source Serif 4', Georgia, 'Times New Roman', Times, serif";
 const SANS = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 const MONO = "'Fragment Mono', 'SFMono-Regular', Menlo, Consolas, 'Courier New', monospace";
-
-/** Self-hosted brand fonts (same families as the site). Gmail ignores
- *  <style> and falls back gracefully; Apple Mail/iOS/Thunderbird render
- *  the real Source Serif 4 · Manrope · Fragment Mono. */
-function fontsCss(): string {
-  const o = (typeof window !== "undefined"
-    ? window.location.origin
-    : process.env.NEXT_PUBLIC_SITE_URL || "https://savotechnologies.com"
-  ).replace(/\/$/, "");
-  const f = (family: string, file: string, weight: string, style = "normal") =>
-    `@font-face{font-family:'${family}';font-style:${style};font-weight:${weight};src:url('${o}/fonts/${file}') format('woff2');}`;
-  return (
-    f("Source Serif 4", "source-serif-4-400.woff2", "400") +
-    f("Source Serif 4", "source-serif-4-400-italic.woff2", "400", "italic") +
-    f("Source Serif 4", "source-serif-4-600.woff2", "600") +
-    f("Source Serif 4", "source-serif-4-700.woff2", "700") +
-    f("Manrope", "manrope-400.woff2", "400") +
-    f("Manrope", "manrope-500.woff2", "500") +
-    f("Manrope", "manrope-700.woff2", "700") +
-    f("Manrope", "manrope-800.woff2", "800") +
-    f("Fragment Mono", "fragment-mono-400.woff2", "400")
-  );
-}
 
 export type MailTemplate = {
   subject: string;
@@ -69,14 +44,32 @@ const esc = (s: string) =>
 
 const site = (path = "/") => `https://savotechnologies.com${path}`;
 
-/** Wordmark URL — resolves for wherever this renders: the editor preview
- *  (browser, any origin) or the send path (production origin). */
-function logoUrl(): string {
-  const origin =
+function origin(): string {
+  return (
     typeof window !== "undefined"
       ? window.location.origin
-      : process.env.NEXT_PUBLIC_SITE_URL || "https://savotechnologies.com";
-  return `${origin.replace(/\/$/, "")}/images/email/logo.png`;
+      : process.env.NEXT_PUBLIC_SITE_URL || "https://savotechnologies.com"
+  ).replace(/\/$/, "");
+}
+const logoUrl = () => `${origin()}/images/email/logo.png`;
+
+/** Self-hosted brand fonts — CORS-open like fonts.gstatic so capable
+ *  clients (and sandboxed previews) render the real faces; everyone
+ *  else falls to the native stacks in the font constants. */
+function fontsCss(): string {
+  const f = (family: string, file: string, weight: string, style = "normal") =>
+    `@font-face{font-family:'${family}';font-style:${style};font-weight:${weight};src:url('${origin()}/fonts/${file}') format('woff2');}`;
+  return (
+    f("Source Serif 4", "source-serif-4-400.woff2", "400") +
+    f("Source Serif 4", "source-serif-4-400-italic.woff2", "400", "italic") +
+    f("Source Serif 4", "source-serif-4-600.woff2", "600") +
+    f("Source Serif 4", "source-serif-4-700.woff2", "700") +
+    f("Manrope", "manrope-400.woff2", "400") +
+    f("Manrope", "manrope-500.woff2", "500") +
+    f("Manrope", "manrope-700.woff2", "700") +
+    f("Manrope", "manrope-800.woff2", "800") +
+    f("Fragment Mono", "fragment-mono-400.woff2", "400")
+  );
 }
 
 const SALT = process.env.ENQUIRY_IP_SALT || "dev-salt";
@@ -87,91 +80,84 @@ export function unsubscribeUrl(email: string): string {
   return `${site("/unsubscribe")}?email=${encodeURIComponent(email)}&sig=${unsubscribeSig(email)}`;
 }
 
-/* ── the letterhead vocabulary ─────────────────────────────────────── */
+/* ── centered building blocks ─────────────────────────────────────── */
 
 const p = (s: string, last = false) =>
-  `<p style="margin:${last ? "0" : "0 0 15px"};font-family:${SERIF};font-size:15.5px;line-height:1.7;color:${BODY};">${s}</p>`;
+  `<p style="margin:${last ? "0" : "0 0 16px"};font-family:${SERIF};font-size:15.5px;line-height:1.7;color:${BODY};text-align:center;">${s}</p>`;
 const lead = (s: string) =>
-  `<p style="margin:0 0 18px;font-family:${SERIF};font-size:16.5px;line-height:1.7;color:${INK};">${s}</p>`;
-const a = (href: string, label: string) =>
-  `<a href="${href}" style="color:${ACCENT};text-decoration:underline;text-underline-offset:3px;">${esc(label)}</a>`;
-const rule = (m = 26) => `<div style="border-top:1px solid ${LINE};margin:${m}px 0;"></div>`;
+  `<p style="margin:0 0 20px;font-family:${SERIF};font-size:16px;line-height:1.7;color:${BODY};text-align:center;">${s}</p>`;
 
-/** Vermilion square + sans label — the site's eyebrow motif. */
+/** Centered eyebrow — the vermilion square mark, then the label. */
 const eyebrow = (t: string) =>
-  `<p style="margin:0 0 14px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};"><span style="display:inline-block;width:7px;height:7px;background:${ACCENT};margin-right:9px;vertical-align:1px;"></span>${esc(t)}</p>`;
+  `<p style="margin:0 0 16px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};text-align:center;"><span style="display:inline-block;width:7px;height:7px;background:${ACCENT};margin-right:9px;vertical-align:1px;"></span>${esc(t)}</p>`;
 
 const h1 = (t: string) =>
-  `<h1 style="margin:0 0 16px;font-family:${SERIF};font-size:26px;line-height:1.25;letter-spacing:-0.012em;font-weight:700;color:${INK};">${esc(t)}</h1>`;
+  `<h1 style="margin:0 0 16px;font-family:${SERIF};font-size:26px;line-height:1.3;letter-spacing:-0.012em;font-weight:700;color:${INK};text-align:center;">${esc(t)}</h1>`;
 
-/** Index-style steps — mono numbers, hairlines, no bubbles. */
+/** Steps as a centered rhythm — mark, title, note; air between. */
 function steps(items: [string, string][]): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px 0;width:100%;">${items
+  return `<div style="margin:24px 0;">${items
     .map(
-      ([title, sub], i) => `<tr>
-  <td style="width:46px;vertical-align:top;padding:13px 0;border-top:${i === 0 ? "none" : `1px solid ${LINE}`};">
-    <span style="font-family:${MONO};font-size:12px;font-weight:700;color:${ACCENT};">${String(i + 1).padStart(2, "0")}</span>
-  </td>
-  <td style="vertical-align:top;padding:13px 0;border-top:${i === 0 ? "none" : `1px solid ${LINE}`};">
-    <div style="font-family:${SERIF};font-size:15px;font-weight:700;color:${INK};">${esc(title)}</div>
-    <div style="margin-top:3px;font-family:${SANS};font-size:13px;line-height:1.55;color:${MUTED};">${esc(sub)}</div>
-  </td>
-</tr>`,
+      ([title, sub], i) => `<div style="${i > 0 ? "margin-top:22px;" : ""}text-align:center;">
+  <div style="font-family:${MONO};font-size:11px;font-weight:400;color:${ACCENT};letter-spacing:0.1em;">${String(i + 1).padStart(2, "0")}</div>
+  <div style="margin-top:5px;font-family:${SANS};font-size:14.5px;font-weight:800;color:${INK};">${esc(title)}</div>
+  <div style="margin:4px auto 0;max-width:400px;font-family:${SANS};font-size:13px;line-height:1.55;color:${MUTED};">${esc(sub)}</div>
+</div>`,
     )
-    .join("")}</table>`;
+    .join("")}</div>`;
 }
 
-/** Detail rows. Default: a soft sans keyline list (letters, not
- *  invoices). `ledger: true` keeps the mono-ledger feel for actual
- *  invoices, where it belongs. */
-function spec(rows: [string, string | undefined][], opts?: { big?: number; ledger?: boolean }): string {
+/** Details as quiet stacked pairs — label above value, both centered. */
+function spec(rows: [string, string | undefined][], opts?: { big?: number }): string {
   const items = rows.filter(([, v]) => v !== undefined && v !== "");
   if (!items.length) return "";
-  const led = opts?.ledger;
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:20px 0;">${items
-    .map(
-      ([k, v], i) => `<tr>
-  <td style="width:${led ? "34%" : "30%"};vertical-align:${opts?.big === i ? "bottom" : "top"};padding:${led ? "11px 14px 11px 0" : "10px 16px 10px 0"};border-top:${i === 0 ? "none" : `1px solid ${LINE}`};font-family:${led ? MONO : SANS};font-size:${led ? "10px" : "11.5px"};font-weight:${led ? 700 : 600};letter-spacing:${led ? "0.1em" : "0.04em"};${led ? "text-transform:uppercase;" : ""}color:${led ? FAINT : MUTED};">${esc(k)}</td>
-  <td style="vertical-align:${opts?.big === i ? "bottom" : "top"};padding:10px 0;border-top:${i === 0 ? "none" : `1px solid ${LINE}`};font-family:${opts?.big === i ? SERIF : SANS};font-size:${opts?.big === i ? "23px" : "14px"};font-weight:${opts?.big === i ? 700 : 600};color:${opts?.big === i ? ACCENT : INK};">${esc(v ?? "—")}</td>
-</tr>`,
-    )
-    .join("")}</table>`;
+  return `<div style="margin:22px 0;">${items
+    .map(([k, v], i) => {
+      const big = opts?.big === i;
+      return `<div style="${i > 0 ? "margin-top:14px;" : ""}text-align:center;">
+  <div style="font-family:${SANS};font-size:10.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${FAINT};">${esc(k)}</div>
+  <div style="margin-top:3px;font-family:${big ? SERIF : SANS};font-size:${big ? "30px" : "14.5px"};font-weight:${big ? 700 : 600};color:${big ? ACCENT : INK};line-height:1.3;">${esc(v ?? "—")}</div>
+</div>`;
+    })
+    .join("")}</div>`;
 }
 
-/** Warm-paper panel with the vermilion spine. */
+/** One-line mono meta strip (invoice numbers, dates). */
+const meta = (parts: string[]) =>
+  `<p style="margin:18px 0 0;font-family:${MONO};font-size:11px;letter-spacing:0.06em;color:${FAINT};text-align:center;">${parts.map(esc).join("&ensp;·&ensp;")}</p>`;
+
+/** Soft centered note panel. */
 function highlight(html: string): string {
-  return `<div style="margin:20px 0;padding:15px 18px;background:${SOFT};border-left:3px solid ${ACCENT};font-family:${SERIF};font-size:14.5px;line-height:1.65;color:${INK};">${html}</div>`;
+  return `<div style="margin:24px 0;padding:16px 22px;background:${SOFT};border-radius:10px;font-family:${SERIF};font-size:14.5px;line-height:1.65;color:${INK};text-align:center;">${html}</div>`;
 }
 
-/** Correspondence quote — serif, italic, hairline spine. */
+/** Centered correspondence quote. */
 function quote(text: string): string {
-  return `<div style="margin:20px 0;padding:4px 0 4px 18px;border-left:2px solid ${INK};font-family:${SERIF};font-style:italic;font-size:16px;line-height:1.65;color:${INK};">${esc(text)}</div>`;
+  return `<div style="margin:24px 0;padding:0 26px;font-family:${SERIF};font-style:italic;font-size:16px;line-height:1.65;color:${INK};text-align:center;">${esc(text)}</div>`;
 }
 
-/** Site-native button: sharp 2px corners like savotechnologies.com. */
-const CTA = (href: string, label: string, sub?: string) => `
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 4px;"><tr><td>
-<a href="${href}" style="display:inline-block;background:${INK};color:#ffffff;font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:15px 30px;border-radius:2px;">${esc(label)}&nbsp;&nbsp;→</a>
-</td></tr>${sub ? `<tr><td style="padding:10px 0 0;font-family:${SANS};font-size:12px;color:${MUTED};">${esc(sub)}</td></tr>` : ""}</table>`;
+/** Reading block for longer content — left-aligned inside the centered layout. */
+function prose(text: string): string {
+  return `<div style="margin:22px 0;padding:16px 20px;background:${PAPER};border-radius:10px;font-family:${SERIF};font-size:14.5px;line-height:1.7;color:${BODY};white-space:pre-line;text-align:left;">${esc(text)}</div>`;
+}
 
-/** Human closing — each letter signs off in its own voice. */
-function signOff(closing: string): string {
-  return `<div style="margin-top:26px;">
-  <div style="border-top:1px solid ${LINE};width:44px;margin-bottom:14px;"></div>
+const CTA = (href: string, label: string, sub?: string) => `
+<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:28px auto 4px;"><tr><td align="center">
+<a href="${href}" style="display:inline-block;background:${INK};color:#ffffff;font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:15px 32px;border-radius:8px;">${esc(label)}&nbsp;&nbsp;→</a>
+${sub ? `</td></tr><tr><td align="center" style="padding:11px 0 0;font-family:${SANS};font-size:12px;color:${MUTED};">${esc(sub)}` : ""}
+</td></tr></table>`;
+
+const signOff = (closing: string) => `
+<div style="margin-top:30px;text-align:center;">
   <p style="margin:0;font-family:${SERIF};font-style:italic;font-size:14.5px;color:${BODY};">${esc(closing)}</p>
   <p style="margin:5px 0 0;font-family:${SERIF};font-size:14.5px;font-weight:700;color:${INK};">The Savo team</p>
-  <p style="margin:3px 0 0;font-family:${SANS};font-size:10.5px;font-weight:600;letter-spacing:0.04em;color:${FAINT};">Reply to this email — a human reads it</p>
+  <p style="margin:3px 0 0;font-family:${SANS};font-size:10.5px;font-weight:600;color:${FAINT};">Reply to this email — a human reads it</p>
 </div>`;
-}
-
-const MONO_DATE = () =>
-  new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
 
 /** Brand shell shared by every template (also wraps admin overrides). */
 export function shell(opts: {
   preheader: string;
   eyebrowText?: string;
-  ref?: string;
   heading: string;
   bodyHtml: string;
   cta?: { href: string; label: string; sub?: string };
@@ -186,25 +172,14 @@ export function shell(opts: {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAPER};"><tr><td align="center" style="padding:36px 14px;">
 <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
 
-  <!-- Letter -->
-  <tr><td style="background:${CARD};border:1px solid ${LINE};border-left:3px solid ${ACCENT};border-radius:3px;">
-    <!-- Letterhead: wordmark + correspondence reference -->
-    <div style="padding:28px 42px 20px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-        <td style="vertical-align:middle;">
-          <img src="${logoUrl()}" width="96" alt="Savo Technologies" style="display:block;width:96px;height:auto;border:0;">
-        </td>
-        <td align="right" style="vertical-align:middle;">
-          <p style="margin:0;font-family:${MONO};font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:${FAINT};text-align:right;">${esc(opts.ref ?? "Correspondence")}</p>
-          <p style="margin:3px 0 0;font-family:${MONO};font-size:10px;letter-spacing:0.14em;color:${FAINT};text-align:right;">${MONO_DATE()}</p>
-        </td>
-      </tr></table>
-      <!-- Double rule — the letterhead signature -->
-      <div style="margin-top:18px;border-top:2px solid ${INK};"></div>
-      <div style="margin-top:2px;border-top:1px solid ${LINE};"></div>
+  <!-- Card -->
+  <tr><td style="background:${CARD};border:1px solid ${LINE};border-radius:12px;">
+    <!-- Wordmark -->
+    <div style="padding:38px 40px 0;text-align:center;">
+      <img src="${logoUrl()}" width="112" alt="Savo Technologies" style="display:block;width:112px;height:auto;border:0;margin:0 auto;">
     </div>
     <!-- Body -->
-    <div style="padding:32px 42px 38px;">
+    <div style="padding:30px 40px 40px;">
       ${opts.eyebrowText ? eyebrow(opts.eyebrowText) : ""}
       ${opts.heading ? h1(opts.heading) : ""}
       ${opts.bodyHtml}
@@ -215,18 +190,17 @@ export function shell(opts: {
 
   <!-- Colophon -->
   <tr><td style="padding:24px 12px 6px;text-align:center;">
-    <div style="margin:0 auto 14px;width:44px;border-top:2px solid ${INK};"></div>
-    <p style="margin:0 0 12px;font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:${INK};">Savo Technologies</p>
+    <p style="margin:0 0 12px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:${INK};">Savo Technologies</p>
     <p style="margin:0 0 10px;font-family:${SANS};font-size:11.5px;color:${MUTED};">
-      ${a(site("/"), "savotechnologies.com")}<span style="color:${LINE};margin:0 8px;">·</span>${a("https://www.linkedin.com/company/savotechnologies/", "LinkedIn")}<span style="color:${LINE};margin:0 8px;">·</span>${a("https://www.instagram.com/savotechnologies/", "Instagram")}<span style="color:${LINE};margin:0 8px;">·</span>${a("https://www.facebook.com/savotechnologies", "Facebook")}<span style="color:${LINE};margin:0 8px;">·</span>${a("https://www.youtube.com/@savotechnologies", "YouTube")}
+      <a href="${site("/")}" style="color:${MUTED};text-decoration:none;">savotechnologies.com</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.linkedin.com/company/savotechnologies/" style="color:${MUTED};text-decoration:none;">LinkedIn</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.instagram.com/savotechnologies/" style="color:${MUTED};text-decoration:none;">Instagram</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.facebook.com/savotechnologies" style="color:${MUTED};text-decoration:none;">Facebook</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.youtube.com/@savotechnologies" style="color:${MUTED};text-decoration:none;">YouTube</a>
     </p>
     <p style="margin:0 0 10px;font-family:${SANS};font-size:11.5px;color:${MUTED};">
       <a href="mailto:hello@savotechnologies.com" style="color:${MUTED};text-decoration:none;">hello@savotechnologies.com</a><span style="color:${LINE};margin:0 8px;">·</span><a href="tel:+917502901234" style="color:${MUTED};text-decoration:none;">+91 75029 01234</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://wa.me/917502901234" style="color:${MUTED};text-decoration:none;">WhatsApp</a>
     </p>
-    <p style="margin:0;font-family:${MONO};font-size:9.5px;letter-spacing:0.06em;line-height:1.7;color:${FAINT};">
-      © ${year} ${esc(SITE.legalName)} — INDORE · ZÜRICH<br>
+    <p style="margin:0;font-family:${SANS};font-size:10px;line-height:1.7;color:${FAINT};">
+      © ${year} ${esc(SITE.legalName)} — Indore · Zürich<br>
       ${esc(opts.reason ?? "You are receiving this because you contacted Savo Technologies.")}
-      ${opts.unsubscribeEmail ? ` — <a href="${unsubscribeUrl(opts.unsubscribeEmail)}" style="color:${FAINT};text-decoration:underline;">Unsubscribe</a>` : ""}
+      ${opts.unsubscribeEmail ? ` · <a href="${unsubscribeUrl(opts.unsubscribeEmail)}" style="color:${FAINT};text-decoration:underline;">Unsubscribe</a>` : ""}
     </p>
   </td></tr>
 
@@ -244,8 +218,7 @@ export function enquiryAck(name: string, projectType: string, to?: string): Mail
     subject: "We got your brief — Savo Technologies",
     html: shell({
       preheader: `Your ${projectType} enquiry is with our engineers. A senior consultant replies within one business day.`,
-      eyebrowText: `Enquiry received — ${projectType}`,
-      ref: "ENQ · RECEIPT",
+      eyebrowText: `Enquiry received`,
       heading: `Thanks, ${fn(name)} — your brief is in.`,
       bodyHtml: [
         lead(`It landed with our engineers, not a sales queue. A senior consultant reads it and replies personally <em>within one business day</em>.`),
@@ -254,14 +227,14 @@ export function enquiryAck(name: string, projectType: string, to?: string): Mail
           ["A senior consultant writes back", "Within one business day, with first thoughts and the right questions."],
           ["We talk: scope, timeline, budget", "Thirty focused minutes. You leave with a clear picture in writing."],
         ]),
-        highlight(`Two things make the first call concrete instead of exploratory: your <strong>ideal launch date</strong>, and an honest <strong>budget range</strong>.`),
+        highlight(`Two things make the first call concrete: your <strong>ideal launch date</strong>, and an honest <strong>budget range</strong>.`),
       ].join(""),
       cta: { href: site("/#start"), label: "Book the call now", sub: "Pick a slot while we prepare your reply." },
       closing: "Talk soon,",
       reason: "You are receiving this because you sent an enquiry through savotechnologies.com.",
       unsubscribeEmail: to,
     }),
-    text: `THANKS, ${fn(name).toUpperCase()} — YOUR BRIEF IS IN\n\nYour ${projectType} enquiry is with our engineers. A senior consultant replies personally within one business day.\n\n01 An engineer reads your brief — today.\n02 A senior consultant writes back — within one business day.\n03 We talk: scope, timeline, budget.\n\nBook the call now: ${site("/#start")}\n\nTalk soon,\nThe Savo team\n${site("/")}`,
+    text: `THANKS, ${fn(name).toUpperCase()} — YOUR BRIEF IS IN\n\nYour ${projectType} enquiry is with our engineers. A senior consultant replies personally within one business day.\n\n1. An engineer reads your brief — today.\n2. A senior consultant writes back — within one business day.\n3. We talk: scope, timeline, budget.\n\nBook the call now: ${site("/#start")}\n\nTalk soon,\nThe Savo team\n${site("/")}`,
   };
 }
 
@@ -272,7 +245,6 @@ export function callbackAck(name: string, country: string, to?: string): MailTem
     html: shell({
       preheader: "Your callback is logged. A Savo engineer calls during your local business hours.",
       eyebrowText: "Callback confirmed",
-      ref: "CALLBACK · CONFIRMED",
       heading: `${fn(name)}, your callback is logged.`,
       bodyHtml: [
         lead(`A Savo engineer will call your ${country} number during your local business hours.`),
@@ -298,11 +270,10 @@ export function askSavoHandoffAck(question: string, to?: string): MailTemplate {
     html: shell({
       preheader: "The assistant does not guess — your question went to a senior consultant, who replies within one business day.",
       eyebrowText: "Assistant handoff",
-      ref: "ASK SAVO · HANDOFF",
       heading: "Your question reached the team.",
       bodyHtml: [
         lead(`The Savo Assistant never guesses — so yours went straight to a senior consultant, who replies <em>within one business day</em>.`),
-        quote(question),
+        quote(`“${question}”`),
         p(`Prefer a conversation to an email thread? Book a call — the first one is free, and an engineer takes it, not sales.`, true),
       ].join(""),
       cta: { href: site("/#start"), label: "Book a call instead" },
@@ -321,7 +292,6 @@ export function applicationAck(name: string, role: string): MailTemplate {
     html: shell({
       preheader: "An engineer reads every application and replies personally within two business days.",
       eyebrowText: `Application — ${role}`,
-      ref: "CAREERS · RECEIPT",
       heading: `${fn(name)}, your application is in.`,
       bodyHtml: [
         lead(`No ATS black hole: <em>an engineer reads every application</em> and replies personally within two business days.`),
@@ -336,7 +306,7 @@ export function applicationAck(name: string, role: string): MailTemplate {
       closing: "Speak soon,",
       reason: "You are receiving this because you applied to Savo Technologies.",
     }),
-    text: `${fn(name).toUpperCase()}, YOUR APPLICATION IS IN\n\nYou applied for ${role}. An engineer reads every application and replies personally within two business days.\n\n01 Engineer review — within two business days\n02 Technical conversation\n03 Paid pairing session\n04 Written offer\n\nHow we hire: ${site("/careers")}\n\nSpeak soon,\nThe Savo team`,
+    text: `${fn(name).toUpperCase()}, YOUR APPLICATION IS IN\n\nYou applied for ${role}. An engineer reads every application and replies personally within two business days.\n\n1. Engineer review — within two business days\n2. Technical conversation\n3. Paid pairing session\n4. Written offer\n\nHow we hire: ${site("/careers")}\n\nSpeak soon,\nThe Savo team`,
   };
 }
 
@@ -349,8 +319,7 @@ export function clientWelcome(name: string, email: string, password: string): Ma
     html: shell({
       preheader: "Progress, milestones, delivery updates and invoices — always current, always yours.",
       eyebrowText: "Portal access",
-      ref: "PORTAL · ACCESS",
-      heading: `${fn(name)}, your project portal is ready.`,
+      heading: `${fn(name)}, your portal is ready.`,
       bodyHtml: [
         lead(`Your project dashboard is live — your engagement with Savo, in one honest place.`),
         spec([
@@ -363,7 +332,7 @@ export function clientWelcome(name: string, email: string, password: string): Ma
           ["Delivery updates", "Every log entry from the team, the moment it posts."],
           ["Invoices & receipts", "Issued, paid, downloadable — accounts-ready."],
         ]),
-        p(`<span style="font-family:${SANS};font-size:12px;color:${MUTED};">The password was generated for you and is stored hashed — share it privately. Your project lead can reset it anytime.</span>`, true),
+        p(`<span style="font-family:${SANS};font-size:12px;color:${MUTED};">The password was generated for you and is stored hashed — share it privately.</span>`, true),
       ].join(""),
       cta: { href: site("/portal"), label: "Open your portal" },
       closing: "Welcome aboard,",
@@ -380,7 +349,6 @@ export function clientPasswordReset(name: string, password: string): MailTemplat
     html: shell({
       preheader: "A new password was generated; previous sessions were signed out.",
       eyebrowText: "Password reset",
-      ref: "PORTAL · RESET",
       heading: "Your portal password was reset.",
       bodyHtml: [
         p(`${fn(name)}, a Savo project lead reset your password. Previous sessions were signed out automatically.`),
@@ -406,16 +374,11 @@ export function invoiceIssued(clientName: string, number: string, amount: number
     subject: `Invoice ${number} · ${money(amount, currency)}`,
     html: shell({
       preheader: `Invoice ${number} is available in your portal${dueDate ? `, due ${fmtDate(dueDate)}` : ""}.`,
-      eyebrowText: `Invoice — ${number}`,
-      ref: `INVOICE · ${number}`,
+      eyebrowText: `Invoice ${number}`,
       heading: "A new invoice is ready.",
       bodyHtml: [
-        spec([
-          ["Amount", money(amount, currency)],
-          ["Issued", fmtDate(new Date())],
-          ["Due", dueDate ? fmtDate(dueDate) : "On receipt"],
-          ["Status", "Awaiting payment"],
-        ], { big: 0, ledger: true }),
+        spec([["Amount", money(amount, currency)]], { big: 0 }),
+        meta([`ISSUED ${fmtDate(new Date()).toUpperCase()}`, dueDate ? `DUE ${fmtDate(dueDate).toUpperCase()}` : "DUE ON RECEIPT", "AWAITING PAYMENT"]),
         p(`The invoice, its status and your payment history live in the portal — beside your project progress, where they belong.`, true),
       ].join(""),
       cta: { href: site("/portal"), label: "View invoice", sub: "PDF-ready view from your dashboard." },
@@ -432,16 +395,11 @@ export function invoicePaid(clientName: string, number: string, amount: number, 
     subject: `Receipt — invoice ${number} paid · ${money(amount, currency)}`,
     html: shell({
       preheader: "Payment received in full. Thank you.",
-      eyebrowText: `Payment received — ${number}`,
-      ref: `RECEIPT · ${number}`,
+      eyebrowText: `Receipt — ${number}`,
       heading: "Paid in full — thank you.",
       bodyHtml: [
-        spec([
-          ["Amount", money(amount, currency)],
-          ["Invoice", number],
-          ["Received", fmtDate(new Date())],
-          ["Status", "Paid in full"],
-        ], { big: 0, ledger: true }),
+        spec([["Amount", money(amount, currency)]], { big: 0 }),
+        meta([`INVOICE ${number.toUpperCase()}`, `RECEIVED ${fmtDate(new Date()).toUpperCase()}`, "PAID IN FULL"]),
         p(`Receipts stay in your portal for accounts. The next milestone keeps moving.`, true),
       ].join(""),
       cta: { href: site("/portal"), label: "Open the portal" },
@@ -459,14 +417,12 @@ export function invoiceOverdue(clientName: string, number: string, amount: numbe
     html: shell({
       preheader: `Invoice ${number} is ${daysLate} day${daysLate === 1 ? "" : "s"} past its due date.`,
       eyebrowText: `Past due — ${number}`,
-      ref: `INVOICE · REMINDER`,
       heading: "A quiet nudge on an open invoice.",
       bodyHtml: [
         spec([
           ["Amount", money(amount, currency)],
           ["Past due by", `${daysLate} day${daysLate === 1 ? "" : "s"}`],
-          ["Status", "Overdue"],
-        ], { big: 0, ledger: true }),
+        ], { big: 0 }),
         p(`If the payment is already on its way, ignore this note with our thanks. If something needs discussing — scope, timing, anything — reply here. We would rather talk than chase.`, true),
       ].join(""),
       cta: { href: site("/portal"), label: "View invoice" },
@@ -484,14 +440,12 @@ export function milestoneUpdate(clientName: string, projectTitle: string, milest
     subject: `Milestone ${label}: ${milestoneTitle}`,
     html: shell({
       preheader: `"${milestoneTitle}" is now ${label} on ${projectTitle}.`,
-      eyebrowText: `Milestone ${label} — ${projectTitle}`,
-      ref: "PROJECT · MILESTONE",
+      eyebrowText: `Milestone ${label}`,
       heading: status === "done" ? "One more step shipped." : "Work has started.",
       bodyHtml: [
         spec([
-          ["Project", projectTitle],
           ["Milestone", milestoneTitle],
-          ["Status", label.charAt(0).toUpperCase() + label.slice(1)],
+          ["Project", projectTitle],
         ]),
         p(`Your dashboard timeline shows every step with dates — the honest version, not a status report.`, true),
       ].join(""),
@@ -509,11 +463,11 @@ export function projectUpdate(clientName: string, projectTitle: string, title: s
     subject: `Project update: ${title}`,
     html: shell({
       preheader: body ? body.slice(0, 110) : `A new update on ${projectTitle}.`,
-      eyebrowText: `Project update — ${projectTitle}`,
-      ref: "PROJECT · UPDATE",
+      eyebrowText: `Project update`,
       heading: title,
       bodyHtml: [
-        body ? `<div style="font-family:${SERIF};font-size:15.5px;line-height:1.7;color:${BODY};white-space:pre-line;">${esc(body)}</div>` : "",
+        body ? prose(body) : "",
+        meta([projectTitle.toUpperCase()]),
       ].join(""),
       cta: { href: site("/portal"), label: "See the full timeline", sub: "Every update, milestone and invoice in one place." },
       closing: "More as it lands,",
@@ -540,20 +494,14 @@ export function teamEnquiry(d: {
     html: shell({
       preheader: `${d.name} · ${d.projectType}${d.budget ? ` · ${d.budget}` : ""} · reply promised within one business day.`,
       eyebrowText: `New enquiry — ${d.source}`,
-      ref: "INTERNAL · ENQUIRY",
       heading: `${d.name} — ${d.projectType}`,
       bodyHtml: [
         spec([
-          ["Name", d.name],
           ["Email", d.email ?? "—"],
           ["Phone", d.phone ?? "—"],
-          ["Type", d.projectType],
           ["Budget", d.budget ?? "—"],
-          ["Source", d.source],
         ]),
-        rule(18),
-        `<div style="font-family:${SERIF};font-size:15px;line-height:1.7;color:${BODY};white-space:pre-line;">${esc(d.message)}</div>`,
-        rule(18),
+        prose(d.message),
         highlight(`<strong>The site promised a reply within one business day.</strong> The enquiry sits in the inbox until someone moves it.`),
       ].join(""),
       cta: { href: site("/admin/enquiries"), label: "Open the inbox" },
@@ -578,19 +526,15 @@ export function teamApplication(d: {
     html: shell({
       preheader: `${d.name} applied for ${d.role}. Candidates are promised a personal reply within two business days.`,
       eyebrowText: `New application — ${d.role}`,
-      ref: "INTERNAL · HR",
       heading: `${d.name} applied`,
       bodyHtml: [
         spec([
-          ["Name", d.name],
           ["Email", d.email],
           ["Role", d.role],
           ["Experience", d.experience],
           ["Links", d.links],
         ]),
-        rule(18),
-        `<div style="font-family:${SERIF};font-size:15px;line-height:1.7;color:${BODY};white-space:pre-line;">${esc(d.message)}</div>`,
-        rule(18),
+        prose(d.message),
         highlight(`<strong>Candidates are told an engineer replies within two business days.</strong> Own it in the inbox.`),
       ].join(""),
       cta: { href: site("/admin/enquiries"), label: "Open the inbox" },
@@ -608,14 +552,13 @@ export function teamCallback(d: { name: string; phone: string; country: string; 
     html: shell({
       preheader: `Call ${d.name} on the ${d.country} number — during their local business hours.`,
       eyebrowText: "Callback requested",
-      ref: "INTERNAL · CALLBACK",
       heading: `${d.name} asked for a call`,
       bodyHtml: [
         spec([
           ["Phone", d.phone],
           ["Country", d.country],
-          ["Note", d.note ?? "—"],
         ]),
+        d.note ? prose(d.note) : "",
         p(`The site told them the call comes <em>during their local business hours</em>, from +91 75029 01234.`, true),
       ].join(""),
       cta: { href: site("/admin/enquiries?type=Callback"), label: "Open callbacks" },
@@ -633,11 +576,10 @@ export function teamAskSavo(d: { email: string; question: string }): MailTemplat
     html: shell({
       preheader: "The visitor was promised a reply within one business day. The clock is running.",
       eyebrowText: "Assistant handoff",
-      ref: "INTERNAL · HANDOFF",
       heading: "A question the assistant could not answer",
       bodyHtml: [
         spec([["Visitor", d.email]]),
-        quote(d.question),
+        quote(`“${d.question}”`),
         highlight(`<strong>Promise made on the site: a reply within one business day.</strong> The visitor has been told exactly that.`),
       ].join(""),
       cta: { href: site("/admin/enquiries"), label: "Answer it now" },
