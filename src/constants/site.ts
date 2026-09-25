@@ -51,17 +51,15 @@ export const SITE = {
 } as const;
 
 /**
- * Social profiles — URLs as carried from version 1. These are platform
- * placeholders until Savo supplies genuine profile URLs; they are shown in
- * the footer but deliberately NOT referenced as `sameAs` in structured
- * data (only verified, Savo-controlled profiles belong there).
+ * Social profiles — genuine, Savo-controlled company accounts, supplied by
+ * Savo. Shown in the footer and referenced as `sameAs` in the Organization
+ * structured data (verified profiles only, per the hard content rule).
  */
 export const SOCIAL_LINKS = [
-  { label: "LinkedIn", href: "https://www.linkedin.com/" },
-  { label: "X (Twitter)", href: "https://x.com/" },
-  { label: "GitHub", href: "https://github.com/" },
-  { label: "Instagram", href: "https://www.instagram.com/" },
-  { label: "YouTube", href: "https://www.youtube.com/" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/savotechnologies/" },
+  { label: "Instagram", href: "https://www.instagram.com/savotechnologies/" },
+  { label: "Facebook", href: "https://www.facebook.com/savotechnologies" },
+  { label: "YouTube", href: "https://www.youtube.com/@savotechnologies" },
 ] as const;
 
 /**

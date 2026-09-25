@@ -3,7 +3,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { EnquiryProvider } from "@/components/shared/enquiry-dialog";
 import { AskSavoBar } from "@/components/shared/ask-savo-bar";
 import { HEADER_NAV, type NavItem } from "@/constants/navigation";
-import { SITE } from "@/constants/site";
+import { SITE, SOCIAL_LINKS } from "@/constants/site";
 import { absoluteUrl } from "@/lib/env";
 import { getSettings } from "@/lib/settings";
 import {
@@ -81,9 +81,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           ...(SITE.hq.postalCode ? { postalCode: SITE.hq.postalCode } : {}),
         },
         areaServed: AREA_SERVED_COUNTRIES,
-        // sameAs deliberately omitted: it will list only verified
-        // Savo-controlled profiles (LinkedIn, GBP, GitHub…) once the
-        // company supplies the URLs. Placeholder platform links never go here.
+        // Verified, Savo-controlled profiles only (SOCIAL_LINKS) —
+        // placeholder platform links never go here.
+        sameAs: SOCIAL_LINKS.map((s) => s.href),
         knowsAbout: [
           "Website Design & Development",
           "Web Application Development",
