@@ -52,8 +52,8 @@ export function Offices() {
                       className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
                     >
                       <MobileGlyph />
-                      {phone.label ? <span className="t-caption text-muted">{phone.label}</span> : null}
                       {phone.display}
+                      {phone.label ? <span className="t-caption text-muted">({phone.label})</span> : null}
                     </a>
                   ))}
                 </div>
