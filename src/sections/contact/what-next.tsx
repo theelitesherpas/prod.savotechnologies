@@ -9,7 +9,7 @@ export function WhatNext() {
   return (
     <section
       aria-labelledby="what-next-heading"
-      className="chapter-ink border-y border-border bg-background"
+      className="chapter-ink border-y border-border bg-background text-foreground"
     >
       <div className="shell py-16 sm:py-20">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
