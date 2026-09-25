@@ -105,6 +105,20 @@ export function PhoneField({
 
   const valid = !rule || digits.length === 0 ? true : digits.length >= rule.min && digits.length <= rule.max;
   reportValidity(onValidity, valid);
+  const q = query.trim().toLowerCase();
+  const countries = Object.keys(COUNTRY_PHONE_RULES).sort();
+  const filteredCountries = q
+    ? countries.filter((c) => {
+        const r = COUNTRY_PHONE_RULES[c];
+        const digits = q.replace(/\D/g, "");
+        return (
+          c.toLowerCase().includes(q) ||
+          (digits && r.dial.replace("+", "").startsWith(digits)) ||
+          r.dial.includes(q)
+        );
+      })
+    : countries;
+
   const localError =
     touched && rule && digits.length > 0 && digits.length < rule.min
       ? `${country} numbers are ${rule.min}${rule.min === rule.max ? "" : `–${rule.max}`} digits.`
@@ -169,27 +183,12 @@ export function PhoneField({
               aria-label="Country"
               className="max-h-60 overflow-y-auto py-1"
             >
-              {(() => {
-                const q = query.trim().toLowerCase();
-                const all = Object.keys(COUNTRY_PHONE_RULES).sort();
-                const list = q
-                  ? all.filter((c) => {
-                      const r = COUNTRY_PHONE_RULES[c];
-                      return (
-                        c.toLowerCase().includes(q) ||
-                        r.dial.replace("+", "").startsWith(q.replace("+", "").replace(/\D/g, "")) ||
-                        r.dial.includes(q)
-                      );
-                    })
-                  : all;
-                if (list.length === 0) {
-                  return (
-                    <li className="px-3.5 py-3 text-[0.8125rem] text-muted" role="presentation">
-                      No country matches “{query.trim()}”.
-                    </li>
-                  );
-                }
-                return list.map((c) => {
+              {filteredCountries.length === 0 ? (
+                <li className="px-3.5 py-3 text-[0.8125rem] text-muted" role="presentation">
+                  No country matches “{query.trim()}”.
+                </li>
+              ) : (
+                filteredCountries.map((c) => {
                   const r = COUNTRY_PHONE_RULES[c];
                   return (
                     <li key={c} role="option" aria-selected={c === country}>
@@ -212,8 +211,8 @@ export function PhoneField({
                       </button>
                     </li>
                   );
-                });
-              })()}
+                })
+              )}
             </ul>
           </div>
         ) : null}
