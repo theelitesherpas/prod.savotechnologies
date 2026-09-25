@@ -15,7 +15,8 @@
     "test:e2e": "node scripts/verify.mjs",
     "db:push": "prisma db push",
     "db:seed": "node scripts/seed.mjs",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "preview:prod": "NEXT_PUBLIC_CONTENT_MODE=production npm run build && npm run start -- -p 4000"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
