@@ -79,6 +79,7 @@ export async function sendMail(to: string, tpl: MailTemplate): Promise<boolean> 
           }
         : {}),
     });
+    logger.info("mail: sent", { to, subject: tpl.subject.slice(0, 80) });
     return true;
   } catch (err) {
     logger.error("mail: send failed", { to, subject: tpl.subject, err: String(err).slice(0, 300) });
