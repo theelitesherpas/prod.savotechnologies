@@ -96,8 +96,13 @@ export function CaseStudyForm({
     setStackDraft("");
   };
 
+  // Drop repeater rows the user left completely empty — scaffolding rows
+  // must never fail server validation.
+  const filledResults = results.filter((r) => r.value.trim() !== "" || r.label.trim() !== "");
+  const filledPalette = palette.filter((p) => p.name.trim() !== "" || p.hex !== "#14161c");
+
   const payload = JSON.stringify({
-    title,
+    title: title.trim(),
     clientName,
     displayClientName,
     discipline,
@@ -107,8 +112,12 @@ export function CaseStudyForm({
     solution,
     services,
     technologies,
-    results,
-    palette,
+    results: filledResults.map((r) => ({
+      value: r.value.trim(),
+      label: r.label.trim(),
+      verified: r.verified,
+    })),
+    palette: filledPalette.map((p) => ({ name: p.name.trim(), hex: p.hex })),
     year,
     duration,
     teamSize,
@@ -126,7 +135,29 @@ export function CaseStudyForm({
   const label = "adm-label block mb-1.5";
 
   return (
-    <form ref={formRef} action={action} className="max-w-4xl space-y-6" onSubmit={(e) => { if (!title.trim()) { e.preventDefault(); alert("Title is required."); } }}>
+    <form
+      ref={formRef}
+      action={action}
+      className="max-w-4xl space-y-6"
+      onSubmit={(e) => {
+        const problems: string[] = [];
+        if (!title.trim()) problems.push("Title is required.");
+        for (const r of results) {
+          const hasV = r.value.trim() !== "";
+          const hasL = r.label.trim() !== "";
+          if (hasV !== hasL)
+            problems.push(`Metric “${hasV ? r.value : r.label}” needs both a value and a label (or clear both).`);
+        }
+        for (const p of palette) {
+          if (p.name.trim() !== "" && !/^#[0-9a-fA-F]{6}$/.test(p.hex))
+            problems.push(`Color “${p.name}” needs a valid hex value like #1F4EE8.`);
+        }
+        if (problems.length > 0) {
+          e.preventDefault();
+          alert(problems.join("\n"));
+        }
+      }}
+    >
       {item ? <input type="hidden" name="id" value={item.id} /> : null}
       {item ? <input type="hidden" name="slug" value={item.slug} /> : null}
       <input type="hidden" name="payload" value={payload} />
