@@ -50,7 +50,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       ])
     : [0, {} as Record<string, number>, 0, 0];
 
-  const contentItems = COLLECTION_KEYS.map((key) => ({
+  const contentItems = COLLECTION_KEYS.filter((key) => key !== "case-studies").map((key) => ({
     href: `/admin/content/${key}`,
     label: CONTENT_COLLECTIONS[key].label,
     icon: CONTENT_COLLECTIONS[key].icon,
@@ -73,6 +73,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       items: [
         { href: "/admin/services", label: "Services", icon: "layers", count: servicesCount },
         { href: "/admin/industries", label: "Industries", icon: "grid", count: industriesCount },
+        {
+          href: "/admin/case-studies",
+          label: "Case studies",
+          icon: "folder",
+          count: contentCounts["case-studies"] ?? 0,
+        },
         ...contentItems,
       ],
     },

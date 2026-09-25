@@ -1,0 +1,114 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
+import { audit } from "@/lib/audit";
+import { caseStudySchema, slugifyCaseStudy } from "@/lib/case-study-schema";
+
+/**
+ * Case-study mutations for the dedicated rich editor (/admin/case-studies).
+ *
+ * The form submits one JSON payload (assembled by the client-side
+ * CaseStudyForm) which is validated by the shared caseStudySchema — the
+ * same schema the public renderer trusts, so admin input and public output
+ * can never drift. Records land in ContentItem (collection "case-studies")
+ * with an explicit lifecycle; only "published" rows render publicly.
+ */
+
+const LIFECYCLE = ["draft", "demo", "review", "verified", "published"] as const;
+
+const formSchema = z.object({
+  id: z.string().min(10).max(32).optional(),
+  slug: z.string().regex(/^[a-z0-9-]{2,80}$/).optional(),
+  payload: z.string().min(2),
+  contentStatus: z.enum(LIFECYCLE),
+});
+
+export async function saveCaseStudyAction(formData: FormData): Promise<void> {
+  const user = await requireAdmin();
+  if (!prisma) redirect("/admin/case-studies?e=db");
+
+  const form = formSchema.safeParse({
+    id: formData.get("id") || undefined,
+    slug: formData.get("slug") || undefined,
+    payload: formData.get("payload"),
+    contentStatus: formData.get("contentStatus"),
+  });
+  if (!form.success) redirect("/admin/case-studies?e=invalid");
+
+  const record = caseStudySchema.safeParse(JSON.parse(form.data.payload));
+  if (!record.success) redirect(`/admin/case-studies?e=invalid`);
+
+  const data = record.data;
+  const slug = form.data.slug || slugifyCaseStudy(data.title);
+  if (!/^[a-z0-9-]{2,80}$/.test(slug)) redirect("/admin/case-studies?e=invalid");
+
+  const values = {
+    collection: "case-studies",
+    slug,
+    title: data.title,
+    order: 0,
+    active: true,
+    contentStatus: form.data.contentStatus,
+    ...(form.data.contentStatus === "published" ? { publishedAt: new Date() } : {}),
+    data: data as unknown as import("@prisma/client").Prisma.InputJsonValue,
+  };
+
+  try {
+    if (form.data.id) {
+      await prisma.contentItem.update({ where: { id: form.data.id }, data: values });
+    } else {
+      await prisma.contentItem.create({ data: values });
+    }
+  } catch {
+    redirect(`/admin/case-studies?e=dup`);
+  }
+
+  await audit(user.id, form.data.id ? "caseStudy.update" : "caseStudy.create", "ContentItem", `case-studies:${slug}`);
+
+  revalidatePath("/");
+  revalidatePath("/case-studies");
+  revalidatePath(`/case-studies/${slug}`);
+  redirect(`/admin/case-studies?saved=${form.data.id ? "updated" : "created"}`);
+}
+
+export async function deleteCaseStudyAction(formData: FormData): Promise<void> {
+  const user = await requireAdmin();
+  if (!prisma) redirect("/admin/case-studies?e=db");
+  const id = z.string().min(10).max(32).parse(formData.get("id"));
+
+  const item = await prisma.contentItem.findUnique({ where: { id } });
+  if (!item || item.collection !== "case-studies") redirect("/admin/case-studies?e=invalid");
+
+  await prisma.contentItem.delete({ where: { id } });
+  await audit(user.id, "caseStudy.delete", "ContentItem", `case-studies:${item.slug}`);
+
+  revalidatePath("/");
+  revalidatePath("/case-studies");
+  revalidatePath(`/case-studies/${item.slug}`);
+  redirect("/admin/case-studies?saved=deleted");
+}
+
+export async function setCaseStudyStatusAction(formData: FormData): Promise<void> {
+  const user = await requireAdmin();
+  if (!prisma) redirect("/admin/case-studies?e=db");
+  const id = z.string().min(10).max(32).parse(formData.get("id"));
+  const status = z.enum(LIFECYCLE).parse(formData.get("contentStatus"));
+
+  const item = await prisma.contentItem.findUnique({ where: { id } });
+  if (!item || item.collection !== "case-studies") redirect("/admin/case-studies?e=invalid");
+
+  await prisma.contentItem.update({
+    where: { id },
+    data: { contentStatus: status, ...(status === "published" ? { publishedAt: new Date() } : {}) },
+  });
+  await audit(user.id, "caseStudy.status", "ContentItem", `case-studies:${item.slug}→${status}`);
+
+  revalidatePath("/");
+  revalidatePath("/case-studies");
+  revalidatePath(`/case-studies/${item.slug}`);
+  redirect("/admin/case-studies?saved=status");
+}

@@ -3,6 +3,7 @@ import { absoluteUrl } from "@/lib/env";
 import { INDUSTRY_DETAILS } from "@/constants/industry-details";
 import { SERVICE_DETAILS } from "@/constants/services-detail";
 import { getManagedHireRoles, getManagedAiServices, getManagedArticles } from "@/lib/content-items";
+import { getCaseStudies } from "@/lib/case-studies";
 
 /**
  * Production XML sitemap — canonical, indexable URLs only, always on the
@@ -10,10 +11,11 @@ import { getManagedHireRoles, getManagedAiServices, getManagedArticles } from "@
  * surfaces are excluded by design.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [HIRE_ROLES, AI_SERVICES, ARTICLES] = await Promise.all([
+  const [HIRE_ROLES, AI_SERVICES, ARTICLES, CASE_STUDIES] = await Promise.all([
     getManagedHireRoles(),
     getManagedAiServices(),
     getManagedArticles(),
+    getCaseStudies(),
   ]);
   const now = new Date();
   const page = (url: string, priority: number, changeFrequency: "monthly" | "weekly" = "monthly") => ({
@@ -32,6 +34,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page("/industries", 0.9),
     ...INDUSTRY_DETAILS.map((d) => page(`/industries/${d.id}`, 0.8)),
     page("/case-studies", 0.8, "weekly"),
+    // Verified engagements only — demo dossiers never enter the sitemap.
+    ...CASE_STUDIES.filter((s) => s.status === "verified").map((s) =>
+      page(`/case-studies/${s.slug}`, 0.7),
+    ),
     page("/hire", 0.8),
     ...HIRE_ROLES.map((r) => page(`/hire/${r.slug}`, 0.7)),
     page("/insights", 0.7, "weekly"),

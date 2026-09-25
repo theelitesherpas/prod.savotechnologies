@@ -5,6 +5,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { WORK_PLACEHOLDERS } from "@/constants/content";
 import { DEMO_CASE_STUDIES, DEMO_TESTIMONIAL } from "@/content/demo";
+import { slugifyCaseStudy } from "@/lib/case-study-schema";
 import { IS_DEMO } from "@/lib/content-mode";
 
 /**
@@ -23,18 +24,23 @@ type WorkItem = {
   stack: string;
   outcome: string;
   variant: "a" | "b" | "c";
+  /** Detail-page link when the item has one (demo/verified). */
+  slug?: string;
 };
 
 const DEMO_WORK_ITEMS: WorkItem[] = DEMO_CASE_STUDIES.slice(0, 3).map((c) => ({
-  name: c.name,
+  name: c.title,
   industry: c.industry,
-  services: c.services,
-  stack: c.stack.join(" · "),
+  services: c.services.slice(0, 2).join(" · ") || c.industry,
+  stack: c.technologies.join(" · "),
   outcome: c.results.map((r) => `${r.value} ${r.label}`).join(" · ") + " — demo figures",
   variant: c.variant,
+  slug: slugifyCaseStudy(c.title),
 }));
 
-const WORK_ITEMS: WorkItem[] = IS_DEMO ? DEMO_WORK_ITEMS : [...WORK_PLACEHOLDERS];
+const WORK_ITEMS: WorkItem[] = IS_DEMO
+  ? DEMO_WORK_ITEMS
+  : WORK_PLACEHOLDERS.map((w) => ({ ...w }));
 const PHOTO_BY_VARIANT = {
   a: "/images/meeting.webp",
   b: "/images/code.webp",
@@ -151,6 +157,17 @@ function WorkCard({
           </p>
           <p className="t-caption mt-3 text-muted/80">{item.outcome}</p>
         </div>
+        {item.slug ? (
+          <Link
+            href={`/case-studies/${item.slug}`}
+            className="t-sm inline-flex items-center gap-2 font-semibold text-foreground transition-colors hover:text-accent"
+          >
+            View Project
+            <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <path d="M3 11 11 3M4.5 3H11v6.5" />
+            </svg>
+          </Link>
+        ) : (
         <span
           aria-disabled="true"
           title="Case study in preparation"
@@ -161,6 +178,7 @@ function WorkCard({
             <path d="M3 11 11 3M4.5 3H11v6.5" />
           </svg>
         </span>
+        )}
       </div>
     </article>
   );

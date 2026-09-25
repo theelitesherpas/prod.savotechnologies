@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { CaseDiscipline, CaseEntry } from "@/constants/case-studies";
 import { CASE_PHOTO } from "@/constants/case-studies";
 
@@ -194,12 +195,17 @@ export function CaseStudyCard({
   aspect: string;
   sizes: string;
 }) {
+  const hasDetail = typeof entry.slug === "string" && entry.slug.length > 0;
   return (
     <article className="group relative border border-border bg-surface transition-colors duration-500 hover:border-foreground/30">
       <div className={`relative overflow-hidden ${aspect}`}>
         <Image
           src={CASE_PHOTO[variant]}
-          alt={`Representative studio imagery: ${variant} case study in preparation`}
+          alt={
+            hasDetail
+              ? `Design concept: ${entry.name} — fictional demo project`
+              : `Representative studio imagery: ${variant} case study in preparation`
+          }
           fill
           sizes={sizes}
           className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
@@ -210,7 +216,7 @@ export function CaseStudyCard({
         />
         <CaseArt variant={variant} />
         <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.45)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
-          In preparation
+          {hasDetail ? "Design concept" : "In preparation"}
         </span>
         <span className="t-label absolute bottom-4 right-4 tnum text-white/75">{entry.sector}</span>
       </div>
@@ -223,6 +229,17 @@ export function CaseStudyCard({
           <p className="t-label mt-1.5 text-muted/80">{entry.stack}</p>
           <p className="t-caption mt-3 text-muted/80">{entry.outcome}</p>
         </div>
+        {hasDetail ? (
+          <Link
+            href={`/case-studies/${entry.slug}`}
+            className="t-sm inline-flex items-center gap-2 font-semibold text-foreground transition-colors hover:text-accent"
+          >
+            View Project
+            <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <path d="M3 11 11 3M4.5 3H11v6.5" />
+            </svg>
+          </Link>
+        ) : (
         <span
           aria-disabled="true"
           title="Case study in preparation"
@@ -233,6 +250,7 @@ export function CaseStudyCard({
             <path d="M3 11 11 3M4.5 3H11v6.5" />
           </svg>
         </span>
+        )}
       </div>
     </article>
   );

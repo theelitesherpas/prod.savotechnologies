@@ -11,6 +11,20 @@
 
 import { IS_DEMO } from "@/lib/content-mode";
 import { DEMO_CASE_STUDIES } from "@/content/demo";
+import { slugifyCaseStudy, type CaseStudy } from "@/lib/case-study-schema";
+
+/**
+ * Full-dossier detail records driving /case-studies/[slug].
+ *
+ * CONTENT_MODE gated: demo mode exposes the fictional design projects so
+ * the detail format can be evaluated; production exposes only records
+ * with status "verified" (real, client-approved engagements), appended
+ * here — or published via the admin panel — as Savo supplies them.
+ * DEMO DATA — NOT VERIFIED, never in production sitemap or structured data.
+ */
+export const CASE_STUDY_DETAILS: CaseStudy[] = (
+  IS_DEMO ? DEMO_CASE_STUDIES.map(({ variant: _variant, ...record }) => record) : []
+).map((record) => ({ ...record, slug: slugifyCaseStudy(record.title) }));
 
 export type CaseEntry = {
   featured: boolean;
@@ -21,6 +35,8 @@ export type CaseEntry = {
   stack: string;
   /** Placeholder until the client approves real figures. */
   outcome: string;
+  /** Present when the entry has a public detail page (demo/verified). */
+  slug?: string;
 };
 
 export type CaseDiscipline = {
@@ -297,11 +313,12 @@ export const CASE_DISCIPLINES: CaseDiscipline[] = CASE_DISCIPLINES_BASE.map((d) 
   if (!demo) return d;
   const demoEntry: CaseEntry = {
     featured: true,
-    name: demo.name,
+    name: demo.title,
     sector: demo.industry,
-    services: demo.services,
-    stack: demo.stack.join(" · "),
+    services: demo.services.join(" · "),
+    stack: demo.technologies.join(" · "),
     outcome: demo.results.map((r) => `${r.value} ${r.label}`).join(" · ") + " — demo figures",
+    slug: slugifyCaseStudy(demo.title),
   };
   return { ...d, entries: [demoEntry, ...d.entries.filter((e) => !e.featured)] };
 });
