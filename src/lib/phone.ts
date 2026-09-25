@@ -45,7 +45,6 @@ export const COUNTRY_PHONE_RULES: Record<string, PhoneRule> = {
   Egypt: { dial: "+20", min: 9, max: 10, flag: "🇪🇬" },
   Nigeria: { dial: "+234", min: 10, max: 10, flag: "🇳🇬" },
   Kenya: { dial: "+254", min: 9, max: 9, flag: "🇰🇪" },
-  Pakistan: { dial: "+92", min: 10, max: 10, flag: "🇵🇰" },
   Bangladesh: { dial: "+880", min: 10, max: 10, flag: "🇧🇩" },
   "Sri Lanka": { dial: "+94", min: 9, max: 9, flag: "🇱🇰" },
   Nepal: { dial: "+977", min: 10, max: 10, flag: "🇳🇵" },
