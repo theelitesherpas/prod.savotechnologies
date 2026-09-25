@@ -9,7 +9,7 @@ import { clientLoginAction } from "@/app/portal/actions";
  */
 export function PortalLoginCard({ error }: { error?: string }) {
   return (
-    <div className="blueprint relative border border-border bg-surface p-8 sm:p-10">
+    <div className="relative border border-border bg-surface p-8 sm:p-10">
       <div className="flex items-center justify-between">
         <p className="t-label text-muted">Client sign-in</p>
         <span aria-hidden="true" className="flex gap-1.5">
@@ -45,7 +45,6 @@ export function PortalLoginCard({ error }: { error?: string }) {
             maxLength={120}
             spellCheck={false}
             className="field"
-            placeholder="you@company.com"
           />
         </div>
         <div>
@@ -60,7 +59,6 @@ export function PortalLoginCard({ error }: { error?: string }) {
             required
             maxLength={128}
             className="field"
-            placeholder="Your portal password"
           />
         </div>
         <button
