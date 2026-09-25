@@ -21,6 +21,7 @@ import {
   type EnquiryInput,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
+import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { cn, withBasePath } from "@/lib/utils";
 
 type EnquiryContextValue = {
@@ -202,11 +203,18 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
   const [errors, setErrors] = useState<EnquiryFieldErrors>({});
   const [serverMessage, setServerMessage] = useState("");
   const formRef = useRef<HTMLFormElement | null>(null);
+  const captcha = useCaptcha();
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (status === "submitting") return;
     setServerMessage("");
+    setCaptchaErr(null);
+    if (captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification above.");
+      return;
+    }
 
     const raw = Object.fromEntries(new FormData(e.currentTarget).entries());
     const parsed = enquirySchema.safeParse(raw);
@@ -224,7 +232,7 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
       const res = await fetch(withBasePath("/api/enquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...parsed.data, details: { form: "start-project" } }),
+        body: JSON.stringify({ ...parsed.data, captchaToken: captcha.token, details: { form: "start-project" } }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
@@ -234,6 +242,7 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
       if (res.ok && json.ok) {
         setStatus("success");
         track("enquiry_form_success");
+        captcha.refresh();
         return;
       }
       if (res.status === 400 && json.fieldErrors) {
@@ -308,6 +317,8 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
           {serverMessage}
         </p>
       ) : null}
+
+      <CaptchaGate captcha={captcha} error={captchaErr} />
 
       <button
         type="submit"

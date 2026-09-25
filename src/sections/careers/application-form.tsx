@@ -20,6 +20,7 @@ import {
   type EnquiryInput,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
+import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { cn, withBasePath } from "@/lib/utils";
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -42,6 +43,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
   const [errors, setErrors] = useState<EnquiryFieldErrors>({});
   const [localErrors, setLocalErrors] = useState<{ city?: string; consent?: string }>({});
   const [serverMessage, setServerMessage] = useState("");
+  const captcha = useCaptcha();
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const startedRef = useRef(false);
 
@@ -60,6 +63,11 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
     e.preventDefault();
     if (status === "submitting") return;
     setServerMessage("");
+    setCaptchaErr(null);
+    if (captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification.");
+      return;
+    }
 
     const data = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
 
@@ -112,6 +120,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...parsed.data,
+          captchaToken: captcha.token,
           source: `careers:${roleSlug(role)}`,
           // Structured payload — rendered as its own panel in the admin inbox.
           details: {
@@ -134,6 +143,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
       };
       if (res.ok && json.ok) {
         setStatus("success");
+        captcha.refresh();
         track("enquiry_form_success", { form: "careers", role });
         return;
       }
@@ -340,6 +350,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
       ) : null}
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <CaptchaGate captcha={captcha} error={captchaErr} />
         <button
           type="submit"
           disabled={status === "submitting"}

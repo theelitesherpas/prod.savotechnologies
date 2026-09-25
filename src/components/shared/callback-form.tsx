@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { COUNTRY_PHONE_RULES, CALLBACK_COUNTRIES } from "@/lib/phone";
 import { track } from "@/lib/analytics";
+import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { withBasePath } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,8 @@ export function CallbackForm() {
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState<Status>("idle");
+  const captcha = useCaptcha();
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [touched, setTouched] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -60,6 +63,11 @@ export function CallbackForm() {
     if (status === "submitting") return;
     if (!rule || !valid) return;
     setStatus("submitting");
+    setCaptchaErr(null);
+    if (captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification.");
+      return;
+    }
     track("enquiry_form_submit", { type: "callback" });
 
     const fd = new FormData(e.currentTarget);
@@ -72,10 +80,12 @@ export function CallbackForm() {
           country: countryName,
           phone: `${rule.dial}${digits}`,
           website: (fd.get("cb-website") as string) || "",
+          captchaToken: captcha.token,
         }),
       });
       const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (res.ok && json.ok) {
+        captcha.refresh();
         setStatus("success");
         track("enquiry_form_success", { type: "callback" });
       } else {
@@ -237,6 +247,7 @@ export function CallbackForm() {
           </label>
         </div>
 
+        <CaptchaGate captcha={captcha} error={captchaErr} />
         <button
           type="submit"
           disabled={status === "submitting"}

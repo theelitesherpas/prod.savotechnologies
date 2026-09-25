@@ -18,6 +18,7 @@ import {
 import { useEnquiry } from "@/components/shared/enquiry-dialog";
 import { track } from "@/lib/analytics";
 import { cn, withBasePath } from "@/lib/utils";
+import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 
 /**
  * Ask Savo — a floating bar pinned to the bottom of every public page that
@@ -66,6 +67,8 @@ export function AskSavoBar() {
   const [email, setEmail] = useState("");
   const [emailState, setEmailState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [emailError, setEmailError] = useState<string | null>(null);
+  const captcha = useCaptcha();
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
 
   const threadRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -230,6 +233,11 @@ export function AskSavoBar() {
       return;
     }
     setEmailError(null);
+    setCaptchaErr(null);
+    if (captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification.");
+      return;
+    }
     if (emailState === "sending") return;
     setEmailState("sending");
     track("ask_savo_handoff");
@@ -244,11 +252,13 @@ export function AskSavoBar() {
           message: `${emailCapture ?? "Question from the Ask Savo chat"}, sent from the Savo Assistant.`,
           details: { form: "ask-savo" },
           website: "",
+          captchaToken: captcha.token,
         }),
       });
       const json = (await res.json().catch(() => ({}))) as { ok?: boolean };
       if (res.ok && json.ok) {
         setEmailState("sent");
+        captcha.refresh();
         say(
           <p>
             Sent. <span className="text-muted">Watch {email}, a reply lands within one business day.</span>
@@ -397,6 +407,7 @@ export function AskSavoBar() {
                         {emailState === "sending" ? "Sending…" : "Send"}
                       </button>
                     </div>
+                    <CaptchaGate captcha={captcha} error={captchaErr} />
                     {emailError ? (
                       <p role="alert" className="t-caption mt-2 text-error">
                         {emailError}

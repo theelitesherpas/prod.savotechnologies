@@ -11,6 +11,7 @@ import {
   type EnquiryInput,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
+import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { cn, withBasePath } from "@/lib/utils";
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -24,6 +25,8 @@ export function ContactForm() {
   const [topic, setTopic] = useState<(typeof CONTACT_TOPICS)[number]>("New project");
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<EnquiryFieldErrors>({});
+  const captcha = useCaptcha();
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
   const [serverMessage, setServerMessage] = useState("");
   const formRef = useRef<HTMLFormElement | null>(null);
   const startedRef = useRef(false);
@@ -36,6 +39,11 @@ export function ContactForm() {
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setCaptchaErr(null);
+    if (captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification.");
+      return;
+    }
     if (status === "submitting") return;
     setServerMessage("");
 
@@ -55,7 +63,7 @@ export function ContactForm() {
       const res = await fetch(withBasePath("/api/enquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...parsed.data, source: "contact", details: { form: "contact", topic } }),
+        body: JSON.stringify({ ...parsed.data, captchaToken: captcha.token, source: "contact", details: { form: "contact", topic } }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
@@ -64,6 +72,7 @@ export function ContactForm() {
       };
       if (res.ok && json.ok) {
         setStatus("success");
+        captcha.refresh();
         track("enquiry_form_success", { form: "contact" });
         return;
       }
@@ -214,6 +223,7 @@ export function ContactForm() {
       ) : null}
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <CaptchaGate captcha={captcha} error={captchaErr} />
         <button
           type="submit"
           disabled={status === "submitting"}

@@ -12,11 +12,12 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${
     isProd ? "" : " 'unsafe-eval'"
-  } https://www.googletagmanager.com https://www.google-analytics.com`,
+  } https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://www.google.com https://www.gstatic.com",
   "font-src 'self'",
   "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com",
+  "frame-src https://www.google.com https://recaptcha.google.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

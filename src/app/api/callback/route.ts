@@ -6,6 +6,7 @@ import { env } from "@/lib/env";
 import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
 import { validatePhone, COUNTRY_PHONE_RULES } from "@/lib/phone";
 import { logger } from "@/lib/logger";
+import { enforceCaptcha, recordSubmission } from "@/lib/captcha";
 import { sendTemplateNow, teamEmail } from "@/lib/mail";
 
 export const runtime = "nodejs";
@@ -52,6 +53,16 @@ export async function POST(req: Request) {
     return apiOk();
   }
 
+  // Progressive captcha: free twice per IP per day, then verify.
+  const rawBody = body.data as Record<string, unknown>;
+  const cap = await enforceCaptcha(ip, rawBody.captchaToken);
+  if (!cap.ok) {
+    if ("captchaRequired" in cap) {
+      return apiError("Please complete the human verification and try again.", 400);
+    }
+    return apiError(cap.error, 400);
+  }
+
   // Country-aware phone validation (shared with the client form).
   const phone = validatePhone(data.country, data.phone);
   if (!phone.ok) {
@@ -86,6 +97,7 @@ export async function POST(req: Request) {
       },
     });
     logger.info("callback.stored", { country: data.country });
+    recordSubmission(ip);
     sendTemplateNow("teamCallback", teamEmail(), {
       name: data.name || "Callback request",
       phone: phone.normalized,

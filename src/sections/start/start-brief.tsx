@@ -10,6 +10,7 @@ import {
   type EnquiryFieldErrors,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
+import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { cn, withBasePath } from "@/lib/utils";
 
 /**
@@ -48,6 +49,8 @@ export function StartBrief() {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [errors, setErrors] = useState<EnquiryFieldErrors>({});
+  const captcha = useCaptcha();
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [serverMessage, setServerMessage] = useState("");
   const startedRef = useRef(false);
@@ -106,6 +109,11 @@ export function StartBrief() {
       return;
     }
     setServerMessage("");
+    setCaptchaErr(null);
+    if (captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification.");
+      return;
+    }
     setStatus("submitting");
     track("enquiry_form_submit", { form: "start-page" });
 
@@ -113,7 +121,7 @@ export function StartBrief() {
       const res = await fetch(withBasePath("/api/enquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...draft, source: "start-page" }),
+        body: JSON.stringify({ ...draft, captchaToken: captcha.token, source: "start-page" }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
@@ -122,6 +130,7 @@ export function StartBrief() {
       };
       if (res.ok && json.ok) {
         setStatus("success");
+        captcha.refresh();
         track("enquiry_form_success", { form: "start-page" });
         return;
       }
@@ -298,6 +307,7 @@ export function StartBrief() {
               </p>
             ) : null}
 
+            <CaptchaGate captcha={captcha} error={captchaErr} />
             <button
               type="submit" disabled={status === "submitting"}
               className="group/btn mt-9 inline-flex h-[3.25rem] items-center justify-center gap-2.5 rounded-[2px] bg-foreground px-8 text-base font-semibold text-background transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-accent hover:text-on-accent disabled:pointer-events-none disabled:opacity-50"
