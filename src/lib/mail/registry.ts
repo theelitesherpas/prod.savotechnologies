@@ -35,6 +35,8 @@ export type TemplateEntry = {
   label: string;
   fires: string;
   recipient: TemplateRecipient;
+  /** Sending department: careers mail goes out as hr@, everything else as hello@. */
+  dept: "hello" | "hr";
   /** Variable name → sample value (samples power the preview). */
   vars: Record<string, string>;
   default: (v: Record<string, string>) => MailTemplate;
@@ -53,6 +55,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Enquiry acknowledgement",
     fires: "Enquiry drawer, contact form, start-page brief submitted",
     recipient: "customer",
+    dept: "hello",
     vars: { name: "Priya Sharma", projectType: "Website" },
     default: (v) => enquiryAck(v.name, v.projectType, v.__to),
   },
@@ -61,6 +64,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Callback logged",
     fires: "Footer callback requested (when an email is present)",
     recipient: "customer",
+    dept: "hello",
     vars: { name: "Rohan Desai", country: "India" },
     default: (v) => callbackAck(v.name, v.country, v.__to),
   },
@@ -69,11 +73,13 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Assistant handoff",
     fires: "Ask Savo question the assistant could not answer",
     recipient: "customer",
+    dept: "hello",
     vars: { question: "How do you price a Flutter app with a backend panel?" },
     default: (v) => askSavoHandoffAck(v.question, v.__to),
   },
   {
     key: "applicationAck",
+    dept: "hr",
     label: "Application received",
     fires: "Careers application submitted",
     recipient: "customer",
@@ -85,6 +91,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Portal welcome",
     fires: "Admin creates a client account",
     recipient: "client",
+    dept: "hello",
     vars: { name: "Sara Khan", email: "sara@acme.co", password: "Savo-Start-2026" },
     default: (v) => clientWelcome(v.name, v.email, v.password),
   },
@@ -93,6 +100,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Portal password reset",
     fires: "Admin resets a client password",
     recipient: "client",
+    dept: "hello",
     vars: { name: "Sara Khan", password: "Savo-New-2026" },
     default: (v) => clientPasswordReset(v.name, v.password),
   },
@@ -101,6 +109,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Invoice issued",
     fires: "Admin creates an invoice",
     recipient: "client",
+    dept: "hello",
     vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500", due: "14 Oct 2026" },
     default: (v) => invoiceIssued(v.name, v.number, 250000, "INR", new Date(Date.now() + 14 * 86400000)),
   },
@@ -109,6 +118,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Payment receipt",
     fires: "Invoice marked paid",
     recipient: "client",
+    dept: "hello",
     vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500" },
     default: (v) => invoicePaid(v.name, v.number, 250000, "INR"),
   },
@@ -117,6 +127,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Overdue reminder",
     fires: "Invoice status set to overdue",
     recipient: "client",
+    dept: "hello",
     vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500", days: "7" },
     default: (v) => invoiceOverdue(v.name, v.number, 250000, "INR", 7),
   },
@@ -125,6 +136,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Milestone status",
     fires: "Milestone started or completed",
     recipient: "client",
+    dept: "hello",
     vars: { name: "Acme Trading", project: "Commerce Platform", milestone: "Design system sign-off", status: "completed" },
     default: (v) => milestoneUpdate(v.name, v.project, v.milestone, "done"),
   },
@@ -133,6 +145,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Project update",
     fires: "Delivery-log entry posted",
     recipient: "client",
+    dept: "hello",
     vars: { name: "Acme Trading", project: "Commerce Platform", title: "Weekly demo shipped", body: "Checkout v2 is live on staging — search filters land next week." },
     default: (v) => projectUpdate(v.name, v.project, v.title, v.body),
   },
@@ -141,6 +154,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Team · new enquiry",
     fires: "Every public form submission",
     recipient: "team",
+    dept: "hello",
     vars: {
       name: "Priya Sharma",
       email: "priya@company.com",
@@ -163,6 +177,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "teamApplication",
+    dept: "hr",
     label: "HR · new application",
     fires: "Careers application submitted",
     recipient: "hr",
@@ -175,6 +190,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Team · callback request",
     fires: "Footer callback requested",
     recipient: "team",
+    dept: "hello",
     vars: { name: "Rohan Desai", phone: "+91 98765 43210", country: "India" },
     default: (v) => teamCallback({ name: v.name, phone: v.phone, country: v.country }),
   },
@@ -183,6 +199,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Team · assistant handoff",
     fires: "Ask Savo handoff",
     recipient: "team",
+    dept: "hello",
     vars: { email: "visitor@company.com", question: "Do you take over existing React Native codebases mid-project?" },
     default: (v) => teamAskSavo({ email: v.email, question: v.question }),
   },

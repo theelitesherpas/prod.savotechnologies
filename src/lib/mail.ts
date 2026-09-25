@@ -33,6 +33,7 @@ export function teamEmail(): string {
 }
 
 let cached: Transporter | null | undefined;
+let cachedHr: Transporter | null | undefined;
 
 function transport(): Transporter | null {
   if (cached !== undefined) return cached;
@@ -51,21 +52,53 @@ function transport(): Transporter | null {
   return cached;
 }
 
+/** Careers/HR department mailbox (hr@). Falls back to the default
+ *  transport until MAIL_HR_PASS is configured — sends then go out as
+ *  hello@ and are logged, so nothing is ever lost. */
+function hrTransport(): Transporter | null {
+  if (cachedHr !== undefined) return cachedHr;
+  const host = process.env.MAIL_HOST;
+  const pass = process.env.MAIL_HR_PASS;
+  if (!host || !pass) {
+    cachedHr = null;
+    return cachedHr;
+  }
+  const port = Number(process.env.MAIL_PORT || 465);
+  cachedHr = nodemailer.createTransport({
+    host,
+    port,
+    secure: process.env.MAIL_SECURE ? process.env.MAIL_SECURE === "true" : port === 465,
+    auth: { user: process.env.MAIL_HR_USER || "hr@savotechnologies.com", pass },
+  });
+  return cachedHr;
+}
+
 export function mailFrom(): string {
   const user = process.env.MAIL_USER || "hello@savotechnologies.com";
   return process.env.MAIL_FROM || `Savo Technologies <${user}>`;
 }
 
-/** Send one template. Never throws — failures are logged for the audit trail. */
-export async function sendMail(to: string, tpl: MailTemplate): Promise<boolean> {
-  const t = transport();
+/** Send one template. Never throws — failures are logged for the audit trail.
+ *  dept "hr" sends from the hr@ mailbox (careers); default is hello@. */
+export async function sendMail(to: string, tpl: MailTemplate, dept: "hello" | "hr" = "hello"): Promise<boolean> {
+  const wantHr = dept === "hr";
+  let t = wantHr ? hrTransport() : transport();
+  let from = mailFrom();
+  if (wantHr && !t) {
+    // HR mailbox not configured — fall back to the default mailbox.
+    logger.info("mail: hr mailbox not configured, sending via default", { to });
+    t = transport();
+  } else if (wantHr) {
+    const user = process.env.MAIL_HR_USER || "hr@savotechnologies.com";
+    from = `Savo Technologies <${user}>`;
+  }
   if (!t) {
-    logger.info("mail: not configured, would send", { to, subject: tpl.subject });
+    logger.info("mail: not configured, would send", { to, subject: tpl.subject, dept });
     return false;
   }
   try {
     await t.sendMail({
-      from: mailFrom(),
+      from,
       to,
       subject: tpl.subject,
       html: tpl.html,
@@ -79,7 +112,7 @@ export async function sendMail(to: string, tpl: MailTemplate): Promise<boolean> 
           }
         : {}),
     });
-    logger.info("mail: sent", { to, subject: tpl.subject.slice(0, 80) });
+    logger.info("mail: sent", { to, subject: tpl.subject.slice(0, 80), dept });
     return true;
   } catch (err) {
     logger.error("mail: send failed", { to, subject: tpl.subject, err: String(err).slice(0, 300) });
@@ -155,7 +188,7 @@ export function sendTemplateNow(
       }
     }
     const tpl = await renderTemplate(key, vars, to);
-    if (tpl) await sendMail(to, tpl);
+    if (tpl) await sendMail(to, tpl, entry?.dept ?? "hello");
     else logger.error("mail: unknown template key", { key });
   })();
 }
