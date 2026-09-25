@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { caseStudySchema, slugifyCaseStudy } from "@/lib/case-study-schema";
@@ -64,8 +65,16 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
     } else {
       await prisma.contentItem.create({ data: values });
     }
-  } catch {
-    redirect(`/admin/case-studies?e=dup`);
+  } catch (err) {
+    const code = err && typeof err === "object" && "code" in err ? String(err.code) : "";
+    if (code === "P2002") {
+      redirect(`/admin/case-studies?e=dup`);
+    }
+    logger.error("case_studies.save_failed", {
+      code,
+      message: err instanceof Error ? err.message.slice(0, 300) : String(err),
+    });
+    redirect(`/admin/case-studies?e=save`);
   }
 
   await audit(user.id, form.data.id ? "caseStudy.update" : "caseStudy.create", "ContentItem", `case-studies:${slug}`);

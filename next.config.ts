@@ -49,6 +49,13 @@ const nextConfig: NextConfig = {
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || undefined,
   poweredByHeader: false,
   reactStrictMode: true,
+  // Case-study records carry cropped hero images (data URLs up to ~4 MB)
+  // through server actions — the 1 MB default would reject them.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "8mb",
+    },
+  },
   async redirects() {
     // Permanent (308) redirects for URLs renamed before production launch.
     // Direct one-hop mappings only — no chains. Internal links already point

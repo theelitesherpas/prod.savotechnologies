@@ -87,6 +87,9 @@ export default async function AdminCaseStudiesPage({
       ) : null}
       {sp.e === "invalid" ? <Notice kind="alert">Check the fields — the record failed validation.</Notice> : null}
       {sp.e === "dup" ? <Notice kind="alert">That slug is already in use.</Notice> : null}
+      {sp.e === "save" ? (
+        <Notice kind="alert">Saving failed — the database rejected the record (see the server log). If this persists, restart the dev server after schema changes.</Notice>
+      ) : null}
       {sp.e === "db" ? <Notice kind="alert">Database unavailable — start PostgreSQL and retry.</Notice> : null}
 
       {parsed.length === 0 ? (
