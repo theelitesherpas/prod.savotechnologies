@@ -3,7 +3,6 @@ import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { RegionArt } from "@/components/shared/region-art";
 import { OFFICES, PRESENCE_FALLBACK_NOTE, PRESENCE_LABEL } from "@/constants/site";
-import { IS_DEMO } from "@/lib/content-mode";
 
 /**
  * Global presence — hairline grid on the sand band, one identity vector
@@ -22,12 +21,8 @@ export function Offices() {
     >
       <SectionHeader
         id="offices-heading"
-        heading={IS_DEMO ? "Six regions, one accountable team." : "One accountable team, worldwide."}
-        lead={
-          IS_DEMO
-            ? "Engineering, design and delivery run from the Indore headquarters, with market presence across Switzerland, the GCC, Australia, the UK and the US — wherever you are, someone senior is awake."
-            : PRESENCE_FALLBACK_NOTE
-        }
+        heading="Six regions, one accountable team."
+        lead={PRESENCE_FALLBACK_NOTE}
       />
 
       <div className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

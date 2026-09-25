@@ -42,7 +42,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   // restricted to the verified home market (demo market-presence cards are
   // visual staging content and never enter machine-readable claims; the
   // verified multi-market list is restored when Savo confirms it).
-  const AREA_SERVED_COUNTRIES = ["India", "Switzerland"];
+  const AREA_SERVED_COUNTRIES = ["India", "Switzerland", "Saudi Arabia", "Australia", "United Kingdom", "United States"];
 
   const jsonLd = {
     "@context": "https://schema.org",

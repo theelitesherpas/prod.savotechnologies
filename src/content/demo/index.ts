@@ -32,7 +32,7 @@ export {
   HQ_PRESENCE,
   CH_OFFICE,
   VERIFIED_OFFICES,
-  DEMO_MARKET_PRESENCE,
+  MARKET_PRESENCE,
   type MarketPresence,
   type PresencePhone,
 } from "./locations";

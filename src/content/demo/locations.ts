@@ -78,8 +78,11 @@ export const CH_OFFICE: MarketPresence = {
 /** All verified offices, in display order. */
 export const VERIFIED_OFFICES: MarketPresence[] = [HQ_PRESENCE, CH_OFFICE];
 
-/** DEMO DATA — NOT VERIFIED. Market presences pending Savo confirmation. */
-export const DEMO_MARKET_PRESENCE: MarketPresence[] = [
+/**
+ * Market presences — service-presence wording (no office claims, no
+ * addresses/phones), confirmed by Savo for live publication 2026-09-25.
+ */
+export const MARKET_PRESENCE: MarketPresence[] = [
   {
     id: "saudi-arabia",
     region: "Saudi Arabia & GCC",
@@ -87,7 +90,7 @@ export const DEMO_MARKET_PRESENCE: MarketPresence[] = [
     cityLine: "Middle East Market",
     description:
       "Supporting software, digital product and AI initiatives across Saudi Arabia and the wider GCC market.",
-    status: "demo",
+    status: "verified",
   },
   {
     id: "australia",
@@ -95,7 +98,7 @@ export const DEMO_MARKET_PRESENCE: MarketPresence[] = [
     kind: "market",
     cityLine: "APAC Market",
     description: "Technology and digital product services for businesses across Australia and the APAC region.",
-    status: "demo",
+    status: "verified",
   },
   {
     id: "united-kingdom",
@@ -103,7 +106,7 @@ export const DEMO_MARKET_PRESENCE: MarketPresence[] = [
     kind: "market",
     cityLine: "UK Market",
     description: "Supporting UK businesses with product design, software engineering and digital development.",
-    status: "demo",
+    status: "verified",
   },
   {
     id: "usa",
@@ -111,6 +114,6 @@ export const DEMO_MARKET_PRESENCE: MarketPresence[] = [
     kind: "market",
     cityLine: "North American Market",
     description: "Digital product and engineering capabilities for businesses across the United States.",
-    status: "demo",
+    status: "verified",
   },
 ];

@@ -77,13 +77,11 @@ export const SOCIAL_LINKS = [
  * production shows the verified HQ plus truthful non-specific wording.
  */
 import { IS_DEMO } from "@/lib/content-mode";
-import { HQ_PRESENCE, CH_OFFICE, VERIFIED_OFFICES, DEMO_MARKET_PRESENCE } from "@/content/demo";
+import { HQ_PRESENCE, CH_OFFICE, VERIFIED_OFFICES, MARKET_PRESENCE } from "@/content/demo";
 
 export type Presence = typeof HQ_PRESENCE;
 
-export const OFFICES: Presence[] = IS_DEMO
-  ? [...VERIFIED_OFFICES, ...DEMO_MARKET_PRESENCE]
-  : VERIFIED_OFFICES;
+export const OFFICES: Presence[] = [...VERIFIED_OFFICES, ...MARKET_PRESENCE];
 
 /** Card designation rendered under the region name on presence surfaces. */
 export const PRESENCE_LABEL: Record<"hq" | "office" | "market", string> = {
@@ -92,9 +90,9 @@ export const PRESENCE_LABEL: Record<"hq" | "office" | "market", string> = {
   market: "Market Presence",
 };
 
-/** Honest production line when only verified offices exist. */
+/** Presence lead — offices are physical; the rest are market presence. */
 export const PRESENCE_FALLBACK_NOTE =
-  "Engineering, design and delivery run from the Indore headquarters, with the Switzerland head office coordinating European engagements — serving clients across India and worldwide.";
+  "Two physical offices — Indore headquarters and the Switzerland head office — with confirmed market presence across four more regions. Wherever you are, someone senior is awake.";
 
 /**
  * Trust strip — NON-CERTIFICATION capability labels (safe in both modes).
