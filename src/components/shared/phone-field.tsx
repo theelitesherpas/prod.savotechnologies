@@ -61,7 +61,15 @@ export function PhoneField({
   const rule = country ? COUNTRY_PHONE_RULES[country] : null;
   const [touched, setTouched] = useState(false);
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const searchRef = useRef<HTMLInputElement | null>(null);
+
+  /* Focus the search as soon as the menu opens. */
+  useEffect(() => {
+    if (!open) return;
+    requestAnimationFrame(() => searchRef.current?.focus());
+  }, [open]);
 
   /* Close the country menu on outside click / Escape. */
   useEffect(() => {
@@ -118,7 +126,10 @@ export function PhoneField({
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-label={country || "Select country code"}
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => {
+            setQuery("");
+            setOpen((v) => !v);
+          }}
           className={cn(
             "flex h-full cursor-pointer items-center gap-1.5 bg-transparent py-2.5 pr-2 text-[0.9375rem] font-semibold outline-none",
             country ? "text-foreground" : "text-muted",
@@ -137,38 +148,74 @@ export function PhoneField({
           </svg>
         </button>
         {open ? (
-          <ul
-            role="listbox"
-            aria-label="Country"
-            className="absolute left-0 top-full z-30 mt-1 max-h-72 w-72 overflow-y-auto border border-border bg-background py-1 shadow-[0_16px_40px_rgb(10_10_14/0.18)]"
-          >
-            {Object.keys(COUNTRY_PHONE_RULES)
-              .sort()
-              .map((c) => {
-                const r = COUNTRY_PHONE_RULES[c];
-                return (
-                  <li key={c} role="option" aria-selected={c === country}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        chooseCountry(c);
-                        setOpen(false);
-                      }}
-                      className={cn(
-                        "flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[0.875rem] transition-colors",
-                        c === country
-                          ? "bg-surface-2 font-semibold text-foreground"
-                          : "text-foreground/80 hover:bg-surface-2/70",
-                      )}
-                    >
-                      <span aria-hidden="true" className="text-base leading-none">{r.flag}</span>
-                      <span className="flex-1 truncate">{c}</span>
-                      <span className="tnum text-muted">{r.dial}</span>
-                    </button>
-                  </li>
-                );
-              })}
-          </ul>
+          <div className="absolute left-0 top-full z-30 mt-1 w-72 border border-border bg-background shadow-[0_16px_40px_rgb(10_10_14/0.18)]">
+            {/* Search — find a country by name or dial code */}
+            <div className="sticky top-0 border-b border-border bg-background p-2">
+              <input
+                ref={searchRef}
+                type="text"
+                role="searchbox"
+                aria-label="Search countries"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search country or code…"
+                className="field !rounded-none !border-0 bg-surface-2/60 px-2 py-1.5 text-[0.8438rem]"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+            <ul
+              role="listbox"
+              aria-label="Country"
+              className="max-h-60 overflow-y-auto py-1"
+            >
+              {(() => {
+                const q = query.trim().toLowerCase();
+                const all = Object.keys(COUNTRY_PHONE_RULES).sort();
+                const list = q
+                  ? all.filter((c) => {
+                      const r = COUNTRY_PHONE_RULES[c];
+                      return (
+                        c.toLowerCase().includes(q) ||
+                        r.dial.replace("+", "").startsWith(q.replace("+", "").replace(/\D/g, "")) ||
+                        r.dial.includes(q)
+                      );
+                    })
+                  : all;
+                if (list.length === 0) {
+                  return (
+                    <li className="px-3.5 py-3 text-[0.8125rem] text-muted" role="presentation">
+                      No country matches “{query.trim()}”.
+                    </li>
+                  );
+                }
+                return list.map((c) => {
+                  const r = COUNTRY_PHONE_RULES[c];
+                  return (
+                    <li key={c} role="option" aria-selected={c === country}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          chooseCountry(c);
+                          setOpen(false);
+                        }}
+                        className={cn(
+                          "flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[0.875rem] transition-colors",
+                          c === country
+                            ? "bg-surface-2 font-semibold text-foreground"
+                            : "text-foreground/80 hover:bg-surface-2/70",
+                        )}
+                      >
+                        <span aria-hidden="true" className="text-base leading-none">{r.flag}</span>
+                        <span className="flex-1 truncate">{c}</span>
+                        <span className="tnum text-muted">{r.dial}</span>
+                      </button>
+                    </li>
+                  );
+                });
+              })()}
+            </ul>
+          </div>
         ) : null}
       </div>
         {/* Number — gated until a country is selected */}
