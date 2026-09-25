@@ -29,9 +29,32 @@ const ACCENT = "#d9480f";
 const LINE = "#e3e1da";
 const CARD = "#ffffff";
 
-const SERIF = "Georgia, 'Times New Roman', Times, serif";
-const MONO = "'Menlo', 'Consolas', 'Courier New', monospace";
-const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const SERIF = "'Source Serif 4', Georgia, 'Times New Roman', Times, serif";
+const SANS = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const MONO = "'Fragment Mono', 'SFMono-Regular', Menlo, Consolas, 'Courier New', monospace";
+
+/** Self-hosted brand fonts (same families as the site). Gmail ignores
+ *  <style> and falls back gracefully; Apple Mail/iOS/Thunderbird render
+ *  the real Source Serif 4 · Manrope · Fragment Mono. */
+function fontsCss(): string {
+  const o = (typeof window !== "undefined"
+    ? window.location.origin
+    : process.env.NEXT_PUBLIC_SITE_URL || "https://savotechnologies.com"
+  ).replace(/\/$/, "");
+  const f = (family: string, file: string, weight: string, style = "normal") =>
+    `@font-face{font-family:'${family}';font-style:${style};font-weight:${weight};src:url('${o}/fonts/${file}') format('woff2');}`;
+  return (
+    f("Source Serif 4", "source-serif-4-400.woff2", "400") +
+    f("Source Serif 4", "source-serif-4-400-italic.woff2", "400", "italic") +
+    f("Source Serif 4", "source-serif-4-600.woff2", "600") +
+    f("Source Serif 4", "source-serif-4-700.woff2", "700") +
+    f("Manrope", "manrope-400.woff2", "400") +
+    f("Manrope", "manrope-500.woff2", "500") +
+    f("Manrope", "manrope-700.woff2", "700") +
+    f("Manrope", "manrope-800.woff2", "800") +
+    f("Fragment Mono", "fragment-mono-400.woff2", "400")
+  );
+}
 
 export type MailTemplate = {
   subject: string;
@@ -74,9 +97,9 @@ const a = (href: string, label: string) =>
   `<a href="${href}" style="color:${ACCENT};text-decoration:underline;text-underline-offset:3px;">${esc(label)}</a>`;
 const rule = (m = 26) => `<div style="border-top:1px solid ${LINE};margin:${m}px 0;"></div>`;
 
-/** Vermilion square + mono label — the site's eyebrow motif. */
+/** Vermilion square + sans label — the site's eyebrow motif. */
 const eyebrow = (t: string) =>
-  `<p style="margin:0 0 14px;font-family:${MONO};font-size:10.5px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${MUTED};"><span style="display:inline-block;width:7px;height:7px;background:${ACCENT};margin-right:9px;vertical-align:1px;"></span>${esc(t)}</p>`;
+  `<p style="margin:0 0 14px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};"><span style="display:inline-block;width:7px;height:7px;background:${ACCENT};margin-right:9px;vertical-align:1px;"></span>${esc(t)}</p>`;
 
 const h1 = (t: string) =>
   `<h1 style="margin:0 0 16px;font-family:${SERIF};font-size:26px;line-height:1.25;letter-spacing:-0.012em;font-weight:700;color:${INK};">${esc(t)}</h1>`;
@@ -98,15 +121,18 @@ function steps(items: [string, string][]): string {
     .join("")}</table>`;
 }
 
-/** Ledger rows — mono labels, hairlines, no fills; big option for amounts. */
-function spec(rows: [string, string | undefined][], opts?: { big?: number }): string {
+/** Detail rows. Default: a soft sans keyline list (letters, not
+ *  invoices). `ledger: true` keeps the mono-ledger feel for actual
+ *  invoices, where it belongs. */
+function spec(rows: [string, string | undefined][], opts?: { big?: number; ledger?: boolean }): string {
   const items = rows.filter(([, v]) => v !== undefined && v !== "");
   if (!items.length) return "";
+  const led = opts?.ledger;
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:20px 0;">${items
     .map(
       ([k, v], i) => `<tr>
-  <td style="width:34%;vertical-align:${opts?.big === i ? "bottom" : "top"};padding:11px 14px 11px 0;border-top:${i === 0 ? "none" : `1px solid ${LINE}`};font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${FAINT};">${esc(k)}</td>
-  <td style="vertical-align:${opts?.big === i ? "bottom" : "top"};padding:11px 0;border-top:${i === 0 ? "none" : `1px solid ${LINE}`};font-family:${opts?.big === i ? SERIF : SANS};font-size:${opts?.big === i ? "23px" : "14px"};font-weight:${opts?.big === i ? 700 : 600};color:${opts?.big === i ? ACCENT : INK};">${esc(v ?? "—")}</td>
+  <td style="width:${led ? "34%" : "30%"};vertical-align:${opts?.big === i ? "bottom" : "top"};padding:${led ? "11px 14px 11px 0" : "10px 16px 10px 0"};border-top:${i === 0 ? "none" : `1px solid ${LINE}`};font-family:${led ? MONO : SANS};font-size:${led ? "10px" : "11.5px"};font-weight:${led ? 700 : 600};letter-spacing:${led ? "0.1em" : "0.04em"};${led ? "text-transform:uppercase;" : ""}color:${led ? FAINT : MUTED};">${esc(k)}</td>
+  <td style="vertical-align:${opts?.big === i ? "bottom" : "top"};padding:10px 0;border-top:${i === 0 ? "none" : `1px solid ${LINE}`};font-family:${opts?.big === i ? SERIF : SANS};font-size:${opts?.big === i ? "23px" : "14px"};font-weight:${opts?.big === i ? 700 : 600};color:${opts?.big === i ? ACCENT : INK};">${esc(v ?? "—")}</td>
 </tr>`,
     )
     .join("")}</table>`;
@@ -134,7 +160,7 @@ function signOff(closing: string): string {
   <div style="border-top:1px solid ${LINE};width:44px;margin-bottom:14px;"></div>
   <p style="margin:0;font-family:${SERIF};font-style:italic;font-size:14.5px;color:${BODY};">${esc(closing)}</p>
   <p style="margin:5px 0 0;font-family:${SERIF};font-size:14.5px;font-weight:700;color:${INK};">The Savo team</p>
-  <p style="margin:3px 0 0;font-family:${MONO};font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT};">Reply to this email — a human reads it</p>
+  <p style="margin:3px 0 0;font-family:${SANS};font-size:10.5px;font-weight:600;letter-spacing:0.04em;color:${FAINT};">Reply to this email — a human reads it</p>
 </div>`;
 }
 
@@ -154,7 +180,7 @@ export function shell(opts: {
   unsubscribeEmail?: string;
 }): string {
   const year = new Date().getFullYear();
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${fontsCss()}</style></head>
 <body style="margin:0;padding:0;background:${PAPER};font-family:${SERIF};-webkit-font-smoothing:antialiased;">
 <div style="display:none;font-size:1px;color:${PAPER};max-height:0;overflow:hidden;opacity:0;">${esc(opts.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAPER};"><tr><td align="center" style="padding:36px 14px;">
@@ -163,10 +189,10 @@ export function shell(opts: {
   <!-- Letter -->
   <tr><td style="background:${CARD};border:1px solid ${LINE};border-left:3px solid ${ACCENT};border-radius:3px;">
     <!-- Letterhead: wordmark + correspondence reference -->
-    <div style="padding:30px 40px 22px;">
+    <div style="padding:28px 42px 20px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
         <td style="vertical-align:middle;">
-          <img src="${logoUrl()}" width="128" alt="Savo Technologies" style="display:block;width:128px;height:auto;border:0;">
+          <img src="${logoUrl()}" width="96" alt="Savo Technologies" style="display:block;width:96px;height:auto;border:0;">
         </td>
         <td align="right" style="vertical-align:middle;">
           <p style="margin:0;font-family:${MONO};font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:${FAINT};text-align:right;">${esc(opts.ref ?? "Correspondence")}</p>
@@ -178,7 +204,7 @@ export function shell(opts: {
       <div style="margin-top:2px;border-top:1px solid ${LINE};"></div>
     </div>
     <!-- Body -->
-    <div style="padding:30px 40px 36px;">
+    <div style="padding:32px 42px 38px;">
       ${opts.eyebrowText ? eyebrow(opts.eyebrowText) : ""}
       ${opts.heading ? h1(opts.heading) : ""}
       ${opts.bodyHtml}
@@ -389,7 +415,7 @@ export function invoiceIssued(clientName: string, number: string, amount: number
           ["Issued", fmtDate(new Date())],
           ["Due", dueDate ? fmtDate(dueDate) : "On receipt"],
           ["Status", "Awaiting payment"],
-        ], { big: 0 }),
+        ], { big: 0, ledger: true }),
         p(`The invoice, its status and your payment history live in the portal — beside your project progress, where they belong.`, true),
       ].join(""),
       cta: { href: site("/portal"), label: "View invoice", sub: "PDF-ready view from your dashboard." },
@@ -415,7 +441,7 @@ export function invoicePaid(clientName: string, number: string, amount: number, 
           ["Invoice", number],
           ["Received", fmtDate(new Date())],
           ["Status", "Paid in full"],
-        ], { big: 0 }),
+        ], { big: 0, ledger: true }),
         p(`Receipts stay in your portal for accounts. The next milestone keeps moving.`, true),
       ].join(""),
       cta: { href: site("/portal"), label: "Open the portal" },
@@ -440,7 +466,7 @@ export function invoiceOverdue(clientName: string, number: string, amount: numbe
           ["Amount", money(amount, currency)],
           ["Past due by", `${daysLate} day${daysLate === 1 ? "" : "s"}`],
           ["Status", "Overdue"],
-        ], { big: 0 }),
+        ], { big: 0, ledger: true }),
         p(`If the payment is already on its way, ignore this note with our thanks. If something needs discussing — scope, timing, anything — reply here. We would rather talk than chase.`, true),
       ].join(""),
       cta: { href: site("/portal"), label: "View invoice" },

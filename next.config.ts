@@ -80,7 +80,15 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Brand fonts for email @font-face — CORS-open like fonts.gstatic,
+      // so sandboxed preview iframes (and any client) can load them.
+      {
+        source: "/fonts/:path*",
+        headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
+      },
+    ];
   },
 };
 
