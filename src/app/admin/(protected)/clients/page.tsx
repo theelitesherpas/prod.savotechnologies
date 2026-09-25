@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, Chip, EmptyState } from "@/components/admin/ui";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
+import { FormGuard } from "@/components/admin/form-guard";
 import { deleteClientAction } from "./actions";
 
 export const metadata: Metadata = { title: "Clients" };
@@ -101,7 +102,7 @@ import { createClientAction } from "./actions";
 function CreateClientCard() {
   const input = "adm-input w-full";
   return (
-    <form action={createClientAction} className="adm-card space-y-5 p-5">
+    <FormGuard action={createClientAction} className="adm-card space-y-5 p-5">
       <p className="adm-label">New client account</p>
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
@@ -123,6 +124,6 @@ function CreateClientCard() {
         </div>
       </div>
       <SubmitButton label="Create client" />
-    </form>
+    </FormGuard>
   );
 }

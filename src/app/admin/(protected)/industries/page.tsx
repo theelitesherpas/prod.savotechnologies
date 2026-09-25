@@ -5,6 +5,7 @@ import { IndustryFields } from "@/components/admin/industry-fields";
 import { PageHeader, Notice, Chip, EmptyState } from "@/components/admin/ui";
 import { AdminIcon } from "@/components/admin/icons";
 import { SubmitButton } from "@/components/admin/form";
+import { FormGuard } from "@/components/admin/form-guard";
 import {
   createIndustryAction,
   toggleIndustryActiveAction,
@@ -119,10 +120,10 @@ export default async function IndustriesPage({
           <AdminIcon name="plus" className="h-4 w-4 text-accent" />
           Add an industry
         </summary>
-        <form action={createIndustryAction} className="space-y-5 border-t border-border p-5">
+        <FormGuard action={createIndustryAction} className="space-y-5 border-t border-border p-5">
           <IndustryFields />
           <SubmitButton label="Create industry" />
-        </form>
+        </FormGuard>
       </details>
     </>
   );

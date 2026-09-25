@@ -10,8 +10,9 @@
  * server-side by the shared caseStudySchema.
  */
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { FormGuard, type GuardProblem } from "@/components/admin/form-guard";
 import type { CaseStudyRecord } from "@/lib/case-study-schema";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
 import { SubmitButton } from "./form";
@@ -47,7 +48,6 @@ export function CaseStudyForm({
   item?: { id: string; slug: string; contentStatus: string; record?: CaseStudyRecord };
 }) {
   const r = item?.record;
-  const formRef = useRef<HTMLFormElement>(null);
 
   const [title, setTitle] = useState(r?.title ?? "");
   const [clientName, setClientName] = useState(r?.clientName ?? "");
@@ -131,33 +131,32 @@ export function CaseStudyForm({
     status: contentStatus === "published" ? "verified" : "demo",
   });
 
+  // Client-side validation for FormGuard — the same rules that used to
+  // fire a raw alert(), now styled inline with anchors per field.
+  const validateForm = (): GuardProblem[] => {
+    const problems: GuardProblem[] = [];
+    // Title emptiness is covered by the native `required` on #cs-title.
+    results.forEach((r, i) => {
+      const hasV = r.value.trim() !== "";
+      const hasL = r.label.trim() !== "";
+      if (hasV !== hasL)
+        problems.push({
+          anchor: `cs-metric-${i}-${hasV ? "label" : "value"}`,
+          message: `Metric “${hasV ? r.value : r.label}” needs both a value and a label (or clear both).`,
+        });
+    });
+    palette.forEach((p, i) => {
+      if (p.name.trim() !== "" && !/^#[0-9a-fA-F]{6}$/.test(p.hex))
+        problems.push({ anchor: `cs-palette-${i}`, message: `Color “${p.name}” needs a valid hex value like #1F4EE8.` });
+    });
+    return problems;
+  };
+
   const input = "adm-input w-full";
   const label = "adm-label block mb-1.5";
 
   return (
-    <form
-      ref={formRef}
-      action={action}
-      className="max-w-4xl space-y-6"
-      onSubmit={(e) => {
-        const problems: string[] = [];
-        if (!title.trim()) problems.push("Title is required.");
-        for (const r of results) {
-          const hasV = r.value.trim() !== "";
-          const hasL = r.label.trim() !== "";
-          if (hasV !== hasL)
-            problems.push(`Metric “${hasV ? r.value : r.label}” needs both a value and a label (or clear both).`);
-        }
-        for (const p of palette) {
-          if (p.name.trim() !== "" && !/^#[0-9a-fA-F]{6}$/.test(p.hex))
-            problems.push(`Color “${p.name}” needs a valid hex value like #1F4EE8.`);
-        }
-        if (problems.length > 0) {
-          e.preventDefault();
-          alert(problems.join("\n"));
-        }
-      }}
-    >
+    <FormGuard action={action} className="max-w-4xl space-y-6" validate={validateForm}>
       {item ? <input type="hidden" name="id" value={item.id} /> : null}
       {item ? <input type="hidden" name="slug" value={item.slug} /> : null}
       <input type="hidden" name="payload" value={payload} />
@@ -364,6 +363,7 @@ export function CaseStudyForm({
           {results.map((res, i) => (
             <div key={i} className="grid grid-cols-[7rem_1fr_auto_auto] items-center gap-2">
               <input
+                id={`cs-metric-${i}-value`}
                 className={input}
                 value={res.value}
                 onChange={(e) => setResults(results.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))}
@@ -372,6 +372,7 @@ export function CaseStudyForm({
                 maxLength={24}
               />
               <input
+                id={`cs-metric-${i}-label`}
                 className={input}
                 value={res.label}
                 onChange={(e) => setResults(results.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
@@ -429,6 +430,7 @@ export function CaseStudyForm({
                 maxLength={60}
               />
               <input
+                id={`cs-palette-${i}`}
                 className={cn(input, "tnum")}
                 value={sw.hex}
                 onChange={(e) => /^#[0-9a-fA-F]{0,6}$/.test(e.target.value) && setPalette(palette.map((x, j) => (j === i ? { ...x, hex: e.target.value } : x)))}
@@ -481,7 +483,7 @@ export function CaseStudyForm({
           Cancel
         </a>
       </div>
-    </form>
+    </FormGuard>
   );
 }
 

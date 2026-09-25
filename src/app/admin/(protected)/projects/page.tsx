@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, EmptyState } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
+import { FormGuard } from "@/components/admin/form-guard";
 import { createProjectAction } from "./actions";
 import { StatusChip } from "@/components/portal/ui";
 
@@ -66,7 +67,7 @@ export default async function AdminProjectsPage({
         <EmptyState title="No projects yet" message="Create the first project below (a client account is needed first)." />
       )}
 
-      <form action={createProjectAction} className="adm-card space-y-5 p-5">
+      <FormGuard action={createProjectAction} className="adm-card space-y-5 p-5">
         <p className="adm-label">New project</p>
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -114,7 +115,7 @@ export default async function AdminProjectsPage({
           </div>
         </div>
         <SubmitButton label="Create project" />
-      </form>
+      </FormGuard>
     </div>
   );
 }

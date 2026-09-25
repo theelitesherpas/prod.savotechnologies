@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { AdminIcon } from "./icons";
+import { FormGuard } from "./form-guard";
 import { cn } from "@/lib/utils";
 import type { CollectionFormDef, FieldDef, ObjectListSubField } from "@/lib/content-registry";
 
@@ -382,6 +383,7 @@ function SlugField({
   value: string;
   titleValue: string;
 }) {
+  const id = useId();
   // Derived while typing: the slug follows the title until it is edited
   // manually; "Auto" hands control back.
   const [manualSlug, setManualSlug] = useState<string | null>(value ? value : null);
@@ -398,6 +400,7 @@ function SlugField({
       <input type="hidden" name={def.name} value={slugify(slug)} />
       <div className="flex gap-2">
         <input
+          id={id}
           type="text"
           value={slug}
           onChange={(e) => setManualSlug(e.target.value)}
@@ -572,10 +575,9 @@ export function CollectionForm({
   const [titleValue, setTitleValue] = useState(initialTitleValue);
   const titleFieldName = def.titleField;
   const data = item?.data ?? def.defaults;
-  const formRef = useRef<HTMLFormElement>(null);
 
   return (
-    <form ref={formRef} action={action} className="min-w-0">
+    <FormGuard action={action} className="min-w-0">
       {item ? <input type="hidden" name="id" value={item.id} /> : null}
       <input type="hidden" name="collection" value={def.key} />
 
@@ -660,6 +662,6 @@ export function CollectionForm({
         </Link>
         {item ? <p className="t-caption tnum ml-auto text-muted">/ {item.slug}</p> : null}
       </div>
-    </form>
+    </FormGuard>
   );
 }

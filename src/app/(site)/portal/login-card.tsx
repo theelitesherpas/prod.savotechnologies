@@ -1,6 +1,7 @@
 "use client";
 
 import { clientLoginAction } from "@/app/portal/actions";
+import { FormGuard } from "@/components/admin/form-guard";
 
 /**
  * Portal sign-in card — embedded in the /portal hero (right column).
@@ -30,7 +31,7 @@ export function PortalLoginCard({ error }: { error?: string }) {
         </p>
       ) : null}
 
-      <form action={clientLoginAction} className="mt-6 space-y-4" noValidate>
+      <FormGuard action={clientLoginAction} className="mt-6 space-y-4">
         <div>
           <label htmlFor="pt-email" className="t-label mb-1.5 block text-muted">
             Email
@@ -70,7 +71,7 @@ export function PortalLoginCard({ error }: { error?: string }) {
             <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
           </svg>
         </button>
-      </form>
+      </FormGuard>
 
       <p className="t-caption mt-5 text-muted">
         First time here or locked out?{" "}

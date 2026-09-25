@@ -5,6 +5,7 @@ import { getAdminUser } from "@/lib/auth";
 import { PageHeader, Notice, Chip, DangerZone } from "@/components/admin/ui";
 import { AdminIcon } from "@/components/admin/icons";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
+import { FormGuard } from "@/components/admin/form-guard";
 import { createUserAction, updateUserAction, deleteUserAction } from "./actions";
 
 export const metadata: Metadata = { title: "Panel users" };
@@ -62,7 +63,7 @@ export default async function UsersPage({
             {users.map((u) => (
               <tr key={u.id}>
                 <td className="px-4 py-3">
-                  <form action={updateUserAction} className="flex flex-wrap items-center gap-2">
+                  <FormGuard action={updateUserAction} className="flex flex-wrap items-center gap-2">
                     <input type="hidden" name="id" value={u.id} />
                     <input
                       name="name"
@@ -87,7 +88,7 @@ export default async function UsersPage({
                       {u.email}
                       {u.id === user.id ? " · you" : ""}
                     </span>
-                  </form>
+                  </FormGuard>
                 </td>
                 <td className="hidden px-4 py-3 sm:table-cell">
                   <span className="t-caption text-muted">
@@ -120,7 +121,7 @@ export default async function UsersPage({
         <h2 id="invite-heading" className="text-[1.0625rem] mb-4 font-bold tracking-[-0.01em]">
           Add a panel user
         </h2>
-        <form action={createUserAction} className="adm-card space-y-5 p-5">
+        <FormGuard action={createUserAction} className="adm-card space-y-5 p-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="new-name" className="adm-label mb-1.5 block">
@@ -164,7 +165,7 @@ export default async function UsersPage({
             <SubmitButton label="Create user" />
             <p className="t-caption text-muted">Share the password privately; it is stored hashed.</p>
           </div>
-        </form>
+        </FormGuard>
       </section>
 
       <div className="mt-8 max-w-xl">

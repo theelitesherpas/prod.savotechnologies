@@ -3,6 +3,7 @@ import { getSettings } from "@/lib/settings";
 import { saveSettingsAction } from "./actions";
 import { PageHeader, Notice } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
+import { FormGuard } from "@/components/admin/form-guard";
 
 export const metadata: Metadata = { title: "Site settings" };
 
@@ -23,7 +24,7 @@ export default async function SettingsPage({
       {saved ? <Notice>Settings saved. Public pages regenerate on the next request.</Notice> : null}
       {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
 
-      <form action={saveSettingsAction} className="adm-card space-y-6 p-5 sm:p-6">
+      <FormGuard action={saveSettingsAction} className="adm-card space-y-6 p-5 sm:p-6">
         <div>
           <label htmlFor="contactEmail" className="adm-label mb-1.5 block">
             Contact email
@@ -109,7 +110,7 @@ export default async function SettingsPage({
         <div className="border-t border-border pt-5">
           <SubmitButton label="Save settings" />
         </div>
-      </form>
+      </FormGuard>
     </div>
   );
 }

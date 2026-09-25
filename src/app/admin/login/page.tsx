@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SavoLogo } from "@/components/shared/savo-logo";
+import { FormGuard } from "@/components/admin/form-guard";
 import { getAdminUser } from "@/lib/auth";
 import { loginAction } from "./actions";
 
@@ -29,7 +30,7 @@ export default async function AdminLoginPage({
           </p>
         </div>
 
-        <form action={loginAction} className="adm-card p-6 sm:p-8" noValidate>
+        <FormGuard action={loginAction} className="adm-card p-6 sm:p-8">
           <h1 className="mb-6 text-[1.25rem] font-bold tracking-[-0.015em] text-foreground">
             Sign in
           </h1>
@@ -82,7 +83,7 @@ export default async function AdminLoginPage({
           >
             Sign in
           </button>
-        </form>
+        </FormGuard>
 
         <p className="mt-6 text-center text-[0.75rem] text-muted">
           Sessions expire after 12 hours · attempts are rate-limited

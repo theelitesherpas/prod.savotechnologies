@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, EmptyState } from "@/components/admin/ui";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
+import { FormGuard } from "@/components/admin/form-guard";
 import { InvoiceStatusChip, money } from "@/components/portal/ui";
 import { createInvoiceAction, markInvoicePaidAction, deleteInvoiceAction } from "./actions";
 
@@ -77,7 +78,7 @@ export default async function AdminInvoicesPage({
         <EmptyState title="No invoices yet" message="Create the first invoice below." />
       )}
 
-      <form action={createInvoiceAction} className="adm-card space-y-5 p-5">
+      <FormGuard action={createInvoiceAction} className="adm-card space-y-5 p-5">
         <p className="adm-label">New invoice</p>
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
@@ -136,7 +137,7 @@ export default async function AdminInvoicesPage({
           </div>
         </div>
         <SubmitButton label="Create invoice" />
-      </form>
+      </FormGuard>
     </div>
   );
 }

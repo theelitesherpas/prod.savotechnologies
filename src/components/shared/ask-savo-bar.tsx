@@ -65,6 +65,7 @@ export function AskSavoBar() {
   const [emailCapture, setEmailCapture] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [emailState, setEmailState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const threadRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -181,6 +182,7 @@ export function AskSavoBar() {
     setMessages((m) => [...m, { kind: "user", id: ++idRef.current, text: clean }]);
     setInput("");
     setEmailCapture(null);
+    setEmailError(null);
     setTyping(true);
 
     const delay = 550 + Math.min(clean.length * 8, 450);
@@ -222,6 +224,12 @@ export function AskSavoBar() {
   /* Human handoff — email capture posts into the enquiry pipeline */
   async function submitEmail(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const clean = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clean)) {
+      setEmailError("Enter an email address like name@company.com so the reply can reach you.");
+      return;
+    }
+    setEmailError(null);
     if (emailState === "sending") return;
     setEmailState("sending");
     track("ask_savo_handoff");
@@ -361,15 +369,24 @@ export function AskSavoBar() {
 
                 {/* Email capture for unmatched questions */}
                 {emailCapture && emailState !== "sent" ? (
-                  <form onSubmit={submitEmail} className="pt-1">
-                    <div className="flex items-stretch border-b border-foreground/20 focus-within:border-accent">
+                  <form onSubmit={submitEmail} className="pt-1" noValidate>
+                    <div
+                      className={cn(
+                        "flex items-stretch border-b transition-colors focus-within:border-accent",
+                        emailError ? "border-error" : "border-foreground/20",
+                      )}
+                    >
                       <input
                         type="email"
                         required
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (emailError) setEmailError(null);
+                        }}
                         placeholder="you@company.com"
                         aria-label="Your email for the reply"
+                        aria-invalid={!!emailError}
                         className="t-sm min-w-0 flex-1 bg-transparent py-2.5 text-foreground outline-none placeholder:text-muted"
                       />
                       <button
@@ -380,6 +397,11 @@ export function AskSavoBar() {
                         {emailState === "sending" ? "Sending…" : "Send"}
                       </button>
                     </div>
+                    {emailError ? (
+                      <p role="alert" className="t-caption mt-2 text-error">
+                        {emailError}
+                      </p>
+                    ) : null}
                     {emailState === "error" ? (
                       <p role="alert" className="t-caption mt-2 text-error">
                         Could not send, try again, or email hello@savotechnologies.com directly.

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BackLink, PageHeader, Notice } from "@/components/admin/ui";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
+import { FormGuard } from "@/components/admin/form-guard";
 import { MilestoneChip } from "@/components/portal/ui";
 import {
   updateProjectAction,
@@ -54,7 +55,7 @@ export default async function EditProjectPage({
       {e ? <Notice kind="alert">{e}</Notice> : null}
 
       {/* Core fields */}
-      <form action={updateProjectAction} className="adm-card mb-6 space-y-5 p-5">
+      <FormGuard action={updateProjectAction} className="adm-card mb-6 space-y-5 p-5">
         <input type="hidden" name="id" value={project.id} />
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -99,7 +100,7 @@ export default async function EditProjectPage({
           </div>
         </div>
         <SubmitButton label="Save project" />
-      </form>
+      </FormGuard>
 
       {/* Milestones */}
       <div className="adm-card mb-6 p-5">
@@ -133,7 +134,7 @@ export default async function EditProjectPage({
             ))}
           </ul>
         )}
-        <form action={addMilestoneAction} className="grid gap-3 sm:grid-cols-[1fr_10rem_6rem_auto] sm:items-end">
+        <FormGuard action={addMilestoneAction} className="grid gap-3 sm:grid-cols-[1fr_10rem_6rem_auto] sm:items-end">
           <input type="hidden" name="projectId" value={project.id} />
           <div>
             <label className="adm-label mb-1 block">New milestone</label>
@@ -148,7 +149,7 @@ export default async function EditProjectPage({
             <input name="order" type="number" min={0} max={999} defaultValue={project.milestones.length + 1} className={input} />
           </div>
           <SubmitButton label="Add" />
-        </form>
+        </FormGuard>
       </div>
 
       {/* Delivery log */}
@@ -174,7 +175,7 @@ export default async function EditProjectPage({
             ))}
           </ul>
         )}
-        <form action={addUpdateAction} className="space-y-3">
+        <FormGuard action={addUpdateAction} className="space-y-3">
           <input type="hidden" name="projectId" value={project.id} />
           <div>
             <label className="adm-label mb-1 block">Post an update</label>
@@ -182,7 +183,7 @@ export default async function EditProjectPage({
           </div>
           <textarea name="body" rows={2} maxLength={2000} className={input} placeholder="Details the client sees on their dashboard (optional)" />
           <SubmitButton label="Post update" />
-        </form>
+        </FormGuard>
       </div>
 
       {/* Danger zone */}

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BackLink, PageHeader, Notice } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
+import { FormGuard } from "@/components/admin/form-guard";
 import { updateInvoiceAction } from "../actions";
 
 export const metadata: Metadata = { title: "Edit invoice" };
@@ -35,7 +36,7 @@ export default async function EditInvoicePage({
       {e === "invalid" ? <Notice kind="alert">Check the fields.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That invoice number is already in use.</Notice> : null}
 
-      <form action={updateInvoiceAction} className="adm-card space-y-5 p-5">
+      <FormGuard action={updateInvoiceAction} className="adm-card space-y-5 p-5">
         <input type="hidden" name="id" value={invoice.id} />
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
@@ -97,7 +98,7 @@ export default async function EditInvoicePage({
           </div>
         </div>
         <SubmitButton label="Save invoice" />
-      </form>
+      </FormGuard>
     </div>
   );
 }

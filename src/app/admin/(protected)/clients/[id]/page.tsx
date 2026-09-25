@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BackLink, PageHeader, Notice } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
+import { FormGuard } from "@/components/admin/form-guard";
 import { updateClientAction, resetClientPasswordAction } from "../actions";
 
 export const metadata: Metadata = { title: "Edit client" };
@@ -33,7 +34,7 @@ export default async function EditClientPage({
       {e === "invalid" ? <Notice kind="alert">Check the fields — name and a valid email are required.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That email is already used by another client.</Notice> : null}
 
-      <form action={updateClientAction} className="adm-card mb-6 space-y-5 p-5">
+      <FormGuard action={updateClientAction} className="adm-card mb-6 space-y-5 p-5">
         <input type="hidden" name="id" value={client.id} />
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
@@ -54,16 +55,16 @@ export default async function EditClientPage({
           Account active (can sign in)
         </label>
         <SubmitButton label="Save client" />
-      </form>
+      </FormGuard>
 
-      <form action={resetClientPasswordAction} className="adm-card mb-6 flex flex-wrap items-center justify-between gap-4 p-5">
+      <FormGuard action={resetClientPasswordAction} className="adm-card mb-6 flex flex-wrap items-center justify-between gap-4 p-5">
         <div>
           <p className="adm-label">Password</p>
           <p className="t-caption mt-1 text-muted">Generates a new one-time password and signs out all their sessions.</p>
         </div>
         <input type="hidden" name="id" value={client.id} />
         <SubmitButton label="Reset password" pendingLabel="Generating…" />
-      </form>
+      </FormGuard>
 
       {client.projects.length > 0 ? (
         <div className="adm-card p-5">

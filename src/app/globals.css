@@ -662,6 +662,26 @@ body:has(.chapter-admin-dark) {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 14%, transparent);
 }
+
+/* Invalid state — set by FormGuard (aria-invalid) when a submit is
+   blocked. Red border, red focus ring, and the field's label turns red
+   via :has() so the problem is visible without reading the summary. */
+.adm-input[aria-invalid="true"],
+.adm-textarea[aria-invalid="true"],
+.adm-select[aria-invalid="true"] {
+  border-color: var(--error);
+}
+.adm-input[aria-invalid="true"]:focus-visible,
+.adm-textarea[aria-invalid="true"]:focus-visible,
+.adm-select[aria-invalid="true"]:focus-visible {
+  border-color: var(--error);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--error) 14%, transparent);
+}
+div:has(> .adm-input[aria-invalid="true"]) > label,
+div:has(> .adm-textarea[aria-invalid="true"]) > label,
+div:has(> .adm-select[aria-invalid="true"]) > label {
+  color: var(--error);
+}
 .adm-textarea {
   resize: vertical;
   min-height: 6rem;
