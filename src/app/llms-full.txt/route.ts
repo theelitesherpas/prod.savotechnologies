@@ -73,7 +73,7 @@ deployed against real business workflows with enterprise security.
 - Contact page: ${absoluteUrl("/contact")}
 - Response promise: first reply within one business day; every message reaches a human
 - Channels: contact form, email (${SITE.email}), phone (${SITE.phone}), WhatsApp chat from the contact page
-- Offices: India headquarters — the verified engineering operations at 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010 (+91 75029 01234, HR +91 78988 52345). Every other region (Switzerland & Europe, Saudi Arabia & GCC, Australia, United Kingdom, United States) is a market/service presence, not a claimed physical office; confirmed office addresses publish only as each region supplies a verified line.
+- Offices: India headquarters — 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010 (+91 75029 01234, HR +91 78988 52345). Switzerland head office — Rue de la Fruiterie 13, 1523 Granges-Marnand (+41 76 408 28 72). Every other region (Saudi Arabia & GCC, Australia, United Kingdom, United States) is a market/service presence, not a claimed physical office; confirmed office addresses publish only as each region supplies a verified line.
 - After you write: senior consultant replies → discovery call → fixed-scope proposal (NDA on request)
 
 ## Careers

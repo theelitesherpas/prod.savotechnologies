@@ -30,6 +30,8 @@ export { DEMO_TESTIMONIAL, type DemoTestimonial } from "./testimonial";
 
 export {
   HQ_PRESENCE,
+  CH_OFFICE,
+  VERIFIED_OFFICES,
   DEMO_MARKET_PRESENCE,
   type MarketPresence,
 } from "./locations";

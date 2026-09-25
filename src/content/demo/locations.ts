@@ -19,8 +19,9 @@ import type { ContentStatus } from "@/lib/content-mode";
 export type MarketPresence = {
   id: string;
   region: string;
-  /** "hq" = verified physical operations; "market" = service presence only. */
-  kind: "hq" | "market";
+  /** "hq" = primary operations; "office" = verified physical office;
+   *  "market" = service presence only (no office claim). */
+  kind: "hq" | "office" | "market";
   /** City-level line only — never an invented street address. */
   cityLine: string;
   /** Verified street address (HQ only). */
@@ -56,19 +57,28 @@ export const HQ_PRESENCE: MarketPresence = {
   status: "verified",
 };
 
+/**
+ * Verified physical offices — render in BOTH modes (never gated).
+ * Switzerland head office supplied by Savo, 2026-09-25.
+ */
+export const CH_OFFICE: MarketPresence = {
+  id: "switzerland",
+  region: "Switzerland",
+  kind: "office",
+  cityLine: "Granges-Marnand, Switzerland",
+  addressLine: "Rue de la Fruiterie 13, 1523 Granges-Marnand",
+  description:
+    "Head office — European engagements, partnerships and client relationships are coordinated from the Swiss office.",
+  mobile: "+41 76 408 28 72",
+  mobileE164: "+41764082872",
+  status: "verified",
+};
+
+/** All verified offices, in display order. */
+export const VERIFIED_OFFICES: MarketPresence[] = [HQ_PRESENCE, CH_OFFICE];
+
 /** DEMO DATA — NOT VERIFIED. Market presences pending Savo confirmation. */
 export const DEMO_MARKET_PRESENCE: MarketPresence[] = [
-  {
-    id: "switzerland",
-    region: "Switzerland",
-    kind: "market",
-    cityLine: "European Market",
-    description:
-      "Supporting digital product and technology engagements across Switzerland and selected European markets.",
-    mobile: null,
-    mobileE164: null,
-    status: "demo",
-  },
   {
     id: "saudi-arabia",
     region: "Saudi Arabia & GCC",

@@ -37,7 +37,7 @@ export function Offices() {
               <RegionArt id={office.id} draw className="mb-6 h-11 w-16" />
               <h3 className="t-h4">{office.region}</h3>
               <p className="t-label mt-2 text-accent">
-                {office.kind === "hq" ? "Primary Operations" : office.cityLine}
+                {office.kind === "hq" ? "Primary Operations" : office.kind === "office" ? "Head Office" : office.cityLine}
               </p>
               <p className="t-caption mt-2.5 flex-1 leading-relaxed text-muted">
                 {office.addressLine ?? office.description}

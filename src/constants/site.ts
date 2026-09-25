@@ -77,17 +77,17 @@ export const SOCIAL_LINKS = [
  * production shows the verified HQ plus truthful non-specific wording.
  */
 import { IS_DEMO } from "@/lib/content-mode";
-import { HQ_PRESENCE, DEMO_MARKET_PRESENCE } from "@/content/demo";
+import { HQ_PRESENCE, CH_OFFICE, VERIFIED_OFFICES, DEMO_MARKET_PRESENCE } from "@/content/demo";
 
 export type Presence = typeof HQ_PRESENCE;
 
 export const OFFICES: Presence[] = IS_DEMO
-  ? [HQ_PRESENCE, ...DEMO_MARKET_PRESENCE]
-  : [HQ_PRESENCE];
+  ? [...VERIFIED_OFFICES, ...DEMO_MARKET_PRESENCE]
+  : VERIFIED_OFFICES;
 
-/** Honest production line when only the HQ is verified. */
+/** Honest production line when only verified offices exist. */
 export const PRESENCE_FALLBACK_NOTE =
-  "Engineering, design and delivery run from Indore, India, with engagements across India and worldwide.";
+  "Engineering, design and delivery run from the Indore headquarters, with the Switzerland head office coordinating European engagements — serving clients across India and worldwide.";
 
 /**
  * Trust strip — NON-CERTIFICATION capability labels (safe in both modes).

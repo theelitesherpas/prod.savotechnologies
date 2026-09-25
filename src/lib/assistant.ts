@@ -172,8 +172,8 @@ export const KNOWLEDGE: AssistantEntry[] = [
           "Beyond India, Savo supports engagements across Switzerland and Europe, Saudi Arabia and the GCC, Australia, the United Kingdom and the United States. These are market/service presences — confirmed office locations publish as each region supplies a verified address.",
         ]
       : [
-          `The engineering headquarters is at 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010, India — that is where the team works every day. Main line +91 75029 01234, HR +91 78988 52345.`,
-          "Beyond India, Savo serves clients worldwide. Confirmed office locations publish as each region supplies a verified address.",
+          `The engineering headquarters is at 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010, India — that is where the team works every day. Main line +91 75029 01234, HR +91 78988 52345. The Switzerland head office is at Rue de la Fruiterie 13, 1523 Granges-Marnand (+41 76 408 28 72).`,
+          "Beyond India and Switzerland, Savo serves clients worldwide. Confirmed office locations publish as each region supplies a verified address.",
         ],
     links: [{ label: "Offices", href: "/contact/#offices" }],
   },
