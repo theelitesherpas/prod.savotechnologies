@@ -11,6 +11,7 @@ import {
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
+import { PhoneField } from "@/components/shared/phone-field";
 import { cn, withBasePath } from "@/lib/utils";
 
 /**
@@ -234,10 +235,12 @@ export function StartBrief() {
                 />
               </Field>
               <Field id="sb-phone" label="Phone (optional)" error={errors.phone}>
-                <input
-                  id="sb-phone" name="phone" type="tel" className="field" value={draft.phone} autoComplete="tel"
-                  onChange={(e) => set("phone", e.target.value)} onFocus={onFirstInput}
-                  placeholder="+91 …" aria-invalid={!!errors.phone}
+                <PhoneField
+                  id="sb-phone"
+                  value={draft.phone}
+                  onChange={(v) => set("phone", v)}
+                  error={errors.phone}
+                  onFocus={onFirstInput}
                 />
               </Field>
             </div>

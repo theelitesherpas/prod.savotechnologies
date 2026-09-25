@@ -12,6 +12,7 @@ import {
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
+import { PhoneField } from "@/components/shared/phone-field";
 import { cn, withBasePath } from "@/lib/utils";
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -25,6 +26,8 @@ export function ContactForm() {
   const [topic, setTopic] = useState<(typeof CONTACT_TOPICS)[number]>("New project");
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<EnquiryFieldErrors>({});
+  const [phone, setPhone] = useState("");
+  const [phoneOk, setPhoneOk] = useState(true);
   const captcha = useCaptcha();
   const [captchaErr, setCaptchaErr] = useState<string | null>(null);
   const [serverMessage, setServerMessage] = useState("");
@@ -40,6 +43,10 @@ export function ContactForm() {
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setCaptchaErr(null);
+    if (!phoneOk) {
+      setErrors({ phone: "Check the phone number — it does not match the selected country's format." });
+      return;
+    }
     if (captchaBlocked(captcha)) {
       setCaptchaErr("Please complete the human verification.");
       return;
@@ -149,16 +156,7 @@ export function ContactForm() {
           autoComplete="email"
           placeholder="you@company.com"
         />
-        <Field
-          label="Phone"
-          name="phone"
-          type="tel"
-          errors={errors}
-          onFocus={onStarted}
-          autoComplete="tel"
-          placeholder="+91 00000 00000"
-          required={false}
-        />
+        <PhoneField value={phone} onChange={setPhone} error={errors.phone} onValidity={setPhoneOk} onFocus={onStarted} />
         <Field
           label="Company"
           name="company"
