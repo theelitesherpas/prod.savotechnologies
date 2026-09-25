@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { COUNTRY_PHONE_RULES } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
@@ -60,8 +60,27 @@ export function PhoneField({
 
   const rule = country ? COUNTRY_PHONE_RULES[country] : null;
   const [touched, setTouched] = useState(false);
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
-  const setCountry = (c: string) => {
+  /* Close the country menu on outside click / Escape. */
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const chooseCountry = (c: string) => {
     if (!c) {
       onChange("");
       return;
@@ -92,37 +111,66 @@ export function PhoneField({
       </label>
       <div className="flex items-end gap-0 border-b border-foreground/20 focus-within:border-foreground/40 transition-colors">
         {/* Country + dial — part of the same visual field */}
-        <div className="relative flex items-center">
-          <select
-            aria-label="Country code"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            className={cn(
-              "h-full appearance-none cursor-pointer bg-transparent py-2.5 pl-0 pr-6 text-[0.9375rem] font-semibold text-foreground outline-none",
-              !country && "text-muted",
-            )}
-            style={{ backgroundImage: "none" }}
-          >
-            <option value="">Code</option>
-            {Object.keys(COUNTRY_PHONE_RULES)
-              .sort()
-              .map((c) => (
-                <option key={c} value={c}>
-                  {COUNTRY_PHONE_RULES[c].flag} {COUNTRY_PHONE_RULES[c].dial}
-                </option>
-              ))}
-          </select>
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 10 6"
-            className="pointer-events-none absolute right-1 h-[5px] w-[9px] text-muted"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-          >
+        <div ref={menuRef} className="relative flex items-center">
+        {/* Closed: flag + dial only. Open: full country list with names. */}
+        <button
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-label={country || "Select country code"}
+          onClick={() => setOpen((v) => !v)}
+          className={cn(
+            "flex h-full cursor-pointer items-center gap-1.5 bg-transparent py-2.5 pr-2 text-[0.9375rem] font-semibold outline-none",
+            country ? "text-foreground" : "text-muted",
+          )}
+        >
+          {country && rule ? (
+            <>
+              <span aria-hidden="true" className="text-base leading-none">{rule.flag}</span>
+              <span className="tnum">{rule.dial}</span>
+            </>
+          ) : (
+            <span>Code</span>
+          )}
+          <svg aria-hidden="true" viewBox="0 0 10 6" className={cn("h-[5px] w-[9px] text-muted transition-transform duration-300", open && "rotate-180")} fill="none" stroke="currentColor" strokeWidth="1.6">
             <path d="M1 1l4 4 4-4" />
           </svg>
-        </div>
+        </button>
+        {open ? (
+          <ul
+            role="listbox"
+            aria-label="Country"
+            className="absolute left-0 top-full z-30 mt-1 max-h-72 w-72 overflow-y-auto border border-border bg-background py-1 shadow-[0_16px_40px_rgb(10_10_14/0.18)]"
+          >
+            {Object.keys(COUNTRY_PHONE_RULES)
+              .sort()
+              .map((c) => {
+                const r = COUNTRY_PHONE_RULES[c];
+                return (
+                  <li key={c} role="option" aria-selected={c === country}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        chooseCountry(c);
+                        setOpen(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[0.875rem] transition-colors",
+                        c === country
+                          ? "bg-surface-2 font-semibold text-foreground"
+                          : "text-foreground/80 hover:bg-surface-2/70",
+                      )}
+                    >
+                      <span aria-hidden="true" className="text-base leading-none">{r.flag}</span>
+                      <span className="flex-1 truncate">{c}</span>
+                      <span className="tnum text-muted">{r.dial}</span>
+                    </button>
+                  </li>
+                );
+              })}
+          </ul>
+        ) : null}
+      </div>
         <span aria-hidden="true" className="pb-3 text-foreground/30 select-none">
           |
         </span>
