@@ -20,6 +20,7 @@ type Status = "idle" | "submitting" | "success" | "error";
 export function CallbackForm() {
   const [countryName, setCountryName] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState<Status>("idle");
@@ -28,12 +29,30 @@ export function CallbackForm() {
   const [error, setError] = useState("");
   const [touched, setTouched] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement | null>(null);
 
   const rule = countryName ? COUNTRY_PHONE_RULES[countryName] : null;
   // Digits only, hard-capped at the selected country's maximum.
   const digits = rule ? phone.replace(/\D/g, "").slice(0, rule.max) : "";
   const valid = !!rule && digits.length >= rule.min;
   const digitsHint = rule ? (rule.min === rule.max ? `${rule.min} digits` : `${rule.min}–${rule.max} digits`) : "";
+
+  /* Fresh, focused search each time the menu opens. */
+  useEffect(() => {
+    if (!open) return;
+    setQuery("");
+    requestAnimationFrame(() => searchRef.current?.focus());
+  }, [open]);
+
+  const capQ = query.trim().toLowerCase();
+  const capDigits = capQ.replace(/\D/g, "");
+  const filteredCountries = capQ
+    ? CALLBACK_COUNTRIES.filter(
+        (c) =>
+          c.toLowerCase().includes(capQ) ||
+          (capDigits && COUNTRY_PHONE_RULES[c].dial.replace("+", "").startsWith(capDigits)),
+      )
+    : CALLBACK_COUNTRIES;
 
   /* Close the country menu on outside click / Escape. */
   useEffect(() => {
@@ -132,7 +151,10 @@ export function CallbackForm() {
               aria-haspopup="listbox"
               aria-expanded={open}
               aria-label={countryName ?? "Select country"}
-              onClick={() => setOpen((v) => !v)}
+              onClick={() => {
+                setQuery("");
+                setOpen((v) => !v);
+              }}
               className={cn(
                 "flex h-full cursor-pointer items-center gap-2 py-2.5 pl-0 pr-2 text-[0.9375rem] font-semibold transition-colors",
                 countryName ? "text-foreground" : "text-muted",
@@ -158,33 +180,52 @@ export function CallbackForm() {
               </svg>
             </button>
             {open ? (
-              <ul
-                role="listbox"
-                aria-label="Country"
-                className="absolute bottom-full left-0 z-30 mb-2 max-h-72 w-64 overflow-y-auto border border-border bg-background py-1 shadow-[0_16px_40px_rgb(10_10_14/0.18)]"
-              >
-                {CALLBACK_COUNTRIES.map((c) => {
-                  const r = COUNTRY_PHONE_RULES[c];
-                  return (
-                    <li key={c} role="option" aria-selected={c === countryName}>
-                      <button
-                        type="button"
-                        onClick={() => chooseCountry(c)}
-                        className={cn(
-                          "flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[0.875rem] transition-colors",
-                          c === countryName
-                            ? "bg-surface-2 font-semibold text-foreground"
-                            : "text-foreground/80 hover:bg-surface-2/70",
-                        )}
-                      >
-                        <span aria-hidden="true" className="text-base leading-none">{r.flag}</span>
-                        <span className="flex-1 truncate">{c}</span>
-                        <span className="tnum text-muted">{r.dial}</span>
-                      </button>
+              <div className="absolute bottom-full left-0 z-30 mb-2 w-72 border border-border bg-background shadow-[0_16px_40px_rgb(10_10_14/0.18)]">
+                {/* Search — find a country by name or dial code */}
+                <div className="sticky top-0 border-b border-border bg-background p-2">
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    role="searchbox"
+                    aria-label="Search countries"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search country or code…"
+                    className="field !rounded-none !border-0 bg-surface-2/60 px-2 py-1.5 text-[0.8438rem]"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+                <ul role="listbox" aria-label="Country" className="max-h-60 overflow-y-auto py-1">
+                  {filteredCountries.length === 0 ? (
+                    <li className="px-3.5 py-3 text-[0.8125rem] text-muted" role="presentation">
+                      No country matches “{query.trim()}”.
                     </li>
-                  );
-                })}
-              </ul>
+                  ) : (
+                    filteredCountries.map((c) => {
+                      const r = COUNTRY_PHONE_RULES[c];
+                      return (
+                        <li key={c} role="option" aria-selected={c === countryName}>
+                          <button
+                            type="button"
+                            onClick={() => chooseCountry(c)}
+                            className={cn(
+                              "flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[0.875rem] transition-colors",
+                              c === countryName
+                                ? "bg-surface-2 font-semibold text-foreground"
+                                : "text-foreground/80 hover:bg-surface-2/70",
+                            )}
+                          >
+                            <span aria-hidden="true" className="text-base leading-none">{r.flag}</span>
+                            <span className="flex-1 truncate">{c}</span>
+                            <span className="tnum text-muted">{r.dial}</span>
+                          </button>
+                        </li>
+                      );
+                    })
+                  )}
+                </ul>
+              </div>
             ) : null}
             <span aria-hidden="true" className="mx-3 h-5 w-px bg-border" />
           </div>
