@@ -33,7 +33,6 @@ export {
   CH_OFFICE,
   VERIFIED_OFFICES,
   DEMO_MARKET_PRESENCE,
-  PRESENCE_LABEL,
   type MarketPresence,
   type PresencePhone,
 } from "./locations";

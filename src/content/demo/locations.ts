@@ -43,13 +43,6 @@ export type MarketPresence = {
   status: ContentStatus;
 };
 
-/** Card designation rendered under the region name. */
-export const PRESENCE_LABEL: Record<MarketPresence["kind"], string> = {
-  hq: "Headquarters",
-  office: "Head Office",
-  market: "Market Presence",
-};
-
 /**
  * Verified headquarters — the one record that is NOT demo. Kept alongside
  * the demo set so the presence grid has a single source.

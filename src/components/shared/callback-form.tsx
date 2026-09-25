@@ -219,7 +219,9 @@ export function CallbackForm() {
             id="cb-name"
             name="cb-name"
             type="text"
+            inputMode="text"
             autoComplete="name"
+            maxLength={80}
             className="field"
             placeholder="Optional"
             value={name}

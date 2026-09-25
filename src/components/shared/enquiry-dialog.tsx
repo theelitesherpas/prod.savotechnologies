@@ -15,6 +15,7 @@ import {
   BUDGET_RANGES,
   PROJECT_TYPES,
   enquirySchema,
+  ENQUIRY_FIELD_LIMITS,
   flattenFieldErrors,
   type EnquiryFieldErrors,
   type EnquiryInput,
@@ -298,7 +299,7 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
           Website
-          <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" maxLength={500} />
         </label>
       </div>
 
@@ -354,8 +355,12 @@ function Field({
   required = true,
   defaultValue,
 }: FieldProps) {
+  const [len, setLen] = useState(0);
   const errorId = `${name}-error`;
   const error = errors[name];
+  const max = ENQUIRY_FIELD_LIMITS[name as keyof typeof ENQUIRY_FIELD_LIMITS];
+  const inputMode =
+    type === "tel" ? "tel" : type === "url" ? "url" : type === "email" ? "email" : undefined;
   return (
     <div>
       <label htmlFor={name} className="t-label mb-1 block text-muted">
@@ -363,28 +368,37 @@ function Field({
         {required ? <span aria-hidden="true" className="text-accent"> *</span> : null}
       </label>
       {textarea ? (
-        <textarea
-          id={name}
-          name={name}
-          className="field"
-          placeholder={placeholder}
-          aria-invalid={!!error}
-          aria-describedby={error ? errorId : undefined}
-          onFocus={onFocus}
-          rows={4}
-          defaultValue={defaultValue}
-        />
+        <>
+          <textarea
+            id={name}
+            name={name}
+            className="field"
+            placeholder={placeholder}
+            aria-invalid={!!error}
+            aria-describedby={error ? errorId : undefined}
+            onFocus={onFocus}
+            onInput={(e) => setLen(e.currentTarget.value.length)}
+            rows={4}
+            maxLength={max}
+            defaultValue={defaultValue}
+          />
+          <p className="t-caption tnum mt-1 text-right text-muted/70">
+            {len} / {max}
+          </p>
+        </>
       ) : (
         <input
           id={name}
           name={name}
           type={type}
+          inputMode={inputMode}
           className="field"
           placeholder={placeholder}
           autoComplete={autoComplete}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
           onFocus={onFocus}
+          maxLength={max}
         />
       )}
       {error ? (

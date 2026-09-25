@@ -87,6 +87,23 @@ export type EnquiryInput = z.infer<typeof enquirySchema>;
 
 export type EnquiryFieldErrors = Partial<Record<keyof EnquiryInput, string>>;
 
+/**
+ * Authoritative field limits for every public form — the input maxLength
+ * attributes mirror these so the browser enforces what the server validates.
+ */
+export const ENQUIRY_FIELD_LIMITS = {
+  name: 80,
+  email: 120,
+  company: 120,
+  phone: 24,
+  message: 4000,
+  website: 500,
+} as const;
+
+/** Careers/details fields (city, links, resume, notes, …) are each capped
+ * at 500 characters server-side (sanitizeDetails). */
+export const DETAILS_FIELD_LIMIT = 500;
+
 export function flattenFieldErrors(error: z.ZodError<EnquiryInput>): EnquiryFieldErrors {
   const flat = error.flatten().fieldErrors;
   const out: EnquiryFieldErrors = {};

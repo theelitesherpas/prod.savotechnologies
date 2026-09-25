@@ -6,10 +6,10 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Reveal } from "@/components/ui/reveal";
 import { ImageReveal } from "@/components/ui/image-reveal";
 import { DetailCta } from "@/components/shared/detail-cta";
-import { OFFICES, SITE } from "@/constants/site";
+import { OFFICES, PRESENCE_LABEL, SITE } from "@/constants/site";
 import { IS_DEMO } from "@/lib/content-mode";
 import { getSettings } from "@/lib/settings";
-import { DEMO_METRICS, PRESENCE_LABEL } from "@/content/demo";
+import { DEMO_METRICS } from "@/content/demo";
 import { cn, withBasePath } from "@/lib/utils";
 import { openGraphFor } from "@/lib/seo";
 

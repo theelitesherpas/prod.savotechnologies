@@ -2,8 +2,7 @@ import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { RegionArt } from "@/components/shared/region-art";
-import { OFFICES, PRESENCE_FALLBACK_NOTE } from "@/constants/site";
-import { PRESENCE_LABEL } from "@/content/demo";
+import { OFFICES, PRESENCE_FALLBACK_NOTE, PRESENCE_LABEL } from "@/constants/site";
 import { IS_DEMO } from "@/lib/content-mode";
 
 /**

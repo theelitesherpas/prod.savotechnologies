@@ -85,6 +85,13 @@ export const OFFICES: Presence[] = IS_DEMO
   ? [...VERIFIED_OFFICES, ...DEMO_MARKET_PRESENCE]
   : VERIFIED_OFFICES;
 
+/** Card designation rendered under the region name on presence surfaces. */
+export const PRESENCE_LABEL: Record<"hq" | "office" | "market", string> = {
+  hq: "Headquarters",
+  office: "Head Office",
+  market: "Market Presence",
+};
+
 /** Honest production line when only verified offices exist. */
 export const PRESENCE_FALLBACK_NOTE =
   "Engineering, design and delivery run from the Indore headquarters, with the Switzerland head office coordinating European engagements — serving clients across India and worldwide.";

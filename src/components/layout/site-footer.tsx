@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { BADGES, LEGAL_LINKS, OFFICES, SITE, SOCIAL_LINKS } from "@/constants/site";
-import { PRESENCE_LABEL } from "@/content/demo";
+import { BADGES, LEGAL_LINKS, OFFICES, PRESENCE_LABEL, SITE, SOCIAL_LINKS } from "@/constants/site";
 import { FOOTER_NAV } from "@/constants/navigation";
 import { SavoLogo } from "@/components/shared/savo-logo";
 import { RegionArt } from "@/components/shared/region-art";
