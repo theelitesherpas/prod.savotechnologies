@@ -16,26 +16,38 @@
 
 import type { ContentStatus } from "@/lib/content-mode";
 
+export type PresencePhone = {
+  /** Optional line label, e.g. "HR". */
+  label?: string;
+  /** Display grouping, e.g. "+91 7502 901234". */
+  display: string;
+  /** Dialable form for tel: links. */
+  e164: string;
+};
+
 export type MarketPresence = {
   id: string;
+  /** Country / region name — the card headline. */
   region: string;
   /** "hq" = primary operations; "office" = verified physical office;
    *  "market" = service presence only (no office claim). */
   kind: "hq" | "office" | "market";
-  /** City-level line only — never an invented street address. */
+  /** City-level line (market cards; never an invented street address). */
   cityLine: string;
-  /** Verified street address (HQ only). */
+  /** Verified street address (physical offices only). */
   addressLine?: string;
-  /** General market wording; must be confirmed before production. */
-  description: string;
-  /** Verified contact numbers only; null otherwise. */
-  mobile: string | null;
-  mobileE164: string | null;
-  /** Secondary line (HR etc.), HQ only. */
-  mobile2Label?: string;
-  mobile2?: string | null;
-  mobile2E164?: string | null;
+  /** Market wording (market cards only; must be confirmed before production). */
+  description?: string;
+  /** Verified phone lines, in order (physical offices only). */
+  phones?: PresencePhone[];
   status: ContentStatus;
+};
+
+/** Card designation rendered under the region name. */
+export const PRESENCE_LABEL: Record<MarketPresence["kind"], string> = {
+  hq: "Headquarters",
+  office: "Head Office",
+  market: "Market Presence",
 };
 
 /**
@@ -48,12 +60,11 @@ export const HQ_PRESENCE: MarketPresence = {
   kind: "hq",
   cityLine: "Indore, Madhya Pradesh, India",
   addressLine: "139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010",
-  description: "Primary operations — engineering, design and delivery run from the Indore headquarters.",
-  mobile: "+91 75029 01234",
-  mobileE164: "+917502901234",
-  mobile2Label: "HR",
-  mobile2: "+91 78988 52345",
-  mobile2E164: "+917898852345",
+  phones: [
+    { display: "+91 7502 901234", e164: "+917502901234" },
+    { display: "+91 7503 901234", e164: "+917503901234" },
+    { label: "HR", display: "+91 78988 52345", e164: "+917898852345" },
+  ],
   status: "verified",
 };
 
@@ -67,10 +78,7 @@ export const CH_OFFICE: MarketPresence = {
   kind: "office",
   cityLine: "Granges-Marnand, Switzerland",
   addressLine: "Rue de la Fruiterie 13, 1523 Granges-Marnand",
-  description:
-    "Head office — European engagements, partnerships and client relationships are coordinated from the Swiss office.",
-  mobile: "+41 76 408 28 72",
-  mobileE164: "+41764082872",
+  phones: [{ display: "+41 76 408 28 72", e164: "+41764082872" }],
   status: "verified",
 };
 
@@ -86,8 +94,6 @@ export const DEMO_MARKET_PRESENCE: MarketPresence[] = [
     cityLine: "Middle East Market",
     description:
       "Supporting software, digital product and AI initiatives across Saudi Arabia and the wider GCC market.",
-    mobile: null,
-    mobileE164: null,
     status: "demo",
   },
   {
@@ -96,8 +102,6 @@ export const DEMO_MARKET_PRESENCE: MarketPresence[] = [
     kind: "market",
     cityLine: "APAC Market",
     description: "Technology and digital product services for businesses across Australia and the APAC region.",
-    mobile: null,
-    mobileE164: null,
     status: "demo",
   },
   {
@@ -106,8 +110,6 @@ export const DEMO_MARKET_PRESENCE: MarketPresence[] = [
     kind: "market",
     cityLine: "UK Market",
     description: "Supporting UK businesses with product design, software engineering and digital development.",
-    mobile: null,
-    mobileE164: null,
     status: "demo",
   },
   {
@@ -116,8 +118,6 @@ export const DEMO_MARKET_PRESENCE: MarketPresence[] = [
     kind: "market",
     cityLine: "North American Market",
     description: "Digital product and engineering capabilities for businesses across the United States.",
-    mobile: null,
-    mobileE164: null,
     status: "demo",
   },
 ];

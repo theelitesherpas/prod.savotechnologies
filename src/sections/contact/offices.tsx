@@ -3,6 +3,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { RegionArt } from "@/components/shared/region-art";
 import { OFFICES, PRESENCE_FALLBACK_NOTE } from "@/constants/site";
+import { PRESENCE_LABEL } from "@/content/demo";
 import { IS_DEMO } from "@/lib/content-mode";
 
 /**
@@ -36,38 +37,27 @@ export function Offices() {
             <div className="flex h-full flex-col p-6 sm:p-7">
               <RegionArt id={office.id} draw className="mb-6 h-11 w-16" />
               <h3 className="t-h4">{office.region}</h3>
-              <p className="t-label mt-2 text-accent">
-                {office.kind === "hq" ? "Primary Operations" : office.kind === "office" ? "Head Office" : office.cityLine}
-              </p>
-              <p className="t-caption mt-2.5 flex-1 leading-relaxed text-muted">
-                {office.addressLine ?? office.description}
-              </p>
-              {office.mobile && office.mobileE164 ? (
+              <p className="t-label mt-2 text-accent">{PRESENCE_LABEL[office.kind]}</p>
+              {office.addressLine ? (
+                <p className="t-caption mt-3 flex-1 leading-relaxed text-muted">{office.addressLine}</p>
+              ) : (
+                <p className="t-caption mt-3 flex-1 leading-relaxed text-muted">{office.description}</p>
+              )}
+              {office.phones && office.phones.length > 0 ? (
                 <div className="mt-4 space-y-2">
-                  <a
-                    href={`tel:${office.mobileE164}`}
-                    className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
-                  >
-                    <MobileGlyph />
-                    {office.mobile}
-                  </a>
-                  {office.mobile2 && office.mobile2E164 ? (
+                  {office.phones.map((phone) => (
                     <a
-                      href={`tel:${office.mobile2E164}`}
+                      key={phone.e164}
+                      href={`tel:${phone.e164}`}
                       className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
                     >
                       <MobileGlyph />
-                      <span className="t-caption text-muted">{office.mobile2Label}</span>
-                      {office.mobile2}
+                      {phone.label ? <span className="t-caption text-muted">{phone.label}</span> : null}
+                      {phone.display}
                     </a>
-                  ) : null}
+                  ))}
                 </div>
-              ) : (
-                <p className="t-caption mt-4 flex items-center gap-2 text-muted/70">
-                  <MobileGlyph />
-                  [Local mobile pending]
-                </p>
-              )}
+              ) : null}
             </div>
           </Reveal>
         ))}

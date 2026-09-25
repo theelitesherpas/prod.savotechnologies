@@ -9,7 +9,7 @@ import { DetailCta } from "@/components/shared/detail-cta";
 import { OFFICES, SITE } from "@/constants/site";
 import { IS_DEMO } from "@/lib/content-mode";
 import { getSettings } from "@/lib/settings";
-import { DEMO_METRICS } from "@/content/demo";
+import { DEMO_METRICS, PRESENCE_LABEL } from "@/content/demo";
 import { cn, withBasePath } from "@/lib/utils";
 import { openGraphFor } from "@/lib/seo";
 
@@ -313,10 +313,19 @@ export default async function AboutPage() {
             {OFFICES.map((office) => (
               <li key={office.id} className="flex flex-col gap-2 bg-background p-7">
                 <p className="t-label text-muted">{office.region}</p>
-                <p className="t-sm font-medium text-foreground/90">{office.cityLine}</p>
-                <p className="t-caption text-muted">{office.description}</p>
-                {office.mobile ? (
-                  <p className="t-caption tnum mt-2 text-muted">{office.mobile}</p>
+                <p className="t-label text-accent">{PRESENCE_LABEL[office.kind]}</p>
+                {office.addressLine ? (
+                  <p className="t-sm font-medium text-foreground/90">{office.addressLine}</p>
+                ) : (
+                  <p className="t-sm font-medium text-foreground/90">{office.cityLine}</p>
+                )}
+                {office.description ? (
+                  <p className="t-caption text-muted">{office.description}</p>
+                ) : null}
+                {office.phones?.[0] ? (
+                  <a className="t-caption tnum mt-2 text-muted transition-colors hover:text-accent" href={`tel:${office.phones[0].e164}`}>
+                    {office.phones[0].display}
+                  </a>
                 ) : null}
               </li>
             ))}
