@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!user) redirect("/admin/login");
 
   // Live counts for the spine (null-safe: a missing DB keeps the panel usable).
-  const [newEnquiries, contentCounts, servicesCount, industriesCount] = prisma
+  const [newEnquiries, contentCounts, servicesCount, industriesCount, clientCount, projectCount, invoiceCount] = prisma
     ? await Promise.all([
         prisma.projectEnquiry.count({ where: { status: "new" } }).catch(() => 0),
         prisma.contentItem
@@ -47,8 +47,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           .catch((): Record<string, number> => ({})),
         prisma.service.count({ where: { active: true } }).catch(() => 0),
         prisma.industry.count({ where: { active: true } }).catch(() => 0),
+        prisma.clientUser.count().catch(() => 0),
+        prisma.clientProject.count().catch(() => 0),
+        prisma.invoice.count().catch(() => 0),
       ])
-    : [0, {} as Record<string, number>, 0, 0];
+    : [0, {} as Record<string, number>, 0, 0, 0, 0, 0];
 
   const contentItems = COLLECTION_KEYS.filter((key) => key !== "case-studies").map((key) => ({
     href: `/admin/content/${key}`,
@@ -80,6 +83,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           count: contentCounts["case-studies"] ?? 0,
         },
         ...contentItems,
+      ],
+    },
+    {
+      key: "clients",
+      label: "Client Portal",
+      icon: "user",
+      items: [
+        { href: "/admin/clients", label: "Clients", icon: "user", count: clientCount },
+        { href: "/admin/projects", label: "Projects", icon: "folder", count: projectCount },
+        { href: "/admin/invoices", label: "Payments", icon: "gauge", count: invoiceCount },
       ],
     },
     {
