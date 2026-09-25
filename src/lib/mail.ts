@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import type { MailTemplate } from "@/lib/mail/templates";
 import { fillText, bodyToHtml, bodyToText, templateEntry } from "@/lib/mail/registry";
+import { unsubscribeUrl } from "@/lib/mail/templates";
 
 /**
  * Transactional mail sender — one SMTP transport, every template.
@@ -69,6 +70,14 @@ export async function sendMail(to: string, tpl: MailTemplate): Promise<boolean> 
       subject: tpl.subject,
       html: tpl.html,
       text: tpl.text,
+      ...(tpl.unsubscribeEmail
+        ? {
+            headers: {
+              "List-Unsubscribe": `<${unsubscribeUrl(tpl.unsubscribeEmail)}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            } as Record<string, string>,
+          }
+        : {}),
     });
     return true;
   } catch (err) {
@@ -83,10 +92,12 @@ export function sendMailNow(to: string, tpl: MailTemplate): void {
 }
 
 /** Render a template by key — admin override if one exists (with
- *  {{placeholders}} filled from vars), the tested code default otherwise. */
+ *  {{placeholders}} filled from vars), the tested code default otherwise.
+ *  Customer-facing templates get a real unsubscribe link for `to`. */
 export async function renderTemplate(
   key: string,
   vars: Record<string, string | number | null | undefined>,
+  to?: string,
 ): Promise<MailTemplate | null> {
   const entry = templateEntry(key);
   if (!entry) return null;
@@ -95,14 +106,19 @@ export async function renderTemplate(
     if (override) {
       const { shell } = await import("@/lib/mail/templates");
       const html = bodyToHtml(fillText(override.body, vars));
+      const subject = fillText(override.subject, vars);
       return {
-        subject: fillText(override.subject, vars),
+        subject,
         html: shell({
-          preheader: fillText(override.subject, vars).slice(0, 120),
+          preheader: subject.slice(0, 120),
           heading: "",
           bodyHtml: html,
+          ...(entry.recipient === "customer" && to
+            ? { reason: "You are receiving this because you contacted Savo Technologies.", unsubscribeEmail: to }
+            : {}),
         }),
         text: fillText(bodyToText(override.body), vars),
+        unsubscribeEmail: entry.recipient === "customer" && to ? to : undefined,
       };
     }
   } catch (err) {
@@ -110,17 +126,34 @@ export async function renderTemplate(
   }
   const clean: Record<string, string> = {};
   for (const [k, v] of Object.entries(vars)) if (v !== null && v !== undefined) clean[k] = String(v);
-  return entry.default(clean);
+  if (entry.recipient === "customer" && to) clean.__to = to;
+  const tpl = entry.default(clean);
+  return entry.recipient === "customer" && to ? { ...tpl, unsubscribeEmail: to } : tpl;
 }
 
-/** Template send by key — override-aware, fire-and-forget. */
+/** Template send by key — override-aware, suppression-checked,
+ *  fire-and-forget. */
 export function sendTemplateNow(
   key: string,
   to: string,
   vars: Record<string, string | number | null | undefined>,
 ): void {
   void (async () => {
-    const tpl = await renderTemplate(key, vars);
+    const entry = templateEntry(key);
+    // Honour one-click unsubscribes for customer-facing mail; team and
+    // portal-service mail (invoices, milestones) always delivers.
+    if (entry?.recipient === "customer" && prisma) {
+      try {
+        const suppressed = await prisma.mailSuppress.findUnique({ where: { email: to.toLowerCase() } });
+        if (suppressed) {
+          logger.info("mail: suppressed send skipped", { key, to });
+          return;
+        }
+      } catch {
+        /* suppression check is best-effort */
+      }
+    }
+    const tpl = await renderTemplate(key, vars, to);
     if (tpl) await sendMail(to, tpl);
     else logger.error("mail: unknown template key", { key });
   })();

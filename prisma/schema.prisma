@@ -322,3 +322,14 @@ model EmailTemplate {
 
   @@map("email_templates")
 }
+
+/// One-click unsubscribe list for transactional marketing mail (enquiry
+/// acks, callbacks, assistant handoffs). Checked before any
+/// customer-facing send; team and portal-service mail is exempt.
+model MailSuppress {
+  email     String   @id
+  reason    String   @default("user")
+  createdAt DateTime @default(now())
+
+  @@map("mail_suppress")
+}

@@ -54,7 +54,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Enquiry drawer, contact form, start-page brief submitted",
     recipient: "customer",
     vars: { name: "Priya Sharma", projectType: "Website" },
-    default: (v) => enquiryAck(v.name, v.projectType),
+    default: (v) => enquiryAck(v.name, v.projectType, v.__to),
   },
   {
     key: "callbackAck",
@@ -62,7 +62,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Footer callback requested (when an email is present)",
     recipient: "customer",
     vars: { name: "Rohan Desai", country: "India" },
-    default: (v) => callbackAck(v.name, v.country),
+    default: (v) => callbackAck(v.name, v.country, v.__to),
   },
   {
     key: "askSavoHandoffAck",
@@ -70,7 +70,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Ask Savo question the assistant could not answer",
     recipient: "customer",
     vars: { question: "How do you price a Flutter app with a backend panel?" },
-    default: (v) => askSavoHandoffAck(v.question),
+    default: (v) => askSavoHandoffAck(v.question, v.__to),
   },
   {
     key: "applicationAck",
