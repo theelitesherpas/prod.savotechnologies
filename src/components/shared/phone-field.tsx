@@ -171,9 +171,6 @@ export function PhoneField({
           </ul>
         ) : null}
       </div>
-        <span aria-hidden="true" className="pb-3 text-foreground/30 select-none">
-          |
-        </span>
         {/* Number — gated until a country is selected */}
         <input
           id={inputId}
@@ -187,7 +184,7 @@ export function PhoneField({
           onChange={(e) => setDigits(e.target.value)}
           placeholder={country && rule ? (rule.min === rule.max ? `${rule.min} digits` : `${rule.min}–${rule.max} digits`) : "Select country first"}
           aria-invalid={shown ? "true" : undefined}
-          className="field !border-0 flex-1 rounded-none disabled:cursor-not-allowed disabled:placeholder:text-muted/70"
+          className="field !border-0 flex-1 rounded-none pl-2 disabled:cursor-not-allowed disabled:placeholder:text-muted/70"
         />
       </div>
       {shown ? (
@@ -196,11 +193,7 @@ export function PhoneField({
         </p>
       ) : hint ? (
         <p className="t-caption mt-1.5 text-muted">{hint}</p>
-      ) : (
-        <p className="t-caption mt-1.5 text-muted">
-          {country && rule ? (rule.min === rule.max ? `${rule.min} digits` : `${rule.min}–${rule.max} digits`) : "Select your country, then enter the number."}
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }
