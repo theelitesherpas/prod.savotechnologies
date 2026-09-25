@@ -92,7 +92,7 @@ export function IndustryDetailHero({
                 fill
                 priority
                 sizes="(max-width: 1536px) 100vw, 1440px"
-                className="duotone object-cover"
+                className="photo object-cover"
               />
               <div
                 aria-hidden="true"
@@ -143,7 +143,7 @@ export function IndustryLandscape({ detail }: { detail: IndustryDetail }) {
                 alt={detail.detailCaption}
                 fill
                 sizes="(max-width: 1024px) 100vw, 480px"
-                className="duotone object-cover"
+                className="photo object-cover"
               />
               <div
                 aria-hidden="true"

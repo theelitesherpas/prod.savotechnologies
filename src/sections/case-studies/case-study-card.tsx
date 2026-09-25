@@ -5,7 +5,7 @@ import { CASE_PHOTO } from "@/constants/case-studies";
 
 /**
  * Case-study specimen card. Photography is representative studio imagery
- * (duotone, inside the document's ink); the wireframe overlay marks each
+ * in true color beneath the wireframe overlay; the overlay marks each
  * card as a slot in preparation. Nothing is presented as a real client
  * until a verified case study is published.
  */
@@ -222,7 +222,7 @@ export function CaseStudyCard({
               }
               fill
               sizes={sizes}
-              className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
+              className="photo object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
             />
             <CaseArt variant={variant} />
           </>

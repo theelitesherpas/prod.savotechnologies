@@ -33,7 +33,7 @@ export function Team() {
                   alt={`${member.name}, ${member.role} at Savo Technologies`}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
-                  className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]"
+                  className="photo object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]"
                 />
                 <div
                   aria-hidden="true"

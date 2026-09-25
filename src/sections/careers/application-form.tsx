@@ -2,14 +2,15 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import {
+  CAREERS_EMAIL,
   CTC_OPTIONS,
   EXPERIENCE_OPTIONS,
   GENERAL_APPLICATION,
   NOTICE_OPTIONS,
   SKILLS,
   roleSlug,
+  type Role,
 } from "@/constants/careers";
-import type { Role } from "@/constants/careers";
 import {
   enquirySchema,
   ENQUIRY_FIELD_LIMITS,
@@ -161,8 +162,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
         <p className="t-body text-muted">
           An engineer reads every application and replies personally within two
           business days. If it is urgent, write to{" "}
-          <a href="mailto:careers@savotechnologies.com" className="link-underline text-foreground">
-            careers@savotechnologies.com
+          <a href={`mailto:${CAREERS_EMAIL}`} className="link-underline text-foreground">
+            {CAREERS_EMAIL}
           </a>{" "}
           directly.
         </p>

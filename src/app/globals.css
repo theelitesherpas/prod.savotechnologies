@@ -494,14 +494,23 @@ body {
   background-size: 44px 44px;
 }
 
-/* Duotone treatment keeps photography inside the document world */
-.duotone {
-  filter: grayscale(1) contrast(1.06) brightness(0.92);
-  transition: filter 0.9s var(--ease-out-expo);
+/* Photography in true color — never desaturated. Hover adds a gentle
+   lift: saturation and brightness breathe in sync with the card's scale,
+   one gesture, not a reveal. The transition covers transform too, so
+   Tailwind scale utilities animate together with the filter. */
+.photo {
+  transition:
+    filter 0.7s var(--ease-out-expo),
+    transform 0.7s var(--ease-out-expo);
 }
-.group:hover .duotone,
-.duotone:hover {
-  filter: grayscale(0.15) contrast(1.02) brightness(0.98);
+.group:hover .photo,
+.photo:hover {
+  filter: saturate(1.05) brightness(1.02);
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo {
+    transition: none;
+  }
 }
 
 /* ============================================================

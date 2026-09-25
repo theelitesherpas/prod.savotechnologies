@@ -123,7 +123,7 @@ export default async function ArticlePage({
                 fill
                 priority
                 sizes="(max-width: 1536px) 100vw, 1440px"
-                className="duotone object-cover"
+                className="photo object-cover"
               />
             </figure>
           </Reveal>

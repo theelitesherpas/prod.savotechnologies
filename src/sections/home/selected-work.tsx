@@ -164,7 +164,7 @@ function WorkCard({
               }
               fill
               sizes={sizes}
-              className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
+              className="photo object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
             />
             <WorkArt variant={item.variant} />
           </>

@@ -24,7 +24,7 @@ Items are ordered by blocking impact. See `DEMO_CONTENT_REPLACEMENT.md` for the 
 7. **Founding/incorporation year** — "2016" drives `foundingDate`, "since 2016" copy.
    Confirm the date and which one (founding vs incorporation) is public history.
 8. **Contact channels** — `hello@savotechnologies.com`, `+91 75029 01234`,
-   `careers@savotechnologies.com` (carried from v1; assumed approved).
+   `hr@savotechnologies.com` (confirmed by Savo, Sep 2026).
 9. **Hire-page process claims** — "matched in 48 hours", "two week paid trial",
    monthly rates (published v1 model; confirm still accurate).
 10. **Social profile URLs** — footer links are platform homepages, deliberately excluded

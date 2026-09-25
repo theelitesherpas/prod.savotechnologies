@@ -85,8 +85,8 @@ const designContract = `<!--
   not an agency pitch.
   OWN-WORLD: Warm paper and sand bands, blue-black ink chapters, one vermilion
   signal; hairline rules, blueprint grids, square-node motif; Source Serif 4
-  display voice over Manrope UI voice, Fragment Mono for measurement; duotone
-  photography held inside the document's ink.
+  display voice over Manrope UI voice, Fragment Mono for measurement; true-color
+  photography inside the document's ink.
   STORY: Visitor learns what SAVO builds (web, mobile, software, AI, design,
   growth), why it differs from an agency, that AI is serious engineering, and
   how to start a project, then acts via Start a Project.

@@ -47,7 +47,7 @@ export function Introduction() {
                 alt="A product team reviewing work together around a studio table"
                 fill
                 sizes="(max-width: 1536px) 100vw, 1440px"
-                className="duotone object-cover"
+                className="photo object-cover"
               />
             </Parallax>
             <div

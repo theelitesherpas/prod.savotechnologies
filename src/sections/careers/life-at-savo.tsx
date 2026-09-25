@@ -8,7 +8,7 @@ import { withBasePath } from "@/lib/utils";
 
 /**
  * Life at Savo — the candidate pitch as hairline rows (why-savo idiom),
- * with the studio meeting photo on a sticky duotone rail.
+ * with the studio meeting photo on a sticky true-color rail.
  */
 export function LifeAtSavo() {
   return (
@@ -50,7 +50,7 @@ export function LifeAtSavo() {
                 alt="The Savo team reviewing product work together around a table"
                 fill
                 sizes="(max-width: 1024px) 100vw, 420px"
-                className="duotone object-cover"
+                className="photo object-cover"
               />
               <div
                 aria-hidden="true"

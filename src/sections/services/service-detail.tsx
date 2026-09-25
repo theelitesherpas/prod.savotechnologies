@@ -119,7 +119,7 @@ export function ServiceOverview({ detail }: { detail: ServiceDetail }) {
                 alt={detail.imageCaption}
                 fill
                 sizes="(max-width: 1024px) 100vw, 480px"
-                className="duotone object-cover"
+                className="photo object-cover"
               />
               <div
                 aria-hidden="true"

@@ -164,7 +164,7 @@ export default async function AboutPage() {
                     fill
                     priority
                     sizes="(max-width: 1024px) 100vw, 480px"
-                    className="duotone object-cover"
+                    className="photo object-cover"
                   />
                   <div
                     aria-hidden="true"
@@ -254,7 +254,7 @@ export default async function AboutPage() {
                       alt={`${person.name}, ${person.role} at Savo Technologies`}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
-                      className="duotone object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]"
+                      className="photo object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]"
                     />
                     <div
                       aria-hidden="true"

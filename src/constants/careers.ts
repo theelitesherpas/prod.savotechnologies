@@ -7,7 +7,7 @@
  * facts (roles, process, bands, remote policy) appear on the page.
  */
 
-export const CAREERS_EMAIL = "careers@savotechnologies.com";
+export const CAREERS_EMAIL = "hr@savotechnologies.com";
 
 /** Date the current role list was published (bump when roles change — feeds JobPosting schema). */
 export const ROLES_POSTED = "2026-09-24";

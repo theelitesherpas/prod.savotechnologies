@@ -119,7 +119,7 @@ export default async function InsightsPage() {
                     alt={`${article.title}: editorial illustration`}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="duotone object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]"
+                    className="photo object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]"
                   />
                   <span className="t-label absolute left-4 top-4 bg-background px-2.5 py-1.5 text-foreground">
                     {article.cat}

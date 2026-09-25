@@ -44,7 +44,7 @@ export function WhySavo() {
                 alt="A designer's workspace with product work in progress on screen"
                 fill
                 sizes="(max-width: 1024px) 100vw, 420px"
-                className="duotone object-cover"
+                className="photo object-cover"
               />
               <div
                 aria-hidden="true"

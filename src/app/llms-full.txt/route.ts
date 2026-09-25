@@ -81,7 +81,7 @@ deployed against real business workflows with enterprise security.
 - Hiring promise: engineer-read applications, personal reply within two business days, four steps to a written offer (technical conversation, paid pairing session)
 - Work model: full time, remote first across India (Indore), INR salaries
 - Open roles (experience · band): ${ROLES.map((r) => `${r.title} (${r.exp} · ${r.band})`).join("; ")}
-- Applications: careers@ contact or the apply form; no matching role → general application accepted
+- Applications: hr@ contact or the apply form; no matching role → general application accepted
 
 ## Start a project
 Use the enquiry drawer at ${absoluteUrl("/#start")}, the contact page at

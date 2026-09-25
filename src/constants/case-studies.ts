@@ -282,7 +282,7 @@ export const CASE_DISCIPLINES_BASE: CaseDiscipline[] = [
   },
 ];
 
-/** Representative studio photography per discipline (duotone, inks with the document). */
+/** Representative studio photography per discipline (true color, inks with the document). */
 export const CASE_PHOTO: Record<CaseDiscipline["id"], string> = {
   web: "/images/code.webp",
   mobile: "/images/mobile.webp",
