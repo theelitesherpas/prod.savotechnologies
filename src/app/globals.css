@@ -81,6 +81,9 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Same canvas as body: without this, mobile scroll dynamics (iOS URL
+     bar, overscroll) expose the default white at the page bottom. */
+  background-color: var(--background);
   scrollbar-color: color-mix(in oklab, var(--foreground) 30%, transparent)
     transparent;
 }

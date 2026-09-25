@@ -132,7 +132,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
       ref={headerRef}
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,color] duration-500 ease-[var(--ease-out-expo)]",
-        mobileOpen && "chapter-ink border-b border-border bg-background",
+        mobileOpen && "chapter-ink border-b border-border bg-background text-foreground",
         !mobileOpen &&
           (scrolled || openPanel
             ? "border-b border-border bg-background"
@@ -284,16 +284,18 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
         ref={mobileRef}
         inert={!mobileOpen}
         className={cn(
-          // h-[100dvh] + explicit edges: robust even under a filtered ancestor
-          "chapter-ink fixed left-0 top-0 z-0 flex h-[100dvh] w-full flex-col overflow-y-auto bg-background transition-[opacity,clip-path] duration-500 ease-[var(--ease-out-expo)] lg:hidden",
+          // h-[100dvh] + explicit edges: robust even under a filtered ancestor.
+          // text-foreground: the ink chapter redefines the color tokens, and the
+          // labels below inherit — without this the menu renders dark-on-dark.
+          "chapter-ink fixed left-0 top-0 z-0 flex h-[100dvh] w-full flex-col overflow-y-auto bg-background text-foreground transition-[opacity,clip-path] duration-500 ease-[var(--ease-out-expo)] lg:hidden",
           mobileOpen
             ? "pointer-events-auto opacity-100 [clip-path:inset(0_0_0%_0)]"
             : "pointer-events-none opacity-0 [clip-path:inset(0_0_100%_0)]",
         )}
       >
-        <div className="shell flex h-[var(--nav-h)] items-center">
-          <span className="t-label text-muted">Menu</span>
-        </div>
+        {/* Spacer for the fixed bar (logo + burger live above the overlay —
+            a label here would sit right behind the logo) */}
+        <div aria-hidden="true" className="h-[var(--nav-h)] shrink-0" />
         <nav aria-label="Mobile" className="shell flex-1 pb-10">
           <ul>
             {nav.map((item, i) => (
