@@ -84,5 +84,11 @@ export async function sendCustomEmailAction(formData: FormData): Promise<void> {
     text: bodyToText(d.body),
   });
   await audit(user.id, ok ? "email.customSent" : "email.customFailed", "Email", d.to, { subject: d.subject });
-  redirect(ok ? "/admin/email-compose?sent=1" : "/admin/email-compose?e=Send%20failed%20—%20check%20SMTP%20settings%20or%20try%20again.");
+  // Header-safe redirect: the query string must be fully encoded (a raw
+  // em-dash here once crashed the action with ERR_INVALID_CHAR).
+  redirect(
+    ok
+      ? "/admin/email-compose?sent=1"
+      : `/admin/email-compose?e=${encodeURIComponent("Send failed — check SMTP settings or try again.")}`,
+  );
 }
