@@ -94,19 +94,6 @@ const eyebrow = (t: string) =>
 const h1 = (t: string) =>
   `<h1 style="margin:0 0 16px;font-family:${SERIF};font-size:26px;line-height:1.3;letter-spacing:-0.012em;font-weight:700;color:${INK};text-align:center;">${esc(t)}</h1>`;
 
-/** Steps as a centered rhythm — mark, title, note; air between. */
-function steps(items: [string, string][]): string {
-  return `<div style="margin:24px 0;">${items
-    .map(
-      ([title, sub], i) => `<div style="${i > 0 ? "margin-top:22px;" : ""}text-align:center;">
-  <div style="font-family:${MONO};font-size:11px;font-weight:400;color:${ACCENT};letter-spacing:0.1em;">${String(i + 1).padStart(2, "0")}</div>
-  <div style="margin-top:5px;font-family:${SANS};font-size:14.5px;font-weight:800;color:${INK};">${esc(title)}</div>
-  <div style="margin:4px auto 0;max-width:400px;font-family:${SANS};font-size:13px;line-height:1.55;color:${MUTED};">${esc(sub)}</div>
-</div>`,
-    )
-    .join("")}</div>`;
-}
-
 /** Details as quiet stacked pairs — label above value, both centered. */
 function spec(rows: [string, string | undefined][], opts?: { big?: number }): string {
   const items = rows.filter(([, v]) => v !== undefined && v !== "");
@@ -221,14 +208,15 @@ export function enquiryAck(name: string, projectType: string, to?: string): Mail
       eyebrowText: `Enquiry received`,
       heading: `Your enquiry has been received.`,
       bodyHtml: [
-        lead(`Dear ${fn(name)},<br><br>Thank you for contacting Savo Technologies. Your <strong>${esc(projectType)}</strong> enquiry has been logged and assigned to our engineering team for review.`),
-        steps([
-          ["Review", "Your enquiry is reviewed by our engineering team."],
-          ["Response", "A senior consultant responds within one business day."],
-          ["Discussion", "A call is scheduled to align on scope, timeline and budget."],
+        lead(`Dear ${fn(name)},<br><br>Thank you for contacting Savo Technologies. This email confirms that your enquiry has been received and registered with our engineering team.`),
+        spec([
+          ["Enquiry type", projectType],
+          ["Assigned to", "Engineering review"],
+          ["Response time", "One business day"],
         ]),
-        p(`To help us respond accurately, you may reply to this email with your preferred timeline and indicative budget.`, true),
-      ].join("",),
+        p(`Your enquiry is reviewed in detail before we respond. A senior consultant will contact you within one business day with initial feedback and recommended next steps for your project.`),
+        p(`Should you wish to add a preferred timeline or an indicative budget in the meantime, simply reply to this email — it reaches the consultant handling your enquiry directly.`, true),
+      ].join(""),
       cta: { href: site("/#start"), label: "Book the call now", sub: "Pick a slot while we prepare your reply." },
       closing: "Kind regards,",
       reason: "You are receiving this because you sent an enquiry through savotechnologies.com.",
@@ -247,12 +235,13 @@ export function callbackAck(name: string, country: string, to?: string): MailTem
       eyebrowText: "Callback confirmed",
       heading: `Your callback request has been received.`,
       bodyHtml: [
-        lead(`Dear ${fn(name)},<br><br>Your request for a callback has been logged. A member of our team will call your ${esc(country)} number during local business hours.`),
-        steps([
-          ["Calling number", "The call will come from +91 75029 01234."],
-          ["Preparation", "Please keep any project context ready for the discussion."],
-          ["Urgent matters", "Reach us immediately on WhatsApp."],
+        lead(`Dear ${fn(name)},<br><br>This email confirms your callback request. A member of our team will call the ${esc(country)} number you provided.`),
+        spec([
+          ["Calling from", "+91 75029 01234"],
+          ["Scheduled", "Local business hours"],
+          ["Region", country],
         ]),
+        p(`Please keep any project context at hand for the discussion. For urgent matters before the call, our team is reachable immediately on WhatsApp.`, true),
       ].join(""),
       cta: { href: "https://wa.me/917502901234", label: "WhatsApp us meanwhile" },
       closing: "Kind regards,",
@@ -272,9 +261,9 @@ export function askSavoHandoffAck(question: string, to?: string): MailTemplate {
       eyebrowText: "Assistant handoff",
       heading: "Your question has been forwarded.",
       bodyHtml: [
-        lead(`Thank you for using the Savo Assistant. Your question has been forwarded to a senior consultant, who will respond within one business day.`),
+        lead(`Thank you for using the Savo Assistant. Your question has been forwarded to a senior consultant.`),
         quote(question),
-        p(`For a detailed discussion, you may also schedule a consultation at a time that suits you.`, true),
+        p(`A considered response will follow <strong>within one business day</strong>. For a detailed discussion, you are also welcome to schedule a consultation at a time that suits you.`, true),
       ].join(""),
       cta: { href: site("/#start"), label: "Book a call instead" },
       closing: "Kind regards,",
@@ -294,15 +283,16 @@ export function applicationAck(name: string, role: string): MailTemplate {
       eyebrowText: `Application — ${role}`,
       heading: `Your application has been received.`,
       bodyHtml: [
-        lead(`Dear ${fn(name)},<br><br>Thank you for your interest in joining Savo Technologies. Your application for <strong>${esc(role)}</strong> has been logged with our hiring team. Every application is reviewed by an engineer, with a personal response within two business days.`),
-        steps([
-          ["Review", "Your application is reviewed within two business days."],
-          ["Technical discussion", "An conversation on your experience and our work."],
-          ["Paid working session", "A collaborative session, compensated."],
-          ["Offer", "A written decision follows."],
+        lead(`Dear ${fn(name)},<br><br>Thank you for your interest in joining Savo Technologies. This email confirms that your application has been received and registered with our hiring team.`),
+        spec([
+          ["Position", role],
+          ["Status", "Under review"],
+          ["Response", "Two business days"],
         ]),
+        p(`Every application is reviewed individually by an engineer. You will receive a personal response within two business days confirming the outcome and, where relevant, the next steps of our hiring process.`),
+        p(`We appreciate the time you have invested in your application.`, true),
       ].join(""),
-      cta: { href: site("/careers"), label: "View our hiring process", sub: "The complete process, salaries and remote policy are published." },
+      cta: { href: site("/careers"), label: "View our hiring process", sub: "Our complete process, salaries and remote policy are published." },
       closing: "Kind regards,",
       reason: "You are receiving this because you applied to Savo Technologies.",
     }),
@@ -321,18 +311,13 @@ export function clientWelcome(name: string, email: string, password: string): Ma
       eyebrowText: "Portal access",
       heading: `Your client portal is now active.`,
       bodyHtml: [
-        lead(`Dear ${fn(name)},<br><br>Your project dashboard is ready. It provides a current view of your engagement with Savo Technologies at all times.`),
+        lead(`Dear ${fn(name)},<br><br>Your client portal is now active. It provides a continuous, current view of your engagement with Savo Technologies — project progress, milestones, delivery updates from your team, and complete invoice records — in one place.`),
         spec([
           ["Portal", "savotechnologies.com/portal"],
           ["Registered email", email],
           ["Password", password],
         ]),
-        steps([
-          ["Progress & milestones", "Status, schedule and upcoming milestones."],
-          ["Delivery updates", "Updates posted by your delivery team."],
-          ["Invoices & receipts", "Issued, paid and downloadable records."],
-        ]),
-        p(`<span style="font-family:${SANS};font-size:12px;color:${MUTED};">Please keep your credentials confidential. Your project lead can reset access at any time.</span>`, true),
+        p(`<span style="font-family:${SANS};font-size:12px;color:${MUTED};">Please keep your credentials confidential. Your project lead can renew access at any time should it be required.</span>`, true),
       ].join(""),
       cta: { href: site("/portal"), label: "Open your portal" },
       closing: "Kind regards,",
@@ -377,6 +362,7 @@ export function invoiceIssued(clientName: string, number: string, amount: number
       eyebrowText: `Invoice ${number}`,
       heading: "Your invoice is ready.",
       bodyHtml: [
+        lead(`Please find the details of your invoice below. The invoice and its current status are available in your client portal at any time.`),
         spec([["Amount", money(amount, currency)]], { big: 0 }),
         meta([`ISSUED ${fmtDate(new Date()).toUpperCase()}`, dueDate ? `DUE ${fmtDate(dueDate).toUpperCase()}` : "DUE ON RECEIPT", "AWAITING PAYMENT"]),
         p(`The invoice and its current status are available in your client portal, alongside your project records.`, true),
@@ -398,6 +384,7 @@ export function invoicePaid(clientName: string, number: string, amount: number, 
       eyebrowText: `Receipt — ${number}`,
       heading: "Payment received.",
       bodyHtml: [
+        lead(`Thank you for your payment. This email confirms that the amount below has been received in full.`),
         spec([["Amount", money(amount, currency)]], { big: 0 }),
         meta([`INVOICE ${number.toUpperCase()}`, `RECEIVED ${fmtDate(new Date()).toUpperCase()}`, "PAID IN FULL"]),
         p(`Thank you for your payment. The receipt remains available in your client portal for your records.`, true),
@@ -419,6 +406,7 @@ export function invoiceOverdue(clientName: string, number: string, amount: numbe
       eyebrowText: `Past due — ${number}`,
       heading: "Payment overdue reminder.",
       bodyHtml: [
+        lead(`This is a reminder that the invoice below has passed its due date.`),
         spec([
           ["Amount", money(amount, currency)],
           ["Past due by", `${daysLate} day${daysLate === 1 ? "" : "s"}`],
@@ -443,11 +431,13 @@ export function milestoneUpdate(clientName: string, projectTitle: string, milest
       eyebrowText: `Milestone ${label}`,
       heading: status === "done" ? "One more step shipped." : "Work has started.",
       bodyHtml: [
+        lead(`This is to inform you that the milestone below has been ${label} on your project.`),
         spec([
           ["Milestone", milestoneTitle],
           ["Project", projectTitle],
+          ["Status", label.charAt(0).toUpperCase() + label.slice(1)],
         ]),
-        p(`The complete milestone timeline is available in your client portal.`, true),
+        p(`The complete milestone timeline remains available in your client portal.`, true),
       ].join(""),
       cta: { href: site("/portal"), label: "View timeline" },
       closing: "Kind regards,",
@@ -466,6 +456,7 @@ export function projectUpdate(clientName: string, projectTitle: string, title: s
       eyebrowText: `Project update`,
       heading: title,
       bodyHtml: [
+        lead(`An update has been posted to your project by the delivery team.`),
         body ? prose(body) : "",
         meta([projectTitle.toUpperCase()]),
       ].join(""),
