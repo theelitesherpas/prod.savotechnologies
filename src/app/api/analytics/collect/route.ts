@@ -76,6 +76,10 @@ export async function POST(req: Request) {
       .digest("hex")
       .slice(0, 32);
 
+    // Browser language (e.g. "en-IN") — coarse, non-identifying.
+    const lang = cap(body.lang, 12);
+    const meta = lang && /^[a-z]{2}(-[a-zA-Z]{2,4})?$/i.test(lang) ? { lang: lang.slice(0, 8) } : undefined;
+
     await prisma.analyticsEvent.create({
       data: {
         type,
@@ -84,6 +88,7 @@ export async function POST(req: Request) {
         referrer,
         device: device && DEVICES.has(device) ? device : null,
         visitorHash,
+        ...(meta ? { meta } : {}),
       },
     });
 

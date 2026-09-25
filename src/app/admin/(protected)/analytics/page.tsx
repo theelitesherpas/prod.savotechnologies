@@ -55,6 +55,28 @@ function sinceDays(days: number) {
   return new Date(Date.now() - days * 86400000);
 }
 
+function sinceMinutes(min: number) {
+  return new Date(Date.now() - min * 60000);
+}
+
+/** Funnel row — label, count, share of the funnel's first stage. */
+function FunnelRow({ label, value, pct }: { label: string; value: number; pct: number }) {
+  return (
+    <div>
+      <div className="mb-1 flex items-baseline justify-between gap-3">
+        <span className="text-[0.8125rem] font-medium text-foreground">{label}</span>
+        <span className="tnum t-caption shrink-0 text-muted">
+          {value.toLocaleString()}
+          {pct > 0 && pct < 100 ? ` · ${pct}%` : ""}
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-foreground/[0.06]">
+        <div className="h-full rounded-full bg-accent/80" style={{ width: `${Math.max(pct, value > 0 ? 4 : 0)}%` }} />
+      </div>
+    </div>
+  );
+}
+
 export default async function AdminAnalyticsPage({
   searchParams,
 }: {
@@ -63,9 +85,16 @@ export default async function AdminAnalyticsPage({
   const { range } = await searchParams;
   const days = RANGES.some((r) => r.key === range) ? Number(range) : 30;
   const since = sinceDays(days);
+  const prevSince = sinceDays(days * 2);
 
-  const [events, gaConfigured, dbUp] = await Promise.all([
+  const [events, prevViews, liveEvents, gaConfigured, dbUp] = await Promise.all([
     prisma ? prisma.analyticsEvent.findMany({ where: { createdAt: { gte: since } } }) : [],
+    prisma
+      ? prisma.analyticsEvent.count({ where: { type: "pageview", createdAt: { gte: prevSince, lt: since } } })
+      : 0,
+    prisma
+      ? prisma.analyticsEvent.findMany({ where: { createdAt: { gte: sinceMinutes(30) } }, select: { visitorHash: true } })
+      : [],
     Promise.resolve(Boolean(env.NEXT_PUBLIC_GA_ID)),
     Promise.resolve(Boolean(prisma)),
   ]);
@@ -83,6 +112,31 @@ export default async function AdminAnalyticsPage({
   const uniques = new Set(pageviews.map((e) => e.visitorHash).filter(Boolean)).size;
   const assistantQuestions = trackedEvents.filter((e) => e.eventName === "ask_savo_question").length;
   const assistantHandoffs = trackedEvents.filter((e) => e.eventName === "ask_savo_handoff").length;
+  const activeNow = new Set(liveEvents.map((e) => e.visitorHash).filter(Boolean)).size;
+  const viewsTrend =
+    prevViews === 0
+      ? undefined
+      : {
+          dir: (pageviews.length >= prevViews ? "up" : "down") as "up" | "down",
+          text: `${Math.abs(Math.round(((pageviews.length - prevViews) / prevViews) * 100))}% vs previous ${days}d`,
+        };
+  const perVisitor = uniques > 0 ? (pageviews.length / uniques).toFixed(1) : "—";
+
+  // ── funnels (share of first stage)
+  const evCount = (name: string) => trackedEvents.filter((e) => e.eventName === name).length;
+  const funnelBase = Math.max(1, pageviews.length);
+  const enquiryFunnel = [
+    { label: "Page views", value: pageviews.length },
+    { label: "Opened enquiry form", value: evCount("enquiry_form_start") },
+    { label: "Submitted", value: evCount("enquiry_form_submit") },
+    { label: "Delivered successfully", value: evCount("enquiry_form_success") },
+  ];
+  const assistantBase = Math.max(1, evCount("ask_savo_open"));
+  const assistantFunnel = [
+    { label: "Opened the assistant", value: evCount("ask_savo_open") },
+    { label: "Asked a question", value: assistantQuestions },
+    { label: "Human handoff (email)", value: assistantHandoffs },
+  ];
 
   // ── daily trend
   const buckets: { label: string; views: number }[] = [];
@@ -119,6 +173,12 @@ export default async function AdminAnalyticsPage({
     pageviews.map((e) => ({ key: e.referrer ?? "direct / none" })),
   );
   const topEvents = tally(trackedEvents.map((e) => ({ key: e.eventName ?? "unknown" })));
+  const topLangs = tally(
+    pageviews.map((e) => {
+      const meta = e.meta as { lang?: string } | null;
+      return { key: meta?.lang ?? "unknown" };
+    }),
+  );
 
   const devices = tally(pageviews.map((e) => ({ key: e.device ?? "unknown" })));
   const deviceTotal = pageviews.length || 1;
@@ -163,10 +223,28 @@ export default async function AdminAnalyticsPage({
       ) : null}
 
       {/* Stat tiles */}
-      <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <StatTile label="Page views" value={pageviews.length} icon="gauge" />
+      <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-5">
+        <StatTile
+          label="Page views"
+          value={pageviews.length}
+          icon="gauge"
+          trend={viewsTrend}
+          hint={`${perVisitor} / visitor`}
+        />
         <StatTile label="Unique visitors" value={uniques} icon="user" hint="Daily salted hash" />
-        <StatTile label="Assistant questions" value={assistantQuestions} icon="bot" hint={`${assistantHandoffs} human handoffs`} />
+        <StatTile
+          label="Active now"
+          value={activeNow}
+          icon="sun"
+          accent={activeNow > 0}
+          hint="Last 30 minutes"
+        />
+        <StatTile
+          label="Assistant questions"
+          value={assistantQuestions}
+          icon="bot"
+          hint={`${assistantHandoffs} human handoffs`}
+        />
         <StatTile label="Tracked events" value={trackedEvents.length} icon="trend" hint="CTAs, forms, funnel" />
       </div>
 
@@ -197,6 +275,30 @@ export default async function AdminAnalyticsPage({
             ))}
         </div>
       </section>
+
+      {/* Funnels */}
+      <div className="mb-6 grid gap-3 lg:grid-cols-2">
+        <Panel title={`Enquiry funnel · ${days}d`}>
+          <div className="space-y-3.5">
+            {enquiryFunnel.map((s) => (
+              <FunnelRow key={s.label} label={s.label} value={s.value} pct={Math.round((s.value / funnelBase) * 100)} />
+            ))}
+          </div>
+          <p className="t-caption mt-3 text-muted">
+            Overall conversion: <span className="font-semibold text-foreground">{((evCount("enquiry_form_success") / funnelBase) * 100).toFixed(1)}%</span> of pageviews end in a delivered enquiry.
+          </p>
+        </Panel>
+        <Panel title={`Savo Assistant funnel · ${days}d`}>
+          <div className="space-y-3.5">
+            {assistantFunnel.map((s) => (
+              <FunnelRow key={s.label} label={s.label} value={s.value} pct={Math.round((s.value / assistantBase) * 100)} />
+            ))}
+          </div>
+          <p className="t-caption mt-3 text-muted">
+            Handoff rate: <span className="font-semibold text-foreground">{((assistantHandoffs / assistantBase) * 100).toFixed(0)}%</span> of assistant opens reach a human handoff.
+          </p>
+        </Panel>
+      </div>
 
       {/* Lists */}
       <div className="mb-6 grid gap-3 lg:grid-cols-2">
@@ -238,6 +340,17 @@ export default async function AdminAnalyticsPage({
             topEvents.map(([name, v]) => (
               <Bucket key={name} label={name.replace(/_/g, " ")} value={v.count} max={topEvents[0][1].count} />
             ))
+          )}
+        </Panel>
+        <Panel title="Visitor languages">
+          {topLangs.filter(([l]) => l !== "unknown").length === 0 ? (
+            <p className="t-caption text-muted">Languages appear as traffic arrives.</p>
+          ) : (
+            topLangs
+              .filter(([l]) => l !== "unknown")
+              .map(([lang, v]) => (
+                <Bucket key={lang} label={lang} value={v.count} max={topLangs.filter(([l]) => l !== "unknown")[0]?.[1].count ?? 1} />
+              ))
           )}
         </Panel>
       </div>

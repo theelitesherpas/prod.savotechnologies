@@ -27,6 +27,7 @@ export function AnalyticsBeacon() {
       path: pathname,
       referrer: document.referrer || undefined,
       device,
+      lang: navigator.language || undefined,
     });
 
     try {

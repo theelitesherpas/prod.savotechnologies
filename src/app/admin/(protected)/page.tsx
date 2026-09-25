@@ -6,6 +6,7 @@ import { COLLECTION_KEYS, CONTENT_COLLECTIONS } from "@/lib/content-registry";
 import { StatTile, PageHeader, EnquiryStatusChip, Chip } from "@/components/admin/ui";
 import { AdminIcon } from "@/components/admin/icons";
 import { ENQUIRY_STATUSES, ENQUIRY_STATUS_META } from "@/lib/enquiry-status";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -18,6 +19,14 @@ function twoWeeksAgoDate(): Date {
 }
 
 const fmtDateTime = (d: Date) => d.toISOString().replace("T", " · ").slice(0, 17);
+
+function monthAgoDate(): Date {
+  return new Date(Date.now() - 30 * 86400000);
+}
+
+function daysFromNow(d: Date): number {
+  return Math.ceil((d.getTime() - Date.now()) / 86400000);
+}
 
 /** Pure-SVG 14-day enquiry trend — area + line, accent stroke, hairline grid. */
 function TrendChart(rows: { createdAt: Date }[]) {
@@ -151,6 +160,40 @@ export default async function AdminDashboard() {
     .catch(() => [] as { collection: string; _count: { _all: number } }[]);
   const countFor = (c: string) => contentCounts.find((r) => r.collection === c)?._count._all ?? 0;
 
+  /* ── Business & delivery: revenue, projects, milestones, demand ── */
+  const monthAgo = monthAgoDate();
+  const [invoices, activeProjects, totalClients, upcomingMilestones, typeBreakdown] = await Promise.all([
+    prisma.invoice.findMany({ select: { status: true, amount: true, currency: true } }).catch(() => []),
+    prisma.clientProject
+      .count({ where: { status: { in: ["planning", "in_progress", "review"] } } })
+      .catch(() => 0),
+    prisma.clientUser.count({ where: { active: true } }).catch(() => 0),
+    prisma.projectMilestone
+      .findMany({
+        where: { status: { not: "done" }, dueDate: { not: null } },
+        orderBy: { dueDate: "asc" },
+        take: 6,
+        include: { project: { select: { code: true, title: true } } },
+      })
+      .catch(() => []),
+    prisma.projectEnquiry
+      .groupBy({ by: ["projectType"], _count: { _all: true }, where: { createdAt: { gte: monthAgo } } })
+      .catch(() => [] as { projectType: string; _count: { _all: number } }[]),
+  ]);
+
+  const sumFor = (statuses: string[]) =>
+    invoices.filter((i) => statuses.includes(i.status)).reduce((s, i) => s + i.amount, 0);
+  const money = (minor: number, currency = "INR") =>
+    new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(
+      minor / 100,
+    );
+  const collected = sumFor(["paid"]);
+  const outstanding = sumFor(["sent", "overdue"]);
+  const overdueCount = invoices.filter((i) => i.status === "overdue").length;
+  const daysTo = (d: Date) => daysFromNow(d);
+  const topTypes = [...typeBreakdown].sort((a, b) => b._count._all - a._count._all).slice(0, 6);
+  const maxType = Math.max(1, ...topTypes.map((t) => t._count._all));
+
   const activityUsers = await prisma.adminUser.findMany({
     where: { id: { in: activity.map((a) => a.userId).filter((x): x is string => !!x) } },
     select: { id: true, name: true },
@@ -243,6 +286,94 @@ export default async function AdminDashboard() {
               No enquiries yet — submissions from every site form land here the moment they arrive.
             </p>
           )}
+        </div>
+      </section>
+
+      {/* Business & delivery */}
+      <section aria-labelledby="business-heading" className="mb-10">
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 id="business-heading" className="text-[1.0625rem] font-bold tracking-[-0.01em]">
+            Business &amp; delivery
+          </h2>
+          <div className="flex gap-3">
+            <Link href="/admin/invoices" className="t-sm link-underline text-accent">
+              Invoices →
+            </Link>
+            <Link href="/admin/projects" className="t-sm link-underline text-accent">
+              Projects →
+            </Link>
+          </div>
+        </div>
+        <div className="mb-3 grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <StatTile label="Collected · all time" value={money(collected)} href="/admin/invoices" icon="check" hint="Paid invoices" />
+          <StatTile
+            label="Outstanding"
+            value={money(outstanding)}
+            href="/admin/invoices"
+            icon="briefcase"
+            accent={overdueCount > 0}
+            hint={overdueCount > 0 ? `${overdueCount} overdue` : "Sent, awaiting payment"}
+          />
+          <StatTile label="Active projects" value={activeProjects} href="/admin/projects" icon="folder" hint="Planning → review" />
+          <StatTile label="Portal clients" value={totalClients} href="/admin/clients" icon="user" />
+        </div>
+        <div className="grid gap-3 lg:grid-cols-2">
+          <div className="adm-card p-4 sm:p-5">
+            <h3 className="adm-label mb-3">Milestones on the calendar</h3>
+            {upcomingMilestones.length === 0 ? (
+              <p className="t-sm text-muted">No open milestones with due dates.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {upcomingMilestones.map((m) => {
+                  const d = daysTo(m.dueDate as Date);
+                  const overdue = d < 0;
+                  return (
+                    <li key={m.id} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[0.8125rem] font-semibold text-foreground">{m.title}</span>
+                        <span className="t-caption block truncate text-muted">
+                          {m.project.code} · {m.project.title}
+                        </span>
+                      </span>
+                      <span
+                        className={cn(
+                          "t-caption tnum shrink-0 rounded-md border px-2 py-1 font-semibold",
+                          overdue
+                            ? "border-error/40 bg-error/[0.06] text-error"
+                            : d <= 7
+                              ? "border-accent/40 bg-accent/[0.06] text-accent"
+                              : "border-border text-muted",
+                        )}
+                      >
+                        {overdue ? `${Math.abs(d)}d overdue` : d === 0 ? "today" : `in ${d}d`}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+          <div className="adm-card p-4 sm:p-5">
+            <h3 className="adm-label mb-3">What people ask for · 30 days</h3>
+            {topTypes.length === 0 ? (
+              <p className="t-sm text-muted">Enquiry demand appears here as forms come in.</p>
+            ) : (
+              <div className="space-y-2">
+                {topTypes.map((t) => (
+                  <div key={t.projectType} className="relative h-9 overflow-hidden rounded-md bg-foreground/[0.05]">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-md bg-foreground/70"
+                      style={{ width: `${Math.max((t._count._all / maxType) * 100, 4)}%` }}
+                    />
+                    <div className="relative flex h-full items-center justify-between px-3">
+                      <span className="truncate text-[0.8125rem] font-medium text-foreground">{t.projectType}</span>
+                      <span className="tnum t-caption shrink-0 pl-3 text-muted">{t._count._all}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
