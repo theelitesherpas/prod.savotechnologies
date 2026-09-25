@@ -8,6 +8,7 @@ import { ImageReveal } from "@/components/ui/image-reveal";
 import { DetailCta } from "@/components/shared/detail-cta";
 import { OFFICES, SITE } from "@/constants/site";
 import { IS_DEMO } from "@/lib/content-mode";
+import { getSettings } from "@/lib/settings";
 import { DEMO_METRICS } from "@/content/demo";
 import { cn, withBasePath } from "@/lib/utils";
 import { openGraphFor } from "@/lib/seo";
@@ -56,17 +57,18 @@ const LEADERSHIP_SEED = [
 
 const LEADERSHIP = IS_DEMO ? LEADERSHIP_SEED : [];
 
-/** Company facts — CONTENT_MODE gated. Demo values are DESIGN DATA ONLY
- * (never verified, never in production/SEO); production shows honest
- * pending slots until Savo supplies verified figures. */
-const FACTS = IS_DEMO
-  ? DEMO_METRICS.map((m) => ({ v: m.value, l: m.label }))
-  : [
-      { v: "…", l: "Projects Delivered" },
-      { v: "…", l: "Clients Supported" },
-      { v: "…", l: "Industries Served" },
-      { v: "…", l: "Markets Reached" },
-    ];
+/** Company facts — demo values on staging (DESIGN DATA ONLY); production
+ * renders the admin-managed verified figures with pending slots for
+ * anything not yet supplied. */
+const buildFacts = (metrics: { projectsDelivered: string; clientsSupported: string; industriesServed: string; marketsReached: string }) =>
+  IS_DEMO
+    ? DEMO_METRICS.map((m) => ({ v: m.value, l: m.label }))
+    : [
+        { v: metrics.projectsDelivered || "…", l: "Projects Delivered" },
+        { v: metrics.clientsSupported || "…", l: "Clients Supported" },
+        { v: metrics.industriesServed || "…", l: "Industries Served" },
+        { v: metrics.marketsReached || "…", l: "Markets Reached" },
+      ];
 
 const DESCRIPTION = `About Savo Technologies: one accountable team engineering AI agents, web platforms and mobile apps since 2016. Our story, values, leadership and how we work.`;
 
@@ -77,7 +79,8 @@ export const metadata: Metadata = {
   openGraph: openGraphFor({ title: "About Us | Savo Technologies", description: DESCRIPTION, url: "/about" }),
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const FACTS = buildFacts((await getSettings()).metrics);
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [

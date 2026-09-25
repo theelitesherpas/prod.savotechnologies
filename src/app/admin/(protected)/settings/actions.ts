@@ -12,6 +12,14 @@ import { revalidateManagedContent } from "@/lib/collections";
  * through getSettings() with constant defaults for missing keys.
  */
 
+const metricValue = z
+  .string()
+  .trim()
+  .max(12)
+  .regex(/^[0-9][0-9.,+×%xkK\/-]*$/, "Figures like 120+, 45+, 12+, 8+ — digits with optional +, %, × or k.")
+  .optional()
+  .or(z.literal(""));
+
 const settingsSchema = z.object({
   contactEmail: z.string().trim().email().max(160),
   contactPhone: z
@@ -21,6 +29,10 @@ const settingsSchema = z.object({
     .max(24)
     .regex(/^[+0-9 ()-]+$/, "Digits, spaces and + ( ) - only."),
   announcement: z.string().trim().max(180).optional().or(z.literal("")),
+  metricProjects: metricValue,
+  metricClients: metricValue,
+  metricIndustries: metricValue,
+  metricMarkets: metricValue,
 });
 
 export async function saveSettingsAction(formData: FormData): Promise<void> {
@@ -29,6 +41,10 @@ export async function saveSettingsAction(formData: FormData): Promise<void> {
     contactEmail: formData.get("contactEmail"),
     contactPhone: formData.get("contactPhone"),
     announcement: formData.get("announcement") ?? "",
+    metricProjects: formData.get("metricProjects") ?? "",
+    metricClients: formData.get("metricClients") ?? "",
+    metricIndustries: formData.get("metricIndustries") ?? "",
+    metricMarkets: formData.get("metricMarkets") ?? "",
   });
 
   if (!parsed.success) {
@@ -36,7 +52,14 @@ export async function saveSettingsAction(formData: FormData): Promise<void> {
     redirect(`/admin/settings?e=${encodeURIComponent(issue?.message ?? "invalid")}`);
   }
 
-  const { contactEmail, contactPhone, announcement } = parsed.data;
+  const { contactEmail, contactPhone, announcement, metricProjects, metricClients, metricIndustries, metricMarkets } = parsed.data;
+
+  const metricRows = [
+    ["metric_projects", metricProjects ?? ""],
+    ["metric_clients", metricClients ?? ""],
+    ["metric_industries", metricIndustries ?? ""],
+    ["metric_markets", metricMarkets ?? ""],
+  ] as const;
 
   await prisma!.$transaction([
     prisma!.siteSetting.upsert({
@@ -54,6 +77,13 @@ export async function saveSettingsAction(formData: FormData): Promise<void> {
       create: { key: "announcement", value: announcement || "" },
       update: { value: announcement || "" },
     }),
+    ...metricRows.map(([key, value]) =>
+      prisma!.siteSetting.upsert({
+        where: { key },
+        create: { key, value },
+        update: { value },
+      }),
+    ),
   ]);
 
   await audit(user.id, "settings.update", "SiteSetting", undefined, {

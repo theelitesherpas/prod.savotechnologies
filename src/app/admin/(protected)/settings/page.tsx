@@ -77,6 +77,36 @@ export default async function SettingsPage({
         </div>
 
         <div className="border-t border-border pt-5">
+          <p className="adm-label mb-4">Company impact metrics</p>
+          <p className="t-caption mb-4 text-muted">
+            Rendered in the homepage impact band and the About facts. Publish only figures you can
+            verify (policy §28) — a field left empty keeps the honest pending slot on the live site.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              { name: "metricProjects", label: "Projects Delivered", value: settings.metrics.projectsDelivered, ph: "120+" },
+              { name: "metricClients", label: "Clients Supported", value: settings.metrics.clientsSupported, ph: "45+" },
+              { name: "metricIndustries", label: "Industries Served", value: settings.metrics.industriesServed, ph: "12+" },
+              { name: "metricMarkets", label: "Markets Reached", value: settings.metrics.marketsReached, ph: "8+" },
+            ].map((m) => (
+              <div key={m.name}>
+                <label htmlFor={m.name} className="adm-label mb-1.5 block">
+                  {m.label}
+                </label>
+                <input
+                  id={m.name}
+                  name={m.name}
+                  maxLength={12}
+                  defaultValue={m.value}
+                  placeholder={m.ph}
+                  className="adm-input"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="border-t border-border pt-5">
           <SubmitButton label="Save settings" />
         </div>
       </form>

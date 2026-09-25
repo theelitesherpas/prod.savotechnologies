@@ -12,15 +12,33 @@ export type SiteSettings = {
   contactEmail: string;
   contactPhone: string;
   announcement: string | null;
+  /** Company impact metrics (policy §28: verified company information,
+   * managed here instead of hardcoded). Empty string = not supplied —
+   * the public site renders honest pending slots until a value exists. */
+  metrics: {
+    projectsDelivered: string;
+    clientsSupported: string;
+    industriesServed: string;
+    marketsReached: string;
+  };
 };
 
-const KEYS = ["contact_email", "contact_phone", "announcement"] as const;
+const KEYS = [
+  "contact_email",
+  "contact_phone",
+  "announcement",
+  "metric_projects",
+  "metric_clients",
+  "metric_industries",
+  "metric_markets",
+] as const;
 
 export async function getSettings(): Promise<SiteSettings> {
   const defaults: SiteSettings = {
     contactEmail: SITE.email,
     contactPhone: SITE.phone,
     announcement: null,
+    metrics: { projectsDelivered: "", clientsSupported: "", industriesServed: "", marketsReached: "" },
   };
   if (!prisma) return defaults;
 
@@ -34,6 +52,12 @@ export async function getSettings(): Promise<SiteSettings> {
       contactEmail: map.get("contact_email")?.trim() || defaults.contactEmail,
       contactPhone: map.get("contact_phone")?.trim() || defaults.contactPhone,
       announcement: map.get("announcement")?.trim() || null,
+      metrics: {
+        projectsDelivered: map.get("metric_projects")?.trim() ?? "",
+        clientsSupported: map.get("metric_clients")?.trim() ?? "",
+        industriesServed: map.get("metric_industries")?.trim() ?? "",
+        marketsReached: map.get("metric_markets")?.trim() ?? "",
+      },
     };
   } catch {
     return defaults; // never break rendering over settings
