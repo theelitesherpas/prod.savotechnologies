@@ -70,29 +70,32 @@ export function ProjectShowcase({
         }}
       />
 
-      {/* The big visual */}
-      <div className="shell relative py-12 sm:py-16 lg:py-20">
-        <div className="mx-auto w-full max-w-6xl">
-          {heroImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={heroImage.dataUrl}
-              alt={heroImage.alt || (title ? `${title} — project visual` : "Project visual")}
-              className="mx-auto max-h-[78vh] w-auto max-w-full border border-white/10 object-contain drop-shadow-[0_40px_80px_rgb(0_0_0/0.45)]"
+      {/* The big visual — full page width, edge to edge */}
+      <div className="relative">
+        {heroImage ? (
+          // Full-bleed: spans the viewport width; the 82vh cap keeps the
+          // band cinematic on short screens (object-cover trims, never
+          // stretches — the studio already crops to exact 16:9).
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={heroImage.dataUrl}
+            alt={heroImage.alt || (title ? `${title} — project visual` : "Project visual")}
+            className="block max-h-[82vh] w-full border-y border-white/10 object-cover drop-shadow-[0_40px_80px_rgb(0_0_0/0.45)]"
+          />
+        ) : (
+          <div className="w-full drop-shadow-[0_40px_80px_rgb(0_0_0/0.45)]">
+            <ProjectMockup
+              discipline={discipline}
+              palette={palette}
+              className="!bg-transparent"
             />
-          ) : (
-            <div className="drop-shadow-[0_40px_80px_rgb(0_0_0/0.45)]">
-              <ProjectMockup
-                discipline={discipline}
-                palette={palette}
-                className="!bg-transparent"
-              />
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
-        {/* Caption row */}
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-5">
+      {/* Caption row — aligned with the page grid */}
+      <div className="shell relative">
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 py-5">
           <p className="t-caption flex items-center gap-3 text-white/60">
             <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0" style={{ backgroundColor: glow }} />
             {caption ?? "Representative product views"}
