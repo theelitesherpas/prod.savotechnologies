@@ -495,7 +495,7 @@ function PreviewSurfaces({
       <div className="sm:col-span-2">
         <Frame slot="showcase" aspect="aspect-[16/9]" label="Showcase" where={`Detail page — ${title || "Project"} big band`} />
       </div>
-      <Frame slot="cardWide" aspect="aspect-[16/9]" label="Featured card" where="Homepage · dossier index" />
+      <Frame slot="cardWide" aspect="aspect-[16/7]" label="Featured card" where="Homepage · dossier index (desktop 16:7)" />
       <Frame slot="card" aspect="aspect-[16/10]" label="Standard card" where="Homepage · dossier index" />
     </div>
   );

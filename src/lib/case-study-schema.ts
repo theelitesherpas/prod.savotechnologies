@@ -112,16 +112,16 @@ export const CASE_IMAGE_SLOTS = {
   },
   cardWide: {
     width: 1600,
-    height: 900,
+    height: 700,
     label: "Featured card",
-    where: "Homepage + dossier index — full-width featured card",
-    hint: "16:9",
+    where: "Homepage + dossier index — full-width featured card (16:7 on desktop)",
+    hint: "16:7",
   },
   card: {
     width: 1280,
     height: 800,
     label: "Standard card",
-    where: "Homepage + dossier index — two-up cards",
+    where: "Homepage + dossier index — two-up half cards",
     hint: "16:10",
   },
 } as const;

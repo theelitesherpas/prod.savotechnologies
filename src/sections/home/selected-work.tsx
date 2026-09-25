@@ -141,8 +141,8 @@ function WorkCard({
   aspect: string;
   sizes: string;
 }) {
-  return (
-    <article className="group relative border border-border bg-surface transition-colors duration-500 hover:border-foreground/30">
+  const card = (
+    <>
       <div className={`relative overflow-hidden ${aspect}`}>
         {item.image?.dataUrl ? (
           // Attached visual — slot-matched to this card class (featured vs
@@ -186,15 +186,15 @@ function WorkCard({
           <p className="t-caption mt-3 text-muted/80">{item.outcome}</p>
         </div>
         {item.slug ? (
-          <Link
-            href={`/case-studies/${item.slug}`}
-            className="t-sm inline-flex items-center gap-2 font-semibold text-foreground transition-colors hover:text-accent"
+          <span
+            aria-hidden="true"
+            className="t-sm inline-flex items-center gap-2 font-semibold text-foreground transition-colors group-hover:text-accent"
           >
             View Project
             <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6">
               <path d="M3 11 11 3M4.5 3H11v6.5" />
             </svg>
-          </Link>
+          </span>
         ) : (
         <span
           aria-disabled="true"
@@ -208,6 +208,25 @@ function WorkCard({
         </span>
         )}
       </div>
+    </>
+  );
+
+  // Whole card is the link — thumbnail included. Pending slots stay an
+  // honest non-interactive article.
+  if (item.slug) {
+    return (
+      <Link
+        href={`/case-studies/${item.slug}`}
+        className="group relative block border border-border bg-surface transition-colors duration-500 hover:border-foreground/30"
+        aria-label={`${item.name} — open case study`}
+      >
+        {card}
+      </Link>
+    );
+  }
+  return (
+    <article className="group relative border border-border bg-surface transition-colors duration-500 hover:border-foreground/30">
+      {card}
     </article>
   );
 }

@@ -198,8 +198,9 @@ export function CaseStudyCard({
   const hasDetail = typeof entry.slug === "string" && entry.slug.length > 0;
   const art = (entry.featured ? entry.images?.cardWide : entry.images?.card) ?? entry.images?.cardWide ?? entry.images?.card;
   const hero = art?.dataUrl;
-  return (
-    <article className="group relative border border-border bg-surface transition-colors duration-500 hover:border-foreground/30">
+
+  const card = (
+    <>
       <div className={`relative overflow-hidden ${aspect}`}>
         {hero ? (
           // Attached visual (admin crop studio, slot-matched to this card)
@@ -245,15 +246,15 @@ export function CaseStudyCard({
           <p className="t-caption mt-3 text-muted/80">{entry.outcome}</p>
         </div>
         {hasDetail ? (
-          <Link
-            href={`/case-studies/${entry.slug}`}
-            className="t-sm inline-flex items-center gap-2 font-semibold text-foreground transition-colors hover:text-accent"
+          <span
+            aria-hidden="true"
+            className="t-sm inline-flex items-center gap-2 font-semibold text-foreground transition-colors group-hover:text-accent"
           >
             View Project
             <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6">
               <path d="M3 11 11 3M4.5 3H11v6.5" />
             </svg>
-          </Link>
+          </span>
         ) : (
         <span
           aria-disabled="true"
@@ -267,6 +268,25 @@ export function CaseStudyCard({
         </span>
         )}
       </div>
+    </>
+  );
+
+  // Whole card is the link — the thumbnail, title, any click opens the
+  // dossier. Pending slots (no slug) stay a non-interactive article.
+  if (hasDetail) {
+    return (
+      <Link
+        href={`/case-studies/${entry.slug}`}
+        className="group relative block border border-border bg-surface transition-colors duration-500 hover:border-foreground/30"
+        aria-label={`${entry.name} — open case study`}
+      >
+        {card}
+      </Link>
+    );
+  }
+  return (
+    <article className="group relative border border-border bg-surface transition-colors duration-500 hover:border-foreground/30">
+      {card}
     </article>
   );
 }
