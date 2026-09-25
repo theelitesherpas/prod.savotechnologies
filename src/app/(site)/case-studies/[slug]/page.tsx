@@ -6,6 +6,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { SectionHeader } from "@/components/ui/section-header";
 import { DetailCta } from "@/components/shared/detail-cta";
+import { ProjectShowcase } from "@/components/shared/project-showcase";
 import { ProjectMockup } from "@/components/shared/project-mockup";
 import { getCaseStudies, getCaseStudy } from "@/lib/case-studies";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
@@ -79,75 +80,61 @@ export default async function CaseStudyPage({
 
   return (
     <>
-      {/* ---------- Hero: statement + bespoke product mockup ---------- */}
-      <section aria-labelledby="cs-heading" className="relative overflow-hidden border-b border-border">
-        <div className="shell grid items-center gap-12 pb-16 pt-[calc(var(--nav-h)+4.5rem)] sm:pb-20 lg:grid-cols-12">
-          <div className="lg:col-span-6">
-            <div aria-hidden="true" className="mb-10 flex items-center gap-4">
-              <span className="h-2 w-2 shrink-0 bg-accent" />
-              <p className="t-label text-muted">
-                <Link href="/case-studies" className="transition-colors hover:text-foreground">
-                  Case Studies
-                </Link>
-                <span className="mx-2 text-muted/50">/</span>
-                {discipline?.title ?? "Dossier"}
-                {study.year ? <span className="text-muted/50"> · {study.year}</span> : null}
-              </p>
-              <span className="h-px flex-1 bg-border" />
-            </div>
-            <h1 id="cs-heading" className="t-h1">
-              {displayName}
-            </h1>
-            {study.industry ? <p className="t-label mt-5 text-accent">{study.industry}</p> : null}
-            {study.summary ? <p className="t-body-lg mt-6 max-w-xl text-muted">{study.summary}</p> : null}
-            {study.services.length > 0 ? (
-              <ul className="mt-8 flex max-w-xl flex-wrap gap-2" aria-label="Engagement capabilities">
-                {study.services.map((s) => (
-                  <li key={s} className="t-caption rounded-[2px] border border-border px-2.5 py-1 text-muted">
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+      {/* ---------- Hero: compact statement ---------- */}
+      <section aria-labelledby="cs-heading" className="border-b border-border">
+        <div className="shell pb-12 pt-[calc(var(--nav-h)+4rem)] sm:pb-16">
+          <div aria-hidden="true" className="mb-10 flex items-center gap-4">
+            <span className="h-2 w-2 shrink-0 bg-accent" />
+            <p className="t-label text-muted">
+              <Link href="/case-studies" className="transition-colors hover:text-foreground">
+                Case Studies
+              </Link>
+              <span className="mx-2 text-muted/50">/</span>
+              {discipline?.title ?? "Dossier"}
+              {study.year ? <span className="text-muted/50"> · {study.year}</span> : null}
+            </p>
+            <span className="h-px flex-1 bg-border" />
           </div>
-          <div className="lg:col-span-6">
-            <Reveal delay={120}>
-              <figure className="relative border border-border bg-surface">
-                <div className="aspect-[5/4]">
-                  {study.heroImage ? (
-                    // Data URL stored in the record — skip the optimizer, render directly.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={study.heroImage.dataUrl}
-                      alt={study.heroImage.alt || `${displayName} — project visual`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <ProjectMockup discipline={study.discipline} palette={study.palette} />
-                  )}
-                </div>
-                {isDemo ? (
-                  <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.5)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
-                    Design concept
-                  </span>
-                ) : null}
-                <figcaption className="flex items-center justify-between gap-4 border-t border-border px-4 py-3">
-                  <span className="t-caption text-muted">
-                    {study.heroImage
-                      ? study.heroImage.alt || "Project visual"
-                      : study.discipline === "mobile"
-                        ? "Key screens — home, detail and conversation"
-                        : study.discipline === "web" || study.discipline === "design"
-                          ? "Representative interface views"
-                          : "Operations dashboard overview"}
-                  </span>
-                  <span aria-hidden="true" className="h-2 w-2 shrink-0 bg-accent" />
-                </figcaption>
-              </figure>
-            </Reveal>
+          <div className="grid items-end gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-7">
+              <h1 id="cs-heading" className="t-h1">
+                {displayName}
+              </h1>
+              {study.industry ? <p className="t-label mt-5 text-accent">{study.industry}</p> : null}
+            </div>
+            <div className="lg:col-span-5">
+              {study.summary ? <p className="t-body-lg text-muted">{study.summary}</p> : null}
+              {study.services.length > 0 ? (
+                <ul className="mt-6 flex flex-wrap gap-2" aria-label="Engagement capabilities">
+                  {study.services.map((s) => (
+                    <li key={s} className="t-caption rounded-[2px] border border-border px-2.5 py-1 text-muted">
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
           </div>
         </div>
       </section>
+
+      {/* ---------- The big showcase — cinematic product stage ---------- */}
+      <ProjectShowcase
+        discipline={study.discipline}
+        palette={study.palette}
+        heroImage={study.heroImage}
+        isDemo={isDemo}
+        title={displayName}
+        caption={
+          study.heroImage
+            ? study.heroImage.alt || "Project visual"
+            : study.discipline === "mobile"
+              ? "Key screens — home, detail and conversation"
+              : study.discipline === "web" || study.discipline === "design"
+                ? "Representative interface views"
+                : "Operations dashboard overview"
+        }
+      />
 
       {/* ---------- Engagement fact bar ---------- */}
       {facts.length > 0 ? (
