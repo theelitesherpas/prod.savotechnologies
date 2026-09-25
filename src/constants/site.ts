@@ -32,15 +32,18 @@ export const SITE = {
   email: "hello@savotechnologies.com",
   phone: "+91 75029 01234",
   phoneE164: "+917502901234",
+  /** HR line (verified) — shown alongside the main line on contact surfaces. */
+  hrPhone: "+91 78988 52345",
+  hrPhoneE164: "+917898852345",
   /** Verified headquarters (entity truth for schema, contact and About). */
   hq: {
     city: "Indore",
     region: "Madhya Pradesh",
     country: "India",
     countryCode: "IN",
-    /** Full street address and postal code pending company supply — never invented. */
-    street: null as string | null,
-    postalCode: null as string | null,
+    /** Verified street address and postal code (supplied by Savo, 2026-09-25). */
+    street: "139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54",
+    postalCode: "452010",
   },
   /** Company registration identifiers — slots only, populated when the company supplies verified values. */
   registration: {

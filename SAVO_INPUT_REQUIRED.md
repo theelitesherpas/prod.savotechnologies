@@ -17,7 +17,7 @@ Items are ordered by blocking impact. See `DEMO_CONTENT_REPLACEMENT.md` for the 
    is to render in production.
 5. **Regional presence confirmation** — for Switzerland, GCC, Australia, UK, US:
    physical office (verified address) or market/service presence (confirm wording).
-6. **HQ street address & postal code** — Indore currently publishes city-level only.
+6. ~~**HQ street address & postal code**~~ ✅ SUPPLIED 2026-09-25: 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010 (+ HR line +91 78988 52345).
 
 ## Must confirm (currently published as carried from version 1)
 

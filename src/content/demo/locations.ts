@@ -23,11 +23,17 @@ export type MarketPresence = {
   kind: "hq" | "market";
   /** City-level line only — never an invented street address. */
   cityLine: string;
+  /** Verified street address (HQ only). */
+  addressLine?: string;
   /** General market wording; must be confirmed before production. */
   description: string;
   /** Verified contact numbers only; null otherwise. */
   mobile: string | null;
   mobileE164: string | null;
+  /** Secondary line (HR etc.), HQ only. */
+  mobile2Label?: string;
+  mobile2?: string | null;
+  mobile2E164?: string | null;
   status: ContentStatus;
 };
 
@@ -40,9 +46,13 @@ export const HQ_PRESENCE: MarketPresence = {
   region: "India",
   kind: "hq",
   cityLine: "Indore, Madhya Pradesh, India",
+  addressLine: "139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010",
   description: "Primary operations — engineering, design and delivery run from the Indore headquarters.",
   mobile: "+91 75029 01234",
   mobileE164: "+917502901234",
+  mobile2Label: "HR",
+  mobile2: "+91 78988 52345",
+  mobile2E164: "+917898852345",
   status: "verified",
 };
 

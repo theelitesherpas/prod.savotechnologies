@@ -88,18 +88,30 @@ export function SiteFooter({
           <div key={office.id} className="flex flex-col bg-background p-5">
             <RegionArt id={office.id} className="mb-4 h-9 w-14 shrink-0" />
             <p className="t-label text-accent">{office.region}</p>
-            <p className="t-caption mt-1 font-medium text-foreground/90">{office.cityLine}</p>
+            <p className="t-caption mt-1 font-medium text-foreground/90">{office.addressLine ?? office.cityLine}</p>
             <p className="t-caption mt-2.5 flex-1 leading-relaxed text-muted">
-              {office.description}
+              {office.addressLine ? office.cityLine + " — " + office.description : office.description}
             </p>
             {office.mobile && office.mobileE164 ? (
-              <a
-                href={`tel:${office.mobileE164}`}
-                className="mt-3 flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
-              >
-                <PhoneGlyph />
-                {office.mobile}
-              </a>
+              <div className="mt-3 space-y-2">
+                <a
+                  href={`tel:${office.mobileE164}`}
+                  className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
+                >
+                  <PhoneGlyph />
+                  {office.mobile}
+                </a>
+                {office.mobile2 && office.mobile2E164 ? (
+                  <a
+                    href={`tel:${office.mobile2E164}`}
+                    className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
+                  >
+                    <PhoneGlyph />
+                    <span className="t-caption text-muted">{office.mobile2Label}</span>
+                    {office.mobile2}
+                  </a>
+                ) : null}
+              </div>
             ) : (
               <p className="t-caption mt-3 flex items-center gap-2 text-muted/70">
                 <PhoneGlyph />

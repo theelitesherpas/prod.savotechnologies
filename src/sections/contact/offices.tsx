@@ -40,16 +40,28 @@ export function Offices() {
                 {office.kind === "hq" ? "Primary Operations" : office.cityLine}
               </p>
               <p className="t-caption mt-2.5 flex-1 leading-relaxed text-muted">
-                {office.description}
+                {office.addressLine ?? office.description}
               </p>
               {office.mobile && office.mobileE164 ? (
-                <a
-                  href={`tel:${office.mobileE164}`}
-                  className="mt-4 flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
-                >
-                  <MobileGlyph />
-                  {office.mobile}
-                </a>
+                <div className="mt-4 space-y-2">
+                  <a
+                    href={`tel:${office.mobileE164}`}
+                    className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
+                  >
+                    <MobileGlyph />
+                    {office.mobile}
+                  </a>
+                  {office.mobile2 && office.mobile2E164 ? (
+                    <a
+                      href={`tel:${office.mobile2E164}`}
+                      className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
+                    >
+                      <MobileGlyph />
+                      <span className="t-caption text-muted">{office.mobile2Label}</span>
+                      {office.mobile2}
+                    </a>
+                  ) : null}
+                </div>
               ) : (
                 <p className="t-caption mt-4 flex items-center gap-2 text-muted/70">
                   <MobileGlyph />
