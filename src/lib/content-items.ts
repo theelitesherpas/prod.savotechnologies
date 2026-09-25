@@ -5,7 +5,8 @@ import { revalidateManagedContent } from "@/lib/collections";
 import { CONTENT_COLLECTIONS, type CollectionKey, type SeedItem } from "@/lib/content-registry";
 import type { Article } from "@/constants/insights";
 import type { Role } from "@/constants/careers";
-import { CASE_DISCIPLINES, type CaseDiscipline } from "@/constants/case-studies";
+import { CASE_DISCIPLINES, CASE_DISCIPLINES_BASE, type CaseDiscipline } from "@/constants/case-studies";
+import { getCaseStudies } from "@/lib/case-studies";
 import type { HireRole } from "@/constants/hire";
 import type { AiService } from "@/constants/ai-services";
 import type { Agent } from "@/constants/agents";
@@ -136,26 +137,29 @@ export async function getManagedRoles(): Promise<Role[]> {
 
 /**
  * Case-study disciplines — structure (discipline meta, capabilities) is
- * code-defined; entries come from the DB once the collection has rows.
+ * code-defined; entries come from the shared case-study getter (admin DB
+ * rows first, coded dossier records as fallback), so the index, the home
+ * cards and the detail pages always tell the same story.
  */
 export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
-  const rows = await readItems("case-studies");
-  if (!rows || rows.length === 0) return CASE_DISCIPLINES;
-  return CASE_DISCIPLINES.map((d) => {
-    const entries = rows
-      .filter((r) => (r.data as Record<string, unknown>)?.discipline === d.id)
-      .map((r) => {
-        const e = r.data as Record<string, unknown>;
-        return {
-          featured: e?.featured === true,
-          name: str(e?.name, "[Project Name]"),
-          sector: str(e?.sector),
-          services: str(e?.services),
-          stack: str(e?.stack),
-          outcome: str(e?.outcome),
-        };
-      });
-    return { ...d, entries };
+  const studies = await getCaseStudies();
+  if (studies.length === 0) return CASE_DISCIPLINES;
+  return CASE_DISCIPLINES_BASE.map((d) => {
+    const mine = studies.filter((s) => s.discipline === d.id);
+    if (mine.length === 0) return d;
+    const mapped = mine.map((s, i) => ({
+      featured: s.featured || i === 0,
+      name: s.displayClientName || s.title,
+      sector: s.industry ?? "",
+      services: (s.services ?? []).slice(0, 2).join(" · ") || (s.industry ?? ""),
+      stack: (s.technologies ?? []).join(" · "),
+      outcome:
+        (s.results ?? []).map((r) => `${r.value} ${r.label}`).join(" · ") +
+        (s.status === "demo" && (s.results?.length ?? 0) > 0 ? " — demo figures" : ""),
+      slug: s.slug,
+    }));
+    const pendingRest = d.entries.filter((e) => !e.featured);
+    return { ...d, entries: [...mapped, ...pendingRest] };
   });
 }
 

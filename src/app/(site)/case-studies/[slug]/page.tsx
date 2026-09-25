@@ -1,36 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
-import { absoluteUrl, env } from "@/lib/env";
 import { openGraphFor } from "@/lib/seo";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { SectionHeader } from "@/components/ui/section-header";
 import { DetailCta } from "@/components/shared/detail-cta";
+import { ProjectMockup } from "@/components/shared/project-mockup";
 import { getCaseStudies, getCaseStudy } from "@/lib/case-studies";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
-import { cn } from "@/lib/utils";
 
 /**
- * Case-study dossier — the full detail page for a project: hero, fact bar,
- * summary, challenge, solution, stack, palette, results, testimonial and
- * next-project navigation.
+ * Case-study dossier — the full detail page for a project.
+ *
+ * Grammar (top to bottom): hero with a bespoke palette-driven product
+ * mockup → engagement fact bar → challenge (ink) → solution + stack rail →
+ * outcomes band → project palette → testimonial → next project → the
+ * vermilion close.
  *
  * Content policy: records render only when available in the current mode
- * (demo projects on staging; verified engagements in production — see
- * src/lib/case-studies.ts). Demo dossiers wear the "Design concept" badge
- * and never claim to be a real Savo client.
+ * (demo projects on staging; verified engagements in production). Demo
+ * dossiers wear the "Design concept" badge and never claim to be a real
+ * Savo client.
  */
-
-const DISCIPLINE_PHOTO: Record<string, string> = {
-  web: "/images/meeting.webp",
-  mobile: "/images/mobile.webp",
-  ai: "/images/architecture.webp",
-  software: "/images/code.webp",
-  design: "/images/studio.webp",
-  growth: "/images/team.webp",
-};
 
 export async function generateStaticParams() {
   const studies = await getCaseStudies();
@@ -75,13 +67,22 @@ export default async function CaseStudyPage({
   const next = all.length > 1 ? all[(index + 1) % all.length] : null;
   const isDemo = study.status === "demo";
   const shownResults = isDemo ? study.results : study.results.filter((r) => r.verified);
+  const displayName = study.displayClientName || study.title;
+
+  const facts = [
+    { k: "Discipline", v: discipline?.title ?? study.discipline },
+    { k: "Year", v: study.year },
+    { k: "Duration", v: study.duration },
+    { k: "Team", v: study.teamSize },
+    { k: "Client", v: displayName },
+  ].filter((f) => f.v);
 
   return (
     <>
-      {/* ---------- Hero ---------- */}
+      {/* ---------- Hero: statement + bespoke product mockup ---------- */}
       <section aria-labelledby="cs-heading" className="relative overflow-hidden border-b border-border">
-        <div className="shell grid gap-10 pb-16 pt-[calc(var(--nav-h)+4.5rem)] sm:pb-20 lg:grid-cols-12">
-          <div className="lg:col-span-7">
+        <div className="shell grid items-center gap-12 pb-16 pt-[calc(var(--nav-h)+4.5rem)] sm:pb-20 lg:grid-cols-12">
+          <div className="lg:col-span-6">
             <div aria-hidden="true" className="mb-10 flex items-center gap-4">
               <span className="h-2 w-2 shrink-0 bg-accent" />
               <p className="t-label text-muted">
@@ -90,16 +91,17 @@ export default async function CaseStudyPage({
                 </Link>
                 <span className="mx-2 text-muted/50">/</span>
                 {discipline?.title ?? "Dossier"}
+                {study.year ? <span className="text-muted/50"> · {study.year}</span> : null}
               </p>
               <span className="h-px flex-1 bg-border" />
             </div>
             <h1 id="cs-heading" className="t-h1">
-              {study.displayClientName || study.title}
+              {displayName}
             </h1>
-            <p className="t-label mt-5 text-accent">{study.industry}</p>
-            <p className="t-body-lg mt-6 max-w-xl text-muted">{study.summary}</p>
+            {study.industry ? <p className="t-label mt-5 text-accent">{study.industry}</p> : null}
+            {study.summary ? <p className="t-body-lg mt-6 max-w-xl text-muted">{study.summary}</p> : null}
             {study.services.length > 0 ? (
-              <ul className="mt-8 flex max-w-2xl flex-wrap gap-2" aria-label="Engagement capabilities">
+              <ul className="mt-8 flex max-w-xl flex-wrap gap-2" aria-label="Engagement capabilities">
                 {study.services.map((s) => (
                   <li key={s} className="t-caption rounded-[2px] border border-border px-2.5 py-1 text-muted">
                     {s}
@@ -108,90 +110,141 @@ export default async function CaseStudyPage({
               </ul>
             ) : null}
           </div>
-          <div className="lg:col-span-5">
-            <div className="relative aspect-[4/3] overflow-hidden border border-border">
-              <Image
-                src={DISCIPLINE_PHOTO[study.discipline] ?? DISCIPLINE_PHOTO.web}
-                alt={
-                  isDemo
-                    ? `Design concept artwork for ${study.title} — fictional demo project`
-                    : `${study.title} case study`
-                }
-                fill
-                sizes="(max-width: 1024px) 100vw, 40vw"
-                className="duotone object-cover"
-                priority
-              />
-              <div aria-hidden="true" className="absolute inset-0 bg-[rgb(16_19_25/0.25)]" />
-              {isDemo ? (
-                <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.45)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
-                  Design concept
-                </span>
-              ) : null}
-            </div>
+          <div className="lg:col-span-6">
+            <Reveal delay={120}>
+              <figure className="relative border border-border bg-surface">
+                <div className="aspect-[5/4]">
+                  {study.heroImage ? (
+                    // Data URL stored in the record — skip the optimizer, render directly.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={study.heroImage.dataUrl}
+                      alt={study.heroImage.alt || `${displayName} — project visual`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <ProjectMockup discipline={study.discipline} palette={study.palette} />
+                  )}
+                </div>
+                {isDemo ? (
+                  <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.5)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
+                    Design concept
+                  </span>
+                ) : null}
+                <figcaption className="flex items-center justify-between gap-4 border-t border-border px-4 py-3">
+                  <span className="t-caption text-muted">
+                    {study.heroImage
+                      ? study.heroImage.alt || "Project visual"
+                      : study.discipline === "mobile"
+                        ? "Key screens — home, detail and conversation"
+                        : study.discipline === "web" || study.discipline === "design"
+                          ? "Representative interface views"
+                          : "Operations dashboard overview"}
+                  </span>
+                  <span aria-hidden="true" className="h-2 w-2 shrink-0 bg-accent" />
+                </figcaption>
+              </figure>
+            </Reveal>
           </div>
         </div>
       </section>
 
-      {/* ---------- Fact bar ---------- */}
-      {(study.year || study.duration || study.teamSize || study.clientName) && (
+      {/* ---------- Engagement fact bar ---------- */}
+      {facts.length > 0 ? (
         <div className="border-b border-border bg-surface-2/60">
-          <dl className="shell grid grid-cols-2 gap-px sm:grid-cols-4">
-            {[
-              { k: "Year", v: study.year },
-              { k: "Duration", v: study.duration },
-              { k: "Team", v: study.teamSize },
-              { k: "Client", v: study.displayClientName || study.clientName },
-            ]
-              .filter((f) => f.v)
-              .map((f) => (
-                <div key={f.k} className="flex flex-col bg-background px-4 py-6 sm:px-6">
-                  <dt className="t-label text-muted">{f.k}</dt>
-                  <dd className="t-sm mt-2 font-medium text-foreground/90">{f.v}</dd>
-                </div>
-              ))}
+          <dl className="shell grid grid-cols-2 gap-px sm:grid-cols-5">
+            {facts.map((f) => (
+              <div key={f.k} className="flex flex-col bg-background px-4 py-6 sm:px-6">
+                <dt className="t-label text-muted">{f.k}</dt>
+                <dd className="t-sm mt-2 font-medium text-foreground/90">{f.v}</dd>
+              </div>
+            ))}
           </dl>
         </div>
-      )}
+      ) : null}
 
       {/* ---------- Challenge ---------- */}
       {study.challenge ? (
         <Section index="Challenge" chapter="ink" labelledBy="cs-challenge-heading">
-          <div className="max-w-3xl">
-            <SectionHeader id="cs-challenge-heading" heading="The challenge." />
-            <Reveal>
-              <p className="t-body-lg text-muted">{study.challenge}</p>
-            </Reveal>
+          <div className="grid gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <SectionHeader
+                id="cs-challenge-heading"
+                heading="The challenge."
+                lead="The problem exactly as it arrived — constraints included."
+              />
+            </div>
+            <div className="lg:col-span-7 lg:col-start-6">
+              <Reveal>
+                <p className="t-body-lg text-muted">{study.challenge}</p>
+              </Reveal>
+            </div>
           </div>
         </Section>
       ) : null}
 
-      {/* ---------- Solution ---------- */}
+      {/* ---------- Solution + stack rail ---------- */}
       {study.solution ? (
         <Section index="Solution" labelledBy="cs-solution-heading">
           <div className="grid gap-12 lg:grid-cols-12">
             <div className="lg:col-span-7">
-              <SectionHeader id="cs-solution-heading" heading="What we built." />
+              <SectionHeader
+                id="cs-solution-heading"
+                heading="What we built."
+                lead="Approach, architecture and how it shipped."
+              />
               <Reveal>
                 <p className="t-body-lg text-muted">{study.solution}</p>
               </Reveal>
             </div>
             {study.technologies.length > 0 ? (
-              <div className="lg:col-span-5">
+              <aside className="lg:col-span-5">
                 <Reveal delay={140}>
-                  <p className="t-label mb-5 text-muted">Technology stack</p>
-                  <ul className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2">
-                    {study.technologies.map((t) => (
-                      <li key={t} className="flex items-center gap-3 bg-background p-4">
-                        <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-accent" />
-                        <span className="t-sm font-medium text-foreground/90">{t}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="border border-border bg-surface-2/60 p-6 sm:p-8">
+                    <p className="t-label mb-6 text-muted">Technology stack</p>
+                    <ul className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2">
+                      {study.technologies.map((t) => (
+                        <li key={t} className="flex items-center gap-3 bg-background p-4">
+                          <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-accent" />
+                          <span className="t-sm font-medium text-foreground/90">{t}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="t-caption mt-6 text-muted/80">
+                      Chosen for the load-bearing walls — proven technology where it counts.
+                    </p>
+                  </div>
                 </Reveal>
-              </div>
+              </aside>
             ) : null}
           </div>
+        </Section>
+      ) : null}
+
+      {/* ---------- Outcomes ---------- */}
+      {shownResults.length > 0 ? (
+        <Section index="Outcomes" chapter="ink" labelledBy="cs-results-heading">
+          <SectionHeader
+            id="cs-results-heading"
+            heading="Measured outcomes."
+            lead={
+              isDemo ? (
+                <>Design-preview figures — replaced by client-approved, verified results at publication.</>
+              ) : (
+                <>Each figure verified with the client before publication.</>
+              )
+            }
+          />
+          <Reveal>
+            <dl className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-3">
+              {shownResults.map((r) => (
+                <div key={r.label} className="flex flex-col bg-background p-7 sm:p-9">
+                  <dd className="t-dl text-foreground/85">{r.value}</dd>
+                  <dt className="t-label order-2 mt-4 text-muted">{r.label}</dt>
+                </div>
+              ))}
+            </dl>
+          </Reveal>
         </Section>
       ) : null}
 
@@ -201,7 +254,7 @@ export default async function CaseStudyPage({
           <SectionHeader
             id="cs-palette-heading"
             heading="Project palette."
-            lead={<>The color system that carries the product's interface, from ink to accent.</>}
+            lead="The color system that carries the product's interface — ink, surfaces and the accent that earns attention."
           />
           <Reveal>
             <ul className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
@@ -219,39 +272,12 @@ export default async function CaseStudyPage({
         </Section>
       ) : null}
 
-      {/* ---------- Results ---------- */}
-      {shownResults.length > 0 ? (
-        <Section index="Results" chapter="ink" labelledBy="cs-results-heading">
-          <SectionHeader
-            id="cs-results-heading"
-            heading="Outcomes."
-            lead={
-              isDemo ? (
-                <>Design-preview figures — replaced by client-approved, verified results at publication.</>
-              ) : (
-                <>Verified with the client before publication.</>
-              )
-            }
-          />
-          <Reveal>
-            <dl className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-3">
-              {shownResults.map((r) => (
-                <div key={r.label} className="flex flex-col bg-background p-7 sm:p-9">
-                  <dd className="t-dl text-foreground/85">{r.value}</dd>
-                  <dt className="t-label order-2 mt-4 text-muted">{r.label}</dt>
-                </div>
-              ))}
-            </dl>
-          </Reveal>
-        </Section>
-      ) : null}
-
       {/* ---------- Testimonial ---------- */}
       {study.testimonial ? (
         <Section index="In Their Words" labelledBy="cs-testimonial-heading">
-          <div className="max-w-4xl">
+          <div className="mx-auto max-w-4xl">
             <Reveal>
-              <figure>
+              <figure className="border border-border bg-surface p-8 sm:p-12">
                 <p className="t-label text-accent">
                   {isDemo ? "Client testimonial preview" : "Client testimonial"}
                 </p>
@@ -271,18 +297,18 @@ export default async function CaseStudyPage({
         </Section>
       ) : null}
 
-      {/* ---------- Next project + CTA ---------- */}
-      <Section index="Continue" labelledBy="cs-next-heading">
-        <div className="grid gap-10 lg:grid-cols-12">
-          {next ? (
-            <div className="lg:col-span-7">
-              <Reveal>
-                <Link
-                  href={`/case-studies/${next.slug}`}
-                  className="group block border border-border bg-surface p-8 transition-colors hover:border-foreground/30 sm:p-10"
-                >
+      {/* ---------- Next project ---------- */}
+      {next ? (
+        <Section index="Continue" labelledBy="cs-next-heading" className="bg-surface-2/60">
+          <div className="mx-auto max-w-5xl">
+            <Reveal>
+              <Link
+                href={`/case-studies/${next.slug}`}
+                className="group flex flex-wrap items-center justify-between gap-6 border border-border bg-background p-8 transition-colors hover:border-foreground/30 sm:p-10"
+              >
+                <div>
                   <p className="t-label text-muted">Next project</p>
-                  <p className="t-h3 mt-4 flex items-center gap-3">
+                  <p className="t-h3 mt-3 flex items-center gap-3">
                     {next.displayClientName || next.title}
                     <svg
                       aria-hidden="true"
@@ -296,20 +322,25 @@ export default async function CaseStudyPage({
                     </svg>
                   </p>
                   <p className="t-caption mt-2.5 text-muted">{next.industry}</p>
-                </Link>
-              </Reveal>
-            </div>
-          ) : null}
-          <div className={cn("lg:col-span-5", !next && "lg:col-start-8")}>
-            <DetailCta
-              headingId="cs-cta-heading"
-              heading="Have a project in this shape?"
-              lead="Tell us the problem, the constraints and what success looks like — a senior consultant replies within one business day."
-              location="Case study"
-            />
+                </div>
+                <div className="flex h-14 w-20 shrink-0 items-center justify-center border border-border bg-surface-2/60 sm:h-16 sm:w-28">
+                  <ProjectMockup discipline={next.discipline} palette={next.palette} className="pointer-events-none" />
+                </div>
+              </Link>
+            </Reveal>
           </div>
-        </div>
-      </Section>
+        </Section>
+      ) : null}
+
+      {/* ---------- Close ---------- */}
+      <DetailCta
+        headingId="cs-cta-heading"
+        heading="Bring us a problem like this one."
+        lead="Every dossier here started as a plain-language brief. Send the problem and its constraints — a senior consultant replies within one business day, with questions worth answering."
+        location="case-study-close"
+        secondaryLabel="Browse Services"
+        secondaryHref="/services"
+      />
     </>
   );
 }

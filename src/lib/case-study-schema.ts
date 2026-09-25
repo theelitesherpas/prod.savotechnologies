@@ -63,6 +63,17 @@ export const caseStudySchema = z.object({
       role: z.string().min(1).max(160),
     })
     .nullish(),
+  /** Attached hero visual — cropped client-side to the exact target size
+   * (see components/admin/image-crop-field.tsx) and stored as a data URL
+   * inside the record JSON, so it travels with the database everywhere. */
+  heroImage: z
+    .object({
+      dataUrl: z.string().startsWith("data:image/").max(4_000_000),
+      width: z.number().int().positive(),
+      height: z.number().int().positive(),
+      alt: z.string().max(200).default(""),
+    })
+    .nullish(),
   featured: z.boolean().optional().default(false),
   /** Constants-side content status — records marked demo never render in production. */
   status: z.enum(["demo", "verified"]).optional().default("demo"),

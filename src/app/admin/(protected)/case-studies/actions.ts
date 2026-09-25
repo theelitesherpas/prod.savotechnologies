@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { caseStudySchema, slugifyCaseStudy } from "@/lib/case-study-schema";
+import { CASE_STUDY_DETAILS } from "@/constants/case-studies";
 
 /**
  * Case-study mutations for the dedicated rich editor (/admin/case-studies).
@@ -111,4 +112,42 @@ export async function setCaseStudyStatusAction(formData: FormData): Promise<void
   revalidatePath("/case-studies");
   revalidatePath(`/case-studies/${item.slug}`);
   redirect("/admin/case-studies?saved=status");
+}
+
+/**
+ * Import (upsert) the coded dossier records — the four demo projects on
+ * staging, or any verified records appended to the constants later — as
+ * editable database rows. Imported demo dossiers land with lifecycle
+ * "demo": visible on staging (never production) and fully editable from
+ * the admin panel. Existing slugs are refreshed, not duplicated.
+ */
+export async function importCaseStudyDefaultsAction(): Promise<void> {
+  const user = await requireAdmin();
+  if (!prisma) redirect("/admin/case-studies?e=db");
+
+  let count = 0;
+  for (const [i, study] of CASE_STUDY_DETAILS.entries()) {
+    const { slug, ...record } = study;
+    await prisma.contentItem.upsert({
+      where: { collection_slug: { collection: "case-studies", slug } },
+      create: {
+        collection: "case-studies",
+        slug,
+        title: record.title,
+        order: i,
+        active: true,
+        contentStatus: record.status === "verified" ? "published" : "demo",
+        data: record as unknown as import("@prisma/client").Prisma.InputJsonValue,
+      },
+      update: { title: record.title, order: i },
+    });
+    count += 1;
+  }
+
+  await audit(user.id, "caseStudy.importDefaults", "ContentItem", `case-studies:${count} records`);
+
+  revalidatePath("/");
+  revalidatePath("/case-studies");
+  for (const s of CASE_STUDY_DETAILS) revalidatePath(`/case-studies/${s.slug}`);
+  redirect(`/admin/case-studies?saved=imported&n=${count}`);
 }

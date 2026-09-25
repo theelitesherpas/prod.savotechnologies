@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import type { CaseStudyRecord } from "@/lib/case-study-schema";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
 import { SubmitButton } from "./form";
+import { ProjectMockup } from "@/components/shared/project-mockup";
+import { ImageCropField, type AttachedImage } from "./image-crop-field";
 
 const secondaryBtn =
   "inline-flex h-10 items-center justify-center rounded-lg border border-border px-5 text-[0.875rem] font-medium text-foreground transition-colors hover:border-foreground/40 disabled:pointer-events-none disabled:opacity-60";
@@ -67,6 +69,11 @@ export function CaseStudyForm({
   const [tName, setTName] = useState(r?.testimonial?.name ?? "");
   const [tRole, setTRole] = useState(r?.testimonial?.role ?? "");
   const [featured, setFeatured] = useState(r?.featured ?? false);
+  const [heroImage, setHeroImage] = useState<AttachedImage | null>(
+    r?.heroImage
+      ? { dataUrl: r.heroImage.dataUrl, width: r.heroImage.width, height: r.heroImage.height, alt: r.heroImage.alt ?? "" }
+      : null,
+  );
   const [contentStatus, setContentStatus] = useState(item?.contentStatus ?? "draft");
 
   const disciplineCaps = useMemo(
@@ -104,6 +111,9 @@ export function CaseStudyForm({
     duration,
     teamSize,
     testimonial: hasTestimonial && tQuote && tName && tRole ? { quote: tQuote, name: tName, role: tRole } : null,
+    heroImage: heroImage
+      ? { dataUrl: heroImage.dataUrl, width: heroImage.width, height: heroImage.height, alt: heroImage.alt }
+      : null,
     featured,
     status: contentStatus === "published" ? "verified" : "demo",
   });
@@ -147,6 +157,38 @@ export function CaseStudyForm({
         <p className="t-caption ml-auto text-muted">
           Only <strong>Published</strong> records render on the public site.
         </p>
+      </div>
+
+      {/* Live product preview — restyles with the discipline and palette;
+          an attached hero image takes over from the generated mockup */}
+      <div className="adm-card p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <p className="adm-label">Detail-page visual (live preview)</p>
+          <p className="t-caption text-muted">{heroImage ? "Attached image" : "Browser · phones · dashboard, tinted from the palette"}</p>
+        </div>
+        <div className="aspect-[5/3] overflow-hidden rounded-[2px] border border-border bg-[var(--surface)]">
+          {heroImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={heroImage.dataUrl} alt="Hero visual preview" className="h-full w-full object-cover" />
+          ) : (
+            <ProjectMockup
+              discipline={discipline}
+              palette={palette.length ? palette : [{ name: "Ink", hex: "#14161c" }, { name: "Surface", hex: "#f4f2ec" }, { name: "Accent", hex: "#e8490f" }]}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Hero image attach + crop */}
+      <div className="adm-card p-5">
+        <ImageCropField
+          label="Hero image"
+          hint="Shown at the top of the detail page. If unset, the generated product mockup renders instead."
+          targetWidth={1600}
+          targetHeight={1280}
+          value={heroImage}
+          onChange={setHeroImage}
+        />
       </div>
 
       {/* Identity */}

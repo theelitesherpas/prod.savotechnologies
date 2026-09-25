@@ -54,7 +54,7 @@ export type CaseDiscipline = {
 const PENDING_OUTCOME = "[Verified project result required]";
 const PENDING_NAME = "[Project Name]";
 
-const CASE_DISCIPLINES_BASE: CaseDiscipline[] = [
+export const CASE_DISCIPLINES_BASE: CaseDiscipline[] = [
   {
     id: "web",
     index: "02",

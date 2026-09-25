@@ -10,14 +10,24 @@
 
 import { prisma } from "./prisma";
 import { logger } from "./logger";
+import { IS_DEMO } from "./content-mode";
 import { CASE_STUDY_DETAILS } from "@/constants/case-studies";
 import { caseStudySchema, type CaseStudy } from "./case-study-schema";
+
+/**
+ * Staging renders everything that has passed draft (demo · review ·
+ * verified · published) so admin edits are visible immediately while the
+ * content is being worked. Production renders published records only.
+ */
+const VISIBLE_STATUSES = IS_DEMO
+  ? (["demo", "review", "verified", "published"] as const)
+  : (["published"] as const);
 
 export async function getCaseStudies(): Promise<CaseStudy[]> {
   if (prisma) {
     try {
       const rows = await prisma.contentItem.findMany({
-        where: { collection: "case-studies", active: true, contentStatus: "published" },
+        where: { collection: "case-studies", active: true, contentStatus: { in: [...VISIBLE_STATUSES] } },
         orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
         select: { slug: true, data: true },
       });

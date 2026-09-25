@@ -4,17 +4,16 @@ import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "@/components/ui/section-header";
 import { WORK_PLACEHOLDERS } from "@/constants/content";
-import { DEMO_CASE_STUDIES, DEMO_TESTIMONIAL } from "@/content/demo";
-import { slugifyCaseStudy } from "@/lib/case-study-schema";
+import { DEMO_TESTIMONIAL } from "@/content/demo";
+import { getCaseStudies } from "@/lib/case-studies";
 import { IS_DEMO } from "@/lib/content-mode";
 
 /**
- * Selected work — CONTENT_MODE gated. Demo mode renders fictional design
- * projects (Meridian Commerce / NovaFlow / Aster Health) so the cards,
- * typography and responsive grid stay complete for review; production
- * renders the honest in-preparation placeholders until verified case
- * studies arrive. Demo cards use the same abstract wireframe art — never
- * real logos or disguised real companies.
+ * Selected work — CONTENT_MODE gated. Demo mode renders the dossier
+ * records (admin DB rows first, coded fictional projects as fallback) so
+ * the cards, typography and responsive grid stay complete for review and
+ * stay in sync with the admin editor; production renders the honest
+ * in-preparation placeholders until verified case studies arrive.
  */
 
 type WorkItem = {
@@ -28,19 +27,27 @@ type WorkItem = {
   slug?: string;
 };
 
-const DEMO_WORK_ITEMS: WorkItem[] = DEMO_CASE_STUDIES.slice(0, 3).map((c) => ({
-  name: c.title,
-  industry: c.industry,
-  services: c.services.slice(0, 2).join(" · ") || c.industry,
-  stack: c.technologies.join(" · "),
-  outcome: c.results.map((r) => `${r.value} ${r.label}`).join(" · ") + " — demo figures",
-  variant: c.variant,
-  slug: slugifyCaseStudy(c.title),
-}));
+/** Variant rotates across the three wireframe art sets. */
+const VARIANT_BY_INDEX = ["a", "b", "c"] as const;
 
-const WORK_ITEMS: WorkItem[] = IS_DEMO
-  ? DEMO_WORK_ITEMS
-  : WORK_PLACEHOLDERS.map((w) => ({ ...w }));
+async function workItems(): Promise<WorkItem[]> {
+  if (IS_DEMO) {
+    const studies = await getCaseStudies();
+    return studies.slice(0, 3).map((c, i) => ({
+      name: c.displayClientName || c.title,
+      industry: c.industry ?? "",
+      services: (c.services ?? []).slice(0, 2).join(" · ") || (c.industry ?? ""),
+      stack: (c.technologies ?? []).join(" · "),
+      outcome:
+        (c.results ?? []).map((r) => `${r.value} ${r.label}`).join(" · ") +
+        ((c.results?.length ?? 0) > 0 ? " — demo figures" : ""),
+      variant: VARIANT_BY_INDEX[i % 3],
+      slug: c.slug,
+    }));
+  }
+  return WORK_PLACEHOLDERS.map((w) => ({ ...w }));
+}
+
 const PHOTO_BY_VARIANT = {
   a: "/images/meeting.webp",
   b: "/images/code.webp",
@@ -184,8 +191,8 @@ function WorkCard({
   );
 }
 
-export function SelectedWork() {
-  const [featured, ...rest] = WORK_ITEMS;
+export async function SelectedWork() {
+  const [featured, ...rest] = await workItems();
 
   return (
     <Section id="work" index="Selected Work" labelledBy="work-heading">

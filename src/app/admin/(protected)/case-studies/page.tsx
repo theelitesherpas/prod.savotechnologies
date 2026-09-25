@@ -5,8 +5,8 @@ import { PageHeader, Notice, Chip, EmptyState } from "@/components/admin/ui";
 import { caseStudySchema } from "@/lib/case-study-schema";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
 import { IS_DEMO } from "@/lib/content-mode";
-import { deleteCaseStudyAction } from "./actions";
-import { ConfirmButton } from "@/components/admin/form";
+import { deleteCaseStudyAction, importCaseStudyDefaultsAction } from "./actions";
+import { ConfirmButton, SubmitButton } from "@/components/admin/form";
 
 export const metadata: Metadata = { title: "Case studies" };
 
@@ -15,6 +15,7 @@ const SAVED_MESSAGES: Record<string, string> = {
   updated: "Changes saved.",
   deleted: "Case study deleted.",
   status: "Lifecycle updated.",
+  imported: "Imported demo dossiers from the coded defaults — they are now editable rows (lifecycle: demo).",
 };
 
 const STATUS_TONE: Record<string, "default" | "accent" | "success" | "warning" | "muted"> = {
@@ -28,7 +29,7 @@ const STATUS_TONE: Record<string, "default" | "accent" | "success" | "warning" |
 export default async function AdminCaseStudiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; e?: string }>;
+  searchParams: Promise<{ saved?: string; e?: string; n?: string }>;
 }) {
   const sp = await searchParams;
 
@@ -63,16 +64,27 @@ export default async function AdminCaseStudiesPage({
           IS_DEMO ? " Staging also shows the coded demo dossiers (Meridian, NovaFlow, Aster, Northstar) until DB records exist." : ""
         }`}
         actions={
-          <Link
-            href="/admin/case-studies/new"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent px-5 text-[0.875rem] font-semibold text-on-accent shadow-sm transition-colors hover:bg-accent-hover"
-          >
-            New case study
-          </Link>
+          <div className="flex items-center gap-3">
+            {parsed.length === 0 ? (
+              <form action={importCaseStudyDefaultsAction}>
+                <SubmitButton label="Import demo dossiers" pendingLabel="Importing…" />
+              </form>
+            ) : null}
+            <Link
+              href="/admin/case-studies/new"
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-accent px-5 text-[0.875rem] font-semibold text-on-accent shadow-sm transition-colors hover:bg-accent-hover"
+            >
+              New case study
+            </Link>
+          </div>
         }
       />
 
-      {sp.saved && SAVED_MESSAGES[sp.saved] ? <Notice>{SAVED_MESSAGES[sp.saved]}</Notice> : null}
+      {sp.saved && SAVED_MESSAGES[sp.saved] ? (
+        <Notice>
+          {sp.saved === "imported" && sp.n ? `${SAVED_MESSAGES.imported} (${sp.n} records)` : SAVED_MESSAGES[sp.saved]}
+        </Notice>
+      ) : null}
       {sp.e === "invalid" ? <Notice kind="alert">Check the fields — the record failed validation.</Notice> : null}
       {sp.e === "dup" ? <Notice kind="alert">That slug is already in use.</Notice> : null}
       {sp.e === "db" ? <Notice kind="alert">Database unavailable — start PostgreSQL and retry.</Notice> : null}
