@@ -6,6 +6,8 @@ import { env } from "@/lib/env";
 import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
 import { validatePhone, COUNTRY_PHONE_RULES } from "@/lib/phone";
 import { logger } from "@/lib/logger";
+import { sendMailNow, teamEmail } from "@/lib/mail";
+import { teamCallback } from "@/lib/mail/templates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -85,6 +87,14 @@ export async function POST(req: Request) {
       },
     });
     logger.info("callback.stored", { country: data.country });
+    sendMailNow(
+      teamEmail(),
+      teamCallback({
+        name: data.name || "Callback request",
+        phone: phone.normalized,
+        country: data.country,
+      }),
+    );
     return apiOk();
   } catch (err) {
     logger.error("callback.store_failed", {

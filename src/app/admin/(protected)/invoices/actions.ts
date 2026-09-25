@@ -6,6 +6,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import { sendMailNow } from "@/lib/mail";
+import { invoiceIssued, invoiceOverdue, invoicePaid } from "@/lib/mail/templates";
 
 const CURRENCIES = ["INR", "USD", "CHF", "EUR", "GBP", "AED"] as const;
 const STATUSES = ["draft", "sent", "paid", "overdue", "cancelled"] as const;
@@ -75,6 +77,13 @@ export async function createInvoiceAction(formData: FormData): Promise<void> {
     redirect("/admin/invoices?e=That%20invoice%20number%20is%20already%20in%20use.");
   }
   await audit(user.id, "invoice.create", "Invoice", d.number, { amount, currency: d.currency });
+  const createdClient = await prisma.clientUser.findUnique({ where: { id: d.clientId } });
+  if (createdClient) {
+    sendMailNow(
+      createdClient.email,
+      invoiceIssued(createdClient.name, d.number, amount, d.currency, parseDate(d.dueDate)),
+    );
+  }
   revalidatePath("/admin/invoices");
   redirect("/admin/invoices?saved=created");
 }
@@ -99,6 +108,7 @@ export async function updateInvoiceAction(formData: FormData): Promise<void> {
   if (!parsed.success) redirect(`/admin/invoices/${id}?e=${encodeURIComponent(parsed.error.issues[0]?.message ?? "invalid")}`);
 
   const d = parsed.data;
+  const amount = Math.round(d.amountMajor * 100);
   try {
     await prisma.invoice.update({
       where: { id },
@@ -106,7 +116,7 @@ export async function updateInvoiceAction(formData: FormData): Promise<void> {
         clientId: d.clientId,
         projectId: d.projectId || null,
         number: d.number,
-        amount: Math.round(d.amountMajor * 100),
+        amount,
         currency: d.currency,
         status: d.status,
         notes: d.notes ?? "",
@@ -119,6 +129,18 @@ export async function updateInvoiceAction(formData: FormData): Promise<void> {
     redirect(`/admin/invoices/${id}?e=dup`);
   }
   await audit(user.id, "invoice.update", "Invoice", d.number);
+  const prev = await prisma.invoice.findUnique({ where: { id } });
+  const updClient = await prisma.clientUser.findUnique({ where: { id: d.clientId } });
+  if (updClient && prev && prev.status !== d.status) {
+    if (d.status === "paid") {
+      sendMailNow(updClient.email, invoicePaid(updClient.name, d.number, amount, d.currency));
+    } else if (d.status === "overdue") {
+      const late = parseDate(d.dueDate)
+        ? Math.max(1, Math.ceil((Date.now() - (parseDate(d.dueDate) as Date).getTime()) / 86400000))
+        : 1;
+      sendMailNow(updClient.email, invoiceOverdue(updClient.name, d.number, amount, d.currency, late));
+    }
+  }
   revalidatePath("/admin/invoices");
   redirect("/admin/invoices?saved=1");
 }

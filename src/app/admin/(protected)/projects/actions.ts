@@ -6,6 +6,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import { sendMailNow } from "@/lib/mail";
+import { milestoneUpdate as milestoneMail, projectUpdate as projectMail } from "@/lib/mail/templates";
 
 const STATUSES = ["planning", "in_progress", "review", "delivered", "paused", "cancelled"] as const;
 
@@ -119,6 +121,14 @@ export async function cycleMilestoneAction(formData: FormData): Promise<void> {
   if (m) {
     const next = m.status === "pending" ? "in_progress" : m.status === "in_progress" ? "done" : "pending";
     await prisma.projectMilestone.update({ where: { id }, data: { status: next } });
+    // Notify the client when work starts or a milestone completes.
+    if (next !== "pending") {
+      const proj = await prisma.clientProject.findUnique({
+        where: { id: projectId },
+        include: { client: { select: { email: true, name: true } } },
+      });
+      if (proj) sendMailNow(proj.client.email, milestoneMail(proj.client.name, proj.title, m.title, next));
+    }
   }
   revalidatePath(`/admin/projects/${projectId}`);
   redirect(`/admin/projects/${projectId}?saved=milestone`);
@@ -143,6 +153,11 @@ export async function addUpdateAction(formData: FormData): Promise<void> {
   const body = z.string().trim().max(2000).catch("").parse(formData.get("body") ?? "");
 
   await prisma.projectUpdate.create({ data: { projectId, title, body } });
+  const proj = await prisma.clientProject.findUnique({
+    where: { id: projectId },
+    include: { client: { select: { email: true, name: true } } },
+  });
+  if (proj) sendMailNow(proj.client.email, projectMail(proj.client.name, proj.title, title, body));
   await audit(user.id, "project.updatePost", "ClientProject", projectId, { title });
   revalidatePath(`/admin/projects/${projectId}`);
   redirect(`/admin/projects/${projectId}?saved=update`);

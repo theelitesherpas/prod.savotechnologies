@@ -6,6 +6,17 @@ import { env } from "@/lib/env";
 import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { enquirySchema } from "@/schemas/enquiry";
+import { sendMailNow, teamEmail } from "@/lib/mail";
+import {
+  applicationAck,
+  askSavoHandoffAck,
+  callbackAck,
+  enquiryAck,
+  teamApplication,
+  teamAskSavo,
+  teamCallback,
+  teamEnquiry,
+} from "@/lib/mail/templates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -99,6 +110,47 @@ export async function POST(req: Request) {
       },
     });
     logger.info("enquiry.stored", { source, type: data.projectType });
+
+    /* Transactional mail — never blocks the response, never fails the
+       request. Careers applications acknowledge the candidate and ping
+       HR; assistant handoffs promise a one-business-day reply; every
+       form notifies the team inbox. */
+    const form = (details as { form?: string } | null)?.form ?? "";
+    const det = (details ?? {}) as Record<string, string>;
+    if (form === "careers") {
+      if (data.email) sendMailNow(data.email, applicationAck(data.name, det.role ?? "the role"));
+      sendMailNow(process.env.HR_EMAIL || "hr@savotechnologies.com", teamApplication({
+        name: data.name,
+        email: data.email ?? "—",
+        role: det.role ?? "General application",
+        experience: det.experience,
+        links: det.links,
+        message: data.message,
+      }));
+    } else if (form === "callback") {
+      if (data.email) sendMailNow(data.email, callbackAck(data.name, det.country ?? "your"));
+      sendMailNow(teamEmail(), teamCallback({
+        name: data.name,
+        phone: data.phone ?? "—",
+        country: det.country ?? "—",
+        note: data.message.slice(0, 300),
+      }));
+    } else if (form === "ask-savo") {
+      if (data.email) sendMailNow(data.email, askSavoHandoffAck(data.message));
+      sendMailNow(teamEmail(), teamAskSavo({ email: data.email ?? "—", question: data.message }));
+    } else {
+      if (data.email) sendMailNow(data.email, enquiryAck(data.name, data.projectType));
+      sendMailNow(teamEmail(), teamEnquiry({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        projectType: data.projectType,
+        budget: data.budget,
+        message: data.message,
+        source,
+      }));
+    }
+
     return apiOk();
   } catch (err) {
     logger.error("enquiry.store_failed", {
