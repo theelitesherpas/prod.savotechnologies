@@ -29,6 +29,7 @@ export type AnalyticsEvent =
   | "ask_savo_handoff"
   | "ask_savo_human"
   | "ask_savo_minimize"
+  | "ask_savo_minimize_outside"
   | "ask_savo_close"
   | "ask_savo_reset"
   | "ask_savo_book_call"

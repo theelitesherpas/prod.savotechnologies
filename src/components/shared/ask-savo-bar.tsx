@@ -26,7 +26,8 @@ import { cn, withBasePath } from "@/lib/utils";
  * broad glass frame. Deterministic FAQ answers over verified site truth;
  * unmatched questions hand off to a human instead of guessing. Window
  * controls: minimize (collapse), new chat (reset), close (dismiss until the
- * visitor returns to the page top). Book a call / WhatsApp reach humans.
+ * visitor returns to the page top). Clicking outside the frame minimizes
+ * the window back to the bar. Book a call / WhatsApp reach humans.
  */
 
 type Message =
@@ -67,6 +68,7 @@ export function AskSavoBar() {
 
   const threadRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const frameRef = useRef<HTMLDivElement | null>(null);
   const idRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const { open: openEnquiry } = useEnquiry();
@@ -102,6 +104,36 @@ export function AskSavoBar() {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  /* Clicking anywhere outside the assistant frame minimizes it back to the
+     bar. The gesture must both start and land outside: a drag that begins
+     inside the chat (selecting an answer, say) is ignored when its click
+     bubbles from a common ancestor, and a drag that becomes a scroll never
+     fires a click at all, so scrolling the page behind it keeps the window
+     open. The enquiry drawer overlays the whole page, so clicks inside it
+     are left alone. */
+  useEffect(() => {
+    if (!open) return;
+    let downInside = false;
+    const onPointerDown = (e: PointerEvent) => {
+      downInside = frameRef.current?.contains(e.target as Node) ?? false;
+    };
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as Node | null;
+      if (!target || downInside) return;
+      if (frameRef.current?.contains(target)) return;
+      if (target instanceof Element && target.closest('[role="dialog"]')) return;
+      track("ask_savo_minimize_outside");
+      setOpen(false);
+      inputRef.current?.blur();
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("click", onClick);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("click", onClick);
+    };
   }, [open]);
 
   /* Keep the thread pinned to the latest message */
@@ -228,6 +260,7 @@ export function AskSavoBar() {
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))]">
       {/* Broad glass frame, the window and the bar live inside it */}
       <div
+        ref={frameRef}
         className={cn(
           "pointer-events-auto w-[min(44rem,calc(100%-1.5rem))] rounded-[14px] border border-foreground/10 bg-background p-[7px] shadow-[0_24px_70px_rgb(10_10_14/0.22)] transition-[transform,opacity] duration-500 ease-[var(--ease-out-expo)]",
           shown ? "translate-y-0 opacity-100" : "translate-y-[150%] opacity-0",
