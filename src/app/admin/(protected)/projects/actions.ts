@@ -6,8 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
-import { sendMailNow } from "@/lib/mail";
-import { milestoneUpdate as milestoneMail, projectUpdate as projectMail } from "@/lib/mail/templates";
+import { sendTemplateNow } from "@/lib/mail";
 
 const STATUSES = ["planning", "in_progress", "review", "delivered", "paused", "cancelled"] as const;
 
@@ -127,7 +126,13 @@ export async function cycleMilestoneAction(formData: FormData): Promise<void> {
         where: { id: projectId },
         include: { client: { select: { email: true, name: true } } },
       });
-      if (proj) sendMailNow(proj.client.email, milestoneMail(proj.client.name, proj.title, m.title, next));
+      if (proj)
+        sendTemplateNow("milestoneUpdate", proj.client.email, {
+          name: proj.client.name,
+          project: proj.title,
+          milestone: m.title,
+          status: next === "done" ? "completed" : "started",
+        });
     }
   }
   revalidatePath(`/admin/projects/${projectId}`);
@@ -157,7 +162,13 @@ export async function addUpdateAction(formData: FormData): Promise<void> {
     where: { id: projectId },
     include: { client: { select: { email: true, name: true } } },
   });
-  if (proj) sendMailNow(proj.client.email, projectMail(proj.client.name, proj.title, title, body));
+  if (proj)
+    sendTemplateNow("projectUpdate", proj.client.email, {
+      name: proj.client.name,
+      project: proj.title,
+      title,
+      body,
+    });
   await audit(user.id, "project.updatePost", "ClientProject", projectId, { title });
   revalidatePath(`/admin/projects/${projectId}`);
   redirect(`/admin/projects/${projectId}?saved=update`);

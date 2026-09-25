@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 const CRUMB_LABELS: Record<string, string> = {
   enquiries: "Enquiries",
   analytics: "Analytics",
+  "email-templates": "Email templates",
+  "email-compose": "Send email",
   services: "Services",
   industries: "Industries",
   content: "Content",
@@ -64,6 +66,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const nav: AdminNavNode[] = [
     { key: "overview", label: "Dashboard", icon: "gauge", href: "/admin" },
     { key: "analytics", label: "Analytics", icon: "trend", href: "/admin/analytics" },
+    { key: "email-templates", label: "Email templates", icon: "pen", href: "/admin/email-templates" },
+    { key: "email-compose", label: "Send email", icon: "external", href: "/admin/email-compose" },
     {
       key: "leads",
       label: "Enquiries",

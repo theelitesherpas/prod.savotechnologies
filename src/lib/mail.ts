@@ -1,6 +1,8 @@
 import nodemailer, { type Transporter } from "nodemailer";
 import { logger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
 import type { MailTemplate } from "@/lib/mail/templates";
+import { fillText, bodyToHtml, bodyToText, templateEntry } from "@/lib/mail/registry";
 
 /**
  * Transactional mail sender — one SMTP transport, every template.
@@ -78,4 +80,48 @@ export async function sendMail(to: string, tpl: MailTemplate): Promise<boolean> 
 /** Fire-and-forget variant for request paths — response never waits on SMTP. */
 export function sendMailNow(to: string, tpl: MailTemplate): void {
   void sendMail(to, tpl);
+}
+
+/** Render a template by key — admin override if one exists (with
+ *  {{placeholders}} filled from vars), the tested code default otherwise. */
+export async function renderTemplate(
+  key: string,
+  vars: Record<string, string | number | null | undefined>,
+): Promise<MailTemplate | null> {
+  const entry = templateEntry(key);
+  if (!entry) return null;
+  try {
+    const override = prisma ? await prisma.emailTemplate.findUnique({ where: { key } }) : null;
+    if (override) {
+      const { shell } = await import("@/lib/mail/templates");
+      const html = bodyToHtml(fillText(override.body, vars));
+      return {
+        subject: fillText(override.subject, vars),
+        html: shell({
+          preheader: fillText(override.subject, vars).slice(0, 120),
+          heading: "",
+          bodyHtml: html,
+        }),
+        text: fillText(bodyToText(override.body), vars),
+      };
+    }
+  } catch (err) {
+    logger.error("mail: override lookup failed, using default", { key, err: String(err).slice(0, 200) });
+  }
+  const clean: Record<string, string> = {};
+  for (const [k, v] of Object.entries(vars)) if (v !== null && v !== undefined) clean[k] = String(v);
+  return entry.default(clean);
+}
+
+/** Template send by key — override-aware, fire-and-forget. */
+export function sendTemplateNow(
+  key: string,
+  to: string,
+  vars: Record<string, string | number | null | undefined>,
+): void {
+  void (async () => {
+    const tpl = await renderTemplate(key, vars);
+    if (tpl) await sendMail(to, tpl);
+    else logger.error("mail: unknown template key", { key });
+  })();
 }

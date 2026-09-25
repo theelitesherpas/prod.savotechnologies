@@ -25,8 +25,8 @@ export type MailTemplate = { subject: string; html: string; text: string };
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** Brand shell shared by every template. */
-function shell(opts: {
+/** Brand shell shared by every template (also wraps admin overrides). */
+export function shell(opts: {
   preheader: string;
   heading: string;
   bodyHtml: string;

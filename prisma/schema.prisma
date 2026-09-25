@@ -310,3 +310,15 @@ model AnalyticsEvent {
   @@index([eventName, createdAt])
   @@map("analytics_events")
 }
+
+/// Admin overrides for transactional email templates. Key = registry key
+/// (e.g. "enquiryAck"); body supports {{placeholders}} rendered at send
+/// time. Absent row = the tested code default is used.
+model EmailTemplate {
+  key       String   @id
+  subject   String
+  body      String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("email_templates")
+}

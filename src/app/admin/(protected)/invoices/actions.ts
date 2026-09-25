@@ -6,8 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
-import { sendMailNow } from "@/lib/mail";
-import { invoiceIssued, invoiceOverdue, invoicePaid } from "@/lib/mail/templates";
+import { sendTemplateNow } from "@/lib/mail";
 
 const CURRENCIES = ["INR", "USD", "CHF", "EUR", "GBP", "AED"] as const;
 const STATUSES = ["draft", "sent", "paid", "overdue", "cancelled"] as const;
@@ -79,10 +78,12 @@ export async function createInvoiceAction(formData: FormData): Promise<void> {
   await audit(user.id, "invoice.create", "Invoice", d.number, { amount, currency: d.currency });
   const createdClient = await prisma.clientUser.findUnique({ where: { id: d.clientId } });
   if (createdClient) {
-    sendMailNow(
-      createdClient.email,
-      invoiceIssued(createdClient.name, d.number, amount, d.currency, parseDate(d.dueDate)),
-    );
+    sendTemplateNow("invoiceIssued", createdClient.email, {
+      name: createdClient.name,
+      number: d.number,
+      amount: new Intl.NumberFormat("en-IN", { style: "currency", currency: d.currency, maximumFractionDigits: 0 }).format(amount / 100),
+      due: parseDate(d.dueDate)?.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) ?? "",
+    });
   }
   revalidatePath("/admin/invoices");
   redirect("/admin/invoices?saved=created");
@@ -132,13 +133,14 @@ export async function updateInvoiceAction(formData: FormData): Promise<void> {
   const prev = await prisma.invoice.findUnique({ where: { id } });
   const updClient = await prisma.clientUser.findUnique({ where: { id: d.clientId } });
   if (updClient && prev && prev.status !== d.status) {
+    const amountStr = new Intl.NumberFormat("en-IN", { style: "currency", currency: d.currency, maximumFractionDigits: 0 }).format(amount / 100);
     if (d.status === "paid") {
-      sendMailNow(updClient.email, invoicePaid(updClient.name, d.number, amount, d.currency));
+      sendTemplateNow("invoicePaid", updClient.email, { name: updClient.name, number: d.number, amount: amountStr });
     } else if (d.status === "overdue") {
       const late = parseDate(d.dueDate)
         ? Math.max(1, Math.ceil((Date.now() - (parseDate(d.dueDate) as Date).getTime()) / 86400000))
         : 1;
-      sendMailNow(updClient.email, invoiceOverdue(updClient.name, d.number, amount, d.currency, late));
+      sendTemplateNow("invoiceOverdue", updClient.email, { name: updClient.name, number: d.number, amount: amountStr, days: String(late) });
     }
   }
   revalidatePath("/admin/invoices");

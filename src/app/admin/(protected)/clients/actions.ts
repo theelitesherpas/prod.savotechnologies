@@ -6,8 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
-import { sendMailNow } from "@/lib/mail";
-import { clientPasswordReset, clientWelcome } from "@/lib/mail/templates";
+import { sendTemplateNow } from "@/lib/mail";
 import { hashPassword, generateClientPassword } from "@/lib/client-auth";
 
 /**
@@ -51,7 +50,7 @@ export async function createClientAction(formData: FormData): Promise<void> {
       },
     });
     await audit(user.id, "client.create", "ClientUser", client.email);
-    sendMailNow(client.email, clientWelcome(parsed.data.name, client.email, password));
+    sendTemplateNow("clientWelcome", client.email, { name: parsed.data.name, email: client.email, password });
   } catch {
     redirect(slugError("That email is already registered."));
   }
@@ -104,7 +103,7 @@ export async function resetClientPasswordAction(formData: FormData): Promise<voi
   // Revoke existing sessions on reset
   await prisma.clientSession.deleteMany({ where: { clientId: id } }).catch(() => undefined);
   await audit(user.id, "client.passwordReset", "ClientUser", client.email);
-  sendMailNow(client.email, clientPasswordReset(client.name, password));
+  sendTemplateNow("clientPasswordReset", client.email, { name: client.name, password });
 
   redirect(`/admin/clients?reset=1&pw=${encodeURIComponent(password)}`);
 }

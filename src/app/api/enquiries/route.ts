@@ -6,17 +6,7 @@ import { env } from "@/lib/env";
 import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { enquirySchema } from "@/schemas/enquiry";
-import { sendMailNow, teamEmail } from "@/lib/mail";
-import {
-  applicationAck,
-  askSavoHandoffAck,
-  callbackAck,
-  enquiryAck,
-  teamApplication,
-  teamAskSavo,
-  teamCallback,
-  teamEnquiry,
-} from "@/lib/mail/templates";
+import { sendTemplateNow, teamEmail } from "@/lib/mail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -118,29 +108,29 @@ export async function POST(req: Request) {
     const form = (details as { form?: string } | null)?.form ?? "";
     const det = (details ?? {}) as Record<string, string>;
     if (form === "careers") {
-      if (data.email) sendMailNow(data.email, applicationAck(data.name, det.role ?? "the role"));
-      sendMailNow(process.env.HR_EMAIL || "hr@savotechnologies.com", teamApplication({
+      if (data.email) sendTemplateNow("applicationAck", data.email, { name: data.name, role: det.role ?? "the role" });
+      sendTemplateNow("teamApplication", process.env.HR_EMAIL || "hr@savotechnologies.com", {
         name: data.name,
         email: data.email ?? "—",
         role: det.role ?? "General application",
         experience: det.experience,
         links: det.links,
         message: data.message,
-      }));
+      });
     } else if (form === "callback") {
-      if (data.email) sendMailNow(data.email, callbackAck(data.name, det.country ?? "your"));
-      sendMailNow(teamEmail(), teamCallback({
+      if (data.email) sendTemplateNow("callbackAck", data.email, { name: data.name, country: det.country ?? "your" });
+      sendTemplateNow("teamCallback", teamEmail(), {
         name: data.name,
         phone: data.phone ?? "—",
         country: det.country ?? "—",
         note: data.message.slice(0, 300),
-      }));
+      });
     } else if (form === "ask-savo") {
-      if (data.email) sendMailNow(data.email, askSavoHandoffAck(data.message));
-      sendMailNow(teamEmail(), teamAskSavo({ email: data.email ?? "—", question: data.message }));
+      if (data.email) sendTemplateNow("askSavoHandoffAck", data.email, { question: data.message });
+      sendTemplateNow("teamAskSavo", teamEmail(), { email: data.email ?? "—", question: data.message });
     } else {
-      if (data.email) sendMailNow(data.email, enquiryAck(data.name, data.projectType));
-      sendMailNow(teamEmail(), teamEnquiry({
+      if (data.email) sendTemplateNow("enquiryAck", data.email, { name: data.name, projectType: data.projectType });
+      sendTemplateNow("teamEnquiry", teamEmail(), {
         name: data.name,
         email: data.email,
         phone: data.phone,
@@ -148,7 +138,7 @@ export async function POST(req: Request) {
         budget: data.budget,
         message: data.message,
         source,
-      }));
+      });
     }
 
     return apiOk();
