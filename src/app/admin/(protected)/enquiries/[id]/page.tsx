@@ -93,9 +93,16 @@ export default async function EnquiryDetailPage({
 }) {
   const { id } = await params;
   const { saved } = await searchParams;
-  const [user, enquiry] = await Promise.all([
+  const [user, enquiry, trail] = await Promise.all([
     getAdminUser(),
     prisma ? prisma.projectEnquiry.findUnique({ where: { id } }) : Promise.resolve(null),
+    prisma
+      ? prisma.auditLog.findMany({
+          where: { entity: "ProjectEnquiry", entityId: id },
+          orderBy: { createdAt: "desc" },
+          include: { user: { select: { name: true } } },
+        })
+      : Promise.resolve([]),
   ]);
 
   if (!enquiry) notFound();
@@ -375,6 +382,83 @@ export default async function EnquiryDetailPage({
           ) : null}
         </aside>
       </div>
+
+      {/* Action timeline */}
+      <section aria-labelledby="trail-heading" className="mt-10">
+        <h2 id="trail-heading" className="adm-label mb-3">Action timeline</h2>
+        <div className="adm-card p-5">
+          {trail.length === 0 ? (
+            <p className="t-sm text-muted">No actions recorded yet for this enquiry.</p>
+          ) : (
+            <ol className="relative">
+              {trail.map((log, i) => {
+                const isLast = i === trail.length - 1;
+                const meta = (log.meta ?? {}) as Record<string, unknown>;
+                const tone = log.action.includes("reject")
+                  ? "bg-error"
+                  : log.action.includes("hire") || log.action.includes("shortlist")
+                    ? "bg-green-500"
+                    : log.action.includes("interview")
+                      ? "bg-accent"
+                    : "bg-foreground/30";
+                const actionLabel = log.action
+                  .replace("enquiry.", "")
+                  .replace(/([A-Z])/g, " $1")
+                  .replace(/^./, (str) => str.toUpperCase())
+                  .trim();
+                return (
+                  <li key={log.id} className={`relative flex gap-4 ${!isLast ? "pb-6" : ""}`}>
+                    {!isLast ? (
+                      <span aria-hidden="true" className="absolute left-[7px] top-5 h-full w-px bg-border" />
+                    ) : null}
+                    <span className={`relative z-10 mt-1.5 h-[15px] w-[15px] shrink-0 rounded-full border-2 border-white ${tone} shadow-sm`} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <span className="text-[0.875rem] font-bold text-foreground">{actionLabel}</span>
+                        <span className="tnum text-[0.6875rem] font-mono text-muted">
+                          {log.createdAt.toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-[0.75rem] text-muted">
+                        by {log.user?.name ?? "system"}
+                        {typeof meta.candidate === "string" ? ` — ${meta.candidate}` : ""}
+                        {typeof meta.role === "string" ? ` (${meta.role})` : ""}
+                      </p>
+                      {typeof meta.date === "string" || typeof meta.time === "string" || typeof meta.interviewer === "string" ? (
+                        <div className="mt-1.5 rounded-md border border-accent/25 bg-accent/[0.04] px-3 py-2 text-[0.75rem] text-foreground">
+                          {typeof meta.date === "string" ? <span className="font-semibold">Interview: {meta.date}</span> : null}
+                          {typeof meta.time === "string" ? <span className="ml-2 font-semibold">at {meta.time}</span> : null}
+                          {typeof meta.interviewer === "string" ? <span className="ml-2 text-muted">with {meta.interviewer}</span> : null}
+                          {typeof meta.meetingLink === "string" ? (
+                            <a href={meta.meetingLink} target="_blank" rel="noopener noreferrer" className="mt-1 block truncate font-mono text-[0.6875rem] text-accent hover:underline">
+                              {meta.meetingLink}
+                            </a>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {log.action.includes("reject") ? (
+                        <p className="mt-1 text-[0.75rem] italic text-error/80">Rejection email sent to candidate</p>
+                      ) : null}
+                      {log.action.includes("shortlist") ? (
+                        <p className="mt-1 text-[0.75rem] italic text-green-600/80">Shortlist acknowledgment email sent to candidate</p>
+                      ) : null}
+                      {log.action.includes("interview") ? (
+                        <p className="mt-1 text-[0.75rem] italic text-accent/80">Interview invitation with meeting link sent to candidate</p>
+                      ) : null}
+                      {log.action.includes("hired") ? (
+                        <p className="mt-1 text-[0.75rem] italic text-green-600/80">Offer letter email sent to candidate</p>
+                      ) : null}
+                      {log.action.includes("docs") ? (
+                        <p className="mt-1 text-[0.75rem] italic text-muted">Document verification checklist email sent to candidate</p>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </div>
+      </section>
     </>
   );
 }
