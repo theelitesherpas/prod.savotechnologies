@@ -39,17 +39,13 @@ export default async function EnquiriesPage({
   }
 
   const status = sp.status && isEnquiryStatus(sp.status) ? sp.status : undefined;
-  const type = sp.type === "Callback" || sp.type === "Project" ? sp.type : undefined;
+  const type = ["Callback", "Project", "Careers", "Client"].includes(sp.type ?? "") ? sp.type : undefined;
   const q = (sp.q ?? "").trim().slice(0, 80);
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
 
   const where = {
     ...(status ? { status } : { status: { not: "archived" } }),
-    ...(type === "Callback"
-      ? { projectType: "Callback" }
-      : type === "Project"
-        ? { projectType: { not: "Callback" } }
-        : {}),
+
     ...(q
       ? {
           OR: [
@@ -64,7 +60,7 @@ export default async function EnquiriesPage({
 
   const [total, items] = await Promise.all([
     prisma.projectEnquiry.count({ where }),
-    prisma.projectEnquiry.findMany({
+    prisma!.projectEnquiry.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: PAGE_SIZE,
@@ -78,11 +74,30 @@ export default async function EnquiriesPage({
         status: true,
         source: true,
         message: true,
+        data: true,
         createdAt: true,
       },
     }),
   ]);
 
+  // Category detection (JS-side, reliable with null JSON data)
+  const isCareerEnquiry = (enq: { data?: unknown; source?: string | null; projectType: string }) => {
+    const d = enq.data as Record<string, unknown> | null;
+    return (
+      d?.form === "careers" ||
+      (enq.source ?? "").startsWith("careers:") ||
+      ["General application", "Full-time role", "Part-time role", "Internship"].includes(enq.projectType)
+    );
+  };
+
+  // Apply category + callback filter in JS
+  const displayItems = type === "Careers"
+    ? items.filter((enq) => isCareerEnquiry(enq))
+    : type === "Client"
+      ? items.filter((enq) => !isCareerEnquiry(enq))
+      : type === "Callback"
+        ? items.filter((enq) => enq.projectType === "Callback")
+        : items;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const qs = (over: Partial<SearchParams>) => {
@@ -115,6 +130,12 @@ export default async function EnquiriesPage({
   );
 
   const statusCounts = await prisma.projectEnquiry.groupBy({ by: ["status"], _count: { _all: true } });
+  const allRows = await prisma!.projectEnquiry.findMany({
+    where: { status: { not: "archived" } },
+    select: { data: true, source: true, projectType: true },
+  });
+  const careerCount = allRows.filter((r) => isCareerEnquiry(r)).length;
+  const clientCount = allRows.length - careerCount;
   const sc = (s: string) => statusCounts.find((r) => r.status === s)?._count._all ?? 0;
 
   return (
@@ -127,21 +148,24 @@ export default async function EnquiriesPage({
       {sp.deleted ? <Notice>Enquiry deleted.</Notice> : null}
       {sp.e === "notfound" ? <Notice kind="alert">That enquiry no longer exists.</Notice> : null}
 
-      {/* Filters */}
+      {/* Category filters */}
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        {filterTab("All enquiries", qs({ type: undefined, page: "1" }), !type)}
+        {filterTab("Projects & Clients", qs({ type: "Client", page: "1" }), type === "Client", clientCount)}
+        {filterTab("Careers & HR", qs({ type: "Careers", page: "1" }), type === "Careers", careerCount)}
+      </div>
+
+      {/* Status filters */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {filterTab("Inbox", qs({ status: undefined, page: "1" }), !status)}
-        {ENQUIRY_STATUSES.map((s) =>
+        {ENQUIRY_STATUSES.map((s2) =>
           filterTab(
-            ENQUIRY_STATUS_META[s].label,
-            qs({ status: s, page: "1" }),
-            status === s,
-            s === "archived" ? undefined : sc(s),
+            ENQUIRY_STATUS_META[s2].label,
+            qs({ status: s2, page: "1" }),
+            status === s2,
+            s2 === "archived" ? undefined : sc(s2),
           ),
         )}
-        <span aria-hidden="true" className="mx-1 hidden h-6 w-px bg-border sm:block" />
-        {filterTab("Projects", qs({ type: "Project", page: "1" }), type === "Project")}
-        {filterTab("Callbacks", qs({ type: "Callback", page: "1" }), type === "Callback")}
-        {type ? filterTab("All types", qs({ type: undefined, page: "1" }), false) : null}
       </div>
 
       {/* Search */}
@@ -191,9 +215,9 @@ export default async function EnquiriesPage({
         />
       ) : (
         <div className="space-y-2">
-              {items.map((enq) => {
+              {displayItems.map((enq) => {
                 const isCallback = enq.projectType === "Callback";
-                const isCareer = enq.message.includes("Applying for") || enq.projectType === "General application";
+                const isCareer = isCareerEnquiry(enq);
                 const kindLabel = isCallback ? "Callback" : isCareer ? "Application" : enq.projectType;
                 const kindTone = isCallback ? "default" : isCareer ? "accent" : "muted";
                 const sourceLabel = (enq.source ?? "")
