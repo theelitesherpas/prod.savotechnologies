@@ -66,6 +66,9 @@ const nextConfig: NextConfig = {
       // /resources → /insights (route renamed pre-launch)
       { source: "/resources", destination: "/insights", permanent: true },
       { source: "/resources/:slug", destination: "/insights/:slug", permanent: true },
+      // /career → /careers (singular to plural, Google still indexes old URL)
+      { source: "/career", destination: "/careers", permanent: true },
+      { source: "/career/:path*", destination: "/careers/:path*", permanent: true },
       // Service slugs normalized to full descriptive forms
       {
         source: "/services/mobile-apps",
