@@ -17,6 +17,15 @@ import {
   saveEnquiryNotesAction,
   deleteEnquiryAction,
 } from "../actions";
+import {
+  shortlistEnquiryAction,
+  rejectEnquiryAction,
+  scheduleInterviewAction,
+  requestDocumentsAction,
+  markHiredAction,
+  resetCareerStatusAction,
+} from "../career-actions";
+import { FormGuard } from "@/components/admin/form-guard";
 
 export const metadata: Metadata = { title: "Enquiry" };
 
@@ -95,6 +104,9 @@ export default async function EnquiryDetailPage({
   const mailto = `mailto:${enquiry.email ?? ""}?subject=${encodeURIComponent(
     `Re: your ${enquiry.projectType.toLowerCase()} enquiry - Savo Technologies`,
   )}`;
+  const isCareer = formData?.form === "careers";
+  const careerRole = typeof formData?.role === "string" ? formData.role : "";
+  const careerStage = enquiry.careerStatus ?? "";
 
   return (
     <>
@@ -148,6 +160,100 @@ export default async function EnquiryDetailPage({
 
           {/* Structured form payload */}
           {formData ? <FormDataPanel data={formData} /> : null}
+
+          {/* Career pipeline actions */}
+          {isCareer ? (
+            <section aria-labelledby="career-heading" className="mb-8">
+              <h2 id="career-heading" className="adm-label mb-3">
+                Recruitment pipeline {careerRole ? `- ${careerRole}` : ""}
+              </h2>
+              <div className="adm-card p-5">
+                {careerStage ? (
+                  <p className="t-caption mb-4 rounded-md border border-accent/30 bg-accent/[0.04] px-3 py-2 font-semibold text-accent">
+                    Current stage: {careerStage.replace("_", " ")}
+                    {enquiry.interviewDate ? ` - ${enquiry.interviewDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}
+                  </p>
+                ) : (
+                  <p className="t-caption mb-4 text-muted">No pipeline action taken yet.</p>
+                )}
+
+                <div className="flex flex-wrap gap-3">
+                  {!careerStage || careerStage === "rejected" ? (
+                    <form action={shortlistEnquiryAction}>
+                      <input type="hidden" name="id" value={enquiry.id} />
+                      <SubmitButton label="Shortlist candidate" />
+                    </form>
+                  ) : null}
+
+                  {careerStage === "shortlisted" ? (
+                    <details className="w-full">
+                      <summary className="t-sm cursor-pointer font-semibold text-accent">Schedule interview</summary>
+                      <FormGuard action={scheduleInterviewAction} className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <input type="hidden" name="id" value={enquiry.id} />
+                        <div>
+                          <label htmlFor="iv-date" className="adm-label mb-1 block">Date *</label>
+                          <input id="iv-date" name="interviewDate" type="date" required className="adm-input" />
+                        </div>
+                        <div>
+                          <label htmlFor="iv-time" className="adm-label mb-1 block">Time (IST) *</label>
+                          <select id="iv-time" name="interviewTime" required className="adm-select">
+                            <option value="">Select time</option>
+                            {["09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM", "07:00 PM"].map((t) => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label htmlFor="iv-link" className="adm-label mb-1 block">Meeting link *</label>
+                          <input id="iv-link" name="meetingLink" type="url" required placeholder="https://meet.google.com/..." className="adm-input" />
+                        </div>
+                        <div>
+                          <label htmlFor="iv-interviewer" className="adm-label mb-1 block">Interviewer *</label>
+                          <input id="iv-interviewer" name="interviewer" required maxLength={80} className="adm-input" placeholder="Name (role)" />
+                        </div>
+                        <div>
+                          <label htmlFor="iv-duration" className="adm-label mb-1 block">Duration</label>
+                          <input id="iv-duration" name="duration" defaultValue="45 minutes" maxLength={20} className="adm-input" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <SubmitButton label="Send interview invitation" pendingLabel="Sending..." />
+                          <p className="t-caption mt-1.5 text-muted">Sends the interview invitation email with the meeting link automatically.</p>
+                        </div>
+                      </FormGuard>
+                    </details>
+                  ) : null}
+
+                  {careerStage === "shortlisted" || careerStage === "interview_scheduled" ? (
+                    <form action={requestDocumentsAction}>
+                      <input type="hidden" name="id" value={enquiry.id} />
+                      <SubmitButton label="Request documents" pendingLabel="Sending..." />
+                    </form>
+                  ) : null}
+
+                  {careerStage === "interview_scheduled" ? (
+                    <form action={markHiredAction}>
+                      <input type="hidden" name="id" value={enquiry.id} />
+                      <SubmitButton label="Mark hired" pendingLabel="Sending..." />
+                    </form>
+                  ) : null}
+
+                  {!careerStage || careerStage === "shortlisted" || careerStage === "interview_scheduled" ? (
+                    <form action={rejectEnquiryAction}>
+                      <input type="hidden" name="id" value={enquiry.id} />
+                      <ConfirmButton label="Reject candidate" confirmLabel="Confirm reject" />
+                    </form>
+                  ) : null}
+
+                  {careerStage ? (
+                    <form action={resetCareerStatusAction}>
+                      <input type="hidden" name="id" value={enquiry.id} />
+                      <SubmitButton label="Reset pipeline" compact />
+                    </form>
+                  ) : null}
+                </div>
+              </div>
+            </section>
+          ) : null}
 
           {/* Message */}
           <section aria-labelledby="message-heading" className="mb-8">

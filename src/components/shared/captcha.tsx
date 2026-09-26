@@ -48,11 +48,11 @@ function loadScript(): Promise<void> {
       setTimeout(() => {
         clearInterval(check);
         fail();
-      }, 8000);
+      }, 10000);
     };
     const existing = document.getElementById(SCRIPT_ID);
     if (existing) {
-      wait(() => reject(new Error("recaptcha load timeout")));
+      wait(() => reject(new Error("reCAPTCHA load timeout")));
       return;
     }
     window.__onRecaptchaLoaded = () => resolve();
@@ -61,7 +61,7 @@ function loadScript(): Promise<void> {
     s.src = "https://www.google.com/recaptcha/api.js?onload=__onRecaptchaLoaded&render=explicit&hl=en";
     s.async = true;
     s.defer = true;
-    s.onerror = () => reject(new Error("recaptcha script failed"));
+    s.onerror = () => reject(new Error("reCAPTCHA script failed to load"));
     document.head.appendChild(s);
   });
 }
@@ -91,7 +91,7 @@ export function useCaptcha(portal?: "admin" | "employee" | "client"): CaptchaSta
       .then((r) => r.json())
       .then((d: { required?: boolean }) => setRequired(Boolean(d.required) && Boolean(siteKey)))
       .catch(() => setRequired(false));
-  }, [siteKey, checkUrl]);
+  }, [checkUrl, siteKey]);
 
   const reset = useCallback(() => {
     setToken(null);
@@ -101,7 +101,7 @@ export function useCaptcha(portal?: "admin" | "employee" | "client"): CaptchaSta
   // Initial gate check on mount (async - server state, not render state).
   useEffect(() => {
     let alive = true;
-    fetch("/api/captcha/required", { cache: "no-store" })
+    fetch(checkUrl, { cache: "no-store" })
       .then((r) => r.json())
       .then((d: { required?: boolean }) => {
         if (alive) setRequired(Boolean(d.required) && Boolean(siteKey));
@@ -110,7 +110,7 @@ export function useCaptcha(portal?: "admin" | "employee" | "client"): CaptchaSta
     return () => {
       alive = false;
     };
-  }, [siteKey]);
+  }, [checkUrl, siteKey]);
 
   return { required, token, setToken, reset, refresh };
 }
@@ -120,25 +120,39 @@ export function CaptchaGate({ captcha, error }: { captcha: CaptchaState; error?:
   const elRef = useRef<HTMLDivElement | null>(null);
   const widgetId = useRef<number | null>(null);
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-  const [failed, setFailed] = useState(false);
+  const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
 
   // Render the widget once the gate is required and the box is mounted.
   useEffect(() => {
     if (!captcha.required || !siteKey || widgetId.current !== null) return;
     let cancelled = false;
+    setStatus("loading");
     loadScript()
       .then(() => {
-        const el = elRef.current;
-        if (cancelled || !el || widgetId.current !== null || !window.grecaptcha?.render) return;
-        widgetId.current = window.grecaptcha.render(el, {
-          sitekey: siteKey,
-          callback: (t) => captcha.setToken(t),
-          "expired-callback": () => captcha.setToken(null),
-          theme: "light",
-        });
+        // Wait for the DOM element to be available
+        const tryRender = (attempts: number) => {
+          if (cancelled) return;
+          const el = elRef.current;
+          if (!el && attempts < 20) {
+            requestAnimationFrame(() => tryRender(attempts + 1));
+            return;
+          }
+          if (!el || widgetId.current !== null || !window.grecaptcha?.render) {
+            if (attempts >= 20) setStatus("failed");
+            return;
+          }
+          widgetId.current = window.grecaptcha.render(el, {
+            sitekey: siteKey,
+            callback: (t) => captcha.setToken(t),
+            "expired-callback": () => captcha.setToken(null),
+            theme: "light",
+          });
+          setStatus("ready");
+        };
+        tryRender(0);
       })
       .catch(() => {
-        if (!cancelled) setFailed(true);
+        if (!cancelled) setStatus("failed");
       });
     return () => {
       cancelled = true;
@@ -147,11 +161,22 @@ export function CaptchaGate({ captcha, error }: { captcha: CaptchaState; error?:
   }, [captcha.required, siteKey]);
 
   if (!captcha.required) return null;
+
   return (
     <div>
-      <div ref={elRef} className="min-h-[78px]" aria-label="Human verification" />
-      {failed ? (
-        <p className="t-caption text-muted">Verification could not load - please reload the page.</p>
+      <div
+        ref={elRef}
+        className="min-h-[78px] py-1"
+        aria-label="Human verification"
+        data-recaptcha-widget={siteKey ? "loaded" : "no-key"}
+      />
+      {status === "loading" ? (
+        <p className="text-[0.75rem] text-muted">Loading verification...</p>
+      ) : null}
+      {status === "failed" ? (
+        <p className="t-caption text-error">
+          Verification could not load - please refresh the page.
+        </p>
       ) : null}
       {error ? (
         <p role="alert" className="t-caption mt-1.5 text-error">
