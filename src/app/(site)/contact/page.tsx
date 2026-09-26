@@ -12,7 +12,7 @@ import { ContactHero } from "@/sections/contact/contact-hero";
 import { ContactForm } from "@/sections/contact/contact-form";
 import { DirectChannels } from "@/sections/contact/direct-channels";
 import { WhatNext } from "@/sections/contact/what-next";
-import { Offices } from "@/sections/contact/offices";
+import { WhileYouDecide } from "@/sections/contact/while-you-decide";
 import { Team } from "@/sections/contact/team";
 import { openGraphFor } from "@/lib/seo";
 
@@ -130,8 +130,10 @@ export default async function ContactPage() {
       {/* Ink band, after-send expectations */}
       <WhatNext />
 
-      {/* 03: Global offices */}
-      <Offices />
+      {/* 03: Reading while deciding - the six-region presence grid lives
+          in the site footer on every page, so the contact body points the
+          space at the insights library instead of duplicating it. */}
+      <WhileYouDecide />
 
       {/* 04: The people who answer */}
       <Team />
