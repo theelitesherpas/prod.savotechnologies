@@ -41,7 +41,7 @@ export async function shortlistEnquiryAction(formData: FormData): Promise<void> 
     where: { id },
     data: { careerStatus: "shortlisted", status: "in_progress" },
   });
-  await audit(user.id, "enquiry.shortlisted", "ProjectEnquiry", id);
+  await audit(user.id, "enquiry.shortlisted", "ProjectEnquiry", id, { candidate: enquiry!.name, role: extractRole(enquiry!.data) });
 
   if (eq.email) {
     sendTemplateNow("shortlistAck", eq.email, {
@@ -67,7 +67,7 @@ export async function rejectEnquiryAction(formData: FormData): Promise<void> {
     where: { id },
     data: { careerStatus: "rejected", status: "closed" },
   });
-  await audit(user.id, "enquiry.rejected", "ProjectEnquiry", id);
+  await audit(user.id, "enquiry.rejected", "ProjectEnquiry", id, { candidate: enquiry!.name, role: extractRole(enquiry!.data) });
 
   if (eq.email) {
     sendTemplateNow("candidateRejection", eq.email, {
@@ -133,7 +133,7 @@ export async function scheduleInterviewAction(formData: FormData): Promise<void>
       interviewer: d!.interviewer,
     },
   });
-  await audit(user.id, "enquiry.interviewScheduled", "ProjectEnquiry", d!.id);
+  await audit(user.id, "enquiry.interviewScheduled", "ProjectEnquiry", d!.id, { candidate: enquiry!.name, role: extractRole(enquiry!.data), date: date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }), time: d!.interviewTime, interviewer: d!.interviewer });
 
   if (eq2.email) {
     sendTemplateNow("interviewInvite", eq2.email, {
@@ -161,7 +161,7 @@ export async function requestDocumentsAction(formData: FormData): Promise<void> 
   const enquiry = await getEnquiry(id);
   if (!enquiry) back(id, "Enquiry not found.");
 
-  await audit(user.id, "enquiry.docsRequested", "ProjectEnquiry", id);
+  await audit(user.id, "enquiry.docsRequested", "ProjectEnquiry", id, { candidate: enquiry!.name });
 
   if (enquiry!.email) {
     sendTemplateNow("documentVerification", enquiry!.email, {
@@ -187,7 +187,7 @@ export async function markHiredAction(formData: FormData): Promise<void> {
     where: { id },
     data: { careerStatus: "hired", status: "closed" },
   });
-  await audit(user.id, "enquiry.hired", "ProjectEnquiry", id);
+  await audit(user.id, "enquiry.hired", "ProjectEnquiry", id, { candidate: enquiry!.name, role: extractRole(enquiry!.data) });
 
   if (enquiry!.email) {
     sendTemplateNow("offerLetter", enquiry!.email, {

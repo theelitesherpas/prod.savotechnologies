@@ -26,6 +26,7 @@ import {
   resetCareerStatusAction,
 } from "../career-actions";
 import { FormGuard } from "@/components/admin/form-guard";
+import { ConfirmAction } from "@/components/admin/confirm-dialog";
 
 export const metadata: Metadata = { title: "Enquiry" };
 
@@ -179,10 +180,15 @@ export default async function EnquiryDetailPage({
 
                 <div className="flex flex-wrap gap-3">
                   {!careerStage || careerStage === "rejected" ? (
-                    <form action={shortlistEnquiryAction}>
-                      <input type="hidden" name="id" value={enquiry.id} />
-                      <SubmitButton label="Shortlist candidate" />
-                    </form>
+                    <ConfirmAction
+                      action={shortlistEnquiryAction}
+                      id={enquiry.id}
+                      label="Shortlist candidate"
+                      title="Shortlist this candidate?"
+                      description={`${enquiry.name} will move to the shortlisted stage and receive a shortlist acknowledgment email from hr@savotechnologies.com.`}
+                      confirmLabel="Yes, shortlist"
+                      tone="success"
+                    />
                   ) : null}
 
                   {careerStage === "shortlisted" ? (
@@ -224,24 +230,38 @@ export default async function EnquiryDetailPage({
                   ) : null}
 
                   {careerStage === "shortlisted" || careerStage === "interview_scheduled" ? (
-                    <form action={requestDocumentsAction}>
-                      <input type="hidden" name="id" value={enquiry.id} />
-                      <SubmitButton label="Request documents" pendingLabel="Sending..." />
-                    </form>
+                    <ConfirmAction
+                      action={requestDocumentsAction}
+                      id={enquiry.id}
+                      label="Request documents"
+                      title="Send document request?"
+                      description={`${enquiry.name} will receive an email listing the required documents with a submission deadline.`}
+                      confirmLabel="Send request"
+                    />
                   ) : null}
 
                   {careerStage === "interview_scheduled" ? (
-                    <form action={markHiredAction}>
-                      <input type="hidden" name="id" value={enquiry.id} />
-                      <SubmitButton label="Mark hired" pendingLabel="Sending..." />
-                    </form>
+                    <ConfirmAction
+                      action={markHiredAction}
+                      id={enquiry.id}
+                      label="Mark hired"
+                      title="Mark this candidate as hired?"
+                      description={`${enquiry.name} will receive an offer letter email and the enquiry will be closed. Create their employee record next from the Employee portal.`}
+                      confirmLabel="Yes, hire"
+                      tone="success"
+                    />
                   ) : null}
 
                   {!careerStage || careerStage === "shortlisted" || careerStage === "interview_scheduled" ? (
-                    <form action={rejectEnquiryAction}>
-                      <input type="hidden" name="id" value={enquiry.id} />
-                      <ConfirmButton label="Reject candidate" confirmLabel="Confirm reject" />
-                    </form>
+                    <ConfirmAction
+                      action={rejectEnquiryAction}
+                      id={enquiry.id}
+                      label="Reject candidate"
+                      title="Reject this candidate?"
+                      description={`${enquiry.name} will receive a rejection email. This action can be undone by resetting the pipeline.`}
+                      confirmLabel="Yes, reject"
+                      tone="danger"
+                    />
                   ) : null}
 
                   {careerStage ? (
