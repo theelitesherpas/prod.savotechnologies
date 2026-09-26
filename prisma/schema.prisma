@@ -312,6 +312,10 @@ model AnalyticsEvent {
   referrer    String?
   device      String?
   visitorHash String?  @map("visitor_hash")
+  country     String?
+  countryCode String? @map("country_code")
+  city        String?
+  region      String?
   meta        Json?
   createdAt   DateTime @default(now()) @map("created_at")
 
@@ -411,4 +415,34 @@ model EmployeeSession {
 
   @@index([employeeId])
   @@map("employee_sessions")
+}
+
+/// Bug and error reports - captured automatically from error boundaries,
+/// 404 pages, and user submissions. Managed in the admin Bug Reports page.
+model BugReport {
+  id          String   @id @default(cuid())
+  /// error | 404 | api_error | user_report
+  type        String
+  /// Short summary line
+  message     String
+  /// Full error stack / details
+  details     String?   @db.Text
+  /// Page URL where it occurred
+  url         String?
+  /// Referrer
+  referrer    String?
+  /// Browser user agent
+  userAgent   String?   @map("user_agent")
+  /// Additional context (browser, screen, etc)
+  context     Json?
+  /// new | acknowledged | resolved | ignored
+  status      String   @default("new")
+  /// Admin who handled it
+  handledBy   String?   @map("handled_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([type, status])
+  @@index([createdAt])
+  @@map("bug_reports")
 }

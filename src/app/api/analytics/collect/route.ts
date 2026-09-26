@@ -4,6 +4,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
 import { clientIp } from "@/lib/api";
 import { logger } from "@/lib/logger";
+import { lookupGeo } from "@/lib/geo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -80,6 +81,9 @@ export async function POST(req: Request) {
     const lang = cap(body.lang, 12);
     const meta = lang && /^[a-z]{2}(-[a-zA-Z]{2,4})?$/i.test(lang) ? { lang: lang.slice(0, 8) } : undefined;
 
+    // Geo lookup (cached, non-blocking on failure)
+    const geo = await lookupGeo(ip);
+
     await prisma.analyticsEvent.create({
       data: {
         type,
@@ -88,6 +92,7 @@ export async function POST(req: Request) {
         referrer,
         device: device && DEVICES.has(device) ? device : null,
         visitorHash,
+        ...(geo.country ? geo : {}),
         ...(meta ? { meta } : {}),
       },
     });

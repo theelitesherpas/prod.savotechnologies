@@ -15,6 +15,7 @@ const CRUMB_LABELS: Record<string, string> = {
   enquiries: "Enquiries",
   employees: "Employee portal",
   "my-profile": "My profile",
+  "bug-reports": "Bug reports",
   leaves: "Leave management",
   analytics: "Analytics",
   "email-templates": "Email templates",
@@ -156,6 +157,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       : []),
     ...(allow("audit")
       ? [{ key: "system", label: "Audit log", icon: "trail" as const, href: "/admin/audit" }]
+      : []),
+    ...(allow("audit")
+      ? [{ key: "bug-reports", label: "Bug reports", icon: "alert" as const, href: "/admin/bug-reports" }]
       : []),
     { key: "my-profile", label: "My profile", icon: "user", href: "/admin/my-profile" },
   ] satisfies unknown[]) as AdminNavNode[];

@@ -24,7 +24,8 @@ export type SectionKey =
   | "content"
   | "email-templates"
   | "settings"
-  | "audit";
+  | "audit"
+  | "bug-reports";
 
 export const SECTIONS: { key: SectionKey; label: string; hint: string }[] = [
   { key: "enquiries", label: "Enquiries", hint: "Lead inbox + detail" },
@@ -35,6 +36,7 @@ export const SECTIONS: { key: SectionKey; label: string; hint: string }[] = [
   { key: "email-templates", label: "Email templates", hint: "Customise the template library" },
   { key: "settings", label: "Site settings", hint: "Contact overrides, announcements" },
   { key: "audit", label: "Audit log", hint: "Action history" },
+  { key: "bug-reports", label: "Bug reports", hint: "Captured errors and user reports" },
 ];
 
 export type PermittedUser = {
@@ -73,6 +75,7 @@ export function pathToSection(path: string): SectionKey | "dashboard" | "users" 
   if (p.startsWith("/admin/settings")) return "settings";
   if (p.startsWith("/admin/users")) return "users";
   if (p.startsWith("/admin/audit")) return "audit";
+  if (p.startsWith("/admin/bug-reports")) return "bug-reports";
   return null;
 }
 

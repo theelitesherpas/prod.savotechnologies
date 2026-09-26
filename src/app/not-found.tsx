@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect } from "react";
+import { report404 } from "@/lib/report";
 
 /**
  * Designed fallback for future routes (services, industries, hire, careers,
@@ -6,6 +10,9 @@ import Link from "next/link";
  * ahead of the pages without a broken experience.
  */
 export default function NotFound() {
+  useEffect(() => {
+    report404();
+  }, []);
   return (
     <section className="chapter-ink flex min-h-[100svh] items-center bg-background text-foreground">
       <div className="shell py-24">

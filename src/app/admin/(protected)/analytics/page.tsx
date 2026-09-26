@@ -180,6 +180,15 @@ export default async function AdminAnalyticsPage({
     }),
   );
 
+  // ── locations (country, city)
+  const topCountries = tally(
+    pageviews.map((e) => ({ key: e.country ?? "Unknown" })),
+  );
+  const knownCountries = topCountries.filter(([c]) => c !== "Unknown");
+  const topCities = tally(
+    pageviews.filter((e) => e.city).map((e) => ({ key: `${e.city}, ${e.countryCode ?? ""}`.replace(/, $/, "") })),
+  );
+
   const devices = tally(pageviews.map((e) => ({ key: e.device ?? "unknown" })));
   const deviceTotal = pageviews.length || 1;
 
@@ -340,6 +349,28 @@ export default async function AdminAnalyticsPage({
             topEvents.map(([name, v]) => (
               <Bucket key={name} label={name.replace(/_/g, " ")} value={v.count} max={topEvents[0][1].count} />
             ))
+          )}
+        </Panel>
+        <Panel title="Top countries">
+          {knownCountries.length === 0 ? (
+            <p className="t-caption text-muted">Location data appears as visitors arrive (geo-IP lookup).</p>
+          ) : (
+            knownCountries
+              .slice(0, 8)
+              .map(([country, v]) => (
+                <Bucket key={country} label={country} value={v.count} max={knownCountries[0]?.[1].count ?? 1} />
+              ))
+          )}
+        </Panel>
+        <Panel title="Top cities">
+          {topCities.length === 0 ? (
+            <p className="t-caption text-muted">City-level data appears as visitors arrive.</p>
+          ) : (
+            topCities
+              .slice(0, 8)
+              .map(([city, v]) => (
+                <Bucket key={city} label={city} value={v.count} max={topCities[0]?.[1].count ?? 1} />
+              ))
           )}
         </Panel>
         <Panel title="Visitor languages">

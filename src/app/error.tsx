@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { reportReactError } from "@/lib/report";
 
 /**
  * Route-level error boundary - v6 styled, never exposes internals.
- * The error object is logged client-side for diagnostics only.
+ * Automatically reports the error to the admin Bug Reports panel and
+ * offers the user an optional report with what they were doing.
  */
 export default function Error({
   error,
@@ -14,9 +16,27 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const [reported, setReported] = useState(false);
+  const [note, setNote] = useState("");
+  const [noteSent, setNoteSent] = useState(false);
+
   useEffect(() => {
     console.error("[route-error]", error.message, error.digest ?? "");
+    reportReactError(error);
+    setReported(true);
   }, [error]);
+
+  const sendUserReport = () => {
+    if (!note.trim()) return;
+    import("@/lib/report").then(({ reportBug }) =>
+      reportBug({
+        type: "user_report",
+        message: `User context: ${error.message || "page error"}`,
+        details: note.trim().slice(0, 2000),
+      }),
+    );
+    setNoteSent(true);
+  };
 
   return (
     <section className="chapter-ink flex min-h-[100svh] items-center bg-background text-foreground">
@@ -24,6 +44,9 @@ export default function Error({
         <div className="mb-12 flex items-center gap-4">
           <span className="t-label tnum text-muted">500</span>
           <span aria-hidden="true" className="h-px flex-1 bg-border" />
+          {reported ? (
+            <span className="t-caption text-muted">Reported to our team</span>
+          ) : null}
         </div>
         <h1 className="t-statement max-w-[16ch]">
           Something interrupted this page
@@ -34,6 +57,38 @@ export default function Error({
           persists, the homepage still carries the full picture and the
           enquiry desk is open.
         </p>
+
+        {!noteSent ? (
+          <div className="mt-8 max-w-md">
+            <label htmlFor="bug-note" className="t-label mb-1.5 block text-muted">
+              What were you doing? (helps us fix it faster)
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="bug-note"
+                type="text"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="e.g. submitting the contact form"
+                maxLength={500}
+                className="field flex-1"
+              />
+              <button
+                type="button"
+                onClick={sendUserReport}
+                disabled={!note.trim()}
+                className="inline-flex h-11 shrink-0 items-center rounded-[2px] border border-foreground/30 px-4 text-[0.8125rem] font-semibold transition-colors hover:border-foreground disabled:opacity-40"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="t-caption mt-6 text-muted">
+            Thank you - your note has been sent to our engineering team.
+          </p>
+        )}
+
         <div className="mt-10 flex flex-wrap gap-4">
           <button
             onClick={reset}
