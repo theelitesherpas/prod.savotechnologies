@@ -146,6 +146,7 @@ export const FOOTER_NAV = {
   ],
   quick: [
     { label: "Client Login", href: "/portal" },
+    { label: "Employee Login", href: "/employee-portal" },
     { label: "Hire Developers", href: "/hire" },
     { label: "AI Agents", href: "/ai-agents", pro: true },
     { label: "Get a Quote", href: "/start" },

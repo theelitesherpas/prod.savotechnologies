@@ -18,54 +18,72 @@ export default async function EmployeePortalPage({
   void prisma;
 
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4 py-16">
+    <main className="flex min-h-dvh items-center justify-center bg-[#f5f4f0] px-4 py-16">
       <div className="w-full max-w-md">
-        {/* Brand mark */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 h-1 w-8 bg-accent" />
-          <p className="font-mono text-[0.6875rem] font-bold uppercase tracking-[0.22em] text-muted">
+        {/* Brand header */}
+        <div className="mb-10 text-center">
+          <div className="mx-auto mb-5 flex h-1.5 w-12 items-center justify-center rounded-full bg-[#d9480f]" />
+          <p className="font-mono text-[0.6875rem] font-bold uppercase tracking-[0.24em] text-[#9a9ea4]">
             Savo Technologies
+          </p>
+          <p className="mt-2 font-serif text-[0.8125rem] italic text-[#6a6e75]">
+            Bold Brands. Built by Savo.
           </p>
         </div>
 
-        <div className="rounded-[14px] border border-line bg-white shadow-[0_20px_60px_rgb(10_10_14/0.08)]">
-          <div className="border-b border-line px-8 pb-6 pt-8 text-center">
-            <h1 className="text-[1.375rem] font-bold tracking-tight text-ink">
-              Employee Portal
-            </h1>
-          </div>
+        {/* Login card */}
+        <div className="overflow-hidden rounded-[14px] border border-[#e3e1da] bg-white shadow-[0_24px_70px_rgb(10_10_14/0.10)]">
+          {/* Top accent bar */}
+          <div className="h-[5px] bg-[#d9480f]" />
 
-          <div className="px-8 py-7">
+          <div className="px-8 pb-8 pt-7">
+            <div className="text-center">
+              <p className="font-mono text-[0.625rem] font-bold uppercase tracking-[0.18em] text-[#6a6e75]">
+                Internal Access
+              </p>
+              <h1 className="mt-2 font-serif text-[1.5rem] font-bold tracking-tight text-[#14161c]">
+                Employee Portal
+              </h1>
+              <div className="mx-auto mt-3 h-px w-16 bg-[#e3e1da]" />
+              <p className="mt-3 text-[0.8438rem] leading-relaxed text-[#6a6e75]">
+                Sign in to your Savo account
+              </p>
+            </div>
+
             {e ? (
               <p
                 role="alert"
-                className="t-caption mb-5 rounded-md border border-error/30 bg-error/[0.05] px-3.5 py-2.5 text-center text-error"
+                className="mt-5 rounded-[8px] border border-[#b3261e]/25 bg-[#b3261e]/[0.04] px-3.5 py-2.5 text-center text-[0.8125rem] font-medium text-[#b3261e]"
               >
                 {decodeURIComponent(e)}
               </p>
             ) : null}
 
-            <EmployeeLoginForm />
+            <div className="mt-6">
+              <EmployeeLoginForm />
+            </div>
 
-            <div className="mt-6 border-t border-line pt-5 text-center">
-              <p className="text-[0.75rem] leading-relaxed text-muted">
-                Need help signing in?{" "}
+            {/* Footer */}
+            <div className="mt-7 border-t border-[#e3e1da] pt-5">
+              <p className="text-center text-[0.75rem] text-[#9a9ea4]">
+                Trouble signing in?{" "}
                 <a
                   href="mailto:hr@savotechnologies.com"
-                  className="font-semibold text-accent transition-colors hover:underline"
+                  className="font-semibold text-[#d9480f] transition-colors hover:underline"
                 >
-                  hr@savotechnologies.com
+                  Contact HR
                 </a>
               </p>
             </div>
           </div>
         </div>
 
-        <p className="mt-6 text-center text-[0.6875rem] tracking-wide text-muted">
-          <Link href="/" className="transition-colors hover:text-foreground">savotechnologies.com</Link>
-          <span className="mx-2 text-line">·</span>
-          <Link href="/portal" className="transition-colors hover:text-foreground">Client Portal</Link>
-        </p>
+        {/* Links below card */}
+        <div className="mt-6 flex items-center justify-center gap-6 text-[0.6875rem] text-[#9a9ea4]">
+          <Link href="/" className="transition-colors hover:text-[#14161c]">savotechnologies.com</a>
+          <span className="text-[#e3e1da]">|</span>
+          <Link href="/portal" className="transition-colors hover:text-[#14161c]">Client Portal</a>
+        </div>
       </div>
     </main>
   );
