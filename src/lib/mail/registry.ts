@@ -10,6 +10,28 @@
  */
 
 import {
+  appointmentLetter,
+  candidateRejection,
+  documentVerification,
+  employmentVerification,
+  exitInterview,
+  holidayAnnouncement,
+  interviewInvite,
+  interviewReminder,
+  interviewReschedule,
+  jobOpeningsBroadcast,
+  leaveApproval,
+  leaveRejection,
+  offerLetter,
+  onboardingWelcome,
+  pipNotice,
+  probationConfirmation,
+  relievingLetter,
+  resignationAcknowledgement,
+  salaryIncrement,
+  terminationNotice,
+} from "@/lib/mail/hr-templates";
+import {
   applicationAck,
   askSavoHandoffAck,
   callbackAck,
@@ -28,7 +50,36 @@ import {
   type MailTemplate,
 } from "@/lib/mail/templates";
 
-export type TemplateRecipient = "customer" | "team" | "hr" | "client";
+export type TemplateRecipient = "customer" | "team" | "hr" | "client" | "candidate" | "employee" | "external";
+
+export type TemplateCategory =
+  | "enquiries"
+  | "careers"
+  | "portal"
+  | "team"
+  | "recruitment"
+  | "onboarding"
+  | "lifecycle";
+
+export const CATEGORY_LABEL: Record<TemplateCategory, string> = {
+  enquiries: "Enquiries & Assistant",
+  careers: "Careers & Applications",
+  portal: "Client Portal & Billing",
+  team: "Team Notifications",
+  recruitment: "Recruitment",
+  onboarding: "Offers & Onboarding",
+  lifecycle: "Employment Lifecycle",
+};
+
+export const CATEGORY_ORDER: TemplateCategory[] = [
+  "enquiries",
+  "careers",
+  "recruitment",
+  "onboarding",
+  "lifecycle",
+  "portal",
+  "team",
+];
 
 export type TemplateEntry = {
   key: string;
@@ -37,6 +88,8 @@ export type TemplateEntry = {
   recipient: TemplateRecipient;
   /** Sending department: careers mail goes out as hr@, everything else as hello@. */
   dept: "hello" | "hr";
+  /** Navigation group in the admin email centre. */
+  category: TemplateCategory;
   /** Variable name → sample value (samples power the preview). */
   vars: Record<string, string>;
   default: (v: Record<string, string>) => MailTemplate;
@@ -47,11 +100,15 @@ export const RECIPIENT_LABEL: Record<TemplateRecipient, string> = {
   team: "Team · hello@",
   hr: "HR · hr@",
   client: "Portal client",
+  candidate: "Candidate · hr@",
+  employee: "Employee · hr@",
+  external: "External · hr@",
 };
 
 export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   {
     key: "enquiryAck",
+    category: "enquiries",
     label: "Enquiry acknowledgement",
     fires: "Enquiry drawer, contact form, start-page brief submitted",
     recipient: "customer",
@@ -61,6 +118,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "callbackAck",
+    category: "enquiries",
     label: "Callback logged",
     fires: "Footer callback requested (when an email is present)",
     recipient: "customer",
@@ -70,6 +128,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "askSavoHandoffAck",
+    category: "enquiries",
     label: "Assistant handoff",
     fires: "Ask Savo question the assistant could not answer",
     recipient: "customer",
@@ -79,6 +138,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "applicationAck",
+    category: "careers",
     dept: "hr",
     label: "Application received",
     fires: "Careers application submitted",
@@ -88,6 +148,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "clientWelcome",
+    category: "portal",
     label: "Portal welcome",
     fires: "Admin creates a client account",
     recipient: "client",
@@ -97,6 +158,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "clientPasswordReset",
+    category: "portal",
     label: "Portal password reset",
     fires: "Admin resets a client password",
     recipient: "client",
@@ -106,6 +168,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "invoiceIssued",
+    category: "portal",
     label: "Invoice issued",
     fires: "Admin creates an invoice",
     recipient: "client",
@@ -115,6 +178,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "invoicePaid",
+    category: "portal",
     label: "Payment receipt",
     fires: "Invoice marked paid",
     recipient: "client",
@@ -124,6 +188,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "invoiceOverdue",
+    category: "portal",
     label: "Overdue reminder",
     fires: "Invoice status set to overdue",
     recipient: "client",
@@ -133,6 +198,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "milestoneUpdate",
+    category: "portal",
     label: "Milestone status",
     fires: "Milestone started or completed",
     recipient: "client",
@@ -142,6 +208,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "projectUpdate",
+    category: "portal",
     label: "Project update",
     fires: "Delivery-log entry posted",
     recipient: "client",
@@ -151,6 +218,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "teamEnquiry",
+    category: "team",
     label: "Team · new enquiry",
     fires: "Every public form submission",
     recipient: "team",
@@ -177,6 +245,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "teamApplication",
+    category: "careers",
     dept: "hr",
     label: "HR · new application",
     fires: "Careers application submitted",
@@ -187,6 +256,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "teamCallback",
+    category: "team",
     label: "Team · callback request",
     fires: "Footer callback requested",
     recipient: "team",
@@ -196,12 +266,217 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
   },
   {
     key: "teamAskSavo",
+    category: "team",
     label: "Team · assistant handoff",
     fires: "Ask Savo handoff",
     recipient: "team",
     dept: "hello",
     vars: { email: "visitor@company.com", question: "Do you take over existing React Native codebases mid-project?" },
     default: (v) => teamAskSavo({ email: v.email, question: v.question }),
+  },
+
+  /* ── HR OPERATIONS · RECRUITMENT ─────────────────────────── */
+  {
+    key: "interviewInvite",
+    dept: "hr",
+    category: "recruitment",
+    label: "Interview invitation",
+    fires: "HR sends to a shortlisted candidate (meeting link + slot)",
+    recipient: "candidate",
+    vars: { candidateName: "Aarav Mehta", position: "Flutter Developer", interviewDate: "Mon, 28 Sep", interviewTime: "11:00", timezone: "IST", duration: "45 minutes", mode: "Google Meet", interviewer: "Rohan Desai (Engineering)", meetingLink: "https://meet.google.com/abc-defg-hij" },
+    default: (v) => interviewInvite(v),
+  },
+  {
+    key: "interviewReminder",
+    dept: "hr",
+    category: "recruitment",
+    label: "Interview reminder",
+    fires: "Sent ahead of the scheduled interview",
+    recipient: "candidate",
+    vars: { candidateName: "Aarav Mehta", position: "Flutter Developer", interviewDate: "Mon, 28 Sep", interviewTime: "11:00", timezone: "IST", meetingLink: "https://meet.google.com/abc-defg-hij" },
+    default: (v) => interviewReminder(v),
+  },
+  {
+    key: "interviewReschedule",
+    dept: "hr",
+    category: "recruitment",
+    label: "Interview rescheduled",
+    fires: "Interview moved to a new slot",
+    recipient: "candidate",
+    vars: { candidateName: "Aarav Mehta", position: "Flutter Developer", newDate: "Wed, 30 Sep", newTime: "16:00", timezone: "IST", meetingLink: "https://meet.google.com/abc-defg-hij" },
+    default: (v) => interviewReschedule(v),
+  },
+  {
+    key: "candidateRejection",
+    dept: "hr",
+    category: "recruitment",
+    label: "Candidate rejection",
+    fires: "Application not proceeding",
+    recipient: "candidate",
+    vars: { candidateName: "Aarav Mehta", position: "Flutter Developer" },
+    default: (v) => candidateRejection(v),
+  },
+  {
+    key: "jobOpeningsBroadcast",
+    dept: "hr",
+    category: "recruitment",
+    label: "Job openings broadcast",
+    fires: "Bulk announcement of open positions",
+    recipient: "candidate",
+    vars: { recipientName: "Team", openingsList: "· Flutter Developer — Indore / Remote\n· AI Engineer — Indore\n· UI/UX Designer — Remote" },
+    default: (v) => jobOpeningsBroadcast(v),
+  },
+  /* ── HR OPERATIONS · OFFERS & ONBOARDING ─────────────────── */
+  {
+    key: "offerLetter",
+    dept: "hr",
+    category: "onboarding",
+    label: "Offer of employment",
+    fires: "HR sends after final selection",
+    recipient: "candidate",
+    vars: { candidateName: "Aarav Mehta", position: "Flutter Developer", ctc: "₹9,00,000 per annum", joiningDate: "12 Oct 2026", reportTo: "Rohan Desai, Engineering Lead", validUntil: "05 Oct 2026" },
+    default: (v) => offerLetter(v),
+  },
+  {
+    key: "documentVerification",
+    dept: "hr",
+    category: "onboarding",
+    label: "Document verification request",
+    fires: "Pre-joining documentation",
+    recipient: "candidate",
+    vars: { candidateName: "Aarav Mehta", position: "Flutter Developer", documents: "· Government photo ID\n· Highest qualification certificate\n· Relieving letter from previous employer\n· Last three salary slips", deadline: "08 Oct 2026" },
+    default: (v) => documentVerification(v),
+  },
+  {
+    key: "employmentVerification",
+    dept: "hr",
+    category: "onboarding",
+    label: "Employment verification (previous employer)",
+    fires: "Reference check with a prior employer",
+    recipient: "external",
+    vars: { recipientName: "HR Manager", candidateName: "Aarav Mehta", workedFrom: "Jun 2022", workedTo: "Aug 2025", designation: "Software Engineer" },
+    default: (v) => employmentVerification(v),
+  },
+  {
+    key: "appointmentLetter",
+    dept: "hr",
+    category: "onboarding",
+    label: "Appointment letter",
+    fires: "Formal appointment after acceptance + verification",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", position: "Flutter Developer", department: "Engineering", joiningDate: "12 Oct 2026", reportTo: "Rohan Desai, Engineering Lead" },
+    default: (v) => appointmentLetter(v),
+  },
+  {
+    key: "onboardingWelcome",
+    dept: "hr",
+    category: "onboarding",
+    label: "First-day welcome",
+    fires: "Sent before the joining date",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", position: "Flutter Developer", joiningDate: "Monday, 12 Oct", reportTime: "9:30 am", officeLocation: "Savo Technologies, Indore", buddy: "Priya Sharma" },
+    default: (v) => onboardingWelcome(v),
+  },
+  /* ── HR OPERATIONS · LIFECYCLE ───────────────────────────── */
+  {
+    key: "probationConfirmation",
+    dept: "hr",
+    category: "lifecycle",
+    label: "Probation confirmation",
+    fires: "Probation completed successfully",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", position: "Flutter Developer", confirmationDate: "12 Apr 2027", managerName: "Rohan Desai" },
+    default: (v) => probationConfirmation(v),
+  },
+  {
+    key: "salaryIncrement",
+    dept: "hr",
+    category: "lifecycle",
+    label: "Salary revision",
+    fires: "Annual / appraisal revision",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", newCtc: "₹11,00,000 per annum", incrementPercent: "22%", effectiveDate: "01 Apr 2027", managerName: "Rohan Desai" },
+    default: (v) => salaryIncrement(v),
+  },
+  {
+    key: "leaveApproval",
+    dept: "hr",
+    category: "lifecycle",
+    label: "Leave approved",
+    fires: "Leave request approved",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", leaveType: "Privilege leave", fromDate: "20 Oct 2026", toDate: "22 Oct 2026", days: "3", approvedBy: "Rohan Desai" },
+    default: (v) => leaveApproval(v),
+  },
+  {
+    key: "leaveRejection",
+    dept: "hr",
+    category: "lifecycle",
+    label: "Leave declined",
+    fires: "Leave request not approved",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", leaveType: "Privilege leave", fromDate: "20 Oct 2026", toDate: "22 Oct 2026", reason: "Release week on an active client project" },
+    default: (v) => leaveRejection(v),
+  },
+  {
+    key: "pipNotice",
+    dept: "hr",
+    category: "lifecycle",
+    label: "Performance improvement plan",
+    fires: "Structured PIP with support",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", position: "Flutter Developer", focusAreas: "Delivery timelines · code review participation", duration: "60 days", reviewDate: "15 Dec 2026", managerName: "Rohan Desai" },
+    default: (v) => pipNotice(v),
+  },
+  {
+    key: "terminationNotice",
+    dept: "hr",
+    category: "lifecycle",
+    label: "Termination of service",
+    fires: "Formal separation notice",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", position: "Flutter Developer", lastWorkingDay: "30 Nov 2026", noticePeriod: "30 days", reason: "As discussed in the review meetings", handoverTo: "Priya Sharma" },
+    default: (v) => terminationNotice(v),
+  },
+  {
+    key: "resignationAcknowledgement",
+    dept: "hr",
+    category: "lifecycle",
+    label: "Resignation acknowledged",
+    fires: "Resignation received",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", position: "Flutter Developer", lastWorkingDay: "30 Nov 2026", handoverTo: "Priya Sharma" },
+    default: (v) => resignationAcknowledgement(v),
+  },
+  {
+    key: "relievingLetter",
+    dept: "hr",
+    category: "lifecycle",
+    label: "Relieving & experience letter",
+    fires: "Issued after exit formalities",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", position: "Flutter Developer", fromDate: "12 Oct 2026", toDate: "30 Nov 2026", conduct: "Good" },
+    default: (v) => relievingLetter(v),
+  },
+  {
+    key: "exitInterview",
+    dept: "hr",
+    category: "lifecycle",
+    label: "Exit interview invitation",
+    fires: "Invitation before last working day",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", exitDate: "27 Nov 2026", duration: "30 minutes", meetingLink: "https://meet.google.com/abc-defg-hij" },
+    default: (v) => exitInterview(v),
+  },
+  {
+    key: "holidayAnnouncement",
+    dept: "hr",
+    category: "lifecycle",
+    label: "Holiday announcement",
+    fires: "Office closure notice",
+    recipient: "employee",
+    vars: { employeeName: "Team", holidayName: "Diwali", holidayDate: "08 Nov 2026", holidayDay: "Sunday", note: "Wishing you and your family a joyful festival." },
+    default: (v) => holidayAnnouncement(v),
   },
 ];
 

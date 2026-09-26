@@ -27,9 +27,9 @@ const ACCENT = "#d9480f";
 const LINE = "#e3e1da";
 const CARD = "#ffffff";
 
-const SERIF = "'Source Serif 4', Georgia, 'Times New Roman', Times, serif";
-const SANS = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-const MONO = "'Fragment Mono', 'SFMono-Regular', Menlo, Consolas, 'Courier New', monospace";
+export const SERIF = "'Source Serif 4', Georgia, 'Times New Roman', Times, serif";
+export const SANS = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+export const MONO = "'Fragment Mono', 'SFMono-Regular', Menlo, Consolas, 'Courier New', monospace";
 
 export type MailTemplate = {
   subject: string;
@@ -82,9 +82,9 @@ export function unsubscribeUrl(email: string): string {
 
 /* ── centered building blocks ─────────────────────────────────────── */
 
-const p = (s: string, last = false) =>
+export const p = (s: string, last = false) =>
   `<p style="margin:${last ? "0" : "0 0 16px"};font-family:${SERIF};font-size:15.5px;line-height:1.7;color:${BODY};text-align:center;">${s}</p>`;
-const lead = (s: string) =>
+export const lead = (s: string) =>
   `<p style="margin:0 0 20px;font-family:${SERIF};font-size:16px;line-height:1.7;color:${BODY};text-align:center;">${s}</p>`;
 
 /** Centered eyebrow — the vermilion square mark, then the label. */
@@ -95,7 +95,7 @@ const h1 = (t: string) =>
   `<h1 style="margin:0 0 16px;font-family:${SERIF};font-size:26px;line-height:1.3;letter-spacing:-0.012em;font-weight:700;color:${INK};text-align:center;">${esc(t)}</h1>`;
 
 /** Details as quiet stacked pairs — label above value, both centered. */
-function spec(rows: [string, string | undefined][], opts?: { big?: number }): string {
+export function spec(rows: [string, string | undefined][], opts?: { big?: number }): string {
   const items = rows.filter(([, v]) => v !== undefined && v !== "");
   if (!items.length) return "";
   return `<div style="margin:22px 0;">${items
@@ -114,7 +114,7 @@ const meta = (parts: string[]) =>
   `<p style="margin:18px 0 0;font-family:${MONO};font-size:11px;letter-spacing:0.06em;color:${FAINT};text-align:center;">${parts.map(esc).join("&ensp;·&ensp;")}</p>`;
 
 /** Soft centered note panel. */
-function highlight(html: string): string {
+export function highlight(html: string): string {
   return `<div style="margin:24px 0;padding:16px 22px;background:${SOFT};border-radius:10px;font-family:${SERIF};font-size:14.5px;line-height:1.65;color:${INK};text-align:center;">${html}</div>`;
 }
 
@@ -124,7 +124,7 @@ function quote(text: string): string {
 }
 
 /** Reading block for longer content — left-aligned inside the centered layout. */
-function prose(text: string): string {
+export function prose(text: string): string {
   return `<div style="margin:22px 0;padding:16px 20px;background:${PAPER};border-radius:10px;font-family:${SERIF};font-size:14.5px;line-height:1.7;color:${BODY};white-space:pre-line;text-align:left;">${esc(text)}</div>`;
 }
 
@@ -145,6 +145,7 @@ const signOff = (closing: string) => `
 export function shell(opts: {
   preheader: string;
   eyebrowText?: string;
+  ref?: string;
   heading: string;
   bodyHtml: string;
   cta?: { href: string; label: string; sub?: string };

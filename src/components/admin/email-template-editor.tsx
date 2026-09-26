@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { TEMPLATE_REGISTRY, RECIPIENT_LABEL, fillText, bodyToHtml, type TemplateEntry } from "@/lib/mail/registry";
+import { TEMPLATE_REGISTRY, RECIPIENT_LABEL, CATEGORY_ORDER, CATEGORY_LABEL, fillText, bodyToHtml, type TemplateEntry, type TemplateCategory } from "@/lib/mail/registry";
 import { shell } from "@/lib/mail/templates";
 import { saveTemplateAction, resetTemplateAction } from "@/app/admin/(protected)/email-templates/actions";
 import { FormGuard } from "@/components/admin/form-guard";
@@ -65,46 +65,55 @@ export function EmailTemplateEditor({ overrides }: { overrides: Override[] }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
-      {/* List */}
+      {/* List — grouped by category */}
       <nav aria-label="Email templates" className="adm-card max-h-[78vh] overflow-y-auto p-2">
-        <ul>
-          {TEMPLATE_REGISTRY.map((e) => {
-            const has = overrides.some((o) => o.key === e.key);
-            return (
-              <li key={e.key}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveKey(e.key);
-                    setMode("preview");
-                  }}
-                  aria-current={e.key === activeKey ? "true" : undefined}
-                  className={cn(
-                    "w-full rounded-lg px-3 py-2.5 text-left transition-colors",
-                    e.key === activeKey ? "bg-foreground text-background" : "hover:bg-foreground/[0.04]",
-                  )}
-                >
-                  <span className="block text-[0.8125rem] font-semibold">
-                    {e.label}
-                    {has ? (
-                      <span
+        {CATEGORY_ORDER.map((cat: TemplateCategory) => {
+          const entries = TEMPLATE_REGISTRY.filter((e) => e.category === cat);
+          if (!entries.length) return null;
+          return (
+            <div key={cat} className="mb-3 last:mb-0">
+              <p className="adm-label px-3 pb-1.5 pt-2">{CATEGORY_LABEL[cat]}</p>
+              <ul>
+                {entries.map((e) => {
+                  const has = overrides.some((o) => o.key === e.key);
+                  return (
+                    <li key={e.key}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveKey(e.key);
+                          setMode("preview");
+                        }}
+                        aria-current={e.key === activeKey ? "true" : undefined}
                         className={cn(
-                          "ml-2 font-mono text-[0.625rem] uppercase",
-                          e.key === activeKey ? "text-background/70" : "text-accent",
+                          "w-full rounded-lg px-3 py-2.5 text-left transition-colors",
+                          e.key === activeKey ? "bg-foreground text-background" : "hover:bg-foreground/[0.04]",
                         )}
                       >
-                        custom
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className={cn("t-caption block", e.key === activeKey ? "text-background/70" : "text-muted")}>
-                    → {RECIPIENT_LABEL[e.recipient]}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                        <span className="block text-[0.8125rem] font-semibold">
+                          {e.label}
+                          {has ? (
+                            <span
+                              className={cn(
+                                "ml-2 font-mono text-[0.625rem] uppercase",
+                                e.key === activeKey ? "text-background/70" : "text-accent",
+                              )}
+                            >
+                              custom
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className={cn("t-caption block", e.key === activeKey ? "text-background/70" : "text-muted")}>
+                          → {RECIPIENT_LABEL[e.recipient]}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
       </nav>
 
       {/* Editor / preview */}

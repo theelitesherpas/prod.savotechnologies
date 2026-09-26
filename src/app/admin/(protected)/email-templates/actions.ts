@@ -6,7 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
-import { sendMail } from "@/lib/mail";
+import { sendMail, renderTemplate } from "@/lib/mail";
 import { templateEntry } from "@/lib/mail/registry";
 import { shell } from "@/lib/mail/templates";
 import { bodyToHtml, bodyToText } from "@/lib/mail/registry";
@@ -24,6 +24,33 @@ const customSchema = z.object({
   subject: z.string().trim().min(3).max(300),
   body: z.string().trim().min(3).max(20000),
 });
+
+/** Template-based send: pick a registry template, supply its variables;
+ *  admin overrides still apply (renderTemplate), dept routing included. */
+export async function sendTemplatedEmailAction(formData: FormData): Promise<void> {
+  const user = await requireAdmin();
+  const to = z.string().trim().email().max(160).parse(formData.get("to"));
+  const key = z.string().min(2).max(60).parse(formData.get("templateKey"));
+  const entry = templateEntry(key);
+  if (!entry) redirect(`/admin/email-compose?e=${encodeURIComponent("Unknown template.")}`);
+
+  const vars: Record<string, string> = {};
+  for (const [k, v] of formData.entries()) {
+    if (k.startsWith("var_") && typeof v === "string" && v.trim()) {
+      vars[k.slice(4)] = v.trim().slice(0, 500);
+    }
+  }
+
+  const tpl = await renderTemplate(key, vars, entry.recipient === "customer" ? to : undefined);
+  if (!tpl) redirect(`/admin/email-compose?e=${encodeURIComponent("Template render failed.")}`);
+  const ok = await sendMail(to, tpl, entry.dept);
+  await audit(user.id, ok ? "email.templatedSent" : "email.templatedFailed", "Email", to, { template: key });
+  redirect(
+    ok
+      ? `/admin/email-compose?sent=1`
+      : `/admin/email-compose?e=${encodeURIComponent("Send failed — check SMTP settings or try again.")}`,
+  );
+}
 
 function back(e: string): never {
   redirect(`/admin/email-templates?e=${encodeURIComponent(e)}`);
