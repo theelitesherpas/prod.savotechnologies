@@ -205,7 +205,7 @@ export default async function EnquiryDetailPage({
                         <input type="hidden" name="id" value={enquiry.id} />
                         <div>
                           <label htmlFor="iv-date" className="adm-label mb-1 block">Date *</label>
-                          <input id="iv-date" name="interviewDate" type="date" required className="adm-input" />
+                          <input id="iv-date" name="interviewDate" type="date" required min={new Date().toISOString().slice(0, 10)} className="adm-input" />
                         </div>
                         <div>
                           <label htmlFor="iv-time" className="adm-label mb-1 block">Time (IST) *</label>

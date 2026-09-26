@@ -86,7 +86,7 @@ export default async function EditInvoicePage({
           </div>
           <div>
             <label className="adm-label mb-1.5 block">Due</label>
-            <input name="dueDate" type="date" defaultValue={iso(invoice.dueDate)} className={input} />
+            <input name="dueDate" type="date" min={new Date().toISOString().slice(0, 10)} defaultValue={iso(invoice.dueDate)} className={input} />
           </div>
           <div>
             <label className="adm-label mb-1.5 block">Paid on</label>

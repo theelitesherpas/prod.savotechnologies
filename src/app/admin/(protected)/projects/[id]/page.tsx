@@ -142,7 +142,7 @@ export default async function EditProjectPage({
           </div>
           <div>
             <label className="adm-label mb-1 block">Due</label>
-            <input name="dueDate" type="date" className={input} />
+            <input name="dueDate" type="date" min={new Date().toISOString().slice(0, 10)} className={input} />
           </div>
           <div>
             <label className="adm-label mb-1 block">Order</label>

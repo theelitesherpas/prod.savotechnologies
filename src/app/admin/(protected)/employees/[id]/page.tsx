@@ -78,11 +78,11 @@ export default async function EmployeeRecordPage({
               </div>
               <div>
                 <label htmlFor="lv-from" className="adm-label mb-1 block">From *</label>
-                <input id="lv-from" name="fromDate" type="date" required className="adm-input" />
+                <input id="lv-from" name="fromDate" type="date" required min={new Date().toISOString().slice(0, 10)} className="adm-input" />
               </div>
               <div>
                 <label htmlFor="lv-to" className="adm-label mb-1 block">To *</label>
-                <input id="lv-to" name="toDate" type="date" required className="adm-input" />
+                <input id="lv-to" name="toDate" type="date" required min={new Date().toISOString().slice(0, 10)} className="adm-input" />
               </div>
               <div>
                 <label htmlFor="lv-reason" className="adm-label mb-1 block">Reason</label>

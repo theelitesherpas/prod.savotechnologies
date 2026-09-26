@@ -107,7 +107,7 @@ export default async function AdminProjectsPage({
           </div>
           <div>
             <label className="adm-label mb-1.5 block" htmlFor="pj-due">Due date</label>
-            <input id="pj-due" name="dueDate" type="date" className={input} />
+            <input id="pj-due" name="dueDate" type="date" min={new Date().toISOString().slice(0, 10)} className={input} />
           </div>
           <div className="sm:col-span-2">
             <label className="adm-label mb-1.5 block" htmlFor="pj-summary">Summary</label>

@@ -74,7 +74,7 @@ export default async function NewEmployeePage() {
           </div>
           <div>
             <label htmlFor="emp-joining" className="adm-label mb-1.5 block">Joining date *</label>
-            <input id="emp-joining" name="joiningDate" type="date" required defaultValue={today} className="adm-input" />
+            <input id="emp-joining" name="joiningDate" type="date" required defaultValue={today} min={today} className="adm-input" />
           </div>
           <div>
             <label htmlFor="emp-probation" className="adm-label mb-1.5 block">Probation (months)</label>
