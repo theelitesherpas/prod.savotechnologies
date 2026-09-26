@@ -128,6 +128,10 @@ export function SiteFooter({
               <LockGlyph />
               Client Login
             </Link>
+            <Link href="/employee-portal" className="flex items-center gap-2 text-[0.875rem] font-medium text-foreground/85 transition-colors hover:text-accent">
+              <LockGlyph />
+              Employee Login
+            </Link>
           </div>
         </div>
       </div>
