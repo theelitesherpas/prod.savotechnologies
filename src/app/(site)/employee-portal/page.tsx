@@ -80,9 +80,9 @@ export default async function EmployeePortalPage({
 
         {/* Links below card */}
         <div className="mt-6 flex items-center justify-center gap-6 text-[0.6875rem] text-[#9a9ea4]">
-          <Link href="/" className="transition-colors hover:text-[#14161c]">savotechnologies.com</a>
+          <Link href="/" className="transition-colors hover:text-[#14161c]">savotechnologies.com</Link>
           <span className="text-[#e3e1da]">|</span>
-          <Link href="/portal" className="transition-colors hover:text-[#14161c]">Client Portal</a>
+          <Link href="/portal" className="transition-colors hover:text-[#14161c]">Client Portal</Link>
         </div>
       </div>
     </main>
