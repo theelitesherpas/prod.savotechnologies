@@ -147,6 +147,7 @@ export async function renderTemplate(
           preheader: subject.slice(0, 120),
           heading: "",
           bodyHtml: html,
+          ...(entry.dept === "hr" ? { dept: "hr" as const } : {}),
           ...(entry.recipient === "customer" && to
             ? { reason: "You are receiving this because you contacted Savo Technologies.", unsubscribeEmail: to }
             : {}),

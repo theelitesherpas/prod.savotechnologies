@@ -152,7 +152,13 @@ export function shell(opts: {
   closing?: string;
   reason?: string;
   unsubscribeEmail?: string;
+  /** Department: "hr" switches footer contact to hr@ and the HR phone. */
+  dept?: "hello" | "hr";
 }): string {
+  const isHr = opts.dept === "hr";
+  const contactEmail = isHr ? "hr@savotechnologies.com" : "hello@savotechnologies.com";
+  const contactPhone = isHr ? "+91 78988 52345" : "+91 75029 01234";
+  const contactPhoneE164 = isHr ? "+917898852345" : "+917502901234";
   const year = new Date().getFullYear();
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${fontsCss()}</style></head>
 <body style="margin:0;padding:0;background:${PAPER};font-family:${SERIF};-webkit-font-smoothing:antialiased;">
@@ -183,7 +189,7 @@ export function shell(opts: {
       <a href="${site("/")}" style="color:${MUTED};text-decoration:none;">savotechnologies.com</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.linkedin.com/company/savotechnologies/" style="color:${MUTED};text-decoration:none;">LinkedIn</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.instagram.com/savotechnologies/" style="color:${MUTED};text-decoration:none;">Instagram</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.facebook.com/savotechnologies" style="color:${MUTED};text-decoration:none;">Facebook</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.youtube.com/@savotechnologies" style="color:${MUTED};text-decoration:none;">YouTube</a>
     </p>
     <p style="margin:0 0 10px;font-family:${SANS};font-size:11.5px;color:${MUTED};">
-      <a href="mailto:hello@savotechnologies.com" style="color:${MUTED};text-decoration:none;">hello@savotechnologies.com</a><span style="color:${LINE};margin:0 8px;">·</span><a href="tel:+917502901234" style="color:${MUTED};text-decoration:none;">+91 75029 01234</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://wa.me/917502901234" style="color:${MUTED};text-decoration:none;">WhatsApp</a>
+      <a href="mailto:${contactEmail}" style="color:${MUTED};text-decoration:none;">${contactEmail}</a><span style="color:${LINE};margin:0 8px;">·</span><a href="tel:${contactPhoneE164}" style="color:${MUTED};text-decoration:none;">${contactPhone}</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://wa.me/${contactPhoneE164.replace("+", "")}" style="color:${MUTED};text-decoration:none;">WhatsApp</a>
     </p>
     <p style="margin:0;font-family:${SANS};font-size:10px;line-height:1.7;color:${FAINT};">
       © ${year} ${esc(SITE.legalName)} - Indore · Zürich<br>
