@@ -4,10 +4,10 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 /**
- * First-party analytics beacon — one pageview per route change, sent to
+ * First-party analytics beacon - one pageview per route change, sent to
  * /api/analytics/collect with sendBeacon (fire-and-forget, survives
  * navigation). Bot UAs are filtered server-side; no raw IP or UA is
- * stored — only a daily salted hash for unique-visitor counts.
+ * stored - only a daily salted hash for unique-visitor counts.
  */
 export function AnalyticsBeacon() {
   const pathname = usePathname();

@@ -5,7 +5,7 @@ import { getClientUser } from "@/lib/client-auth";
 import { ProgressRail, StatusChip, InvoiceStatusChip, money } from "@/components/portal/ui";
 
 /**
- * Overview — active projects at a glance, next payments, latest delivery log.
+ * Overview - active projects at a glance, next payments, latest delivery log.
  */
 export default async function PortalDashboard() {
   const client = await getClientUser();
@@ -40,7 +40,7 @@ export default async function PortalDashboard() {
         <dl className="mt-8 grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
           {[
             { k: "Active projects", v: String(active.length) },
-            { k: "In delivery", v: active.length ? `${Math.round(active.reduce((s, p) => s + p.progress, 0) / active.length)}%` : "—" },
+            { k: "In delivery", v: active.length ? `${Math.round(active.reduce((s, p) => s + p.progress, 0) / active.length)}%` : "-" },
             { k: "Payments due", v: String(invoices.length) },
             { k: "Member since", v: "" },
           ].map((s, i) => (
@@ -62,7 +62,7 @@ export default async function PortalDashboard() {
         </div>
         {projects.length === 0 ? (
           <p className="t-sm border border-border bg-surface p-6 text-muted">
-            No projects yet — your delivery lead will publish the first one here at kickoff.
+            No projects yet - your delivery lead will publish the first one here at kickoff.
           </p>
         ) : (
           <ul className="grid gap-px border border-border bg-border lg:grid-cols-2">
@@ -98,7 +98,7 @@ export default async function PortalDashboard() {
             </Link>
           </div>
           {invoices.length === 0 ? (
-            <p className="t-sm border border-border bg-surface p-6 text-muted">Nothing due — you are all settled.</p>
+            <p className="t-sm border border-border bg-surface p-6 text-muted">Nothing due - you are all settled.</p>
           ) : (
             <ul className="divide-y divide-border border border-border bg-surface">
               {invoices.map((inv) => (

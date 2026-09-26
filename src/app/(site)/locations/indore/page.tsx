@@ -8,7 +8,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Indore location page — Savo Technologies is headquartered in Indore,
+ * Indore location page - Savo Technologies is headquartered in Indore,
  * Madhya Pradesh. This page exists because the company genuinely operates
  * from Indore; it explains what that means for clients rather than
  * repeating the homepage. No fabricated street address, no invented

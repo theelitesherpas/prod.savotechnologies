@@ -1,12 +1,12 @@
 /**
- * Savo Assistant — the knowledge engine behind the Ask Savo chat.
+ * Savo Assistant - the knowledge engine behind the Ask Savo chat.
  *
  * Deterministic FAQ retrieval over verified site truth (services, process,
  * pricing approach, offices, careers, contact promises). No invented claims:
  * every answer mirrors content published on the site; anything unmatched
  * falls through to a human handoff (enquiry pipeline) instead of a guess.
  *
- * Pure module — unit-tested in tests/assistant.test.ts.
+ * Pure module - unit-tested in tests/assistant.test.ts.
  */
 
 import { IS_DEMO } from "@/lib/content-mode";
@@ -168,11 +168,11 @@ export const KNOWLEDGE: AssistantEntry[] = [
     keywords: ["where", "located", "location", "office", "offices", "address", "india", "switzerland", "zurich", "usa", "uk", "london", "australia", "sydney", "saudi", "dubai", "gcc", "headquarters"],
     paragraphs: IS_DEMO
       ? [
-          "The engineering headquarters is in Indore, India — that is where the team works every day.",
-          "Beyond India, Savo supports engagements across Switzerland and Europe, Saudi Arabia and the GCC, Australia, the United Kingdom and the United States. These are market/service presences — confirmed office locations publish as each region supplies a verified address.",
+          "The engineering headquarters is in Indore, India - that is where the team works every day.",
+          "Beyond India, Savo supports engagements across Switzerland and Europe, Saudi Arabia and the GCC, Australia, the United Kingdom and the United States. These are market/service presences - confirmed office locations publish as each region supplies a verified address.",
         ]
       : [
-          `The engineering headquarters is at 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010, India — that is where the team works every day. Main line +91 75029 01234, HR +91 78988 52345. The Switzerland head office is at Rue de la Fruiterie 13, 1523 Granges-Marnand (+41 76 408 28 72).`,
+          `The engineering headquarters is at 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010, India - that is where the team works every day. Main line +91 75029 01234, HR +91 78988 52345. The Switzerland head office is at Rue de la Fruiterie 13, 1523 Granges-Marnand (+41 76 408 28 72).`,
           "Beyond India and Switzerland, Savo serves clients worldwide. Confirmed office locations publish as each region supplies a verified address.",
         ],
     links: [{ label: "Offices", href: "/contact/#offices" }],
@@ -219,7 +219,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
   },
 ];
 
-/* Initial chip set — one strong question per category, plus the human path */
+/* Initial chip set - one strong question per category, plus the human path */
 export const INITIAL_SUGGESTIONS = ["build", "cost", "ai", "start", "where", "careers"] as const;
 
 export const HUMAN_CHIP = "talk-human" as const;
@@ -228,7 +228,7 @@ export function entryById(id: string): AssistantEntry | undefined {
   return KNOWLEDGE.find((e) => e.id === id);
 }
 
-/* Money words carry the strongest commercial intent — they outrank topic nouns. */
+/* Money words carry the strongest commercial intent - they outrank topic nouns. */
 const INTENT_BOOST = new Set([
   "price", "pricing", "cost", "budget", "quote", "estimate", "charge", "fee", "money",
 ]);

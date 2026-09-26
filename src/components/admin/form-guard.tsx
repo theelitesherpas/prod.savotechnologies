@@ -9,7 +9,7 @@ import {
 } from "react";
 
 /**
- * FormGuard — styled, inline validation for server-action forms.
+ * FormGuard - styled, inline validation for server-action forms.
  *
  * One engine behind every admin/portal form. The constraint attributes
  * already on the markup (required, type, minLength/maxLength, min/max,
@@ -20,12 +20,12 @@ import {
  *     with clickable entries that focus the offending field
  *   - aria-invalid + red border/ring + red label on each invalid field
  *   - live re-validation: an error clears the moment the field becomes
- *     valid — never making the user re-submit to find out
+ *     valid - never making the user re-submit to find out
  *   - focus moved to the summary, first invalid field focused from there
  *
  * A `validate` prop adds cross-field/custom rules to the same surface
  * (keyed by element id, or by field name when no id exists). When JS is
- * absent the native attributes still gate the request server-side —
+ * absent the native attributes still gate the request server-side -
  * client validation is UX, the server action remains the gatekeeper.
  */
 
@@ -67,11 +67,11 @@ function nativeProblem(el: Validatable): string | null {
     }
     if (v.tooShort) {
       const min = (el as HTMLInputElement | HTMLTextAreaElement).minLength;
-      return `The ${what} is too short — at least ${min} characters.`;
+      return `The ${what} is too short - at least ${min} characters.`;
     }
     if (v.tooLong) {
       const max = (el as HTMLInputElement | HTMLTextAreaElement).maxLength;
-      return `The ${what} is too long — no more than ${max} characters.`;
+      return `The ${what} is too long - no more than ${max} characters.`;
     }
     if (v.rangeUnderflow) return `The ${what} must be ${(el as HTMLInputElement).min} or more.`;
     if (v.rangeOverflow) return `The ${what} must be ${(el as HTMLInputElement).max} or less.`;
@@ -99,7 +99,7 @@ export function FormGuard({
   const formRef = useRef<HTMLFormElement>(null);
   const [problems, setProblems] = useState<GuardProblem[]>([]);
   const summaryRef = useRef<HTMLDivElement>(null);
-  /** True once a submit has been blocked — live clearing is active then. */
+  /** True once a submit has been blocked - live clearing is active then. */
   const armedRef = useRef(false);
 
   const anchorOf = (el: Validatable) => el.id || `name:${el.name}`;
@@ -114,7 +114,7 @@ export function FormGuard({
     }
   }, []);
 
-  /** Silent re-validation as the user edits — only after a blocked submit.
+  /** Silent re-validation as the user edits - only after a blocked submit.
      An error clears the moment its field becomes valid; custom
      (cross-field) rules re-run so related errors settle live too. */
   const refresh = useCallback(
@@ -203,7 +203,7 @@ export function FormGuard({
               <path d="M8 4.8v4" />
               <circle cx="8" cy="11.2" r="0.2" fill="currentColor" />
             </svg>
-            There is a problem — the form was not saved
+            There is a problem - the form was not saved
           </p>
           <ul className="space-y-1">
             {problems.map((p, i) => (

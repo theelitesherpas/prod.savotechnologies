@@ -1,18 +1,18 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- * DEMO CASE STUDIES — FICTIONAL DESIGN PROJECTS (FULL DOSSIER)
- * DEMO — REPLACE BEFORE PRODUCTION
+ * DEMO CASE STUDIES - FICTIONAL DESIGN PROJECTS (FULL DOSSIER)
+ * DEMO - REPLACE BEFORE PRODUCTION
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * Polished fictional projects with the complete dossier format — challenge,
- * solution, stack, results, palette, timeline and a testimonial PREVIEW —
+ * Polished fictional projects with the complete dossier format - challenge,
+ * solution, stack, results, palette, timeline and a testimonial PREVIEW -
  * so the public detail pages (/case-studies/[slug]) and the admin editor
  * can be evaluated end to end before real, client-approved engagements
  * arrive.
  *
  * None of these are Savo clients. Every metric is invented. Names were
  * checked against common trademarks at authoring time and chosen as
- * generic fictional identities — they must never be presented as real
+ * generic fictional identities - they must never be presented as real
  * engagements, in production, in sitemaps or in structured data.
  *
  * Source of truth for replacements: DEMO_CONTENT_REPLACEMENT.md
@@ -56,7 +56,7 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
     teamSize: "5 specialists",
     testimonial: {
       quote:
-        "Placeholder testimonial — this slot carries the approved client quote for the engagement, its delivery experience and the measurable value created.",
+        "Placeholder testimonial - this slot carries the approved client quote for the engagement, its delivery experience and the measurable value created.",
       name: "Client Name",
       role: "Role · Company",
     },
@@ -75,7 +75,7 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
     challenge:
       "Operations teams stitched together six tools with spreadsheets and hand-offs. Every exception meant a person re-keying data, and nobody could see the state of a workflow without asking three departments. Manual processing consumed the team's best hours.",
     solution:
-      "One unified product: a visual workflow builder with real-time operational dashboards, rule-based automation for the deterministic steps, and an AI layer — retrieval over company data with guardrails and human approval gates — for the exceptions. Every action is logged, observable and reversible.",
+      "One unified product: a visual workflow builder with real-time operational dashboards, rule-based automation for the deterministic steps, and an AI layer - retrieval over company data with guardrails and human approval gates - for the exceptions. Every action is logged, observable and reversible.",
     services: ["Web Applications", "Custom Software Development", "AI Agent Development", "Business Process Automation"],
     technologies: ["Next.js", "PostgreSQL", "AI/LLM Integration", "Cloud Infrastructure"],
     results: [
@@ -94,7 +94,7 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
     teamSize: "6 specialists",
     testimonial: {
       quote:
-        "Placeholder testimonial — this slot carries the approved client quote for the engagement, its delivery experience and the measurable value created.",
+        "Placeholder testimonial - this slot carries the approved client quote for the engagement, its delivery experience and the measurable value created.",
       name: "Client Name",
       role: "Role · Company",
     },
@@ -132,7 +132,7 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
     teamSize: "4 specialists",
     testimonial: {
       quote:
-        "Placeholder testimonial — this slot carries the approved client quote for the engagement, its delivery experience and the measurable value created.",
+        "Placeholder testimonial - this slot carries the approved client quote for the engagement, its delivery experience and the measurable value created.",
       name: "Client Name",
       role: "Role · Company",
     },
@@ -149,7 +149,7 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
     summary:
       "A unified operations platform designed to improve shipment visibility, workflow coordination and reporting across distributed teams.",
     challenge:
-      "Shipment status lived in email threads and three legacy systems. Dispatchers reconciled spreadsheets twice a day, reporting to management was a weekly manual export, and exceptions surfaced late — usually after the customer called.",
+      "Shipment status lived in email threads and three legacy systems. Dispatchers reconciled spreadsheets twice a day, reporting to management was a weekly manual export, and exceptions surfaced late - usually after the customer called.",
     solution:
       "A single operations platform: live shipment visibility with event timelines, exception queues that route work to the right team, and reporting that assembles itself. A Node.js services layer integrates the legacy systems rather than replacing them in one risky cut-over.",
     services: ["Custom Software Development", "Web Applications", "API Development & Integration", "Cloud & Backend Engineering"],
@@ -170,7 +170,7 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
     teamSize: "5 specialists",
     testimonial: {
       quote:
-        "Placeholder testimonial — this slot carries the approved client quote for the engagement, its delivery experience and the measurable value created.",
+        "Placeholder testimonial - this slot carries the approved client quote for the engagement, its delivery experience and the measurable value created.",
       name: "Client Name",
       role: "Role · Company",
     },
@@ -181,8 +181,8 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
 ];
 
 /**
- * DEMO DATA — NOT VERIFIED. Fictional client brands for any logo/brand
- * strip ("trusted by" style). Abstract wordmarks only — never render as
+ * DEMO DATA - NOT VERIFIED. Fictional client brands for any logo/brand
+ * strip ("trusted by" style). Abstract wordmarks only - never render as
  * real customer relationships, and never in production.
  */
 export const DEMO_CLIENTS: { name: string; status: "demo" | "verified" }[] = [

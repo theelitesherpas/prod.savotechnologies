@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 
 /* ================================================================== */
-/* The crew — playful hand-drawn scenes for the hire pages.            */
+/* The crew - playful hand-drawn scenes for the hire pages.            */
 /* Loose monoline people in the dossier's ink, one vermilion accent   */
 /* per scene, gentle CSS motion.                                       */
 /*                                                                     */
 /* Positioning rule: the SVG transform ATTRIBUTE and CSS transform    */
-/* animations override each other — every animated group is wrapped:  */
+/* animations override each other - every animated group is wrapped:  */
 /* an outer <g transform="translate(...)"> positions, an inner        */
 /* <g class="crew-bob"> animates. Never both on one element.          */
 /* ================================================================== */
@@ -183,7 +183,7 @@ function Cloud({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   );
 }
 
-/** A little bird — two loose arcs, flapping gently. */
+/** A little bird - two loose arcs, flapping gently. */
 function Bird({ x, y, flip = false }: { x: number; y: number; flip?: boolean }) {
   return (
     <g transform={`translate(${x} ${y})${flip ? " scale(-1 1)" : ""}`}>
@@ -262,7 +262,7 @@ function Wheel({ x, y, r = 20 }: { x: number; y: number; r?: number }) {
   );
 }
 
-/** Parcels — the deliverables, stacked or flying. */
+/** Parcels - the deliverables, stacked or flying. */
 function Parcel({ x, y, s = 1, spin = false, delay = "0s" }: { x: number; y: number; s?: number; spin?: boolean; delay?: string }) {
   const inner = (
     <>

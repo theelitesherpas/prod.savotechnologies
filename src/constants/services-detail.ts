@@ -1,8 +1,8 @@
 /**
- * Service detail content — drives /services/[slug]/.
+ * Service detail content - drives /services/[slug]/.
  *
  * The ten canonical services mirror SERVICE_LINKS in navigation.ts
- * (version-1 hrefs). Capability copy only — no invented clients,
+ * (version-1 hrefs). Capability copy only - no invented clients,
  * metrics or results (PRODUCT.md hard rule). SEO-aware phrasing stays
  * honest: what the service is, what it includes, how it runs.
  */

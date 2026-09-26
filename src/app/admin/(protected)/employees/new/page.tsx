@@ -10,7 +10,7 @@ import { nextEmployeeCode } from "@/lib/employees";
 export const metadata: Metadata = { title: "New employee" };
 export const dynamic = "force-dynamic";
 
-/** Create an employee — the next STPL0300IN-style ID is reserved and the
+/** Create an employee - the next STPL0300IN-style ID is reserved and the
  *  welcome email (ID, joining details, leave policy) sends automatically. */
 export default async function NewEmployeePage() {
   const code = prisma ? await nextEmployeeCode() : "STPL00001";
@@ -25,7 +25,7 @@ export default async function NewEmployeePage() {
       <Notice>
         On creation: record saved with status <strong>Pre-joining</strong>, welcome email sent from
         hr@savotechnologies.com with the employee ID, joining date and leave policy. For existing
-        employees, set the joining date to their original date — leave credit accrues from it.
+        employees, set the joining date to their original date - leave credit accrues from it.
       </Notice>
 
       <FormGuard action={createEmployeeAction} className="adm-card mt-6 space-y-5 p-5 sm:p-6">
@@ -44,7 +44,7 @@ export default async function NewEmployeePage() {
             />
             <p id="emp-code-hint" className="t-caption mt-1.5 text-muted">
               Suggested next ID: <span className="font-mono">{code}</span>. Change it only to enter an
-              existing employee with their original ID — format STPL + digits + country code (e.g. STPL0217IN).
+              existing employee with their original ID - format STPL + digits + country code (e.g. STPL0217IN).
             </p>
           </div>
           <div>

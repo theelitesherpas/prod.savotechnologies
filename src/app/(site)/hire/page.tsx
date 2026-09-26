@@ -6,9 +6,9 @@ import { DetailCta } from "@/components/shared/detail-cta";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Hire Resources — the roles catalogue. The v1 dedicated-hiring model
+ * Hire Resources - the roles catalogue. The v1 dedicated-hiring model
  * (48h matching, two week paid trial, transparent monthly rates) in the
- * v6 document language. Process facts and rates only — no invented
+ * v6 document language. Process facts and rates only - no invented
  * performance figures or clients.
  */
 

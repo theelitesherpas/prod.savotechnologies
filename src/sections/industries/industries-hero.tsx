@@ -4,8 +4,8 @@ import { IndustryIcon } from "@/components/shared/industry-icon";
 import { INDUSTRIES_ATLAS } from "@/constants/industries";
 
 /**
- * Industries hero — paper chapter. Statement opening, the coverage card
- * (honest counts only — no invented figures), and the sector contents
+ * Industries hero - paper chapter. Statement opening, the coverage card
+ * (honest counts only - no invented figures), and the sector contents
  * board: a hairline cabinet of anchor cells that invert to ink on hover,
  * matching the case-studies index board grammar.
  */

@@ -1,6 +1,6 @@
 import { MARQUEE_ITEMS } from "@/constants/services";
 
-/** Slow capability divider — an ink strip of what SAVO does (decorative
+/** Slow capability divider - an ink strip of what SAVO does (decorative
  * repetition; the accessible source of the same information is the
  * services section). */
 export function CapabilityMarquee() {

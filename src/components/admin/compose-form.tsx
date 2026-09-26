@@ -11,7 +11,7 @@ import { bodyToHtml } from "@/lib/mail/registry";
 import { cn } from "@/lib/utils";
 
 /**
- * Compose — two modes:
+ * Compose - two modes:
  *   · Template: pick any registry template (grouped by category), fill
  *     its variables, preview live, send with override + dept routing.
  *   · Blank: a one-off branded email from scratch.
@@ -114,7 +114,7 @@ export function ComposeForm({
         <FormGuard action={sendTemplatedEmailAction} className="space-y-4">
           <input type="hidden" name="templateKey" value={templateKey} />
 
-          {/* Template picker — grouped */}
+          {/* Template picker - grouped */}
           <div className="adm-card p-5">
             <label htmlFor="compose-template" className="adm-label mb-1.5 block">
               Template
@@ -132,7 +132,7 @@ export function ComposeForm({
                   <optgroup key={cat} label={CATEGORY_LABEL[cat]}>
                     {entries.map((t) => (
                       <option key={t.key} value={t.key}>
-                        {t.label} — {RECIPIENT_LABEL[t.recipient]}
+                        {t.label} - {RECIPIENT_LABEL[t.recipient]}
                       </option>
                     ))}
                   </optgroup>
@@ -194,7 +194,7 @@ export function ComposeForm({
                   }}
                   className="adm-select h-9 max-w-[16rem] py-1"
                 >
-                  <option value="">— manual —</option>
+                  <option value="">- manual -</option>
                   {employees.map((em) => (
                     <option key={em.id} value={em.id}>
                       {em.employeeCode} · {em.name}
@@ -299,7 +299,7 @@ export function ComposeForm({
             <label htmlFor="compose-body" className="adm-label mb-1.5 block">
               Message
             </label>
-            <p className="t-caption mb-2 text-muted">Plain text or HTML — the branded shell wraps it automatically.</p>
+            <p className="t-caption mb-2 text-muted">Plain text or HTML - the branded shell wraps it automatically.</p>
             <textarea
               id="compose-body"
               name="body"

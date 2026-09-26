@@ -1,7 +1,7 @@
 /**
- * Project mockup — bespoke, palette-driven product visuals for the
+ * Project mockup - bespoke, palette-driven product visuals for the
  * case-study detail pages (demo content policy §9: abstract interface
- * demonstrations only — never real company logos, trademarks or copied
+ * demonstrations only - never real company logos, trademarks or copied
  * dashboards).
  *
  * One component, three disciplines:
@@ -10,7 +10,7 @@
  *   ai / software / growth → operations dashboard (sidebar, KPIs, charts)
  *
  * Every mockup is tinted from the project's own palette record, so each
- * dossier looks like its own product. Pure presentational SVG — usable on
+ * dossier looks like its own product. Pure presentational SVG - usable on
  * the public site and inside the admin editor's live preview.
  */
 

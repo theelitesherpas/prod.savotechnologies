@@ -35,7 +35,7 @@ export default async function EditItemPage({
       <BackLink href={`/admin/content/${def.key}`} label={`All ${def.label.toLowerCase()}`} />
       <PageHeader title={`Edit ${def.singular}`} description={`${def.publicNote} Slug /${item.slug}`} />
 
-      {e === "invalid" ? <Notice kind="alert">Check the fields — a required value is missing or invalid.</Notice> : null}
+      {e === "invalid" ? <Notice kind="alert">Check the fields - a required value is missing or invalid.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That slug is already in use. Choose another.</Notice> : null}
 
       <CollectionForm

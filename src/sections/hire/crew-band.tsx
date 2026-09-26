@@ -3,7 +3,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { CrewScene, crewCopy } from "./crew-scene";
 
 /**
- * The crew band — a playful hand-drawn scene before the vermilion
+ * The crew band - a playful hand-drawn scene before the vermilion
  * close. One scene per page, drawn in the site's own stroke grammar,
  * gently animated. The energy moment; the doodles stay in character.
  */

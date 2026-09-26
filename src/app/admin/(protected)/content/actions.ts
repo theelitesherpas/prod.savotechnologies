@@ -33,7 +33,7 @@ type ParsedItem = {
   data: Record<string, unknown>;
 };
 
-/** Content lifecycle (demo content policy) — publication is explicit. */
+/** Content lifecycle (demo content policy) - publication is explicit. */
 const LIFECYCLE = ["draft", "demo", "review", "verified", "published"] as const;
 export type ContentLifecycle = (typeof LIFECYCLE)[number];
 const parseLifecycle = (v: FormDataEntryValue | null): ContentLifecycle => {
@@ -110,7 +110,7 @@ function parseItemForm(collection: CollectionKey, formData: FormData): ParsedIte
   if (!title) return null;
 
   // Collections without an explicit slug field (case studies) derive it
-  // from the title — guaranteeing a non-empty unique-ish key.
+  // from the title - guaranteeing a non-empty unique-ish key.
   if (!slug) {
     slug = slugify(title);
     if (!/^[a-z0-9-]{2,80}$/.test(slug)) return null;
@@ -230,7 +230,7 @@ export async function moveItemAction(formData: FormData): Promise<void> {
   const dir = formData.get("dir") === "down" ? 1 : -1;
   if (!collection || !prisma) redirect("/admin?e=invalid");
 
-  // Swap `order` with the adjacent row — small collections, cheap query.
+  // Swap `order` with the adjacent row - small collections, cheap query.
   const rows = await prisma!.contentItem.findMany({
     where: { collection },
     orderBy: [{ order: "asc" }, { updatedAt: "asc" }],

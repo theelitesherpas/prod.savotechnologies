@@ -9,7 +9,7 @@ import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
-/* Hand-drawn service icons — one stroke weight (1.5), 28px grid       */
+/* Hand-drawn service icons - one stroke weight (1.5), 28px grid       */
 /* ------------------------------------------------------------------ */
 
 function IconWeb() {

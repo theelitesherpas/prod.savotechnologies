@@ -11,9 +11,9 @@ import {
 export const dynamic = "force-static";
 
 /**
- * /llms.txt — the emerging convention for AI/answer engines (AEO/GEO).
+ * /llms.txt - the emerging convention for AI/answer engines (AEO/GEO).
  * Plain-text orientation card: who Savo is, what the site offers, where the
- * facts live. Content mirrors visible on-page content only — no claims the
+ * facts live. Content mirrors visible on-page content only - no claims the
  * site does not make.
  */
 export async function GET() {

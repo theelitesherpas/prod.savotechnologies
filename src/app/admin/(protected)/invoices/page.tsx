@@ -84,7 +84,7 @@ export default async function AdminInvoicesPage({
           <div>
             <label className="adm-label mb-1.5 block">Client *</label>
             <select name="clientId" required className="adm-select w-full">
-              {clients.length === 0 ? <option value="">— create a client first —</option> : null}
+              {clients.length === 0 ? <option value="">- create a client first -</option> : null}
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -93,7 +93,7 @@ export default async function AdminInvoicesPage({
           <div>
             <label className="adm-label mb-1.5 block">Project</label>
             <select name="projectId" className="adm-select w-full">
-              <option value="">— none —</option>
+              <option value="">- none -</option>
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>{p.code} · {p.title}</option>
               ))}

@@ -23,7 +23,7 @@ import { AGENTS } from "@/constants/agents";
  * Every collection lives in the `content_items` table with a JSONB payload
  * validated against the registry schema. When a collection's table is empty
  * (or the DB is unreachable) the constants act as the guaranteed fallback,
- * so the public site always renders — the same contract as services and
+ * so the public site always renders - the same contract as services and
  * industries. Admin mutations call revalidateManagedContent() to
  * regenerate public pages on demand.
  */
@@ -42,7 +42,7 @@ type ItemRow = {
  *
  * Publication is explicit (demo content policy): public reads return only
  * rows whose content lifecycle reached "published". Rows still in
- * draft/demo/review — or seeded without a lifecycle — never render; the
+ * draft/demo/review - or seeded without a lifecycle - never render; the
  * constants fallback covers the public site instead. */
 async function readItems(collection: CollectionKey, includeInactive = false): Promise<ItemRow[] | null> {
   if (!prisma) return null;
@@ -90,7 +90,7 @@ const qaList = (v: unknown): { q: string; a: string }[] =>
       }))
     : [];
 
-/** Insights articles — index + reading pages. */
+/** Insights articles - index + reading pages. */
 export async function getManagedArticles(): Promise<Article[]> {
   const rows = await readItems("insights");
   if (!rows || rows.length === 0) return ARTICLES;
@@ -137,7 +137,7 @@ export async function getManagedRoles(): Promise<Role[]> {
 }
 
 /**
- * Case-study disciplines — structure (discipline meta, capabilities) is
+ * Case-study disciplines - structure (discipline meta, capabilities) is
  * code-defined; entries come from the shared case-study getter (admin DB
  * rows first, coded dossier records as fallback), so the index, the home
  * cards and the detail pages always tell the same story.
@@ -158,7 +158,7 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
       stack: (s.technologies ?? []).join(" · "),
       outcome:
         (s.results ?? []).map((r) => `${r.value} ${r.label}`).join(" · ") +
-        (s.status === "demo" && (s.results?.length ?? 0) > 0 ? " — demo figures" : ""),
+        (s.status === "demo" && (s.results?.length ?? 0) > 0 ? " - demo figures" : ""),
       slug: s.slug,
       images: {
         cardWide: resolved.cardWide ? { dataUrl: resolved.cardWide.dataUrl, alt: resolved.cardWide.alt } : null,
@@ -171,7 +171,7 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
   });
 }
 
-/** Hire roles — index + per-role chapters. */
+/** Hire roles - index + per-role chapters. */
 export async function getManagedHireRoles(): Promise<HireRole[]> {
   const rows = await readItems("hire");
   if (!rows || rows.length === 0) return HIRE_ROLES;

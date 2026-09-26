@@ -69,7 +69,7 @@ export default async function AuditLogPage({
     <>
       <PageHeader
         title="Audit log"
-        description="Append-only trail of every panel action — who did what, when. Logins included; nothing here is editable."
+        description="Append-only trail of every panel action - who did what, when. Logins included; nothing here is editable."
       />
 
       <form action="/admin/audit" method="get" className="mb-6 flex max-w-md items-center gap-2">
@@ -120,11 +120,11 @@ export default async function AuditLogPage({
                     <Chip tone={e.action.startsWith("auth.") ? "muted" : "default"}>{e.action}</Chip>
                   </td>
                   <td className="hidden px-4 py-2.5 font-mono text-[0.6875rem] text-muted md:table-cell">
-                    {e.entity ? `${e.entity}${e.entityId ? ` · ${e.entityId.slice(0, 14)}` : ""}` : "—"}
+                    {e.entity ? `${e.entity}${e.entityId ? ` · ${e.entityId.slice(0, 14)}` : ""}` : "-"}
                   </td>
                   <td className="hidden max-w-xs px-4 py-2.5 lg:table-cell">
                     <span className="t-caption block truncate text-muted">
-                      {e.meta ? JSON.stringify(e.meta) : "—"}
+                      {e.meta ? JSON.stringify(e.meta) : "-"}
                     </span>
                   </td>
                 </tr>

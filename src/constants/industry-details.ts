@@ -1,9 +1,9 @@
 /**
- * Industry detail content — drives /industries/[slug]/.
+ * Industry detail content - drives /industries/[slug]/.
  *
  * One chapter per sector from INDUSTRIES_ATLAS. Copy is capability copy:
  * SEO-aware (sector + "development"/"software"/"platform" phrasing) but
- * strictly honest — no invented clients, metrics, certifications or
+ * strictly honest - no invented clients, metrics, certifications or
  * results (PRODUCT.md hard rule). Regulation names appear only as
  * constraints the engineering respects.
  */
@@ -20,17 +20,17 @@ export type IndustryDetail = {
   heroLead: string;
   /** SEO meta description (~155 chars). */
   metaDescription: string;
-  /** Landscape section — two paragraphs. */
+  /** Landscape section - two paragraphs. */
   overview: [string, string];
   /** Hero image caption. */
   imageCaption: string;
   /** Detail image caption. */
   detailCaption: string;
-  /** Engagement markers — short honest statements for the detail rail. */
+  /** Engagement markers - short honest statements for the detail rail. */
   markers: string[];
-  /** What we build — six cells. */
+  /** What we build - six cells. */
   solutions: { title: string; text: string }[];
-  /** Vector plate — the flow we engineer. */
+  /** Vector plate - the flow we engineer. */
   flow: {
     heading: string;
     intro: string;

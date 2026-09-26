@@ -38,7 +38,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
   // One canonical entity graph: Organization (Savo Technologies = Savo =
   // Savo Technologies Private Limited = Savo Technologies Pvt Ltd) and the
-  // WebSite it publishes. Every page references these @ids — no duplicate
+  // WebSite it publishes. Every page references these @ids - no duplicate
   // entities. Structured data stays factual in BOTH modes: areaServed is
   // restricted to the verified home market (demo market-presence cards are
   // visual staging content and never enter machine-readable claims; the
@@ -77,7 +77,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           ...(SITE.hq.postalCode ? { postalCode: SITE.hq.postalCode } : {}),
         },
         areaServed: AREA_SERVED_COUNTRIES,
-        // Verified, Savo-controlled profiles only (SOCIAL_LINKS) —
+        // Verified, Savo-controlled profiles only (SOCIAL_LINKS) -
         // placeholder platform links never go here.
         sameAs: SOCIAL_LINKS.map((s) => s.href),
         knowsAbout: [
@@ -133,7 +133,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Admin-managed announcement line (Settings) — hidden when unset */}
+      {/* Admin-managed announcement line (Settings) - hidden when unset */}
       {settings.announcement ? (
         <div className="chapter-ink bg-background">
           <p className="shell flex items-center gap-3 py-2.5 text-[0.8125rem] text-foreground">
@@ -143,7 +143,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         </div>
       ) : null}
 
-      {/* Staging identifier — demo builds only, never in production.
+      {/* Staging identifier - demo builds only, never in production.
           Marks the environment to reviewers so demo content cannot be
           mistaken for approved corporate information. */}
       {IS_DEMO ? (

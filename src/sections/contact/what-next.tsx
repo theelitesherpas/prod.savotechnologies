@@ -2,7 +2,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { WHAT_HAPPENS_NEXT } from "@/constants/contact";
 
 /**
- * After-send expectations — an ink band that sets the process straight:
+ * After-send expectations - an ink band that sets the process straight:
  * what actually happens once the message leaves the form.
  */
 export function WhatNext() {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * The rate plate — one honest price, cycle switch, what's included.
+ * The rate plate - one honest price, cycle switch, what's included.
  * The transparent-rates promise, made interactive.
  */
 

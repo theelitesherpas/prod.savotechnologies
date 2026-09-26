@@ -1,6 +1,6 @@
 import { unsubscribeSig } from "@/lib/mail/templates";
 
-/** One-click unsubscribe endpoint — Gmail/Outlook POST here directly
+/** One-click unsubscribe endpoint - Gmail/Outlook POST here directly
  *  (List-Unsubscribe-Post: One-Click). GET redirects humans to the
  *  confirmation page. HMAC-signed so the list can't be enumerated. */
 

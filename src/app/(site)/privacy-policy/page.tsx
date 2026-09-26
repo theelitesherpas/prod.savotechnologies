@@ -7,7 +7,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Privacy Policy — plain, accurate, and honest about what the site actually
+ * Privacy Policy - plain, accurate, and honest about what the site actually
  * collects (enquiry forms, callback requests, admin sessions, GA4 when
  * enabled). Bracketed slots mark where the company must confirm its own
  * details before production launch.

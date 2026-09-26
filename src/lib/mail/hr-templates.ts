@@ -1,5 +1,5 @@
 /**
- * HR operations templates — the full employment lifecycle.
+ * HR operations templates - the full employment lifecycle.
  *
  * Recruitment → offers & onboarding → employment lifecycle. Professional
  * business register, same letterhead system as the site templates:
@@ -23,16 +23,16 @@ import {
 
 
 const site = (path = "/") => `https://savotechnologies.com${path}`;
-const v = (vars: Record<string, string>, key: string, fallback = "—") => vars[key] || fallback;
+const v = (vars: Record<string, string>, key: string, fallback = "-") => vars[key] || fallback;
 
-const HR_SIGN = `Kind regards,<br>The Savo Team — Human Resources`;
+const HR_SIGN = `Kind regards,<br>The Savo Team - Human Resources`;
 
 /* ══════════════ RECRUITMENT ══════════════ */
 
 /** Interview invitation (shortlisted candidate) with meeting link. */
 export function interviewInvite(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Interview invitation — ${v(vars, "position")} · Savo Technologies`,
+    subject: `Interview invitation - ${v(vars, "position")} · Savo Technologies`,
     html: shell({
       preheader: `You have been shortlisted for ${v(vars, "position")}. Interview: ${v(vars, "interviewDate")} at ${v(vars, "interviewTime")}.`,
       eyebrowText: "Interview invitation",
@@ -47,7 +47,7 @@ export function interviewInvite(vars: Record<string, string>): MailTemplate {
           ["Mode", v(vars, "mode", "Google Meet / Microsoft Teams")],
           ["Interviewer", v(vars, "interviewer")],
         ]),
-        highlight(`<strong>Joining link:</strong> <a href="${v(vars, "meetingLink", "#")}" style="color:#d9480f;">${v(vars, "meetingLink", "— link will be shared —")}</a>`),
+        highlight(`<strong>Joining link:</strong> <a href="${v(vars, "meetingLink", "#")}" style="color:#d9480f;">${v(vars, "meetingLink", "- link will be shared -")}</a>`),
         p(`Please join the meeting a few minutes early and ensure a stable internet connection. Should the proposed time be inconvenient, reply to this email and we will gladly reschedule.`, true),
       ].join(""),
       closing: "Kind regards,",
@@ -57,10 +57,10 @@ export function interviewInvite(vars: Record<string, string>): MailTemplate {
   };
 }
 
-/** Interview reminder — sent ahead of the scheduled interview. */
+/** Interview reminder - sent ahead of the scheduled interview. */
 export function interviewReminder(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Reminder — interview on ${v(vars, "interviewDate")}`,
+    subject: `Reminder - interview on ${v(vars, "interviewDate")}`,
     html: shell({
       preheader: `A reminder for your ${v(vars, "position")} interview: ${v(vars, "interviewDate")} at ${v(vars, "interviewTime")}.`,
       eyebrowText: "Interview reminder",
@@ -85,7 +85,7 @@ export function interviewReminder(vars: Record<string, string>): MailTemplate {
 /** Interview reschedule notice. */
 export function interviewReschedule(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Interview rescheduled — ${v(vars, "position")}`,
+    subject: `Interview rescheduled - ${v(vars, "position")}`,
     html: shell({
       preheader: `Your interview has been moved to ${v(vars, "newDate")} at ${v(vars, "newTime")}.`,
       eyebrowText: "Interview rescheduled",
@@ -107,10 +107,10 @@ export function interviewReschedule(vars: Record<string, string>): MailTemplate 
   };
 }
 
-/** Candidate rejection — respectful, keeps the door open. */
+/** Candidate rejection - respectful, keeps the door open. */
 export function candidateRejection(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Your application — ${v(vars, "position")} · Savo Technologies`,
+    subject: `Your application - ${v(vars, "position")} · Savo Technologies`,
     html: shell({
       preheader: "Thank you for your application. We are unable to proceed at this time.",
       eyebrowText: "Application update",
@@ -118,7 +118,7 @@ export function candidateRejection(vars: Record<string, string>): MailTemplate {
       heading: "Update on your application.",
       bodyHtml: [
         lead(`Dear ${v(vars, "candidateName")},<br><br>Thank you for the time and effort you invested in your application for the <strong>${v(vars, "position")}</strong> position at Savo Technologies.`),
-        p(`After careful consideration, we are unable to proceed with your application at this time. This decision does not reflect on your capabilities — the volume and quality of applications for this role made selection genuinely difficult.`),
+        p(`After careful consideration, we are unable to proceed with your application at this time. This decision does not reflect on your capabilities - the volume and quality of applications for this role made selection genuinely difficult.`),
         p(`We would be glad to consider your profile for future openings that match your experience, and encourage you to apply again.`, true),
       ].join(""),
       closing: "Kind regards,",
@@ -131,15 +131,15 @@ export function candidateRejection(vars: Record<string, string>): MailTemplate {
 /** Bulk announcement of current job openings. */
 export function jobOpeningsBroadcast(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `We are hiring — current openings at Savo Technologies`,
+    subject: `We are hiring - current openings at Savo Technologies`,
     html: shell({
-      preheader: "Current openings at Savo Technologies — share with someone who fits.",
+      preheader: "Current openings at Savo Technologies - share with someone who fits.",
       eyebrowText: "Job openings",
       ref: "HR · OPENINGS",
       heading: "We are hiring.",
       bodyHtml: [
         lead(`Dear ${v(vars, "recipientName", "Team")},<br><br>Below are the positions currently open at Savo Technologies. If someone in your network fits a role, we would be grateful for the referral.`),
-        prose(v(vars, "openingsList", "· Position — Location\n· Position — Location")),
+        prose(v(vars, "openingsList", "· Position - Location\n· Position - Location")),
         p(`All openings are listed with full details on our careers page. Referrals are reviewed on priority.`, true),
       ].join(""),
       cta: { href: site("/careers"), label: "View all openings" },
@@ -152,10 +152,10 @@ export function jobOpeningsBroadcast(vars: Record<string, string>): MailTemplate
 
 /* ══════════════ OFFERS & ONBOARDING ══════════════ */
 
-/** Employee record created — the employee ID email. */
+/** Employee record created - the employee ID email. */
 export function employeeWelcome(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Welcome to Savo Technologies — employee ID ${v(vars, "employeeCode")}`,
+    subject: `Welcome to Savo Technologies - employee ID ${v(vars, "employeeCode")}`,
     html: shell({
       preheader: `Your employee ID is ${v(vars, "employeeCode")}. Joining on ${v(vars, "joiningDate")}.`,
       eyebrowText: "Employee record created",
@@ -171,7 +171,7 @@ export function employeeWelcome(vars: Record<string, string>): MailTemplate {
           ["Reporting to", v(vars, "reportTo")],
         ]),
         p(`<strong>Leave policy:</strong> ${v(vars, "leavePolicy", "One leave is credited for every completed month of service; unused leaves carry forward.")}`),
-        p(`Your onboarding formalities and first-day details will follow in a separate email. For anything in the meantime, reply to this email — Human Resources reads it.`, true),
+        p(`Your onboarding formalities and first-day details will follow in a separate email. For anything in the meantime, reply to this email - Human Resources reads it.`, true),
       ].join(""),
       closing: "Kind regards,",
       reason: "You are receiving this email as a part of your employment onboarding at Savo Technologies.",
@@ -196,7 +196,7 @@ ${HR_SIGN}`,
 /** Offer of employment. */
 export function offerLetter(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Offer of employment — ${v(vars, "position")} · Savo Technologies`,
+    subject: `Offer of employment - ${v(vars, "position")} · Savo Technologies`,
     html: shell({
       preheader: `We are pleased to offer you the position of ${v(vars, "position")}.`,
       eyebrowText: "Offer of employment",
@@ -223,7 +223,7 @@ export function offerLetter(vars: Record<string, string>): MailTemplate {
 /** Pre-joining document verification request. */
 export function documentVerification(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Document verification — ${v(vars, "position")} · Savo Technologies`,
+    subject: `Document verification - ${v(vars, "position")} · Savo Technologies`,
     html: shell({
       preheader: "Please share the listed documents to complete your joining formalities.",
       eyebrowText: "Document verification",
@@ -248,7 +248,7 @@ export function documentVerification(vars: Record<string, string>): MailTemplate
 /** Reference check with a candidate's previous employer. */
 export function employmentVerification(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Employment verification request — ${v(vars, "candidateName")}`,
+    subject: `Employment verification request - ${v(vars, "candidateName")}`,
     html: shell({
       preheader: `A verification request regarding ${v(vars, "candidateName")}, who has applied to Savo Technologies.`,
       eyebrowText: "Employment verification",
@@ -258,22 +258,22 @@ export function employmentVerification(vars: Record<string, string>): MailTempla
         lead(`Dear ${v(vars, "recipientName", "Sir/Madam")},<br><br><strong>${v(vars, "candidateName")}</strong> has applied for a position at Savo Technologies and has listed your organisation as a previous employer. We would be grateful if you could confirm the following details from your records.`),
         spec([
           ["Candidate", v(vars, "candidateName")],
-          ["Tenure claimed", `${v(vars, "workedFrom")} — ${v(vars, "workedTo")}`],
+          ["Tenure claimed", `${v(vars, "workedFrom")} - ${v(vars, "workedTo")}`],
           ["Designation claimed", v(vars, "designation")],
         ]),
-        p(`A simple confirmation of tenure, designation and conduct — a reply to this email suffices. Any information you share is used strictly for this verification and kept confidential.`, true),
+        p(`A simple confirmation of tenure, designation and conduct - a reply to this email suffices. Any information you share is used strictly for this verification and kept confidential.`, true),
       ].join(""),
       closing: "Kind regards,",
       reason: "You are receiving this request because the candidate listed your organisation as a previous employer.",
     }),
-    text: `Dear ${v(vars, "recipientName", "Sir/Madam")},\n\n${v(vars, "candidateName")} has applied for a position at Savo Technologies and listed your organisation as a previous employer. We would be grateful for confirmation of:\n\nTenure: ${v(vars, "workedFrom")} — ${v(vars, "workedTo")}\nDesignation: ${v(vars, "designation")}\n\nA reply to this email with a simple confirmation suffices. The information is kept strictly confidential.\n\n${HR_SIGN}`,
+    text: `Dear ${v(vars, "recipientName", "Sir/Madam")},\n\n${v(vars, "candidateName")} has applied for a position at Savo Technologies and listed your organisation as a previous employer. We would be grateful for confirmation of:\n\nTenure: ${v(vars, "workedFrom")} - ${v(vars, "workedTo")}\nDesignation: ${v(vars, "designation")}\n\nA reply to this email with a simple confirmation suffices. The information is kept strictly confidential.\n\n${HR_SIGN}`,
   };
 }
 
 /** Appointment letter (post acceptance). */
 export function appointmentLetter(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Appointment letter — ${v(vars, "position")} · Savo Technologies`,
+    subject: `Appointment letter - ${v(vars, "position")} · Savo Technologies`,
     html: shell({
       preheader: `Your appointment as ${v(vars, "position")} is confirmed.`,
       eyebrowText: "Appointment letter",
@@ -299,21 +299,21 @@ export function appointmentLetter(vars: Record<string, string>): MailTemplate {
 /** First-day welcome with joining details. */
 export function onboardingWelcome(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Welcome to Savo Technologies — your first day`,
+    subject: `Welcome to Savo Technologies - your first day`,
     html: shell({
       preheader: `Everything you need for your first day on ${v(vars, "joiningDate")}.`,
       eyebrowText: "Welcome aboard",
       ref: "HR · ONBOARDING",
       heading: "Welcome to Savo Technologies.",
       bodyHtml: [
-        lead(`Dear ${v(vars, "employeeName")},<br><br>We are delighted to welcome you as <strong>${v(vars, "position")}</strong>. Your first day details are below — everything else, your team will walk you through.`),
+        lead(`Dear ${v(vars, "employeeName")},<br><br>We are delighted to welcome you as <strong>${v(vars, "position")}</strong>. Your first day details are below - everything else, your team will walk you through.`),
         spec([
           ["First day", v(vars, "joiningDate")],
           ["Report at", v(vars, "reportTime")],
           ["Location", v(vars, "officeLocation")],
           ["Buddy", v(vars, "buddy", "Assigned on arrival")],
         ]),
-        p(`Carry a government photo ID for building access. Lunch is on us — your buddy will take you around.`, true),
+        p(`Carry a government photo ID for building access. Lunch is on us - your buddy will take you around.`, true),
       ].join(""),
       closing: "See you on Monday,",
       reason: "You are receiving this email as a part of your onboarding at Savo Technologies.",
@@ -327,7 +327,7 @@ export function onboardingWelcome(vars: Record<string, string>): MailTemplate {
 /** Probation confirmation. */
 export function probationConfirmation(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Confirmation of employment — ${v(vars, "employeeName")}`,
+    subject: `Confirmation of employment - ${v(vars, "employeeName")}`,
     html: shell({
       preheader: "Your probation period has been successfully completed.",
       eyebrowText: "Employment confirmed",
@@ -351,7 +351,7 @@ export function probationConfirmation(vars: Record<string, string>): MailTemplat
 /** Salary increment / revision. */
 export function salaryIncrement(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Salary revision — effective ${v(vars, "effectiveDate")}`,
+    subject: `Salary revision - effective ${v(vars, "effectiveDate")}`,
     html: shell({
       preheader: "Your revised compensation, in recognition of your contribution.",
       eyebrowText: "Salary revision",
@@ -364,7 +364,7 @@ export function salaryIncrement(vars: Record<string, string>): MailTemplate {
           ["Increase", v(vars, "incrementPercent")],
           ["Effective from", v(vars, "effectiveDate")],
         ]),
-        p(`The detailed revision letter follows separately for your records. Thank you for your continued commitment — we look forward to the year ahead with you.`, true),
+        p(`The detailed revision letter follows separately for your records. Thank you for your continued commitment - we look forward to the year ahead with you.`, true),
       ].join(""),
       closing: "Kind regards,",
       reason: "You are receiving this email as a part of your employment with Savo Technologies.",
@@ -376,7 +376,7 @@ export function salaryIncrement(vars: Record<string, string>): MailTemplate {
 /** Leave approval. */
 export function leaveApproval(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Leave approved — ${v(vars, "fromDate")} to ${v(vars, "toDate")}`,
+    subject: `Leave approved - ${v(vars, "fromDate")} to ${v(vars, "toDate")}`,
     html: shell({
       preheader: "Your leave request has been approved.",
       eyebrowText: "Leave approved",
@@ -403,17 +403,17 @@ export function leaveApproval(vars: Record<string, string>): MailTemplate {
 /** Leave rejection. */
 export function leaveRejection(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Leave request — unable to approve`,
+    subject: `Leave request - unable to approve`,
     html: shell({
       preheader: "Your leave request could not be approved at this time.",
       eyebrowText: "Leave update",
       ref: "HR · LEAVE",
       heading: "Your leave request could not be approved.",
       bodyHtml: [
-        lead(`Dear ${v(vars, "employeeName")},<br><br>We have reviewed your leave request for <strong>${v(vars, "fromDate")} — ${v(vars, "toDate")}</strong>. Unfortunately, we are unable to approve it at this time.`),
+        lead(`Dear ${v(vars, "employeeName")},<br><br>We have reviewed your leave request for <strong>${v(vars, "fromDate")} - ${v(vars, "toDate")}</strong>. Unfortunately, we are unable to approve it at this time.`),
         spec([
           ["Leave type", v(vars, "leaveType")],
-          ["Requested", `${v(vars, "fromDate")} — ${v(vars, "toDate")}`],
+          ["Requested", `${v(vars, "fromDate")} - ${v(vars, "toDate")}`],
           ["Reason", v(vars, "reason")],
         ]),
         p(`We understand this may be inconvenient. You are welcome to discuss alternate dates with your manager, and we will do our best to accommodate them.`, true),
@@ -421,28 +421,28 @@ export function leaveRejection(vars: Record<string, string>): MailTemplate {
       closing: "Kind regards,",
       reason: "You are receiving this email as a part of leave management at Savo Technologies.",
     }),
-    text: `Dear ${v(vars, "employeeName")},\n\nYour leave request for ${v(vars, "fromDate")} — ${v(vars, "toDate")} could not be approved.\n\nReason: ${v(vars, "reason")}\n\nYou are welcome to discuss alternate dates with your manager.\n\n${HR_SIGN}`,
+    text: `Dear ${v(vars, "employeeName")},\n\nYour leave request for ${v(vars, "fromDate")} - ${v(vars, "toDate")} could not be approved.\n\nReason: ${v(vars, "reason")}\n\nYou are welcome to discuss alternate dates with your manager.\n\n${HR_SIGN}`,
   };
 }
 
 /** Performance improvement plan. */
 export function pipNotice(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Performance improvement plan — ${v(vars, "employeeName")}`,
+    subject: `Performance improvement plan - ${v(vars, "employeeName")}`,
     html: shell({
       preheader: "A structured plan with our full support.",
       eyebrowText: "Performance improvement",
       ref: "HR · PIP",
       heading: "Performance improvement plan.",
       bodyHtml: [
-        lead(`Dear ${v(vars, "employeeName")},<br><br>Following your performance review, we would like to work with you on a structured improvement plan. This is a supportive process — its purpose is to help you succeed in your role as <strong>${v(vars, "position")}</strong>.`),
+        lead(`Dear ${v(vars, "employeeName")},<br><br>Following your performance review, we would like to work with you on a structured improvement plan. This is a supportive process - its purpose is to help you succeed in your role as <strong>${v(vars, "position")}</strong>.`),
         spec([
           ["Focus areas", v(vars, "focusAreas")],
           ["Plan duration", v(vars, "duration")],
           ["Review date", v(vars, "reviewDate")],
           ["Manager", v(vars, "managerName")],
         ]),
-        p(`During this period, the support listed above — regular check-ins, mentorship and resources — is fully available to you. We are committed to your success and will review progress together on the date mentioned.`, true),
+        p(`During this period, the support listed above - regular check-ins, mentorship and resources - is fully available to you. We are committed to your success and will review progress together on the date mentioned.`, true),
       ].join(""),
       closing: "Kind regards,",
       reason: "You are receiving this email as a part of employment processes at Savo Technologies.",
@@ -454,7 +454,7 @@ export function pipNotice(vars: Record<string, string>): MailTemplate {
 /** Termination of service. */
 export function terminationNotice(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Termination of service — ${v(vars, "employeeName")}`,
+    subject: `Termination of service - ${v(vars, "employeeName")}`,
     html: shell({
       preheader: "Formal notice regarding the conclusion of employment.",
       eyebrowText: "Termination of service",
@@ -467,7 +467,7 @@ export function terminationNotice(vars: Record<string, string>): MailTemplate {
           ["Notice period", v(vars, "noticePeriod")],
           ["Reason", v(vars, "reason")],
         ]),
-        p(`Your full and final settlement — salary, leave balance and applicable dues — will be processed as per policy following your last working day. Company property must be returned and handover completed to <strong>${v(vars, "handoverTo")}</strong> before separation.`, true),
+        p(`Your full and final settlement - salary, leave balance and applicable dues - will be processed as per policy following your last working day. Company property must be returned and handover completed to <strong>${v(vars, "handoverTo")}</strong> before separation.`, true),
       ].join(""),
       closing: "Kind regards,",
       reason: "You are receiving this email as a formal employment communication from Savo Technologies.",
@@ -479,7 +479,7 @@ export function terminationNotice(vars: Record<string, string>): MailTemplate {
 /** Resignation acknowledgement. */
 export function resignationAcknowledgement(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Resignation acknowledged — ${v(vars, "employeeName")}`,
+    subject: `Resignation acknowledged - ${v(vars, "employeeName")}`,
     html: shell({
       preheader: "We acknowledge your resignation and outline the exit process.",
       eyebrowText: "Resignation acknowledged",
@@ -504,7 +504,7 @@ export function resignationAcknowledgement(vars: Record<string, string>): MailTe
 /** Relieving & experience confirmation. */
 export function relievingLetter(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Relieving letter — ${v(vars, "employeeName")}`,
+    subject: `Relieving letter - ${v(vars, "employeeName")}`,
     html: shell({
       preheader: "Confirmation of relieving and service record.",
       eyebrowText: "Relieving letter",
@@ -513,7 +513,7 @@ export function relievingLetter(vars: Record<string, string>): MailTemplate {
       bodyHtml: [
         lead(`Dear ${v(vars, "employeeName")},<br><br>This is to confirm that you have been relieved from the position of <strong>${v(vars, "position")}</strong> at Savo Technologies, having completed all exit formalities.`),
         spec([
-          ["Tenure", `${v(vars, "fromDate")} — ${v(vars, "toDate")}`],
+          ["Tenure", `${v(vars, "fromDate")} - ${v(vars, "toDate")}`],
           ["Position", v(vars, "position")],
           ["Conduct", v(vars, "conduct", "Good")],
         ]),
@@ -522,21 +522,21 @@ export function relievingLetter(vars: Record<string, string>): MailTemplate {
       closing: "Kind regards,",
       reason: "You are receiving this email as a part of exit formalities at Savo Technologies.",
     }),
-    text: `Dear ${v(vars, "employeeName")},\n\nThis is to confirm that you have been relieved from the position of ${v(vars, "position")} at Savo Technologies.\n\nTenure: ${v(vars, "fromDate")} — ${v(vars, "toDate")}\nConduct: ${v(vars, "conduct", "Good")}\n\nWe thank you for your service and wish you the best ahead. Formal letters are attached.\n\n${HR_SIGN}`,
+    text: `Dear ${v(vars, "employeeName")},\n\nThis is to confirm that you have been relieved from the position of ${v(vars, "position")} at Savo Technologies.\n\nTenure: ${v(vars, "fromDate")} - ${v(vars, "toDate")}\nConduct: ${v(vars, "conduct", "Good")}\n\nWe thank you for your service and wish you the best ahead. Formal letters are attached.\n\n${HR_SIGN}`,
   };
 }
 
 /** Exit interview invitation. */
 export function exitInterview(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Exit interview — ${v(vars, "employeeName")}`,
+    subject: `Exit interview - ${v(vars, "employeeName")}`,
     html: shell({
       preheader: "An open conversation before your last day.",
       eyebrowText: "Exit interview",
       ref: "HR · EXIT",
       heading: "Exit interview invitation.",
       bodyHtml: [
-        lead(`Dear ${v(vars, "employeeName")},<br><br>As a part of your exit process, we would like to invite you to a short exit interview — an open conversation about your experience with us, and anything we can do better.`),
+        lead(`Dear ${v(vars, "employeeName")},<br><br>As a part of your exit process, we would like to invite you to a short exit interview - an open conversation about your experience with us, and anything we can do better.`),
         spec([
           ["Date", v(vars, "exitDate")],
           ["Duration", v(vars, "duration", "30 minutes")],
@@ -554,12 +554,12 @@ export function exitInterview(vars: Record<string, string>): MailTemplate {
 /** Holiday announcement. */
 export function holidayAnnouncement(vars: Record<string, string>): MailTemplate {
   return {
-    subject: `Holiday announcement — ${v(vars, "holidayName")}`,
+    subject: `Holiday announcement - ${v(vars, "holidayName")}`,
     html: shell({
       preheader: `The office will remain closed on ${v(vars, "holidayDate")}.`,
       eyebrowText: "Holiday announcement",
       ref: "HR · ANNOUNCEMENT",
-      heading: `Holiday — ${v(vars, "holidayName")}.`,
+      heading: `Holiday - ${v(vars, "holidayName")}.`,
       bodyHtml: [
         lead(`Dear ${v(vars, "employeeName", "Team")},<br><br>This is to inform you that the office will remain closed on the occasion of <strong>${v(vars, "holidayName")}</strong>.`),
         spec([
@@ -571,6 +571,6 @@ export function holidayAnnouncement(vars: Record<string, string>): MailTemplate 
       closing: "Kind regards,",
       reason: "You are receiving this email as a part of workplace communications at Savo Technologies.",
     }),
-    text: `Dear ${v(vars, "employeeName", "Team")},\n\nThe office will remain closed on the occasion of ${v(vars, "holidayName")} — ${v(vars, "holidayDate")} (${v(vars, "holidayDay")}).\n\n${HR_SIGN}`,
+    text: `Dear ${v(vars, "employeeName", "Team")},\n\nThe office will remain closed on the occasion of ${v(vars, "holidayName")} - ${v(vars, "holidayDate")} (${v(vars, "holidayDay")}).\n\n${HR_SIGN}`,
   };
 }

@@ -9,7 +9,7 @@ import { leaveSummary, fmtDate } from "@/lib/employees";
 export const metadata: Metadata = { title: "Leave management" };
 export const dynamic = "force-dynamic";
 
-/** Leave management — every request across the workforce, balances at a glance. */
+/** Leave management - every request across the workforce, balances at a glance. */
 export default async function LeaveManagementPage({
   searchParams,
 }: {
@@ -42,7 +42,7 @@ export default async function LeaveManagementPage({
     <div className="max-w-6xl">
       <PageHeader
         title="Leave management"
-        description="Requests across the workforce — approvals email employees automatically and adjust balances in real time."
+        description="Requests across the workforce - approvals email employees automatically and adjust balances in real time."
       />
       {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
 
@@ -129,7 +129,7 @@ export default async function LeaveManagementPage({
                     <td className="px-4 py-3 text-right">
                       <Chip tone={l.status === "approved" ? "success" : "warning"}>{l.status}</Chip>
                     </td>
-                    <td className="px-4 py-3 text-right text-[0.8125rem] text-muted">{l.actedBy ?? "—"}</td>
+                    <td className="px-4 py-3 text-right text-[0.8125rem] text-muted">{l.actedBy ?? "-"}</td>
                   </tr>
                 ))}
               </tbody>

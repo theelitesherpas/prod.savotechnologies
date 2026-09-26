@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Global error boundary — replaces the full document when the root layout
+ * Global error boundary - replaces the full document when the root layout
  * itself throws. Minimal by design (no shared chrome can be assumed).
  */
 export default function GlobalError({

@@ -12,7 +12,7 @@ import { CASE_PHOTO } from "@/constants/case-studies";
 
 type Variant = CaseDiscipline["id"];
 
-/* Hand-drawn wireframe art, one per discipline — hairline strokes with the
+/* Hand-drawn wireframe art, one per discipline - hairline strokes with the
    square node accent, matching the homepage selected-work grammar. */
 function CaseArt({ variant }: { variant: Variant }) {
   return (
@@ -204,11 +204,11 @@ export function CaseStudyCard({
       <div className={`relative overflow-hidden ${aspect}`}>
         {hero ? (
           // Attached visual (admin crop studio, slot-matched to this card)
-          // — the same image family the detail-page showcase renders.
+          // - the same image family the detail-page showcase renders.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={hero}
-            alt={art?.alt || `${entry.name} — project visual`}
+            alt={art?.alt || `${entry.name} - project visual`}
             className="h-full w-full object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
           />
         ) : (
@@ -217,7 +217,7 @@ export function CaseStudyCard({
               src={CASE_PHOTO[variant]}
               alt={
                 hasDetail
-                  ? `Design concept: ${entry.name} — fictional demo project`
+                  ? `Design concept: ${entry.name} - fictional demo project`
                   : `Representative studio imagery: ${variant} case study in preparation`
               }
               fill
@@ -271,14 +271,14 @@ export function CaseStudyCard({
     </>
   );
 
-  // Whole card is the link — the thumbnail, title, any click opens the
+  // Whole card is the link - the thumbnail, title, any click opens the
   // dossier. Pending slots (no slug) stay a non-interactive article.
   if (hasDetail) {
     return (
       <Link
         href={`/case-studies/${entry.slug}`}
         className="group relative block border border-border bg-surface transition-colors duration-500 hover:border-foreground/30"
-        aria-label={`${entry.name} — open case study`}
+        aria-label={`${entry.name} - open case study`}
       >
         {card}
       </Link>

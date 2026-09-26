@@ -179,7 +179,7 @@ export default async function EditProjectPage({
           <input type="hidden" name="projectId" value={project.id} />
           <div>
             <label className="adm-label mb-1 block">Post an update</label>
-            <input name="title" required maxLength={140} className={input} placeholder="Weekly demo shipped — checkout v2 live on staging" />
+            <input name="title" required maxLength={140} className={input} placeholder="Weekly demo shipped - checkout v2 live on staging" />
           </div>
           <textarea name="body" rows={2} maxLength={2000} className={input} placeholder="Details the client sees on their dashboard (optional)" />
           <SubmitButton label="Post update" />

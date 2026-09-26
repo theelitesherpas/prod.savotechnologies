@@ -8,7 +8,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
 /**
- * Client-portal authentication — server-side sessions, mirroring the
+ * Client-portal authentication - server-side sessions, mirroring the
  * admin auth hardening:
  *
  *   cookie: savo_client = <32-byte random token>  (HttpOnly, SameSite=Lax,

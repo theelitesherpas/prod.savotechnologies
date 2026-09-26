@@ -4,7 +4,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { StartBrief } from "./start-brief";
 
 /**
- * Start a Project — the detailed brief. Hero and guarantees on paper;
+ * Start a Project - the detailed brief. Hero and guarantees on paper;
  * the wizard is the page's centerpiece; what happens next closes on ink.
  */
 

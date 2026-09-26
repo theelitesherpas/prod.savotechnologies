@@ -14,7 +14,7 @@ import { CASE_STUDY_DETAILS } from "@/constants/case-studies";
  * Case-study mutations for the dedicated rich editor (/admin/case-studies).
  *
  * The form submits one JSON payload (assembled by the client-side
- * CaseStudyForm) which is validated by the shared caseStudySchema — the
+ * CaseStudyForm) which is validated by the shared caseStudySchema - the
  * same schema the public renderer trusts, so admin input and public output
  * can never drift. Records land in ContentItem (collection "case-studies")
  * with an explicit lifecycle; only "published" rows render publicly.
@@ -124,8 +124,8 @@ export async function setCaseStudyStatusAction(formData: FormData): Promise<void
 }
 
 /**
- * Import (upsert) the coded dossier records — the four demo projects on
- * staging, or any verified records appended to the constants later — as
+ * Import (upsert) the coded dossier records - the four demo projects on
+ * staging, or any verified records appended to the constants later - as
  * editable database rows. Imported demo dossiers land with lifecycle
  * "demo": visible on staging (never production) and fully editable from
  * the admin panel. Existing slugs are refreshed, not duplicated.

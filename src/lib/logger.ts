@@ -1,5 +1,5 @@
 /**
- * Structured JSON logger — one line per event, safe for production logs.
+ * Structured JSON logger - one line per event, safe for production logs.
  * Never log secrets, tokens, passwords or personal data; `meta` should
  * carry identifiers and status only.
  */

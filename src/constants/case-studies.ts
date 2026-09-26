@@ -1,12 +1,12 @@
 /**
- * Case-study dossier — the discipline index that drives /case-studies/.
+ * Case-study dossier - the discipline index that drives /case-studies/.
  *
  * HARD CONTENT RULE (PRODUCT.md): never fabricate clients, metrics or
  * results. Every entry is an honest specimen slot: the sector, services
  * and stack describe capability slots drawn from the public services and
  * industries lists; names stay bracketed and outcomes stay pending until
  * SAVO supplies verified engagements. The page copy states this policy
- * explicitly — "In preparation" is the honest state, not a defect.
+ * explicitly - "In preparation" is the honest state, not a defect.
  */
 
 import { IS_DEMO } from "@/lib/content-mode";
@@ -19,8 +19,8 @@ import { slugifyCaseStudy, type CaseStudy } from "@/lib/case-study-schema";
  * CONTENT_MODE gated: demo mode exposes the fictional design projects so
  * the detail format can be evaluated; production exposes only records
  * with status "verified" (real, client-approved engagements), appended
- * here — or published via the admin panel — as Savo supplies them.
- * DEMO DATA — NOT VERIFIED, never in production sitemap or structured data.
+ * here - or published via the admin panel - as Savo supplies them.
+ * DEMO DATA - NOT VERIFIED, never in production sitemap or structured data.
  */
 export const CASE_STUDY_DETAILS: CaseStudy[] = (
   IS_DEMO ? DEMO_CASE_STUDIES.map(({ variant: _variant, ...record }) => record) : []
@@ -37,7 +37,7 @@ export type CaseEntry = {
   outcome: string;
   /** Present when the entry has a public detail page (demo/verified). */
   slug?: string;
-  /** Resolved card visuals (admin crop studio) — featured cards use
+  /** Resolved card visuals (admin crop studio) - featured cards use
    * cardWide, standard cards use card; detail pages use showcase. */
   images?: { cardWide?: { dataUrl: string; alt?: string } | null; card?: { dataUrl: string; alt?: string } | null };
 };
@@ -303,10 +303,10 @@ export const DOSSIER_CONTENTS = [
 ] as const;
 
 /**
- * CONTENT_MODE gate — demo mode files a fictional design project as the
+ * CONTENT_MODE gate - demo mode files a fictional design project as the
  * featured specimen of its discipline (Meridian Commerce → web,
  * NovaFlow → ai, Aster Health → mobile, Northstar Logistics → software)
- * so the dossier boards stay visually complete. DEMO DATA — NOT VERIFIED:
+ * so the dossier boards stay visually complete. DEMO DATA - NOT VERIFIED:
  * never renders in production, never in sitemap/structured data.
  * Production keeps the honest pending specimen slots below.
  */
@@ -320,7 +320,7 @@ export const CASE_DISCIPLINES: CaseDiscipline[] = CASE_DISCIPLINES_BASE.map((d) 
     sector: demo.industry,
     services: demo.services.join(" · "),
     stack: demo.technologies.join(" · "),
-    outcome: demo.results.map((r) => `${r.value} ${r.label}`).join(" · ") + " — demo figures",
+    outcome: demo.results.map((r) => `${r.value} ${r.label}`).join(" · ") + " - demo figures",
     slug: slugifyCaseStudy(demo.title),
   };
   return { ...d, entries: [demoEntry, ...d.entries.filter((e) => !e.featured)] };

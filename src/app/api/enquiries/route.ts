@@ -12,7 +12,7 @@ import { sendTemplateNow, teamEmail } from "@/lib/mail";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** POST /api/enquiries — homepage enquiry drawer submissions. */
+/** POST /api/enquiries - homepage enquiry drawer submissions. */
 
 /** Sanitized structured payload a form may attach (careers application
  *  details, callback country). Keys/values are length-capped and the
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     typeof raw.source === "string" ? (raw.source as string).slice(0, 60) : "homepage";
   const details = sanitizeDetails(raw.details);
 
-  // Honeypot — bots get a silent success so they learn nothing.
+  // Honeypot - bots get a silent success so they learn nothing.
   if (data.website) {
     logger.info("enquiry.honeypot", {});
     return apiOk();
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
         data: (details as Prisma.InputJsonValue) ?? undefined,
         source,
         userAgent: req.headers.get("user-agent")?.slice(0, 255) ?? null,
-        // Salted hash prefix — raw IPs are never persisted (privacy).
+        // Salted hash prefix - raw IPs are never persisted (privacy).
         ipHash:
           ip === "unknown"
             ? null
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     logger.info("enquiry.stored", { source, type: data.projectType });
     recordSubmission(ip);
 
-    /* Transactional mail — never blocks the response, never fails the
+    /* Transactional mail - never blocks the response, never fails the
        request. Careers applications acknowledge the candidate and ping
        HR; assistant handoffs promise a one-business-day reply; every
        form notifies the team inbox. */
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
       if (data.email) sendTemplateNow("applicationAck", data.email, { name: data.name, role: det.role ?? "the role" });
       sendTemplateNow("teamApplication", process.env.HR_EMAIL || "hr@savotechnologies.com", {
         name: data.name,
-        email: data.email ?? "—",
+        email: data.email ?? "-",
         role: det.role ?? "General application",
         experience: det.experience,
         links: det.links,
@@ -132,13 +132,13 @@ export async function POST(req: Request) {
       if (data.email) sendTemplateNow("callbackAck", data.email, { name: data.name, country: det.country ?? "your" });
       sendTemplateNow("teamCallback", teamEmail(), {
         name: data.name,
-        phone: data.phone ?? "—",
-        country: det.country ?? "—",
+        phone: data.phone ?? "-",
+        country: det.country ?? "-",
         note: data.message.slice(0, 300),
       });
     } else if (form === "ask-savo") {
       if (data.email) sendTemplateNow("askSavoHandoffAck", data.email, { question: data.message });
-      sendTemplateNow("teamAskSavo", teamEmail(), { email: data.email ?? "—", question: data.message });
+      sendTemplateNow("teamAskSavo", teamEmail(), { email: data.email ?? "-", question: data.message });
     } else {
       if (data.email) sendTemplateNow("enquiryAck", data.email, { name: data.name, projectType: data.projectType });
       sendTemplateNow("teamEnquiry", teamEmail(), {

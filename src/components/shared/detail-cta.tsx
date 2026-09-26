@@ -6,7 +6,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { track } from "@/lib/analytics";
 
 /**
- * Closing moment — the vermilion chapter for detail pages. One shout per
+ * Closing moment - the vermilion chapter for detail pages. One shout per
  * page, parameterised copy, same controls as the site-wide close.
  */
 export function DetailCta({

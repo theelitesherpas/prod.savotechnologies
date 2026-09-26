@@ -15,7 +15,7 @@ import { PhoneField } from "@/components/shared/phone-field";
 import { cn, withBasePath } from "@/lib/utils";
 
 /**
- * The brief — the detailed start-a-project wizard. Three steps (you, the
+ * The brief - the detailed start-a-project wizard. Three steps (you, the
  * project, review) posting to the standard /api/enquiries pipeline with
  * the shared Zod schema, honeypot and analytics events.
  */

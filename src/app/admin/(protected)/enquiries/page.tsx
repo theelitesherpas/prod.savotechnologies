@@ -121,7 +121,7 @@ export default async function EnquiriesPage({
     <>
       <PageHeader
         title="Enquiries"
-        description={`Every public form — Start a project, Contact, Careers applications and callbacks — lands in this one pipeline. ${total} shown for the current filter.`}
+        description={`Every public form - Start a project, Contact, Careers applications and callbacks - lands in this one pipeline. ${total} shown for the current filter.`}
       />
 
       {sp.deleted ? <Notice>Enquiry deleted.</Notice> : null}
@@ -211,7 +211,7 @@ export default async function EnquiriesPage({
                         {enq.name}
                       </span>
                       <span className="t-caption block truncate text-muted">
-                        {enq.email ?? enq.company ?? "—"}
+                        {enq.email ?? enq.company ?? "-"}
                       </span>
                       <span className="t-caption mt-0.5 block truncate text-muted/80 lg:hidden">
                         {enq.projectType}

@@ -1,5 +1,5 @@
 /**
- * Content collection registry — the contract between the admin panel's
+ * Content collection registry - the contract between the admin panel's
  * generic collection engine and each website collection it manages.
  *
  * Every managed collection (insights articles, careers roles, case-study
@@ -12,7 +12,7 @@
  *     is empty (mirrors the services/industries pattern)
  *
  * This module must stay importable from client components: plain data
- * and constants only — no server-only imports.
+ * and constants only - no server-only imports.
  */
 
 import { ARTICLES } from "@/constants/insights";
@@ -103,7 +103,7 @@ const insights: CollectionDef = {
   key: "insights",
   label: "Insights articles",
   singular: "article",
-  publicNote: "The /insights/ journal — index grid and reading pages.",
+  publicNote: "The /insights/ journal - index grid and reading pages.",
   titleField: "title",
   icon: "pen",
   fields: [
@@ -238,7 +238,7 @@ const caseStudies: CollectionDef = {
     { name: "sector", label: "Sector", type: "text", width: "half", placeholder: "Professional Services" },
     { name: "services", label: "Services", type: "text", width: "half", placeholder: "Corporate platform · Customer portal" },
     { name: "stack", label: "Stack", type: "text", width: "half", placeholder: "Next.js · Node.js · PostgreSQL" },
-    { name: "outcome", label: "Verified outcome", type: "textarea", rows: 3, placeholder: "[Verified project result required]", help: "Publish only client-approved figures — placeholders stay honest." },
+    { name: "outcome", label: "Verified outcome", type: "textarea", rows: 3, placeholder: "[Verified project result required]", help: "Publish only client-approved figures - placeholders stay honest." },
   ],
   newDefaults: () => ({
     discipline: "web",
@@ -272,7 +272,7 @@ const hire: CollectionDef = {
   key: "hire",
   label: "Hire roles",
   singular: "hire role",
-  publicNote: "Dedicated-hiring catalogue on /hire/ — index and per-role pages.",
+  publicNote: "Dedicated-hiring catalogue on /hire/ - index and per-role pages.",
   titleField: "title",
   icon: "crew",
   fields: [
@@ -465,7 +465,7 @@ const agents: CollectionDef = {
   key: "agents",
   label: "AI agents",
   singular: "agent",
-  publicNote: "The agent fleet on /ai-agents/ — personas, deliverables and tags.",
+  publicNote: "The agent fleet on /ai-agents/ - personas, deliverables and tags.",
   titleField: "name",
   icon: "bot",
   fields: [

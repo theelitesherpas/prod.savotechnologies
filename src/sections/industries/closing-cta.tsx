@@ -5,7 +5,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { track } from "@/lib/analytics";
 
 /**
- * Closing moment — the vermilion chapter, the page's single shout. The
+ * Closing moment - the vermilion chapter, the page's single shout. The
  * visitor who found their sector is invited to bring its hardest problem.
  */
 export function IndustriesCta() {

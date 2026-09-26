@@ -1,5 +1,5 @@
 /**
- * Case-study data access — DB (published) first, constants fallback.
+ * Case-study data access - DB (published) first, constants fallback.
  *
  * Mirrors the site's content model: admin-managed rows in ContentItem
  * (collection "case-studies", validated by the shared zod schema, lifecycle

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 /**
- * "Reach us directly" — email, phone and WhatsApp rows (version-1 content).
+ * "Reach us directly" - email, phone and WhatsApp rows (version-1 content).
  * Contact details come from the admin-managed site settings.
  */
 

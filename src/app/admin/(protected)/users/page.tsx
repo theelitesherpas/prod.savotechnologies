@@ -44,7 +44,7 @@ export default async function UsersPage({
     <>
       <PageHeader
         title="Panel users"
-        description="Admins have full access including user management. Editors get exactly the sections you check — everything else is hidden and unreachable."
+        description="Admins have full access including user management. Editors get exactly the sections you check - everything else is hidden and unreachable."
       />
 
       {sp.saved === "created" ? <Notice>User created. They can sign in immediately.</Notice> : null}
@@ -98,7 +98,7 @@ export default async function UsersPage({
                     <div className="w-full">
                       <label className="t-caption block font-semibold text-muted">Linked employee</label>
                       <select name="employeeId" defaultValue={u.employeeId ?? ""} className="adm-select mt-1 h-9 max-w-[18rem] py-1">
-                        <option value="">— not linked —</option>
+                        <option value="">- not linked -</option>
                         {employeeList.map((emp) => (
                           <option key={emp.id} value={emp.id}>{emp.employeeCode} · {emp.name}</option>
                         ))}
@@ -108,7 +108,7 @@ export default async function UsersPage({
                       ) : null}
                     </div>
                     <fieldset className="w-full border-t border-border pt-2.5">
-                      <legend className="t-caption font-semibold text-muted">Section access {u.role === "admin" ? "(admin — full access)" : ""}</legend>
+                      <legend className="t-caption font-semibold text-muted">Section access {u.role === "admin" ? "(admin - full access)" : ""}</legend>
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-1.5">
                         {SECTIONS.map((sec) => (
                           <label key={sec.key} className="flex cursor-pointer items-center gap-1.5 text-[0.75rem] font-medium text-foreground/85">
@@ -145,7 +145,7 @@ export default async function UsersPage({
                       </form>
                     </div>
                   ) : (
-                    <p className="t-caption text-right text-muted">—</p>
+                    <p className="t-caption text-right text-muted">-</p>
                   )}
                 </td>
               </tr>
@@ -201,12 +201,12 @@ export default async function UsersPage({
           <div>
             <label htmlFor="new-employee" className="adm-label mb-1.5 block">Link to employee (optional)</label>
             <select id="new-employee" name="employeeId" defaultValue="" className="adm-select">
-              <option value="">— not linked —</option>
+              <option value="">- not linked -</option>
               {employeeList.map((emp) => (
                 <option key={emp.id} value={emp.id}>{emp.employeeCode} · {emp.name}</option>
               ))}
             </select>
-            <p className="t-caption mt-1 text-muted">Links the panel account to an employee record — enables the self-service profile.</p>
+            <p className="t-caption mt-1 text-muted">Links the panel account to an employee record - enables the self-service profile.</p>
           </div>
           <fieldset className="border-t border-border pt-4">
             <legend className="t-caption font-semibold text-muted">Section access (for Editors)</legend>

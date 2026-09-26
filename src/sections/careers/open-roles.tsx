@@ -9,7 +9,7 @@ import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 /**
- * Open roles — filterable hairline rows in the v6 accordion idiom
+ * Open roles - filterable hairline rows in the v6 accordion idiom
  * (services pattern: rotating plus, grid-rows 0fr→1fr panels).
  * "Apply for this role" deep-links the apply page with the role preselected.
  */

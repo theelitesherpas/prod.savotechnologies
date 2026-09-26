@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { Employee, EmployeeLeave } from "@prisma/client";
 
 /**
- * Leave policy engine — deterministic balance, no cron needed.
+ * Leave policy engine - deterministic balance, no cron needed.
  *
  * One leave is credited per completed month of service (from the
  * joining date), credited up to the last working day for exited
@@ -48,7 +48,7 @@ export const EMPLOYEE_CODE_PATTERN = /^STPL\d{4}[A-Z]{2}$/;
 export const EMPLOYEE_CODE_START = 301;
 export const EMPLOYEE_CODE_COUNTRY = "IN";
 
-/** Next suggested employee code — max existing + 1, floor at 301. */
+/** Next suggested employee code - max existing + 1, floor at 301. */
 export async function nextEmployeeCode(): Promise<string> {
   if (!prisma) return `STPL${String(EMPLOYEE_CODE_START).padStart(4, "0")}${EMPLOYEE_CODE_COUNTRY}`;
   const last = await prisma.employee.findFirst({
@@ -71,7 +71,7 @@ export const EMPLOYEE_STATUS_META: Record<string, { label: string; tone: "defaul
 export const LEAVE_TYPES = ["privilege", "sick", "casual", "unpaid", "other"] as const;
 
 export const fmtDate = (d: Date | null | undefined) =>
-  d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+  d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "-";
 
 /** Variable map for email autofill from an employee record. */
 export function employeeVars(

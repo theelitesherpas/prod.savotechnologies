@@ -44,7 +44,7 @@ export function ContactForm() {
     e.preventDefault();
     setCaptchaErr(null);
     if (!phoneOk) {
-      setErrors({ phone: "Check the phone number — it does not match the selected country's format." });
+      setErrors({ phone: "Check the phone number - it does not match the selected country's format." });
       return;
     }
     if (captchaBlocked(captcha)) {

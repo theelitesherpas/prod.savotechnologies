@@ -6,13 +6,13 @@ import { IS_DEMO } from "@/lib/content-mode";
  * Crawler policy.
  *
  * Indexing gate: only the production deployment (NEXT_PUBLIC_INDEXABLE=true
- * AND CONTENT_MODE=production) is crawlable. Every other environment —
+ * AND CONTENT_MODE=production) is crawlable. Every other environment -
  * local dev, Vercel test and preview deployments, and any demo-content
- * build — serves `Disallow: /` so demo staging content can never be
+ * build - serves `Disallow: /` so demo staging content can never be
  * indexed or compete with https://savotechnologies.com.
  *
  * - Everything public is crawlable in production; API endpoints and the
- *   admin panel are not (they are also protected by auth — robots.txt is a
+ *   admin panel are not (they are also protected by auth - robots.txt is a
  *   policy hint, never a security boundary).
  * - AI/answer-engine crawlers are explicitly welcomed (AEO/GEO posture),
  *   they are allowed by default, and stating it documents intent.

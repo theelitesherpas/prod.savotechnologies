@@ -25,9 +25,9 @@ export default async function NewItemPage({
     <div className="max-w-4xl">
       <PageHeader
         title={`New ${def.singular}`}
-        description={`Add a ${def.singular} to ${def.label.toLowerCase()} — it goes live on the site the moment you create it.`}
+        description={`Add a ${def.singular} to ${def.label.toLowerCase()} - it goes live on the site the moment you create it.`}
       />
-      {e === "invalid" ? <Notice kind="alert">Check the fields — a required value is missing or invalid.</Notice> : null}
+      {e === "invalid" ? <Notice kind="alert">Check the fields - a required value is missing or invalid.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That slug is already in use. Choose another.</Notice> : null}
       <CollectionForm
         def={toFormDef(def)}

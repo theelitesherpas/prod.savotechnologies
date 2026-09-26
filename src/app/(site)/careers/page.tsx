@@ -12,12 +12,12 @@ import { LifeAtSavo } from "@/sections/careers/life-at-savo";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Careers — version-1 content (roles, bands, hiring promise, apply flow)
+ * Careers - version-1 content (roles, bands, hiring promise, apply flow)
  * rebuilt in the v6 document language. Applications share the enquiry
  * pipeline (admin inbox, honeypot, rate limit, IP hashing).
  *
  * v1 placeholder stats (team size, retention, eNPS) are intentionally
- * not carried over — v6 publishes only verifiable figures.
+ * not carried over - v6 publishes only verifiable figures.
  */
 
 const DESCRIPTION =
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 
 export default async function CareersPage() {
   const ROLES = await getManagedRoles();
-  // JobPosting structured data — one entry per open role (Google Jobs / AEO).
+  // JobPosting structured data - one entry per open role (Google Jobs / AEO).
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": ROLES.map((role) => ({

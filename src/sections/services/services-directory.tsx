@@ -7,7 +7,7 @@ import { SERVICE_DETAILS } from "@/constants/services-detail";
 import { CrewBand } from "@/sections/hire/crew-band";
 
 /**
- * Services directory — paper hero plus the ten-service index in the
+ * Services directory - paper hero plus the ten-service index in the
  * atlas grammar: hairline rows that invert to ink on hover, each opening
  * its service chapter.
  */

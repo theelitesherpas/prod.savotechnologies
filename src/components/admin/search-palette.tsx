@@ -7,7 +7,7 @@ import { AdminIcon, type AdminIconName } from "./icons";
 import { cn } from "@/lib/utils";
 
 /**
- * Global ⌘K palette — searches enquiries and every content collection
+ * Global ⌘K palette - searches enquiries and every content collection
  * through /api/admin/search. Arrow-key navigation, Enter to open, Esc to
  * close; also opens from the top bar search button.
  */
@@ -114,7 +114,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
             <p className="px-3 py-6 text-center text-[0.8125rem] text-muted">Searching…</p>
           ) : q.trim().length < 2 ? (
             <p className="px-3 py-6 text-center text-[0.8125rem] text-muted">
-              Type at least two characters — searches every collection and the inbox.
+              Type at least two characters - searches every collection and the inbox.
             </p>
           ) : flat.length === 0 ? (
             <p className="px-3 py-6 text-center text-[0.8125rem] text-muted">No matches for “{q.trim()}”.</p>

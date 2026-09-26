@@ -11,7 +11,7 @@ function Metadata() {
 }
 export const dynamic = "force-dynamic";
 
-/** Employee self-service — their own record, leave balance, authored content.
+/** Employee self-service - their own record, leave balance, authored content.
  *  Linked via AdminUser.employeeId; unlinked users see a notice instead. */
 export default async function MyProfilePage() {
   const user = await getAdminUser();
@@ -72,7 +72,7 @@ export default async function MyProfilePage() {
     <div className="max-w-4xl">
       <PageHeader
         title={`Hello, ${employee.name.split(" ")[0]}`}
-        description={`Your employee record, leave balance and authored content — ${employee.employeeCode}.`}
+        description={`Your employee record, leave balance and authored content - ${employee.employeeCode}.`}
       />
 
       <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -95,9 +95,9 @@ export default async function MyProfilePage() {
               ["Probation ends", fmtDate(employee.probationEnds)],
               ["Increment date", fmtDate(employee.incrementDate)],
               ["Bond expiry", fmtDate(employee.bondExpiry)],
-              ["Reporting to", employee.manager ?? "—"],
-              ["CTC", employee.ctc ?? "—"],
-              ["Location", employee.location ?? "—"],
+              ["Reporting to", employee.manager ?? "-"],
+              ["CTC", employee.ctc ?? "-"],
+              ["Location", employee.location ?? "-"],
             ].map(([k, v]) => (
               <div key={k} className="flex items-baseline justify-between gap-3 border-b border-border/50 pb-2 last:border-0">
                 <dt className="t-caption shrink-0 text-muted">{k}</dt>

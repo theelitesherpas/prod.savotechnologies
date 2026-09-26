@@ -3,9 +3,9 @@ import { Reveal } from "@/components/ui/reveal";
 import { CASE_DISCIPLINES, type CaseDiscipline } from "@/constants/case-studies";
 
 /**
- * Case studies hero — paper chapter. Statement opening, the editorial
+ * Case studies hero - paper chapter. Statement opening, the editorial
  * standard card, and the discipline index board: a hairline cabinet of
- * anchor cells that invert to ink on hover. No code specimen here — that
+ * anchor cells that invert to ink on hover. No code specimen here - that
  * voice belongs to the developers' chapter on careers.
  */
 

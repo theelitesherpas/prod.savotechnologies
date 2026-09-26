@@ -29,7 +29,7 @@ export default async function AdminClientsPage({
     <div className="max-w-4xl">
       <PageHeader
         title="Clients"
-        description="Portal accounts — create a client, hand them their one-time password, then publish their projects and payments."
+        description="Portal accounts - create a client, hand them their one-time password, then publish their projects and payments."
       />
 
       {sp.created === "1" && sp.pw ? (
@@ -120,7 +120,7 @@ function CreateClientCard() {
         <div className="sm:col-span-2">
           <label className="adm-label mb-1.5 block" htmlFor="cl-password">Password (optional)</label>
           <input id="cl-password" name="password" maxLength={64} className={input} placeholder="Leave empty to auto-generate" />
-          <p className="t-caption mt-1.5 text-muted">The one-time password is shown once after saving — share it securely with the client.</p>
+          <p className="t-caption mt-1.5 text-muted">The one-time password is shown once after saving - share it securely with the client.</p>
         </div>
       </div>
       <SubmitButton label="Create client" />

@@ -12,7 +12,7 @@ import { sendTemplateNow, teamEmail } from "@/lib/mail";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** POST /api/callback — footer "prefer a call back" requests. */
+/** POST /api/callback - footer "prefer a call back" requests. */
 
 const callbackSchema = z.object({
   name: z.string().trim().max(80).optional().or(z.literal("")),
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
   }
   const data = parsed.data;
 
-  // Honeypot — silent success for bots.
+  // Honeypot - silent success for bots.
   if (data.website) {
     return apiOk();
   }

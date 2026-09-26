@@ -4,7 +4,7 @@ import { StartHero, StartBriefSection, WhatHappensNext } from "@/sections/start/
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Start a Project — the detailed brief page. The drawer stays for quick
+ * Start a Project - the detailed brief page. The drawer stays for quick
  * starts; this page is the full format: three steps, review, and the
  * defined reply path. Posts through the standard enquiry pipeline
  * (Zod, honeypot, rate limit, admin inbox).

@@ -8,7 +8,7 @@ import { logger } from "@/lib/logger";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** POST /api/analytics/collect — first-party analytics beacon.
+/** POST /api/analytics/collect - first-party analytics beacon.
  *
  *  Privacy by design: no raw IP or user agent is ever stored. A daily
  *  salted SHA-256 of (ip + user agent) powers rough unique-visitor
@@ -48,14 +48,14 @@ export async function POST(req: Request) {
     if (!type || !TYPES.has(type) || !path || !path.startsWith("/")) {
       return new Response(null, { status: 204 });
     }
-    // Query strings are stripped — paths only, never PII.
+    // Query strings are stripped - paths only, never PII.
     const cleanPath = ("/" + path.split("?")[0].replace(/^\/+/, "")).slice(0, 300);
 
     const device = cap(body.device, 10);
     const eventName = cap(body.eventName, 80);
     const referrerFull = cap(body.referrer, 500);
     // Store the referrer without its query string (may contain UPI ids /
-    // emails in weird cases) — host + path is all reporting needs.
+    // emails in weird cases) - host + path is all reporting needs.
     const referrer =
       referrerFull && /^https?:\/\//i.test(referrerFull)
         ? (() => {
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
       .digest("hex")
       .slice(0, 32);
 
-    // Browser language (e.g. "en-IN") — coarse, non-identifying.
+    // Browser language (e.g. "en-IN") - coarse, non-identifying.
     const lang = cap(body.lang, 12);
     const meta = lang && /^[a-z]{2}(-[a-zA-Z]{2,4})?$/i.test(lang) ? { lang: lang.slice(0, 8) } : undefined;
 

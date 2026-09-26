@@ -13,7 +13,7 @@ export type SiteSettings = {
   contactPhone: string;
   announcement: string | null;
   /** Company impact metrics (policy §28: verified company information,
-   * managed here instead of hardcoded). Empty string = not supplied —
+   * managed here instead of hardcoded). Empty string = not supplied -
    * the public site renders honest pending slots until a value exists. */
   metrics: {
     projectsDelivered: string;

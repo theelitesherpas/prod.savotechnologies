@@ -14,7 +14,7 @@ import { BrandStatement } from "@/sections/home/brand-statement";
 import { FinalCTA } from "@/sections/home/final-cta";
 
 /**
- * Savo Technologies — homepage narrative.
+ * Savo Technologies - homepage narrative.
  *
  * Testimonials are intentionally absent: the brief forbids fabricated
  * quotes, and none have been supplied. Add a testimonials section only

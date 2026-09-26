@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * Centralized analytics event layer — two sinks, one call:
+ * Centralized analytics event layer - two sinks, one call:
  *  1. `window.dataLayer` (GA4 via GTM or gtag). Nothing is sent and no
  *     script is loaded unless NEXT_PUBLIC_GA_ID is set.
  *  2. The first-party collector (/api/analytics/collect) that powers the
- *     admin Analytics page — fire-and-forget, never throws.
+ *     admin Analytics page - fire-and-forget, never throws.
  */
 
 export type AnalyticsEvent =

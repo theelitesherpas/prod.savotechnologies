@@ -8,7 +8,7 @@ import { withBasePath } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 /**
- * Footer call-back request: ONE attached control — a compact country
+ * Footer call-back request: ONE attached control - a compact country
  * dropdown (flag + ISD) joined to the national-number input on the same
  * row. The input stays disabled until a country is chosen, then accepts
  * only digits, hard-capped at the country's maximum length (the same
@@ -143,7 +143,7 @@ export function CallbackForm() {
               : "border-border focus-within:border-accent hover:border-foreground/30",
           )}
         >
-          {/* Country — compact flag + dial, full list opens upward */}
+          {/* Country - compact flag + dial, full list opens upward */}
           <div ref={menuRef} className="relative shrink-0">
             <button
               type="button"
@@ -180,7 +180,7 @@ export function CallbackForm() {
             </button>
             {open ? (
               <div className="absolute bottom-full left-0 z-30 mb-2 w-72 border border-border bg-background shadow-[0_16px_40px_rgb(10_10_14/0.18)]">
-                {/* Search — find a country by name or dial code */}
+                {/* Search - find a country by name or dial code */}
                 <div className="sticky top-0 border-b border-border bg-background p-2">
                   <input
                     ref={searchRef}
@@ -229,7 +229,7 @@ export function CallbackForm() {
             <span aria-hidden="true" className="mx-3 h-5 w-px bg-border" />
           </div>
 
-          {/* Number — enabled only once a country is chosen; digits capped */}
+          {/* Number - enabled only once a country is chosen; digits capped */}
           <input
             id="cb-phone"
             name="cb-phone"

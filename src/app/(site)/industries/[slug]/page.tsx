@@ -16,7 +16,7 @@ import {
 import { DetailCta } from "@/components/shared/detail-cta";
 
 /**
- * Industry chapters — one route per sector from the atlas. Rich, honest
+ * Industry chapters - one route per sector from the atlas. Rich, honest
  * capability content (PRODUCT.md hard rule) structured for discovery:
  * sector keyword-led metadata, FAQPage JSON-LD for AEO, and cross-links
  * into the services that carry the work.

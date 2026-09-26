@@ -9,7 +9,7 @@ import { SearchPalette } from "./search-palette";
 import { cn } from "@/lib/utils";
 
 /**
- * Operations Console shell — NextAdmin-style operations chrome: light
+ * Operations Console shell - NextAdmin-style operations chrome: light
  * sidebar with icon tiles and grouped expandable submenus (collapses to
  * an icon rail on desktop, drawer on mobile), top bar with breadcrumb,
  * new-enquiry bell and account card.
@@ -32,7 +32,7 @@ export type AdminNavNode = {
   /** Leaf destination when the node is a direct link. */
   href?: string;
   badge?: number;
-  /** Submenu items — the node becomes an expandable group. */
+  /** Submenu items - the node becomes an expandable group. */
   items?: AdminNavItem[];
 };
 
@@ -205,7 +205,7 @@ function NavNode({
       <button
         type="button"
         title={node.label}
-        aria-label={`${node.label} — expand menu`}
+        aria-label={`${node.label} - expand menu`}
         onClick={() => onToggle(node.key)}
         className={cn(
           "group flex h-11 w-full items-center justify-center rounded-lg transition-colors duration-200",

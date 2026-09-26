@@ -8,9 +8,9 @@ import { IndustriesCta } from "@/sections/industries/closing-cta";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Industries — the atlas. Ten sectors under one engineering standard;
+ * Industries - the atlas. Ten sectors under one engineering standard;
  * each entry opens its own chapter at /industries/[slug]/ (detail pages
- * arrive next). Capability copy only — no invented clients or figures.
+ * arrive next). Capability copy only - no invented clients or figures.
  */
 
 const DESCRIPTION = `Industries served by Savo Technologies: healthcare, fintech, ecommerce, logistics, real estate, education, travel, manufacturing, government and energy. Sector-fluent teams, one engineering playbook across all ten.`;

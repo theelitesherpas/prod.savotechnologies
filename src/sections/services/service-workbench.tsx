@@ -10,7 +10,7 @@ import type { ServiceDetail } from "@/constants/services-detail";
 const SLOT_NAMES = ["one", "two", "three", "four", "five", "six"];
 
 /**
- * The workbench — the deliverables explorer. Selector list left, live
+ * The workbench - the deliverables explorer. Selector list left, live
  * panel right; the panel swaps with a small entrance animation. The
  * same interaction works on touch (tap to select).
  */

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** Public unsubscribe confirmation — one click, HMAC-signed link,
+/** Public unsubscribe confirmation - one click, HMAC-signed link,
  *  instantly honoured by every future customer-facing email. */
 export default async function UnsubscribePage({
   searchParams,
@@ -27,7 +27,7 @@ export default async function UnsubscribePage({
           <p className="t-body mt-3 text-muted">
             No more automated emails from Savo Technologies to{" "}
             <span className="font-semibold text-foreground">{clean || "this address"}</span>. Project
-            and invoice emails from your portal (if any) still arrive — those are service records.
+            and invoice emails from your portal (if any) still arrive - those are service records.
           </p>
           <p className="t-caption mt-6 text-muted">
             Changed your mind?{" "}

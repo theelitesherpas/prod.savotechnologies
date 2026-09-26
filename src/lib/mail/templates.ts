@@ -1,7 +1,7 @@
 /**
- * Transactional email templates — every automated action on the site.
+ * Transactional email templates - every automated action on the site.
  *
- * DESIGN — the modern SaaS transactional standard, in Savo's voice:
+ * DESIGN - the modern SaaS transactional standard, in Savo's voice:
  *   centered wordmark, centered greeting, statement headings and
  *   buttons on the center axis; details as quiet stacked pairs rather
  *   than ledgers; one generous serif amount where money matters; a
@@ -53,7 +53,7 @@ function origin(): string {
 }
 const logoUrl = () => `${origin()}/images/email/logo.png`;
 
-/** Self-hosted brand fonts — CORS-open like fonts.gstatic so capable
+/** Self-hosted brand fonts - CORS-open like fonts.gstatic so capable
  *  clients (and sandboxed previews) render the real faces; everyone
  *  else falls to the native stacks in the font constants. */
 function fontsCss(): string {
@@ -87,14 +87,14 @@ export const p = (s: string, last = false) =>
 export const lead = (s: string) =>
   `<p style="margin:0 0 20px;font-family:${SERIF};font-size:16px;line-height:1.7;color:${BODY};text-align:center;">${s}</p>`;
 
-/** Centered eyebrow — the vermilion square mark, then the label. */
+/** Centered eyebrow - the vermilion square mark, then the label. */
 const eyebrow = (t: string) =>
   `<p style="margin:0 0 16px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};text-align:center;"><span style="display:inline-block;width:7px;height:7px;background:${ACCENT};margin-right:9px;vertical-align:1px;"></span>${esc(t)}</p>`;
 
 const h1 = (t: string) =>
   `<h1 style="margin:0 0 16px;font-family:${SERIF};font-size:26px;line-height:1.3;letter-spacing:-0.012em;font-weight:700;color:${INK};text-align:center;">${esc(t)}</h1>`;
 
-/** Details as quiet stacked pairs — label above value, both centered. */
+/** Details as quiet stacked pairs - label above value, both centered. */
 export function spec(rows: [string, string | undefined][], opts?: { big?: number }): string {
   const items = rows.filter(([, v]) => v !== undefined && v !== "");
   if (!items.length) return "";
@@ -103,7 +103,7 @@ export function spec(rows: [string, string | undefined][], opts?: { big?: number
       const big = opts?.big === i;
       return `<div style="${i > 0 ? "margin-top:14px;" : ""}text-align:center;">
   <div style="font-family:${SANS};font-size:10.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${FAINT};">${esc(k)}</div>
-  <div style="margin-top:3px;font-family:${big ? SERIF : SANS};font-size:${big ? "30px" : "14.5px"};font-weight:${big ? 700 : 600};color:${big ? ACCENT : INK};line-height:1.3;">${esc(v ?? "—")}</div>
+  <div style="margin-top:3px;font-family:${big ? SERIF : SANS};font-size:${big ? "30px" : "14.5px"};font-weight:${big ? 700 : 600};color:${big ? ACCENT : INK};line-height:1.3;">${esc(v ?? "-")}</div>
 </div>`;
     })
     .join("")}</div>`;
@@ -123,7 +123,7 @@ function quote(text: string): string {
   return `<div style="margin:24px 0;padding:0 26px;font-family:${SERIF};font-style:italic;font-size:16px;line-height:1.65;color:${INK};text-align:center;">${esc(text)}</div>`;
 }
 
-/** Reading block for longer content — left-aligned inside the centered layout. */
+/** Reading block for longer content - left-aligned inside the centered layout. */
 export function prose(text: string): string {
   return `<div style="margin:22px 0;padding:16px 20px;background:${PAPER};border-radius:10px;font-family:${SERIF};font-size:14.5px;line-height:1.7;color:${BODY};white-space:pre-line;text-align:left;">${esc(text)}</div>`;
 }
@@ -186,7 +186,7 @@ export function shell(opts: {
       <a href="mailto:hello@savotechnologies.com" style="color:${MUTED};text-decoration:none;">hello@savotechnologies.com</a><span style="color:${LINE};margin:0 8px;">·</span><a href="tel:+917502901234" style="color:${MUTED};text-decoration:none;">+91 75029 01234</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://wa.me/917502901234" style="color:${MUTED};text-decoration:none;">WhatsApp</a>
     </p>
     <p style="margin:0;font-family:${SANS};font-size:10px;line-height:1.7;color:${FAINT};">
-      © ${year} ${esc(SITE.legalName)} — Indore · Zürich<br>
+      © ${year} ${esc(SITE.legalName)} - Indore · Zürich<br>
       ${esc(opts.reason ?? "You are receiving this because you contacted Savo Technologies.")}
       ${opts.unsubscribeEmail ? ` · <a href="${unsubscribeUrl(opts.unsubscribeEmail)}" style="color:${FAINT};text-decoration:underline;">Unsubscribe</a>` : ""}
     </p>
@@ -203,7 +203,7 @@ const fn = (name: string) => name.split(" ")[0];
 /** Enquiry drawer / contact form / start-page brief received. */
 export function enquiryAck(name: string, projectType: string, to?: string): MailTemplate {
   return {
-    subject: "Enquiry received — Savo Technologies",
+    subject: "Enquiry received - Savo Technologies",
     html: shell({
       preheader: `Your ${projectType} enquiry is with our engineers. A senior consultant replies within one business day.`,
       eyebrowText: `Enquiry received`,
@@ -216,21 +216,21 @@ export function enquiryAck(name: string, projectType: string, to?: string): Mail
           ["Response time", "One business day"],
         ]),
         p(`Your enquiry is reviewed in detail before we respond. A senior consultant will contact you within one business day with initial feedback and recommended next steps for your project.`),
-        p(`Should you wish to add a preferred timeline or an indicative budget in the meantime, simply reply to this email — it reaches the consultant handling your enquiry directly.`, true),
+        p(`Should you wish to add a preferred timeline or an indicative budget in the meantime, simply reply to this email - it reaches the consultant handling your enquiry directly.`, true),
       ].join(""),
       cta: { href: site("/#start"), label: "Book the call now", sub: "Pick a slot while we prepare your reply." },
       closing: "Kind regards,",
       reason: "You are receiving this because you sent an enquiry through savotechnologies.com.",
       unsubscribeEmail: to,
     }),
-    text: `THANKS, ${fn(name).toUpperCase()} — YOUR BRIEF IS IN\n\nYour ${projectType} enquiry is with our engineers. A senior consultant replies personally within one business day.\n\n1. An engineer reads your brief — today.\n2. A senior consultant writes back — within one business day.\n3. We talk: scope, timeline, budget.\n\nBook the call now: ${site("/#start")}\n\nTalk soon,\nThe Savo team\n${site("/")}`,
+    text: `THANKS, ${fn(name).toUpperCase()} - YOUR BRIEF IS IN\n\nYour ${projectType} enquiry is with our engineers. A senior consultant replies personally within one business day.\n\n1. An engineer reads your brief - today.\n2. A senior consultant writes back - within one business day.\n3. We talk: scope, timeline, budget.\n\nBook the call now: ${site("/#start")}\n\nTalk soon,\nThe Savo team\n${site("/")}`,
   };
 }
 
 /** Footer callback request. */
 export function callbackAck(name: string, country: string, to?: string): MailTemplate {
   return {
-    subject: "We will call you back — Savo Technologies",
+    subject: "We will call you back - Savo Technologies",
     html: shell({
       preheader: "Your callback is logged. A Savo engineer calls during your local business hours.",
       eyebrowText: "Callback confirmed",
@@ -253,12 +253,12 @@ export function callbackAck(name: string, country: string, to?: string): MailTem
   };
 }
 
-/** Ask Savo handoff — question the assistant could not answer. */
+/** Ask Savo handoff - question the assistant could not answer. */
 export function askSavoHandoffAck(question: string, to?: string): MailTemplate {
   return {
     subject: "Your question is with a Savo engineer",
     html: shell({
-      preheader: "The assistant does not guess — your question went to a senior consultant, who replies within one business day.",
+      preheader: "The assistant does not guess - your question went to a senior consultant, who replies within one business day.",
       eyebrowText: "Assistant handoff",
       heading: "Your question has been forwarded.",
       bodyHtml: [
@@ -271,17 +271,17 @@ export function askSavoHandoffAck(question: string, to?: string): MailTemplate {
       reason: "You are receiving this because you asked the Savo Assistant a question it could not answer.",
       unsubscribeEmail: to,
     }),
-    text: `YOUR QUESTION REACHED THE TEAM\n\nThe assistant never guesses — your question went to a senior consultant, who replies within one business day.\n\n"${question}"\n\nBook a call: ${site("/#start")}\n\nWith the answer soon,\nThe Savo team`,
+    text: `YOUR QUESTION REACHED THE TEAM\n\nThe assistant never guesses - your question went to a senior consultant, who replies within one business day.\n\n"${question}"\n\nBook a call: ${site("/#start")}\n\nWith the answer soon,\nThe Savo team`,
   };
 }
 
 /** Careers application received. */
 export function applicationAck(name: string, role: string): MailTemplate {
   return {
-    subject: `Application received — ${role} · Savo Technologies`,
+    subject: `Application received - ${role} · Savo Technologies`,
     html: shell({
       preheader: "An engineer reads every application and replies personally within two business days.",
-      eyebrowText: `Application — ${role}`,
+      eyebrowText: `Application - ${role}`,
       heading: `Your application has been received.`,
       bodyHtml: [
         lead(`Dear ${fn(name)},<br><br>Thank you for your interest in joining Savo Technologies. This email confirms that your application has been received and registered with our hiring team.`),
@@ -297,7 +297,7 @@ export function applicationAck(name: string, role: string): MailTemplate {
       closing: "Kind regards,",
       reason: "You are receiving this because you applied to Savo Technologies.",
     }),
-    text: `${fn(name).toUpperCase()}, YOUR APPLICATION IS IN\n\nYou applied for ${role}. An engineer reads every application and replies personally within two business days.\n\n1. Engineer review — within two business days\n2. Technical conversation\n3. Paid pairing session\n4. Written offer\n\nHow we hire: ${site("/careers")}\n\nSpeak soon,\nThe Savo team`,
+    text: `${fn(name).toUpperCase()}, YOUR APPLICATION IS IN\n\nYou applied for ${role}. An engineer reads every application and replies personally within two business days.\n\n1. Engineer review - within two business days\n2. Technical conversation\n3. Paid pairing session\n4. Written offer\n\nHow we hire: ${site("/careers")}\n\nSpeak soon,\nThe Savo team`,
   };
 }
 
@@ -308,11 +308,11 @@ export function clientWelcome(name: string, email: string, password: string): Ma
   return {
     subject: "Your Savo client portal is ready",
     html: shell({
-      preheader: "Progress, milestones, delivery updates and invoices — always current, always yours.",
+      preheader: "Progress, milestones, delivery updates and invoices - always current, always yours.",
       eyebrowText: "Portal access",
       heading: `Your client portal is now active.`,
       bodyHtml: [
-        lead(`Dear ${fn(name)},<br><br>Your client portal is now active. It provides a continuous, current view of your engagement with Savo Technologies — project progress, milestones, delivery updates from your team, and complete invoice records — in one place.`),
+        lead(`Dear ${fn(name)},<br><br>Your client portal is now active. It provides a continuous, current view of your engagement with Savo Technologies - project progress, milestones, delivery updates from your team, and complete invoice records - in one place.`),
         spec([
           ["Portal", "savotechnologies.com/portal"],
           ["Registered email", email],
@@ -376,13 +376,13 @@ export function invoiceIssued(clientName: string, number: string, amount: number
   };
 }
 
-/** Invoice marked paid — receipt. */
+/** Invoice marked paid - receipt. */
 export function invoicePaid(clientName: string, number: string, amount: number, currency: string): MailTemplate {
   return {
-    subject: `Receipt — invoice ${number} paid · ${money(amount, currency)}`,
+    subject: `Receipt - invoice ${number} paid · ${money(amount, currency)}`,
     html: shell({
       preheader: "Payment received in full. Thank you.",
-      eyebrowText: `Receipt — ${number}`,
+      eyebrowText: `Receipt - ${number}`,
       heading: "Payment received.",
       bodyHtml: [
         lead(`Thank you for your payment. This email confirms that the amount below has been received in full.`),
@@ -394,17 +394,17 @@ export function invoicePaid(clientName: string, number: string, amount: number, 
       closing: "Kind regards,",
       reason: "You are receiving this because an invoice on your account was paid.",
     }),
-    text: `PAID IN FULL — THANK YOU\n\n${number} · ${money(amount, currency)} · Received ${fmtDate(new Date())}\n\n${site("/portal")}\n\nOnward,\nThe Savo team`,
+    text: `PAID IN FULL - THANK YOU\n\n${number} · ${money(amount, currency)} · Received ${fmtDate(new Date())}\n\n${site("/portal")}\n\nOnward,\nThe Savo team`,
   };
 }
 
 /** Invoice flagged overdue. */
 export function invoiceOverdue(clientName: string, number: string, amount: number, currency: string, daysLate: number): MailTemplate {
   return {
-    subject: `Reminder — invoice ${number} is past due`,
+    subject: `Reminder - invoice ${number} is past due`,
     html: shell({
       preheader: `Invoice ${number} is ${daysLate} day${daysLate === 1 ? "" : "s"} past its due date.`,
-      eyebrowText: `Past due — ${number}`,
+      eyebrowText: `Past due - ${number}`,
       heading: "Payment overdue reminder.",
       bodyHtml: [
         lead(`This is a reminder that the invoice below has passed its due date.`),
@@ -418,7 +418,7 @@ export function invoiceOverdue(clientName: string, number: string, amount: numbe
       closing: "Kind regards,",
       reason: "You are receiving this because an invoice on your account passed its due date.",
     }),
-    text: `REMINDER — INVOICE ${number} PAST DUE\n\n${money(amount, currency)} · ${daysLate} day(s) over\n\nAlready paid? Our thanks. Need to talk? Reply here.\n${site("/portal")}\n\nEasily fixed,\nThe Savo team`,
+    text: `REMINDER - INVOICE ${number} PAST DUE\n\n${money(amount, currency)} · ${daysLate} day(s) over\n\nAlready paid? Our thanks. Need to talk? Reply here.\n${site("/portal")}\n\nEasily fixed,\nThe Savo team`,
   };
 }
 
@@ -465,7 +465,7 @@ export function projectUpdate(clientName: string, projectTitle: string, title: s
       closing: "Kind regards,",
       reason: "You are receiving this because your project team posted a delivery update.",
     }),
-    text: `PROJECT UPDATE — ${title}\n\n${body}\n\n${site("/portal")}\n\nMore as it lands,\nThe Savo team`,
+    text: `PROJECT UPDATE - ${title}\n\n${body}\n\n${site("/portal")}\n\nMore as it lands,\nThe Savo team`,
   };
 }
 
@@ -482,16 +482,16 @@ export function teamEnquiry(d: {
   source: string;
 }): MailTemplate {
   return {
-    subject: `New ${d.source}: ${d.name} — ${d.projectType}`,
+    subject: `New ${d.source}: ${d.name} - ${d.projectType}`,
     html: shell({
       preheader: `${d.name} · ${d.projectType}${d.budget ? ` · ${d.budget}` : ""} · reply promised within one business day.`,
-      eyebrowText: `New enquiry — ${d.source}`,
-      heading: `${d.name} — ${d.projectType}`,
+      eyebrowText: `New enquiry - ${d.source}`,
+      heading: `${d.name} - ${d.projectType}`,
       bodyHtml: [
         spec([
-          ["Email", d.email ?? "—"],
-          ["Phone", d.phone ?? "—"],
-          ["Budget", d.budget ?? "—"],
+          ["Email", d.email ?? "-"],
+          ["Phone", d.phone ?? "-"],
+          ["Budget", d.budget ?? "-"],
         ]),
         prose(d.message),
         highlight(`<strong>Note:</strong> a response within one business day is committed on the website.`),
@@ -500,7 +500,7 @@ export function teamEnquiry(d: {
       closing: "Regards,",
       reason: "Internal team notification.",
     }),
-    text: `NEW ENQUIRY (${d.source})\n\n${d.name} · ${d.email ?? "no email"} · ${d.phone ?? "no phone"}\nType: ${d.projectType}\nBudget: ${d.budget ?? "—"}\n\n${d.message}\n\nReply promised within one business day.\n${site("/admin/enquiries")}\n\nOwn the promise,\nThe Savo team`,
+    text: `NEW ENQUIRY (${d.source})\n\n${d.name} · ${d.email ?? "no email"} · ${d.phone ?? "no phone"}\nType: ${d.projectType}\nBudget: ${d.budget ?? "-"}\n\n${d.message}\n\nReply promised within one business day.\n${site("/admin/enquiries")}\n\nOwn the promise,\nThe Savo team`,
   };
 }
 
@@ -514,10 +514,10 @@ export function teamApplication(d: {
   message: string;
 }): MailTemplate {
   return {
-    subject: `New application: ${d.role} — ${d.name}`,
+    subject: `New application: ${d.role} - ${d.name}`,
     html: shell({
       preheader: `${d.name} applied for ${d.role}. Candidates are promised a personal reply within two business days.`,
-      eyebrowText: `New application — ${d.role}`,
+      eyebrowText: `New application - ${d.role}`,
       heading: `${d.name} applied`,
       bodyHtml: [
         spec([
@@ -533,7 +533,7 @@ export function teamApplication(d: {
       closing: "Regards,",
       reason: "Internal HR notification.",
     }),
-    text: `NEW APPLICATION\n\n${d.name} · ${d.email}\nRole: ${d.role}\nExperience: ${d.experience ?? "—"}\nLinks: ${d.links ?? "—"}\n\n${d.message}\n\nPersonal reply promised within two business days.\n${site("/admin/enquiries")}\n\nGood hiring,\nThe Savo team`,
+    text: `NEW APPLICATION\n\n${d.name} · ${d.email}\nRole: ${d.role}\nExperience: ${d.experience ?? "-"}\nLinks: ${d.links ?? "-"}\n\n${d.message}\n\nPersonal reply promised within two business days.\n${site("/admin/enquiries")}\n\nGood hiring,\nThe Savo team`,
   };
 }
 
@@ -542,9 +542,9 @@ export function teamCallback(d: { name: string; phone: string; country: string; 
   return {
     subject: `Callback request: ${d.name} (${d.country})`,
     html: shell({
-      preheader: `Call ${d.name} on the ${d.country} number — during their local business hours.`,
+      preheader: `Call ${d.name} on the ${d.country} number - during their local business hours.`,
       eyebrowText: "Callback requested",
-      heading: `Callback request — ${d.name}`,
+      heading: `Callback request - ${d.name}`,
       bodyHtml: [
         spec([
           ["Phone", d.phone],
@@ -564,11 +564,11 @@ export function teamCallback(d: { name: string; phone: string; country: string; 
 /** Internal: Ask Savo handoff (unanswered question + email). */
 export function teamAskSavo(d: { email: string; question: string }): MailTemplate {
   return {
-    subject: "Ask Savo handoff — question needs an answer",
+    subject: "Ask Savo handoff - question needs an answer",
     html: shell({
       preheader: "The visitor was promised a reply within one business day. The clock is running.",
       eyebrowText: "Assistant handoff",
-      heading: "Assistant handoff — response required",
+      heading: "Assistant handoff - response required",
       bodyHtml: [
         spec([["Visitor", d.email]]),
         quote(`“${d.question}”`),
@@ -578,6 +578,6 @@ export function teamAskSavo(d: { email: string; question: string }): MailTemplat
       closing: "Regards,",
       reason: "Internal team notification.",
     }),
-    text: `ASSISTANT HANDOFF\n\nVisitor: ${d.email}\n\n"${d.question}"\n\nReply within one business day — promise made.\n${site("/admin/enquiries")}\n\nBefore the day ends,\nThe Savo team`,
+    text: `ASSISTANT HANDOFF\n\nVisitor: ${d.email}\n\n"${d.question}"\n\nReply within one business day - promise made.\n${site("/admin/enquiries")}\n\nBefore the day ends,\nThe Savo team`,
   };
 }

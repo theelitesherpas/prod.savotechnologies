@@ -2,14 +2,14 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Region identity vectors — one hand-drawn line illustration per region,
+ * Region identity vectors - one hand-drawn line illustration per region,
  * shared by the contact offices grid and the footer presence strip.
  * Abstract technical marks, 1.5px stroke on a 64×44 grid; strokes ink
  * themselves in on scroll (pathLength trick) when `draw` is set.
  */
 
 const ART: Record<string, ReactNode> = {
-  /* India · Headquarters — dome monument over an arched base */
+  /* India · Headquarters - dome monument over an arched base */
   india: (
     <>
       <path pathLength={1} d="M32 3v2.5" />
@@ -21,7 +21,7 @@ const ART: Record<string, ReactNode> = {
       <path pathLength={1} d="M8 38h48M14 42h36" />
     </>
   ),
-  /* Switzerland · Head Office — alpine ridge with snow cap */
+  /* Switzerland · Head Office - alpine ridge with snow cap */
   switzerland: (
     <>
       <path pathLength={1} d="M9 38 25 14l6.5 9.5" />
@@ -31,7 +31,7 @@ const ART: Record<string, ReactNode> = {
       <path pathLength={1} d="M14 42h10M42 42h10" />
     </>
   ),
-  /* Saudi Arabia — dhow sail over the gulf line */
+  /* Saudi Arabia - dhow sail over the gulf line */
   "saudi-arabia": (
     <>
       <path pathLength={1} d="M26 32C26 19.5 32.5 9.5 45.5 5.5 37 13.5 33.5 23 33.5 32" />
@@ -40,7 +40,7 @@ const ART: Record<string, ReactNode> = {
       <path pathLength={1} d="M8 40.5h12M44 40.5h12" />
     </>
   ),
-  /* Australia — sails over water */
+  /* Australia - sails over water */
   australia: (
     <>
       <path pathLength={1} d="M13 36c2-10 8-16 16-18-6 6-9 12-9 18" />
@@ -50,7 +50,7 @@ const ART: Record<string, ReactNode> = {
       <path pathLength={1} d="M14 40.5h8M42 40.5h8" />
     </>
   ),
-  /* United Kingdom — clock tower over the baseline */
+  /* United Kingdom - clock tower over the baseline */
   "united-kingdom": (
     <>
       <path pathLength={1} d="M27 38V14h10v24" />
@@ -61,7 +61,7 @@ const ART: Record<string, ReactNode> = {
       <path pathLength={1} d="M8 38h48" style={{ ["--draw-delay" as string]: "0.7s" }} />
     </>
   ),
-  /* USA — tower and skyline */
+  /* USA - tower and skyline */
   usa: (
     <>
       <path pathLength={1} d="M30 38V13h4v25" />

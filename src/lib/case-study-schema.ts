@@ -1,5 +1,5 @@
 /**
- * Case-study record — shared schema for the public detail pages and the
+ * Case-study record - shared schema for the public detail pages and the
  * admin editor. One zod schema validates both directions so the admin form
  * and the public renderer can never drift.
  *
@@ -34,7 +34,7 @@ export const caseStudySchema = z.object({
   summary: z.string().max(600).optional().default(""),
   challenge: z.string().max(4000).optional().default(""),
   solution: z.string().max(4000).optional().default(""),
-  /** Capability chips — multiselected from the discipline's list. */
+  /** Capability chips - multiselected from the discipline's list. */
   services: z.array(z.string().min(1).max(80)).max(12).optional().default([]),
   /** Tech stack chips. */
   technologies: z.array(z.string().min(1).max(60)).max(20).optional().default([]),
@@ -50,7 +50,7 @@ export const caseStudySchema = z.object({
     .max(6)
     .optional()
     .default([]),
-  /** Project palette — design system colors shown as swatches. */
+  /** Project palette - design system colors shown as swatches. */
   palette: z
     .array(
       z.object({
@@ -71,11 +71,11 @@ export const caseStudySchema = z.object({
       role: z.string().min(1).max(160),
     })
     .nullish(),
-  /** Attached visuals — one slot per rendering surface, each cropped to
+  /** Attached visuals - one slot per rendering surface, each cropped to
    * the exact aspect that surface shows (no distortion anywhere):
-   *   showcase (1920×1080) — detail-page big band
-   *   cardWide  (1600×900)  — featured cards (home + index)
-   *   card      (1280×800)  — standard cards (home + index)
+   *   showcase (1920×1080) - detail-page big band
+   *   cardWide  (1600×900)  - featured cards (home + index)
+   *   card      (1280×800)  - standard cards (home + index)
    * Empty slots fall back down the chain (card → cardWide → showcase),
    * then to the generated mockup. Data URLs live inside the record JSON
    * so images travel with the database everywhere. */
@@ -86,11 +86,11 @@ export const caseStudySchema = z.object({
       card: attachedImageSchema.nullish(),
     })
     .optional(),
-  /** Legacy single image (pre multi-slot) — treated as the showcase slot
+  /** Legacy single image (pre multi-slot) - treated as the showcase slot
    * by resolveCaseImages below. */
   heroImage: attachedImageSchema.nullish(),
   featured: z.boolean().optional().default(false),
-  /** Constants-side content status — records marked demo never render in production. */
+  /** Constants-side content status - records marked demo never render in production. */
   status: z.enum(["demo", "verified"]).optional().default("demo"),
 });
 
@@ -107,21 +107,21 @@ export const CASE_IMAGE_SLOTS = {
     width: 1920,
     height: 1080,
     label: "Showcase",
-    where: "Detail page — the big cinematic band",
+    where: "Detail page - the big cinematic band",
     hint: "16:9",
   },
   cardWide: {
     width: 1600,
     height: 700,
     label: "Featured card",
-    where: "Homepage + dossier index — full-width featured card (16:7 on desktop)",
+    where: "Homepage + dossier index - full-width featured card (16:7 on desktop)",
     hint: "16:7",
   },
   card: {
     width: 1280,
     height: 800,
     label: "Standard card",
-    where: "Homepage + dossier index — two-up half cards",
+    where: "Homepage + dossier index - two-up half cards",
     hint: "16:10",
   },
 } as const;
@@ -130,7 +130,7 @@ export type SlotKey = keyof typeof CASE_IMAGE_SLOTS;
 
 /**
  * Resolve the effective image per surface with the fallback chain
- * card → cardWide → showcase → legacy heroImage. Pure — usable on the
+ * card → cardWide → showcase → legacy heroImage. Pure - usable on the
  * server and inside the admin form's live preview.
  */
 export function resolveCaseImages(study: {

@@ -10,7 +10,7 @@ import { CrewBand } from "./crew-band";
 const inr = (n: number) => `₹${new Intl.NumberFormat("en-IN").format(n)}`;
 
 /* ================================================================== */
-/* Index hero — statement, model facts strip                           */
+/* Index hero - statement, model facts strip                           */
 /* ================================================================== */
 
 export function HireHero() {
@@ -71,7 +71,7 @@ export function HireHero() {
 }
 
 /* ================================================================== */
-/* Roles directory — atlas grammar rows with rates                     */
+/* Roles directory - atlas grammar rows with rates                     */
 /* ================================================================== */
 
 export function HireDirectory({ roles: HIRE_ROLES }: { roles: HireRole[] }) {
@@ -138,7 +138,7 @@ export function HireDirectory({ roles: HIRE_ROLES }: { roles: HireRole[] }) {
 }
 
 /* ================================================================== */
-/* Engagement models — sand band cabinet                               */
+/* Engagement models - sand band cabinet                               */
 /* ================================================================== */
 
 export function HireModels() {
@@ -171,7 +171,7 @@ export function HireModels() {
 }
 
 /* ================================================================== */
-/* How hiring runs — paper steps                                       */
+/* How hiring runs - paper steps                                       */
 /* ================================================================== */
 
 export function HireSteps({ roles: HIRE_ROLES }: { roles: HireRole[] }) {

@@ -9,7 +9,7 @@ import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { cn } from "@/lib/utils";
 
 /**
- * Email template editor — pick a template, customise subject + body with
+ * Email template editor - pick a template, customise subject + body with
  * {{placeholders}}, watch a live preview, save the override (or reset to
  * the tested code default). Overrides render inside the same branded
  * shell, so custom emails stay on brand automatically.
@@ -65,7 +65,7 @@ export function EmailTemplateEditor({ overrides }: { overrides: Override[] }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
-      {/* List — grouped by category */}
+      {/* List - grouped by category */}
       <nav aria-label="Email templates" className="adm-card max-h-[78vh] overflow-y-auto p-2">
         {CATEGORY_ORDER.map((cat: TemplateCategory) => {
           const entries = TEMPLATE_REGISTRY.filter((e) => e.category === cat);
@@ -190,7 +190,7 @@ export function EmailTemplateEditor({ overrides }: { overrides: Override[] }) {
                 Body
               </label>
               <p className="t-caption mb-2 text-muted">
-                Plain text or HTML. Use the variables below — they fill automatically per send. The
+                Plain text or HTML. Use the variables below - they fill automatically per send. The
                 branded header/footer wrap every email automatically.
               </p>
               <textarea

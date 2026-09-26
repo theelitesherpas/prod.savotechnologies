@@ -1,5 +1,5 @@
 /**
- * Insights — article content for /resources/. Ported from version 1
+ * Insights - article content for /resources/. Ported from version 1
  * with v6 rules: authors dropped (no invented people), client-specific
  * performance claims removed from excerpts; the editorial substance
  * carries over. Body blocks render in the dossier reading style.

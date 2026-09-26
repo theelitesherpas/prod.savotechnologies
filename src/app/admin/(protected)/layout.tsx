@@ -42,7 +42,7 @@ const CRUMB_LABELS: Record<string, string> = {
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getAdminUser();
-  // Central section guard — middleware forwards the request path.
+  // Central section guard - middleware forwards the request path.
   await enforcePathAccess(await currentAdminPath());
   if (!user) redirect("/admin/login");
 
@@ -72,7 +72,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const allow = (k: SectionKey) => canAccess(user, k);
   const nav = ([
     { key: "overview", label: "Dashboard", icon: "gauge", href: "/admin" },
-    { key: "my-profile", label: "My profile", icon: "user", href: "/admin/my-profile" },
     ...(allow("enquiries")
       ? [
           {
@@ -158,6 +157,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     ...(allow("audit")
       ? [{ key: "system", label: "Audit log", icon: "trail" as const, href: "/admin/audit" }]
       : []),
+    { key: "my-profile", label: "My profile", icon: "user", href: "/admin/my-profile" },
   ] satisfies unknown[]) as AdminNavNode[];
 
   return (

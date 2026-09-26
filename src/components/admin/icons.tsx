@@ -1,5 +1,5 @@
 /**
- * Admin icon set — hand-authored inline SVG on a 24px grid, 1.5px stroke,
+ * Admin icon set - hand-authored inline SVG on a 24px grid, 1.5px stroke,
  * square-node grammar (no rounded terminals), matching the site's
  * drawn-infographic language. Server- and client-safe (no hooks).
  */

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 
 /**
- * Route-level error boundary — v6 styled, never exposes internals.
+ * Route-level error boundary - v6 styled, never exposes internals.
  * The error object is logged client-side for diagnostics only.
  */
 export default function Error({

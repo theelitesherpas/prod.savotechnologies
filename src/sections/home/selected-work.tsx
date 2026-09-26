@@ -10,7 +10,7 @@ import { resolveCaseImages } from "@/lib/case-study-schema";
 import { IS_DEMO } from "@/lib/content-mode";
 
 /**
- * Selected work — CONTENT_MODE gated. Demo mode renders the dossier
+ * Selected work - CONTENT_MODE gated. Demo mode renders the dossier
  * records (admin DB rows first, coded fictional projects as fallback) so
  * the cards, typography and responsive grid stay complete for review and
  * stay in sync with the admin editor; production renders the honest
@@ -46,7 +46,7 @@ async function workItems(): Promise<WorkItem[]> {
       stack: (c.technologies ?? []).join(" · "),
       outcome:
         (c.results ?? []).map((r) => `${r.value} ${r.label}`).join(" · ") +
-        ((c.results?.length ?? 0) > 0 ? " — demo figures" : ""),
+        ((c.results?.length ?? 0) > 0 ? " - demo figures" : ""),
       variant: VARIANT_BY_INDEX[i % 3],
       slug: c.slug,
       image: slot ? { dataUrl: slot.dataUrl, alt: slot.alt } : null,
@@ -145,12 +145,12 @@ function WorkCard({
     <>
       <div className={`relative overflow-hidden ${aspect}`}>
         {item.image?.dataUrl ? (
-          // Attached visual — slot-matched to this card class (featured vs
+          // Attached visual - slot-matched to this card class (featured vs
           // standard), cropped to its exact aspect in the admin studio.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={item.image.dataUrl}
-            alt={item.image.alt || `${item.name} — project visual`}
+            alt={item.image.alt || `${item.name} - project visual`}
             className="h-full w-full object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
           />
         ) : (
@@ -159,7 +159,7 @@ function WorkCard({
               src={PHOTO_BY_VARIANT[item.variant]}
               alt={
                 IS_DEMO
-                  ? `Design concept: ${item.name} — fictional demo project`
+                  ? `Design concept: ${item.name} - fictional demo project`
                   : "Representative studio imagery, case study in preparation"
               }
               fill
@@ -211,14 +211,14 @@ function WorkCard({
     </>
   );
 
-  // Whole card is the link — thumbnail included. Pending slots stay an
+  // Whole card is the link - thumbnail included. Pending slots stay an
   // honest non-interactive article.
   if (item.slug) {
     return (
       <Link
         href={`/case-studies/${item.slug}`}
         className="group relative block border border-border bg-surface transition-colors duration-500 hover:border-foreground/30"
-        aria-label={`${item.name} — open case study`}
+        aria-label={`${item.name} - open case study`}
       >
         {card}
       </Link>
@@ -243,7 +243,7 @@ export async function SelectedWork() {
           IS_DEMO ? (
             <>
               Digital products designed around real business objectives. The
-              engagements below are polished design concepts — fictional
+              engagements below are polished design concepts - fictional
               projects shown so the case-study format can be evaluated before
               verified work is published.
             </>
@@ -274,7 +274,7 @@ export async function SelectedWork() {
         </div>
       </div>
 
-      {/* DEMO TESTIMONIAL — layout preview only, never a fabricated endorsement.
+      {/* DEMO TESTIMONIAL - layout preview only, never a fabricated endorsement.
           Suppressed entirely in production until an approved quote exists. */}
       {IS_DEMO ? (
         <Reveal className="mt-16">

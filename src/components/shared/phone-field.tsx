@@ -5,7 +5,7 @@ import { COUNTRY_PHONE_RULES } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 /**
- * PhoneField — country-first phone entry, one field.
+ * PhoneField - country-first phone entry, one field.
  *
  * A single control: country selector (flag + dial code) fused to the
  * number input, in the site's baseline-underline field style. The
@@ -31,7 +31,7 @@ export function PhoneField({
   name?: string;
   label?: string;
   id?: string;
-  /** Full value incl. dial code, e.g. "+919876543210" — controlled. */
+  /** Full value incl. dial code, e.g. "+919876543210" - controlled. */
   value: string;
   onChange: (full: string) => void;
   error?: string | null;
@@ -132,7 +132,7 @@ export function PhoneField({
         {label}
       </label>
       <div className="flex items-end gap-0 border-b border-foreground/20 focus-within:border-foreground/40 transition-colors">
-        {/* Country + dial — part of the same visual field */}
+        {/* Country + dial - part of the same visual field */}
         <div ref={menuRef} className="relative flex items-center">
         {/* Closed: flag + dial only. Open: full country list with names. */}
         <button
@@ -163,7 +163,7 @@ export function PhoneField({
         </button>
         {open ? (
           <div className="absolute left-0 top-full z-30 mt-1 w-72 border border-border bg-background shadow-[0_16px_40px_rgb(10_10_14/0.18)]">
-            {/* Search — find a country by name or dial code */}
+            {/* Search - find a country by name or dial code */}
             <div className="sticky top-0 border-b border-border bg-background p-2">
               <input
                 ref={searchRef}
@@ -217,7 +217,7 @@ export function PhoneField({
           </div>
         ) : null}
       </div>
-        {/* Number — gated until a country is selected */}
+        {/* Number - gated until a country is selected */}
         <input
           id={inputId}
           type="tel"

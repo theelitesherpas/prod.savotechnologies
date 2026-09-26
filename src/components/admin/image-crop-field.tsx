@@ -6,7 +6,7 @@
  * Each image slot declares FIXED target dimensions (e.g. 1600 × 1280).
  * The attached photo is shown inside the exact target aspect frame; drag
  * to reposition and zoom to scale; the canvas then exports EXACTLY the
- * framed region at the required pixel size — what you see is what saves.
+ * framed region at the required pixel size - what you see is what saves.
  *
  * The crop works in PROPORTIONS: the frame maps 1:1 onto the target
  * rectangle, so the preview and the export can never disagree.
@@ -69,7 +69,7 @@ export function ImageCropField({
   }, [sourceUrl]);
 
   /* Display geometry: cover the frame, then zoom. All in proportions of
-     the same "scale" — preview and export share it exactly. */
+     the same "scale" - preview and export share it exactly. */
   const base = natural && frameSize ? Math.max(frameSize.w / natural.w, frameSize.h / natural.h) : 1;
   const scale = base * zoom;
   const dispW = natural ? natural.w * scale : 0;
@@ -128,7 +128,7 @@ export function ImageCropField({
       return;
     }
     if (file.size > MAX_SOURCE_BYTES) {
-      setError("That file is larger than 25 MB — export a smaller copy first.");
+      setError("That file is larger than 25 MB - export a smaller copy first.");
       return;
     }
     const reader = new FileReader();
@@ -152,7 +152,7 @@ export function ImageCropField({
   const pointerUp = () => setDragging(false);
 
   /**
-   * Export — the frame region in SOURCE pixels maps exactly onto the
+   * Export - the frame region in SOURCE pixels maps exactly onto the
    * target rectangle. dest is always the full canvas, so the saved file
    * is precisely what the frame shows (proportion-true, any file size).
    */
@@ -182,7 +182,7 @@ export function ImageCropField({
       if (dataUrl.length <= TARGET_BYTES_MAX) break;
     }
     if (dataUrl.length > TARGET_BYTES_MAX) {
-      setError("The cropped image is still too heavy — try a simpler photo or lower zoom.");
+      setError("The cropped image is still too heavy - try a simpler photo or lower zoom.");
       return;
     }
     onChange({ dataUrl, width: targetWidth, height: targetHeight, alt: "" });
@@ -213,7 +213,7 @@ export function ImageCropField({
           <img src={value.dataUrl} alt="Attached visual" className="h-20 w-24 rounded-[2px] border border-border object-cover" />
           <div className="min-w-0">
             <p className="t-sm font-medium">
-              Attached — {value.width} × {value.height} px
+              Attached - {value.width} × {value.height} px
             </p>
             <input
               className="adm-input mt-2 h-9 w-64 max-w-full"
@@ -320,13 +320,13 @@ export function ImageCropField({
               e.currentTarget.value = "";
             }}
           />
-          {value ? "Replace image — opens the crop studio" : "Attach image — opens the crop studio"}
+          {value ? "Replace image - opens the crop studio" : "Attach image - opens the crop studio"}
         </label>
       )}
 
       {!sourceUrl && !value ? (
         <p className="t-caption text-muted">
-          Wrong proportions are fine — position and zoom inside the frame; the crop saves exactly what the frame shows.
+          Wrong proportions are fine - position and zoom inside the frame; the crop saves exactly what the frame shows.
         </p>
       ) : null}
       {error && !sourceUrl ? <p className="t-caption text-[var(--error)]">{error}</p> : null}

@@ -23,7 +23,7 @@ export default async function PortalProjectsPage() {
 
       {projects.length === 0 ? (
         <p className="t-sm border border-border bg-surface p-6 text-muted">
-          No projects yet — your delivery lead will publish the first one here at kickoff.
+          No projects yet - your delivery lead will publish the first one here at kickoff.
         </p>
       ) : (
         <ul className="grid gap-px border border-border bg-border lg:grid-cols-2">

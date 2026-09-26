@@ -17,13 +17,13 @@ import { Team } from "@/sections/contact/team";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Contact Us — version-1 content (topic form, direct channels, offices,
+ * Contact Us - version-1 content (topic form, direct channels, offices,
  * team) rebuilt in the v6 design language and wired into the shared
  * enquiry pipeline (admin inbox, honeypot, rate limit, IP hashing).
  */
 
 const DESCRIPTION =
-  "Talk to the engineers who will build it. Message Savo Technologies, book a call back, or reach the team in Indore, India — serving clients across India and worldwide. One business day reply.";
+  "Talk to the engineers who will build it. Message Savo Technologies, book a call back, or reach the team in Indore, India - serving clients across India and worldwide. One business day reply.";
 
 export const metadata: Metadata = {
   title: "Contact Us",

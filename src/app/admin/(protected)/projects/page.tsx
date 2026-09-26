@@ -31,7 +31,7 @@ export default async function AdminProjectsPage({
     <div className="max-w-4xl">
       <PageHeader
         title="Projects"
-        description="Client projects published to the portal — status, progress, milestones and the delivery log."
+        description="Client projects published to the portal - status, progress, milestones and the delivery log."
       />
 
       {sp.saved ? <Notice>Project saved.</Notice> : null}
@@ -73,7 +73,7 @@ export default async function AdminProjectsPage({
           <div className="sm:col-span-2">
             <label className="adm-label mb-1.5 block" htmlFor="pj-client">Client *</label>
             <select id="pj-client" name="clientId" required className="adm-select w-full">
-              {clients.length === 0 ? <option value="">— create a client first —</option> : null}
+              {clients.length === 0 ? <option value="">- create a client first -</option> : null}
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}{c.company ? ` · ${c.company}` : ""}

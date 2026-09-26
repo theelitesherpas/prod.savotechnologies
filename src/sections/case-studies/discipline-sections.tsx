@@ -5,7 +5,7 @@ import type { CaseDiscipline } from "@/constants/case-studies";
 import { CaseStudyCard } from "./case-study-card";
 
 /**
- * One discipline chapter of the dossier — index rail, SectionHeader,
+ * One discipline chapter of the dossier - index rail, SectionHeader,
  * capability chips, then the specimen entries: featured full-width,
  * the rest in a two-up editorial grid.
  */

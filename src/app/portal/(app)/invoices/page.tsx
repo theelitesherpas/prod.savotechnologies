@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getClientUser } from "@/lib/client-auth";
 import { InvoiceStatusChip, money } from "@/components/portal/ui";
 
-/** Payments — full billing history with status. */
+/** Payments - full billing history with status. */
 export default async function PortalInvoicesPage() {
   const client = await getClientUser();
   if (!client) redirect("/portal");

@@ -1,5 +1,5 @@
 /**
- * Hire — the roles catalogue and per-role detail content for /hire/.
+ * Hire - the roles catalogue and per-role detail content for /hire/.
  *
  * Ported from version 1 (savotech-website, lib/hire-data.tsx) with v6
  * content rules applied: process facts and rates carry over (they are
@@ -15,11 +15,11 @@ export type HireRole = {
   heroLead: string;
   metaDescription: string;
   intro: [string, string];
-  /** INR per month, dedicated senior — the published transparent rate. */
+  /** INR per month, dedicated senior - the published transparent rate. */
   monthly: number;
   /** Core stack chips (marquee + kit). */
   stack: string[];
-  /** Workbench slots — what the engineer takes on. */
+  /** Workbench slots - what the engineer takes on. */
   engagements: { title: string; text: string }[];
   skills: { title: string; text: string }[];
   process: { name: string; text: string }[];
@@ -337,7 +337,7 @@ export function hireRole(slug: string): HireRole | undefined {
   return HIRE_ROLES.find((r) => r.slug === slug);
 }
 
-/** Shared engagement models — the index page's cabinet. */
+/** Shared engagement models - the index page's cabinet. */
 export const HIRE_MODELS = [
   {
     title: "Dedicated developer",

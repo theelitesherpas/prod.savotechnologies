@@ -9,7 +9,7 @@ import { audit } from "@/lib/audit";
 import { sanitizePermissions } from "@/lib/permissions";
 
 /**
- * Panel user management — admin role only. Passwords are bcrypt-hashed
+ * Panel user management - admin role only. Passwords are bcrypt-hashed
  * (12 rounds) server-side; sessions are destroyed on role change or
  * deletion so revocation is immediate.
  */

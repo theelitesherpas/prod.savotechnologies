@@ -1,9 +1,9 @@
 import type { ServiceDetail } from "@/constants/services-detail";
 
 /* ------------------------------------------------------------------ */
-/* Service schematics — the specimen plates. One authored blueprint    */
+/* Service schematics - the specimen plates. One authored blueprint    */
 /* per service: hairline strokes that ink themselves in on reveal     */
-/* (data-draw) and one pulsing accent node — the practice, drawn.      */
+/* (data-draw) and one pulsing accent node - the practice, drawn.      */
 /* Square nodes only; the world's own grammar.                         */
 /* ------------------------------------------------------------------ */
 

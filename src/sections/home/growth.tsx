@@ -4,7 +4,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { GROWTH_CAPABILITIES, GROWTH_CHANNELS } from "@/constants/content";
 
 /**
- * Convergence infographic — how discovery channels meet the product.
+ * Convergence infographic - how discovery channels meet the product.
  * Lines draw themselves on scroll (pathLength trick + .reveal trigger).
  */
 function ConvergenceDiagram() {

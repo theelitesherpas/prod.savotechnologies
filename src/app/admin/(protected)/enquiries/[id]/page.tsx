@@ -93,7 +93,7 @@ export default async function EnquiryDetailPage({
   const formData =
     enquiry.data && typeof enquiry.data === "object" ? (enquiry.data as Record<string, unknown>) : null;
   const mailto = `mailto:${enquiry.email ?? ""}?subject=${encodeURIComponent(
-    `Re: your ${enquiry.projectType.toLowerCase()} enquiry — Savo Technologies`,
+    `Re: your ${enquiry.projectType.toLowerCase()} enquiry - Savo Technologies`,
   )}`;
 
   return (
@@ -129,14 +129,14 @@ export default async function EnquiryDetailPage({
             </h2>
             <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2">
               {[
-                ["Email", enquiry.email ?? "—"],
-                ["Phone", enquiry.phone ?? "—"],
-                ["Company", enquiry.company ?? "—"],
+                ["Email", enquiry.email ?? "-"],
+                ["Phone", enquiry.phone ?? "-"],
+                ["Company", enquiry.company ?? "-"],
                 ["Type", enquiry.projectType],
-                ["Budget", enquiry.budget ?? "—"],
+                ["Budget", enquiry.budget ?? "-"],
                 ["Source", enquiry.source],
                 ["Received", enquiry.createdAt.toISOString().replace("T", " · ").slice(0, 17)],
-                ["IP (hashed prefix)", enquiry.ipHash ? enquiry.ipHash.slice(0, 12) : "—"],
+                ["IP (hashed prefix)", enquiry.ipHash ? enquiry.ipHash.slice(0, 12) : "-"],
               ].map(([label, value]) => (
                 <div key={label} className="bg-surface px-4 py-3">
                   <dt className="adm-label mb-1">{label}</dt>

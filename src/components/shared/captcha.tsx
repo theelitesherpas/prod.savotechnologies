@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * Progressive reCAPTCHA v2 — client half.
+ * Progressive reCAPTCHA v2 - client half.
  *
  * useCaptcha() asks the server whether this IP still has free
  * submissions left; only then does the CaptchaGate load Google's
  * script and render the challenge (first-time visitors get zero
- * third-party JS — performance and privacy best practice). Forms
+ * third-party JS - performance and privacy best practice). Forms
  * block submit until the token exists and send it as `captchaToken`.
  *
  * With no site key configured the gate reports required:false and
@@ -69,7 +69,7 @@ function loadScript(): Promise<void> {
 export type CaptchaState = {
   /** Server says this IP needs a challenge for its next submission. */
   required: boolean;
-  /** Solved token — send as captchaToken with the submission. */
+  /** Solved token - send as captchaToken with the submission. */
   token: string | null;
   /** Receive a solved token (used by the gate). */
   setToken: (t: string | null) => void;
@@ -97,7 +97,7 @@ export function useCaptcha(): CaptchaState {
     window.grecaptcha?.reset();
   }, []);
 
-  // Initial gate check on mount (async — server state, not render state).
+  // Initial gate check on mount (async - server state, not render state).
   useEffect(() => {
     let alive = true;
     fetch("/api/captcha/required", { cache: "no-store" })
@@ -114,7 +114,7 @@ export function useCaptcha(): CaptchaState {
   return { required, token, setToken, reset, refresh };
 }
 
-/** The challenge box — render inside any form; invisible unless required. */
+/** The challenge box - render inside any form; invisible unless required. */
 export function CaptchaGate({ captcha, error }: { captcha: CaptchaState; error?: string | null }) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const widgetId = useRef<number | null>(null);
@@ -150,7 +150,7 @@ export function CaptchaGate({ captcha, error }: { captcha: CaptchaState; error?:
     <div>
       <div ref={elRef} className="min-h-[78px]" aria-label="Human verification" />
       {failed ? (
-        <p className="t-caption text-muted">Verification could not load — please reload the page.</p>
+        <p className="t-caption text-muted">Verification could not load - please reload the page.</p>
       ) : null}
       {error ? (
         <p role="alert" className="t-caption mt-1.5 text-error">

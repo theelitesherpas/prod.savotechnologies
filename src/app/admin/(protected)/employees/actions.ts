@@ -9,7 +9,7 @@ import { audit } from "@/lib/audit";
 import { sendTemplateNow } from "@/lib/mail";
 import { nextEmployeeCode, leaveSummary } from "@/lib/employees";
 
-/** Employee portal actions — records, lifecycle, leaves. */
+/** Employee portal actions - records, lifecycle, leaves. */
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const back = (e: string): never => redirect(`/admin/employees?e=${encodeURIComponent(e)}`);
@@ -99,14 +99,14 @@ export async function createEmployeeAction(formData: FormData): Promise<void> {
   }
   await audit(user.id, "employee.create", "Employee", employee.employeeCode, { name: employee.name });
 
-  // Welcome email — employee ID, joining details, leave policy.
+  // Welcome email - employee ID, joining details, leave policy.
   sendTemplateNow("employeeWelcome", employee.email, {
     employeeName: employee.name,
     employeeCode: employee.employeeCode,
     position: employee.position,
     department: employee.department,
     joiningDate: joining.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-    reportTo: employee.manager ?? "—",
+    reportTo: employee.manager ?? "-",
     leavePolicy: "One leave is credited for every completed month of service; unused leaves carry forward.",
   });
 
@@ -212,7 +212,7 @@ export async function addLeaveAction(formData: FormData): Promise<void> {
   const days = Math.round(((to.getTime() - from.getTime()) / 86400000 + 1) * 10) / 10;
   const summary = leaveSummary(employee, employee.leaves);
   if (d.type !== "unpaid" && days > summary.balance) {
-    backId(d.employeeId, `Insufficient balance — available ${summary.balance}, requested ${days}.`);
+    backId(d.employeeId, `Insufficient balance - available ${summary.balance}, requested ${days}.`);
   }
 
   await prisma!.employeeLeave.create({

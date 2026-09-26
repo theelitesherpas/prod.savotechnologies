@@ -29,7 +29,7 @@ type Status = "idle" | "submitting" | "success" | "error";
 /**
  * Careers application (version-1 fields, v6 idiom). Posts to the shared
  * /api/enquiries pipeline with source "careers" and the role as the
- * projectType — applications land in the same admin inbox as enquiries.
+ * projectType - applications land in the same admin inbox as enquiries.
  * Details the inbox schema has no column for (city, skills, links…) are
  * composed into the message, exactly like version 1.
  */
@@ -68,7 +68,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
     setServerMessage("");
     setCaptchaErr(null);
     if (!phoneOk) {
-      setErrors({ phone: "Check the phone number — it does not match the selected country's format." });
+      setErrors({ phone: "Check the phone number - it does not match the selected country's format." });
       return;
     }
     if (captchaBlocked(captcha)) {
@@ -129,7 +129,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           ...parsed.data,
           captchaToken: captcha.token,
           source: `careers:${roleSlug(role)}`,
-          // Structured payload — rendered as its own panel in the admin inbox.
+          // Structured payload - rendered as its own panel in the admin inbox.
           details: {
             form: "careers",
             role,
@@ -383,7 +383,7 @@ type FieldProps = {
   label: string;
   name: string;
   errors?: EnquiryFieldErrors;
-  /** Overrides errors[name] — for form-local checks like city. */
+  /** Overrides errors[name] - for form-local checks like city. */
   error?: string;
   onFocus: () => void;
   placeholder?: string;

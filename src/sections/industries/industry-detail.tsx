@@ -13,7 +13,7 @@ import type { Industry } from "@/constants/industries";
 export type CrossLink = { label: string; hint: string; href: string };
 
 /* ------------------------------------------------------------------ */
-/* Hero — paper chapter: rail, statement, chips, at-a-glance, image band */
+/* Hero - paper chapter: rail, statement, chips, at-a-glance, image band */
 
 export function IndustryDetailHero({
   detail,
@@ -111,7 +111,7 @@ export function IndustryDetailHero({
 }
 
 /* ------------------------------------------------------------------ */
-/* Landscape — paper: overview copy + detail image rail                 */
+/* Landscape - paper: overview copy + detail image rail                 */
 
 export function IndustryLandscape({ detail }: { detail: IndustryDetail }) {
   const headingId = "landscape-heading";
@@ -159,7 +159,7 @@ export function IndustryLandscape({ detail }: { detail: IndustryDetail }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* What we build — sand band: gap-px solution cabinet                   */
+/* What we build - sand band: gap-px solution cabinet                   */
 
 export function IndustrySolutions({ detail }: { detail: IndustryDetail }) {
   const headingId = "build-heading";
@@ -195,7 +195,7 @@ export function IndustrySolutions({ detail }: { detail: IndustryDetail }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Flow — ink chapter: the sector infographic plate                     */
+/* Flow - ink chapter: the sector infographic plate                     */
 
 export function IndustryFlow({ detail }: { detail: IndustryDetail }) {
   const headingId = "flow-heading";
@@ -208,7 +208,7 @@ export function IndustryFlow({ detail }: { detail: IndustryDetail }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* FAQ — sand band                                                      */
+/* FAQ - sand band                                                      */
 
 export function IndustryFaqs({ detail }: { detail: IndustryDetail }) {
   const headingId = "faq-heading";
@@ -232,7 +232,7 @@ export function IndustryFaqs({ detail }: { detail: IndustryDetail }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Explore further — paper: industries + services cross-links           */
+/* Explore further - paper: industries + services cross-links           */
 
 export function IndustryCrossLinks({
   industries,

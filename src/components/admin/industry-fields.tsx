@@ -1,4 +1,4 @@
-/** Shared industry create/edit fields (no featured flag — services only). */
+/** Shared industry create/edit fields (no featured flag - services only). */
 export function IndustryFields({
   industry,
 }: {

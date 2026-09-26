@@ -4,7 +4,7 @@ import { clientLoginAction } from "@/app/portal/actions";
 import { FormGuard } from "@/components/admin/form-guard";
 
 /**
- * Portal sign-in card — embedded in the /portal hero (right column).
+ * Portal sign-in card - embedded in the /portal hero (right column).
  * Compact: email + password + submit, inline error from ?e=, link for
  * clients who need their credentials re-issued.
  */
@@ -22,7 +22,7 @@ export function PortalLoginCard({ error }: { error?: string }) {
 
       <h2 className="t-h4 mt-6">Your project, live.</h2>
       <p className="t-caption mt-2 text-muted">
-        Status, milestones, deliverables and payments — the same view our delivery leads use.
+        Status, milestones, deliverables and payments - the same view our delivery leads use.
       </p>
 
       {error ? (

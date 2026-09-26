@@ -29,7 +29,7 @@ export default async function EditCaseStudyPage({
         <BackLink href="/admin/case-studies" label="All case studies" />
         <PageHeader title="Edit case study" description={item.title} />
         <Notice kind="alert">
-          This record failed schema validation (it may predate the rich editor). Its data is preserved —
+          This record failed schema validation (it may predate the rich editor). Its data is preserved -
           re-enter the fields below once and save to migrate it.
         </Notice>
         <CaseStudyForm action={saveCaseStudyAction} item={{ id: item.id, slug: item.slug, contentStatus: item.contentStatus }} />
@@ -50,7 +50,7 @@ export default async function EditCaseStudyPage({
     <div className="max-w-4xl">
       <BackLink href="/admin/case-studies" label="All case studies" />
       <PageHeader title="Edit case study" description={`${item.title} · /case-studies/${item.slug}`} />
-      {e === "invalid" ? <Notice kind="alert">Check the fields — the record failed validation.</Notice> : null}
+      {e === "invalid" ? <Notice kind="alert">Check the fields - the record failed validation.</Notice> : null}
       <CaseStudyForm
         action={saveCaseStudyAction}
         item={{ id: item.id, slug: item.slug, contentStatus: item.contentStatus, record }}

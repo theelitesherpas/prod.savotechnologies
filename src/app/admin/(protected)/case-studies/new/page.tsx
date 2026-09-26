@@ -11,7 +11,7 @@ export default function NewCaseStudyPage() {
       <BackLink href="/admin/case-studies" label="All case studies" />
       <PageHeader
         title="New case study"
-        description="Full dossier: identity, discipline, capabilities, stack, outcomes, palette and testimonial. Set the lifecycle to Published when the content is verified — only published records render publicly."
+        description="Full dossier: identity, discipline, capabilities, stack, outcomes, palette and testimonial. Set the lifecycle to Published when the content is verified - only published records render publicly."
       />
       <CaseStudyForm action={saveCaseStudyAction} />
     </div>

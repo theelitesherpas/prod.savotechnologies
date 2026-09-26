@@ -22,7 +22,7 @@ const SAVED_MESSAGES: Record<string, string> = {
   created: "Item created and now live on the site.",
   updated: "Changes saved and live on the site.",
   deleted: "Item deleted.",
-  imported: "Defaults imported — the collection is now editable.",
+  imported: "Defaults imported - the collection is now editable.",
 };
 
 export default async function CollectionPage({
@@ -77,7 +77,7 @@ export default async function CollectionPage({
           {sp.saved === "imported" && sp.n ? `${SAVED_MESSAGES[sp.saved]} (${sp.n} items)` : SAVED_MESSAGES[sp.saved]}
         </Notice>
       ) : null}
-      {sp.e === "invalid" ? <Notice kind="alert">Check the fields — a required value is missing or invalid.</Notice> : null}
+      {sp.e === "invalid" ? <Notice kind="alert">Check the fields - a required value is missing or invalid.</Notice> : null}
       {sp.e === "dup" ? <Notice kind="alert">That slug is already in use. Choose another.</Notice> : null}
 
       {fallback ? (

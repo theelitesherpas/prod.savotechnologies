@@ -19,7 +19,7 @@ const chapterClass: Record<NonNullable<SectionProps["chapter"]>, string> = {
 
 /**
  * Section shell: establishes the chapter (token scope), vertical rhythm
- * and the document-style rail — a square node, the section name, then a
+ * and the document-style rail - a square node, the section name, then a
  * hairline. Content stays semantic <section>.
  */
 export function Section({

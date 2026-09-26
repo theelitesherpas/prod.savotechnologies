@@ -96,7 +96,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
     }
   }, [mobileOpen]);
 
-  /* Hover grace timer — diagonal moves between trigger and panel never close */
+  /* Hover grace timer - diagonal moves between trigger and panel never close */
   const keepOpen = () => {
     if (closeTimer.current) {
       clearTimeout(closeTimer.current);
@@ -202,7 +202,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                 <li key={item.label}>
                   <Link
                     href={item.href ?? "/"}
-                    /* Plain top-level links skip prefetch — future routes
+                    /* Plain top-level links skip prefetch - future routes
                        (careers) would prefetch a 404 and log console noise. */
                     prefetch={false}
                     onClick={() => track("nav_link_click", { label: item.label })}
@@ -286,14 +286,14 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
         className={cn(
           // h-[100dvh] + explicit edges: robust even under a filtered ancestor.
           // text-foreground: the ink chapter redefines the color tokens, and the
-          // labels below inherit — without this the menu renders dark-on-dark.
+          // labels below inherit - without this the menu renders dark-on-dark.
           "chapter-ink fixed left-0 top-0 z-0 flex h-[100dvh] w-full flex-col overflow-y-auto bg-background text-foreground transition-[opacity,clip-path] duration-500 ease-[var(--ease-out-expo)] lg:hidden",
           mobileOpen
             ? "pointer-events-auto opacity-100 [clip-path:inset(0_0_0%_0)]"
             : "pointer-events-none opacity-0 [clip-path:inset(0_0_100%_0)]",
         )}
       >
-        {/* Spacer for the fixed bar (logo + burger live above the overlay —
+        {/* Spacer for the fixed bar (logo + burger live above the overlay -
             a label here would sit right behind the logo) */}
         <div aria-hidden="true" className="h-[var(--nav-h)] shrink-0" />
         <nav aria-label="Mobile" className="shell flex-1 pb-10">

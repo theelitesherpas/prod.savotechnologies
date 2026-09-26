@@ -1,5 +1,5 @@
 /**
- * The industry atlas — content model for /industries/.
+ * The industry atlas - content model for /industries/.
  *
  * The ten sectors mirror INDUSTRY_LINKS in navigation.ts (version-1
  * canonical order and hrefs). Each entry is a gateway: the index page
@@ -8,12 +8,12 @@
  *
  * HARD CONTENT RULE (PRODUCT.md): never fabricate clients, metrics,
  * certifications or results. Copy describes capability slots drawn from
- * the public services list — regulation names appear only as constraints
+ * the public services list - regulation names appear only as constraints
  * the engineering respects, never as credentials we hold.
  */
 
 export type Industry = {
-  /** Slug — anchors the atlas row and builds the detail-page href. */
+  /** Slug - anchors the atlas row and builds the detail-page href. */
   id: string;
   index: string;
   title: string;
@@ -23,7 +23,7 @@ export type Industry = {
   hint: string;
   /** Atlas-row lead copy. */
   lead: string;
-  /** Capability chips — what Savo builds in this sector. */
+  /** Capability chips - what Savo builds in this sector. */
   capabilities: string[];
   href: string;
 };
@@ -201,7 +201,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
   },
 ];
 
-/** Cross-sector foundations — the load-bearing walls of every engagement. */
+/** Cross-sector foundations - the load-bearing walls of every engagement. */
 export const INDUSTRY_FOUNDATIONS = [
   {
     title: "Regulation-aware engineering",

@@ -33,7 +33,7 @@ export default async function EditIndustryPage({
 
       {saved ? <Notice>Saved. Public pages regenerate on the next request.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That slug is already in use by another industry.</Notice> : null}
-      {e === "invalid" ? <Notice kind="alert">Check the fields — titles need 2–80 characters, slugs lowercase/hyphens.</Notice> : null}
+      {e === "invalid" ? <Notice kind="alert">Check the fields - titles need 2–80 characters, slugs lowercase/hyphens.</Notice> : null}
 
       <FormGuard action={updateIndustryAction} className="adm-card space-y-5 p-5">
         <input type="hidden" name="id" value={industry.id} />

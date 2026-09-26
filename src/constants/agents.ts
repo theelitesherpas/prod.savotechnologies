@@ -1,8 +1,8 @@
 /**
- * The Savo agent fleet — content for /ai-agents/.
+ * The Savo agent fleet - content for /ai-agents/.
  *
  * Ported from version 1 (lib/agents-data.tsx) with v6 rules: the six
- * personas are Savo's published product offering — capability claims
+ * personas are Savo's published product offering - capability claims
  * about our own agents carry over; client results and invented
  * deployments do not. Drawn as the site's own square-node schematics.
  */
@@ -110,7 +110,7 @@ export const AGENTS: Agent[] = [
   },
 ];
 
-/** Deployment path — the published 2–4 week promise. */
+/** Deployment path - the published 2–4 week promise. */
 export const AGENT_DEPLOY_STEPS = [
   { name: "Scope the job", text: "The workflow, data, tools and escalation rules the agent will operate within, written down first." },
   { name: "Ground it", text: "Retrieval and integrations built over your real systems, permissions scoped to the agent's role." },

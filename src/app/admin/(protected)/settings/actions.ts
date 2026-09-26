@@ -16,7 +16,7 @@ const metricValue = z
   .string()
   .trim()
   .max(12)
-  .regex(/^[0-9][0-9.,+×%xkK\/-]*$/, "Figures like 120+, 45+, 12+, 8+ — digits with optional +, %, × or k.")
+  .regex(/^[0-9][0-9.,+×%xkK\/-]*$/, "Figures like 120+, 45+, 12+, 8+ - digits with optional +, %, × or k.")
   .optional()
   .or(z.literal(""));
 

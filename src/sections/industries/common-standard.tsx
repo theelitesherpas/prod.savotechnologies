@@ -4,7 +4,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { INDUSTRY_FOUNDATIONS } from "@/constants/industries";
 
 /**
- * The common standard — ink chapter. What carries across all ten sectors:
+ * The common standard - ink chapter. What carries across all ten sectors:
  * the load-bearing walls under every engagement. Hairline gap-px grid on
  * the blue-black chapter, square-node marks instead of icons.
  */

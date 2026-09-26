@@ -22,7 +22,7 @@ const sizes: Record<Size, string> = {
   lg: "h-[3.25rem] px-7 text-base",
 };
 
-/** Arrow that nudges on hover — used inside buttons and links. */
+/** Arrow that nudges on hover - used inside buttons and links. */
 export function ArrowRight({ className }: { className?: string }) {
   return (
     <svg

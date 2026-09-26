@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Case-study editor — the complete dossier form for /admin/case-studies.
+ * Case-study editor - the complete dossier form for /admin/case-studies.
  *
  * Rich fields the generic registry form can't express: discipline-scoped
  * capability multiselector, tech-stack tag input, outcome repeater
@@ -96,7 +96,7 @@ export function CaseStudyForm({
     setStackDraft("");
   };
 
-  // Drop repeater rows the user left completely empty — scaffolding rows
+  // Drop repeater rows the user left completely empty - scaffolding rows
   // must never fail server validation.
   const filledResults = results.filter((r) => r.value.trim() !== "" || r.label.trim() !== "");
   const filledPalette = palette.filter((p) => p.name.trim() !== "" || p.hex !== "#14161c");
@@ -131,7 +131,7 @@ export function CaseStudyForm({
     status: contentStatus === "published" ? "verified" : "demo",
   });
 
-  // Client-side validation for FormGuard — the same rules that used to
+  // Client-side validation for FormGuard - the same rules that used to
   // fire a raw alert(), now styled inline with anchors per field.
   const validateForm = (): GuardProblem[] => {
     const problems: GuardProblem[] = [];
@@ -193,7 +193,7 @@ export function CaseStudyForm({
         </p>
       </div>
 
-      {/* Live previews — every surface the images render on, with fallbacks */}
+      {/* Live previews - every surface the images render on, with fallbacks */}
       <div className="adm-card p-5">
         <div className="mb-4 flex items-center justify-between">
           <p className="adm-label">Where these images appear (live preview)</p>
@@ -202,18 +202,18 @@ export function CaseStudyForm({
         <PreviewSurfaces images={images} discipline={discipline} palette={palette} title={title} />
       </div>
 
-      {/* Image slots — one crop studio per surface */}
+      {/* Image slots - one crop studio per surface */}
       <div className="adm-card space-y-8 p-5">
         <div>
           <p className="adm-label mb-1">Project images</p>
           <p className="t-caption text-muted">
-            Upload separate images per surface when one photo does not fit all — each studio crops to that surface’s exact size.
+            Upload separate images per surface when one photo does not fit all - each studio crops to that surface’s exact size.
           </p>
         </div>
         {(Object.keys(CASE_IMAGE_SLOTS) as SlotKey[]).map((slot) => (
           <ImageCropField
             key={slot}
-            label={`${CASE_IMAGE_SLOTS[slot].label} — ${CASE_IMAGE_SLOTS[slot].width} × ${CASE_IMAGE_SLOTS[slot].height}`}
+            label={`${CASE_IMAGE_SLOTS[slot].label} - ${CASE_IMAGE_SLOTS[slot].width} × ${CASE_IMAGE_SLOTS[slot].height}`}
             hint={`${CASE_IMAGE_SLOTS[slot].where} · ${CASE_IMAGE_SLOTS[slot].hint}. If unset, falls back to a wider slot${slot === "showcase" ? " or the generated mockup" : ""}.`}
             targetWidth={CASE_IMAGE_SLOTS[slot].width}
             targetHeight={CASE_IMAGE_SLOTS[slot].height}
@@ -337,7 +337,7 @@ export function CaseStudyForm({
                 addStack();
               }
             }}
-            placeholder="Add a technology and press Enter — Next.js, PostgreSQL, Flutter…"
+            placeholder="Add a technology and press Enter - Next.js, PostgreSQL, Flutter…"
             aria-label="Add technology"
           />
           <button type="button" onClick={addStack} className={cn(secondaryBtn, "shrink-0")}>
@@ -358,7 +358,7 @@ export function CaseStudyForm({
             + Add metric
           </button>
         </div>
-        {results.length === 0 ? <p className="t-caption text-muted">No metrics yet — e.g. “+42% / Conversion Improvement”.</p> : null}
+        {results.length === 0 ? <p className="t-caption text-muted">No metrics yet - e.g. “+42% / Conversion Improvement”.</p> : null}
         <div className="space-y-2">
           {results.map((res, i) => (
             <div key={i} className="grid grid-cols-[7rem_1fr_auto_auto] items-center gap-2">
@@ -460,7 +460,7 @@ export function CaseStudyForm({
           <div className="space-y-4">
             <div>
               <label className={label} htmlFor="cs-tq">Quote</label>
-              <textarea id="cs-tq" className={cn(input, "min-h-24 resize-y")} value={tQuote} onChange={(e) => setTQuote(e.target.value)} maxLength={1200} placeholder="Approved client quote — never an invented endorsement." />
+              <textarea id="cs-tq" className={cn(input, "min-h-24 resize-y")} value={tQuote} onChange={(e) => setTQuote(e.target.value)} maxLength={1200} placeholder="Approved client quote - never an invented endorsement." />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -526,7 +526,7 @@ function PreviewSurfaces({
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <div className="sm:col-span-2">
-        <Frame slot="showcase" aspect="aspect-[16/9]" label="Showcase" where={`Detail page — ${title || "Project"} big band`} />
+        <Frame slot="showcase" aspect="aspect-[16/9]" label="Showcase" where={`Detail page - ${title || "Project"} big band`} />
       </div>
       <Frame slot="cardWide" aspect="aspect-[16/7]" label="Featured card" where="Homepage · dossier index (desktop 16:7)" />
       <Frame slot="card" aspect="aspect-[16/10]" label="Standard card" where="Homepage · dossier index" />

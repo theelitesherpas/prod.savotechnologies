@@ -28,7 +28,7 @@ function daysFromNow(d: Date): number {
   return Math.ceil((d.getTime() - Date.now()) / 86400000);
 }
 
-/** Pure-SVG 14-day enquiry trend — area + line, accent stroke, hairline grid. */
+/** Pure-SVG 14-day enquiry trend - area + line, accent stroke, hairline grid. */
 function TrendChart(rows: { createdAt: Date }[]) {
   const days = 14;
   const now = new Date();
@@ -71,7 +71,7 @@ function TrendChart(rows: { createdAt: Date }[]) {
       </div>
       {total === 0 ? (
         <p className="t-sm py-8 text-center text-muted">
-          No submissions in the last two weeks — the chart draws itself the moment one arrives.
+          No submissions in the last two weeks - the chart draws itself the moment one arrives.
         </p>
       ) : (
         <svg viewBox={`0 0 ${W} ${H}`} className="h-[150px] w-full" role="img" aria-label={`Enquiries over the last 14 days, ${total} total`} preserveAspectRatio="none">
@@ -283,7 +283,7 @@ export default async function AdminDashboard() {
             </>
           ) : (
             <p className="t-sm text-muted">
-              No enquiries yet — submissions from every site form land here the moment they arrive.
+              No enquiries yet - submissions from every site form land here the moment they arrive.
             </p>
           )}
         </div>

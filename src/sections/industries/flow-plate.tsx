@@ -1,7 +1,7 @@
 import { Reveal } from "@/components/ui/reveal";
 
 /**
- * Sector flow plate — the per-industry infographic. Blueprint figure on
+ * Sector flow plate - the per-industry infographic. Blueprint figure on
  * the ink chapter: a chain of square nodes on a drawing hairline that
  * ink themselves in as the section reveals. Five stages, label + note,
  * horizontal on wide screens, stacked below.

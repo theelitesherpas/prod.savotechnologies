@@ -5,7 +5,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
 
 /**
- * Workbench — the shared deliverables/slots explorer. Tablist left, live
+ * Workbench - the shared deliverables/slots explorer. Tablist left, live
  * panel right; the panel swaps with a small entrance animation. Works on
  * touch the same way.
  */

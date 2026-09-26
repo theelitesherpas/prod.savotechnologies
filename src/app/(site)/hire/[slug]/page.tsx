@@ -18,7 +18,7 @@ import { CrewBand } from "@/sections/hire/crew-band";
 import { DetailCta } from "@/components/shared/detail-cta";
 
 /**
- * Hire role chapters — one route per role. The published model (rates,
+ * Hire role chapters - one route per role. The published model (rates,
  * trial, replacement) with v6 content rules: no invented clients,
  * testimonials or unverified performance figures.
  */

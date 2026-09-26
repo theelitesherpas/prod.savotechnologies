@@ -4,7 +4,7 @@ import { logger } from "@/lib/logger";
 /**
  * Standardized API responses.
  * Success: { ok: true, ...data }  ·  Failure: { ok: false, error }
- * Errors never leak internals — details go to the structured log only.
+ * Errors never leak internals - details go to the structured log only.
  */
 
 export function apiOk<T extends Record<string, unknown>>(data?: T, init?: ResponseInit) {
@@ -47,7 +47,7 @@ export async function readJsonBody(
 /**
  * Cross-origin protection for state-changing requests: when a browser sends
  * Origin it must match the request host. Absent Origin (curl, server-to-
- * server) is allowed — SameSite cookies cover the browser CSRF vector.
+ * server) is allowed - SameSite cookies cover the browser CSRF vector.
  */
 export function sameOrigin(req: Request): boolean {
   const origin = req.headers.get("origin");

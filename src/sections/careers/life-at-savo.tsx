@@ -7,7 +7,7 @@ import { LIFE_POINTS } from "@/constants/careers";
 import { withBasePath } from "@/lib/utils";
 
 /**
- * Life at Savo — the candidate pitch as hairline rows (why-savo idiom),
+ * Life at Savo - the candidate pitch as hairline rows (why-savo idiom),
  * with the studio meeting photo on a sticky true-color rail.
  */
 export function LifeAtSavo() {

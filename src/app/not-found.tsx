@@ -2,7 +2,7 @@ import Link from "next/link";
 
 /**
  * Designed fallback for future routes (services, industries, hire, careers,
- * legal…) — v6 rolls out section by section, so menu architecture can ship
+ * legal…) - v6 rolls out section by section, so menu architecture can ship
  * ahead of the pages without a broken experience.
  */
 export default function NotFound() {

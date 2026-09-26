@@ -1,12 +1,12 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- * DEMO MARKET PRESENCE — INTERNATIONAL SECTION
- * DEMO — REPLACE BEFORE PRODUCTION
+ * DEMO MARKET PRESENCE - INTERNATIONAL SECTION
+ * DEMO - REPLACE BEFORE PRODUCTION
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * Distinguishes a VERIFIED physical headquarters from an unverified
  * market/service presence. No fabricated street addresses, no invented
- * office phones, no "Head Office in Zürich" claims — city-level lines
+ * office phones, no "Head Office in Zürich" claims - city-level lines
  * only ("Zürich, Switzerland"), and general market wording everywhere
  * else. All market descriptions require Savo confirmation before any
  * production use.
@@ -27,7 +27,7 @@ export type PresencePhone = {
 
 export type MarketPresence = {
   id: string;
-  /** Country / region name — the card headline. */
+  /** Country / region name - the card headline. */
   region: string;
   /** "hq" = primary operations; "office" = verified physical office;
    *  "market" = service presence only (no office claim). */
@@ -44,7 +44,7 @@ export type MarketPresence = {
 };
 
 /**
- * Verified headquarters — the one record that is NOT demo. Kept alongside
+ * Verified headquarters - the one record that is NOT demo. Kept alongside
  * the demo set so the presence grid has a single source.
  */
 export const HQ_PRESENCE: MarketPresence = {
@@ -62,7 +62,7 @@ export const HQ_PRESENCE: MarketPresence = {
 };
 
 /**
- * Verified physical offices — render in BOTH modes (never gated).
+ * Verified physical offices - render in BOTH modes (never gated).
  * Switzerland head office supplied by Savo, 2026-09-25.
  */
 export const CH_OFFICE: MarketPresence = {
@@ -79,7 +79,7 @@ export const CH_OFFICE: MarketPresence = {
 export const VERIFIED_OFFICES: MarketPresence[] = [HQ_PRESENCE, CH_OFFICE];
 
 /**
- * Market presences — service-presence wording (no office claims, no
+ * Market presences - service-presence wording (no office claims, no
  * addresses/phones), confirmed by Savo for live publication 2026-09-25.
  */
 export const MARKET_PRESENCE: MarketPresence[] = [

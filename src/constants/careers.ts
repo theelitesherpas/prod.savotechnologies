@@ -1,20 +1,20 @@
 /**
- * Careers content — roles and hiring facts carried from version 1
+ * Careers content - roles and hiring facts carried from version 1
  * (/newdesign/careers), structured for the v6 document language.
  *
  * Team-size / retention / eNPS figures from v1 were placeholder numbers;
- * per the v6 honesty rule they are not published — only verifiable
+ * per the v6 honesty rule they are not published - only verifiable
  * facts (roles, process, bands, remote policy) appear on the page.
  */
 
 export const CAREERS_EMAIL = "hr@savotechnologies.com";
 
-/** Date the current role list was published (bump when roles change — feeds JobPosting schema). */
+/** Date the current role list was published (bump when roles change - feeds JobPosting schema). */
 export const ROLES_POSTED = "2026-09-24";
 
 export type RoleCategory = "eng" | "design" | "ops";
 
-/** Literal title tuple — Role.title is typed against it so data can never drift
+/** Literal title tuple - Role.title is typed against it so data can never drift
  *  from the values the enquiry schema accepts. */
 export const ROLE_TITLES = [
   "Senior Frontend Engineer",
@@ -28,14 +28,14 @@ export const ROLE_TITLES = [
 export type RoleTitle = (typeof ROLE_TITLES)[number];
 
 export type Role = {
-  /** Free-form — managed roles come from the admin panel; ROLE_TITLES is the coded baseline. */
+  /** Free-form - managed roles come from the admin panel; ROLE_TITLES is the coded baseline. */
   title: string;
   /** Short tech/craft track, e.g. "React · Next.js". */
   track: string;
   cat: RoleCategory;
   exp: string;
   band: string;
-  /** CTC range in ₹ lakh per annum — feeds the JobPosting baseSalary. */
+  /** CTC range in ₹ lakh per annum - feeds the JobPosting baseSalary. */
   ctc: [number, number];
   blurb: string;
   duties: string[];
@@ -46,7 +46,7 @@ export function roleSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
 
-/** Open positions — single source for the careers page, the apply form and JobPosting JSON-LD. */
+/** Open positions - single source for the careers page, the apply form and JobPosting JSON-LD. */
 export const ROLES: Role[] = [
   {
     title: "Senior Frontend Engineer",
@@ -173,7 +173,7 @@ export const ROLES: Role[] = [
 /** Chip shown in the apply form when no open role fits. */
 export const GENERAL_APPLICATION = "General application" as const;
 
-/** Literal tuple — accepted for the projectType column when source is "careers". */
+/** Literal tuple - accepted for the projectType column when source is "careers". */
 export const CAREERS_TYPES = [...ROLE_TITLES, GENERAL_APPLICATION] as const;
 
 export const ROLE_FILTERS: ReadonlyArray<{ key: "all" | RoleCategory; label: string }> = [
@@ -207,7 +207,7 @@ export const HIRING_STEPS = [
   },
 ] as const;
 
-/** What working here is actually like — every claim is anchored to published site content. */
+/** What working here is actually like - every claim is anchored to published site content. */
 export const LIFE_POINTS = [
   {
     title: "Real products, real stakes",

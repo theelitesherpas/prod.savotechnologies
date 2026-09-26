@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import type { HireRole } from "@/constants/hire";
 
 /**
- * How hiring runs — ink chapter, spine with traveling signal dot,
+ * How hiring runs - ink chapter, spine with traveling signal dot,
  * staggered steps, stack kit at the close.
  */
 

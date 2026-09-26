@@ -3,10 +3,10 @@ import type { Role } from "@/constants/careers";
 import { CodeResultLoop } from "./code-result-loop";
 
 /**
- * Careers hero — the ink chapter opens below the navigation bar (a paper
+ * Careers hero - the ink chapter opens below the navigation bar (a paper
  * strip stays behind the fixed header, exactly like every other page), then
  * the statement, the at-a-glance facts strip, and the developer specimen:
- * an animated code→UI loop — careers.js writes itself, then the interface
+ * an animated code→UI loop - careers.js writes itself, then the interface
  * it renders builds in, over and over.
  */
 export function CareersHero({ roles }: { roles: Role[] }) {

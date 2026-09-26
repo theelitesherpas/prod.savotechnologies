@@ -21,7 +21,7 @@ import { cn, withBasePath } from "@/lib/utils";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 
 /**
- * Ask Savo — a floating bar pinned to the bottom of every public page that
+ * Ask Savo - a floating bar pinned to the bottom of every public page that
  * expands in place into the Savo Assistant: clicking (or focusing) the input
  * grows the conversation window directly above the bar, attached, inside a
  * broad glass frame. Deterministic FAQ answers over verified site truth;
@@ -177,7 +177,7 @@ export function AskSavoBar() {
     }
   }
 
-  /* Asking — chips, Enter, or the bar's first submission */
+  /* Asking - chips, Enter, or the bar's first submission */
   function ask(question: string) {
     const clean = question.trim();
     if (!clean || typing) return;
@@ -224,7 +224,7 @@ export function AskSavoBar() {
     ask(input);
   }
 
-  /* Human handoff — email capture posts into the enquiry pipeline */
+  /* Human handoff - email capture posts into the enquiry pipeline */
   async function submitEmail(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const clean = email.trim();

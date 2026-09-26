@@ -1,7 +1,7 @@
 import { Reveal } from "@/components/ui/reveal";
 
 /**
- * Contact page hero — statement opening with the response-time specimen
+ * Contact page hero - statement opening with the response-time specimen
  * on the right rail. Content carried from version 1, rendered in the
  * v6 document language (index rail, serif statement, hairline card).
  */

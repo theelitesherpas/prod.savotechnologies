@@ -1,7 +1,7 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- * DEMO COMPANY METRICS — DESIGN DATA ONLY
- * DEMO — REPLACE BEFORE PRODUCTION
+ * DEMO COMPANY METRICS - DESIGN DATA ONLY
+ * DEMO - REPLACE BEFORE PRODUCTION
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * These values exist so the statistics section can be evaluated visually
@@ -25,7 +25,7 @@ export type DemoMetric = {
   status: ContentStatus;
 };
 
-/** DEMO DATA — NOT VERIFIED. Homepage impact band. */
+/** DEMO DATA - NOT VERIFIED. Homepage impact band. */
 export const DEMO_METRICS: DemoMetric[] = [
   { value: "120+", label: "Projects Delivered", status: "demo" },
   { value: "45+", label: "Clients Supported", status: "demo" },
@@ -33,7 +33,7 @@ export const DEMO_METRICS: DemoMetric[] = [
   { value: "8+", label: "Markets Reached", status: "demo" },
 ];
 
-/** DEMO DATA — NOT VERIFIED. Team-size card if the design needs one. */
+/** DEMO DATA - NOT VERIFIED. Team-size card if the design needs one. */
 export const DEMO_TEAM_SIZE: DemoMetric = {
   value: "25+",
   label: "Technology Professionals",
@@ -41,7 +41,7 @@ export const DEMO_TEAM_SIZE: DemoMetric = {
 };
 
 /**
- * DEMO DATA — NOT VERIFIED. Years-of-experience statistic if the design
+ * DEMO DATA - NOT VERIFIED. Years-of-experience statistic if the design
  * needs one. Do NOT calculate or publish a real value until Savo confirms
  * the founding/incorporation date and which date represents public history.
  */

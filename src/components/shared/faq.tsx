@@ -5,7 +5,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
 
 /**
- * FAQ accordion — hairline rows, native button semantics, grid-rows
+ * FAQ accordion - hairline rows, native button semantics, grid-rows
  * animation matching the services accordion. Doubles as the AEO surface:
  * questions render in the DOM (and as FAQPage JSON-LD at page level).
  */

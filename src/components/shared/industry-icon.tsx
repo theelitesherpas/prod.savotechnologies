@@ -1,7 +1,7 @@
 import type { Industry } from "@/constants/industries";
 
 /* ------------------------------------------------------------------ */
-/* Hand-drawn industry icons — one stroke weight (1.5), 28px grid,    */
+/* Hand-drawn industry icons - one stroke weight (1.5), 28px grid,    */
 /* authored in the same grammar as the service icon set. No fills,    */
 /* square nodes where a mark is needed.                               */
 /* ------------------------------------------------------------------ */

@@ -8,7 +8,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
 /**
- * Admin authentication — server-side sessions.
+ * Admin authentication - server-side sessions.
  *
  *   cookie: savo_admin = <32-byte random token>  (HttpOnly, SameSite=Lax,
  *           Secure in production)
@@ -151,7 +151,7 @@ export const getAdminUser = cache(async (): Promise<AdminSessionUser | null> => 
   };
 });
 
-/** Guard for admin pages and server actions — throws when not signed in. */
+/** Guard for admin pages and server actions - throws when not signed in. */
 export async function requireAdmin(): Promise<AdminSessionUser> {
   const user = await getAdminUser();
   if (!user) throw new Error("UNAUTHORIZED");

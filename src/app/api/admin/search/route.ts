@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/admin/search?q=… — global palette search across every managed
+ * GET /api/admin/search?q=… - global palette search across every managed
  * collection plus the enquiry inbox. Session-guarded; results are capped.
  */
 export async function GET(req: Request) {

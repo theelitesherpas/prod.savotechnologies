@@ -11,7 +11,7 @@ import type { ServiceDetail } from "@/constants/services-detail";
 import type { CrossLink } from "@/sections/industries/industry-detail";
 
 /* ================================================================== */
-/* Hero — the specimen plate. No stock band: each service opens on     */
+/* Hero - the specimen plate. No stock band: each service opens on     */
 /* its own animated blueprint schematic beside the statement, with     */
 /* the toolchain passing on a slow hairline marquee below.             */
 /* ================================================================== */
@@ -102,7 +102,7 @@ export function ServiceDetailHero({ detail }: { detail: ServiceDetail }) {
 }
 
 /* ================================================================== */
-/* The practice — editorial: photo rail left, copy + modes right       */
+/* The practice - editorial: photo rail left, copy + modes right       */
 /* ================================================================== */
 
 export function ServiceOverview({ detail }: { detail: ServiceDetail }) {
@@ -171,7 +171,7 @@ export function ServiceOverview({ detail }: { detail: ServiceDetail }) {
 }
 
 /* ================================================================== */
-/* FAQ — sand band, sticky heading left, accordion right               */
+/* FAQ - sand band, sticky heading left, accordion right               */
 /* ================================================================== */
 
 export function ServiceFaqs({ detail }: { detail: ServiceDetail }) {
@@ -217,7 +217,7 @@ export function ServiceFaqs({ detail }: { detail: ServiceDetail }) {
 }
 
 /* ================================================================== */
-/* Explore further — paper cross-links                                 */
+/* Explore further - paper cross-links                                 */
 /* ================================================================== */
 
 export function ServiceCrossLinks({

@@ -6,13 +6,13 @@ import { getAdminUser } from "@/lib/auth";
  * Section-based access control for the admin panel.
  *
  * Roles:
- *   admin  — full access, bypasses permissions, manages panel users
- *   editor — access is exactly the sections granted in `permissions`
+ *   admin  - full access, bypasses permissions, manages panel users
+ *   editor - access is exactly the sections granted in `permissions`
  *
  * Enforcement is central: the admin layout reads the request path
  * (forwarded by middleware as x-pathname), maps it to a section and
  * redirects to the dashboard with a denial notice. Navigation is
- * filtered with the same source, so a user never sees — or reaches —
+ * filtered with the same source, so a user never sees - or reaches -
  * a section outside their grant.
  */
 
@@ -77,7 +77,7 @@ export function pathToSection(path: string): SectionKey | "dashboard" | "users" 
 }
 
 /**
- * Central guard — call from the admin layout with the forwarded path.
+ * Central guard - call from the admin layout with the forwarded path.
  * Redirects unauthorized access to the dashboard with a notice.
  */
 export async function enforcePathAccess(path: string): Promise<void> {

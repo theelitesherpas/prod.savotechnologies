@@ -10,7 +10,7 @@ import { PortalLoginCard } from "./login-card";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Client portal — the honest teaser. The portal is in production; this
+ * Client portal - the honest teaser. The portal is in production; this
  * page says so plainly, shows what it will carry, and offers the
  * human channel meanwhile.
  */
@@ -81,7 +81,7 @@ export default async function PortalPage({
               <Reveal delay={120}>
                 <p className="t-body-lg mt-8 max-w-xl text-muted">
                   The client portal is live. Sign in to see exactly where
-                  your project stands — and every client still gets the same
+                  your project stands - and every client still gets the same
                   access the old way: a named delivery lead, weekly demos,
                   and a direct line to the team building your product.
                 </p>

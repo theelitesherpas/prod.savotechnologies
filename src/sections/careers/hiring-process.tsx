@@ -4,7 +4,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { HIRING_STEPS } from "@/constants/careers";
 
 /**
- * The four-step hiring promise — sand band, numbered hairline cells.
+ * The four-step hiring promise - sand band, numbered hairline cells.
  * Version-1 process, tightened copy. No ghosting, ever.
  */
 export function HiringProcess() {

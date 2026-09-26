@@ -13,7 +13,7 @@ import { resolveCaseImages } from "@/lib/case-study-schema";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
 
 /**
- * Case-study dossier — the full detail page for a project.
+ * Case-study dossier - the full detail page for a project.
  *
  * Grammar (top to bottom): hero with a bespoke palette-driven product
  * mockup → engagement fact bar → challenge (ink) → solution + stack rail →
@@ -40,7 +40,7 @@ export async function generateMetadata({
   const study = await getCaseStudy(slug);
   if (!study) return {};
   const discipline = CASE_DISCIPLINES.find((d) => d.id === study.discipline);
-  const title = `${study.displayClientName || study.title} — ${discipline?.title ?? "Case Study"}`;
+  const title = `${study.displayClientName || study.title} - ${discipline?.title ?? "Case Study"}`;
   return {
     title,
     description: study.summary || `${study.title} case study by Savo Technologies.`,
@@ -120,7 +120,7 @@ export default async function CaseStudyPage({
         </div>
       </section>
 
-      {/* ---------- The big showcase — cinematic product stage ---------- */}
+      {/* ---------- The big showcase - cinematic product stage ---------- */}
       <ProjectShowcase
         discipline={study.discipline}
         palette={study.palette}
@@ -131,7 +131,7 @@ export default async function CaseStudyPage({
           showcaseImage
             ? showcaseImage.alt || "Project visual"
             : study.discipline === "mobile"
-              ? "Key screens — home, detail and conversation"
+              ? "Key screens - home, detail and conversation"
               : study.discipline === "web" || study.discipline === "design"
                 ? "Representative interface views"
                 : "Operations dashboard overview"
@@ -160,7 +160,7 @@ export default async function CaseStudyPage({
               <SectionHeader
                 id="cs-challenge-heading"
                 heading="The challenge."
-                lead="The problem exactly as it arrived — constraints included."
+                lead="The problem exactly as it arrived - constraints included."
               />
             </div>
             <div className="lg:col-span-7 lg:col-start-6">
@@ -200,7 +200,7 @@ export default async function CaseStudyPage({
                       ))}
                     </ul>
                     <p className="t-caption mt-6 text-muted/80">
-                      Chosen for the load-bearing walls — proven technology where it counts.
+                      Chosen for the load-bearing walls - proven technology where it counts.
                     </p>
                   </div>
                 </Reveal>
@@ -218,7 +218,7 @@ export default async function CaseStudyPage({
             heading="Measured outcomes."
             lead={
               isDemo ? (
-                <>Design-preview figures — replaced by client-approved, verified results at publication.</>
+                <>Design-preview figures - replaced by client-approved, verified results at publication.</>
               ) : (
                 <>Each figure verified with the client before publication.</>
               )
@@ -243,7 +243,7 @@ export default async function CaseStudyPage({
           <SectionHeader
             id="cs-palette-heading"
             heading="Project palette."
-            lead="The color system that carries the product's interface — ink, surfaces and the accent that earns attention."
+            lead="The color system that carries the product's interface - ink, surfaces and the accent that earns attention."
           />
           <Reveal>
             <ul className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
@@ -325,7 +325,7 @@ export default async function CaseStudyPage({
       <DetailCta
         headingId="cs-cta-heading"
         heading="Bring us a problem like this one."
-        lead="Every dossier here started as a plain-language brief. Send the problem and its constraints — a senior consultant replies within one business day, with questions worth answering."
+        lead="Every dossier here started as a plain-language brief. Send the problem and its constraints - a senior consultant replies within one business day, with questions worth answering."
         location="case-study-close"
         secondaryLabel="Browse Services"
         secondaryHref="/services"

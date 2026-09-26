@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
 /**
- * Prisma singleton — avoids exhausting connections during dev hot reloads.
+ * Prisma singleton - avoids exhausting connections during dev hot reloads.
  * Returns null when no database is configured so the enquiry API can
  * degrade gracefully instead of crashing the render path.
  */

@@ -7,7 +7,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Terms and Conditions — scoped honestly to what this website is: an
+ * Terms and Conditions - scoped honestly to what this website is: an
  * informational site with an enquiry pipeline. Project engagements are
  * governed by individual written agreements, not by these terms.
  */

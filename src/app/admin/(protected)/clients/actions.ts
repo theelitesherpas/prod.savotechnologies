@@ -11,7 +11,7 @@ import { hashPassword, generateClientPassword } from "@/lib/client-auth";
 
 /**
  * Client account mutations (admin). Passwords are generated server-side
- * and shown once after create/reset — never stored in plaintext.
+ * and shown once after create/reset - never stored in plaintext.
  */
 
 const clientSchema = z.object({
@@ -35,7 +35,7 @@ export async function createClientAction(formData: FormData): Promise<void> {
     company: formData.get("company") ?? "",
     active: true,
   });
-  if (!parsed.success) redirect(slugError("Check the fields — name and a valid email are required."));
+  if (!parsed.success) redirect(slugError("Check the fields - name and a valid email are required."));
 
   const password = formData.get("password")?.toString().trim() || generateClientPassword();
   if (password.length < 10) redirect(slugError("Password must be at least 10 characters."));

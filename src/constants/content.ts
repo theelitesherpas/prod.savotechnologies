@@ -1,4 +1,4 @@
-/** Homepage narrative content — methodology, technology, why-savo, industries, growth. */
+/** Homepage narrative content - methodology, technology, why-savo, industries, growth. */
 
 export const METHODOLOGY = [
   {
@@ -68,12 +68,12 @@ export const WHY_SAVO = [
 ] as const;
 
 /**
- * Impact metrics — CONTENT_MODE gated (see src/lib/content-mode.ts).
+ * Impact metrics - CONTENT_MODE gated (see src/lib/content-mode.ts).
  *
  * demo mode:  polished DEMO values (src/content/demo/company.ts) so the
  *             statistics band stays visually complete for design review.
- *             DEMO DATA — NOT VERIFIED, never in JSON-LD/SEO/metadata.
- * production: honest pending slots ("…") — false statistics are never
+ *             DEMO DATA - NOT VERIFIED, never in JSON-LD/SEO/metadata.
+ * production: honest pending slots ("…") - false statistics are never
  *             rendered; verified figures replace them when Savo supplies
  *             them via the admin-managed company configuration.
  */
@@ -163,7 +163,7 @@ export const GROWTH_CAPABILITIES = [
 
 /**
  * Selected work placeholders. Every field is clearly a placeholder until
- * verified SAVO case studies are supplied — nothing here is presented as fact.
+ * verified SAVO case studies are supplied - nothing here is presented as fact.
  */
 export const WORK_PLACEHOLDERS = [
   {

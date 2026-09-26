@@ -11,7 +11,7 @@ import { getManagedArticles } from "@/lib/content-items";
 import { withBasePath } from "@/lib/utils";
 
 /**
- * The reading page — one article, set in the document's reading style:
+ * The reading page - one article, set in the document's reading style:
  * serif display title, measured measure, hairline rhythm.
  */
 

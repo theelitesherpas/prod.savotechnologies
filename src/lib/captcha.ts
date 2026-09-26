@@ -3,18 +3,18 @@ import { clientIp } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
 /**
- * Progressive captcha gate — industry-standard bot defence in layers:
+ * Progressive captcha gate - industry-standard bot defence in layers:
  *
- *   1. honeypot field (bots fail silently)            — always on
- *   2. hard rate limit per IP                          — always on
- *   3. Google reCAPTCHA v2 after N submissions per IP  — this module
+ *   1. honeypot field (bots fail silently)            - always on
+ *   2. hard rate limit per IP                          - always on
+ *   3. Google reCAPTCHA v2 after N submissions per IP  - this module
  *
  * A visitor may submit freely twice from one IP inside 24 hours; from
  * the third submission the client renders the reCAPTCHA challenge and
  * the server rejects any request without a verified token. Keys come
  * from env (NEXT_PUBLIC_RECAPTCHA_SITE_KEY / RECAPTCHA_SECRET_KEY);
  * with keys unset the gate stays open so a misconfiguration can never
- * lock real customers out — layers 1 and 2 still protect the forms.
+ * lock real customers out - layers 1 and 2 still protect the forms.
  */
 
 const TRACK_WINDOW = 24 * 60 * 60 * 1000;
@@ -52,7 +52,7 @@ export async function enforceCaptcha(ip: string, token: unknown): Promise<Captch
 
   const secret = process.env.RECAPTCHA_SECRET_KEY;
   if (!secret) {
-    // Keys not configured — fail open (logged); honeypot + rate limits hold.
+    // Keys not configured - fail open (logged); honeypot + rate limits hold.
     logger.warn("captcha: secret not configured, gate skipped", { ip });
     return { ok: true };
   }

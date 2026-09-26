@@ -5,7 +5,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { DOSSIER_CONTENTS } from "@/constants/case-studies";
 
 /**
- * Editorial policy — the ink beat before the vermilion close. States the
+ * Editorial policy - the ink beat before the vermilion close. States the
  * honest-content rule the whole page runs on, lists what every dossier
  * will carry once published, and offers the NDA reference path for
  * visitors who need proof today.

@@ -7,7 +7,7 @@ import { login } from "@/lib/auth";
 
 /**
  * Admin login server action.
- * Errors are conveyed via search params — the form works without JS.
+ * Errors are conveyed via search params - the form works without JS.
  */
 
 const credentialsSchema = z.object({

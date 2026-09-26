@@ -5,10 +5,10 @@ import { RegionArt } from "@/components/shared/region-art";
 import { OFFICES, PRESENCE_FALLBACK_NOTE, PRESENCE_LABEL } from "@/constants/site";
 
 /**
- * Global presence — hairline grid on the sand band, one identity vector
+ * Global presence - hairline grid on the sand band, one identity vector
  * per region. The strokes ink themselves in on scroll (pathLength trick),
  * like every v6 infographic. Verified HQ first; market presences are
- * clearly worded as markets (demo content, gated by CONTENT_MODE) — never
+ * clearly worded as markets (demo content, gated by CONTENT_MODE) - never
  * a fabricated street address or an invented office phone.
  */
 export function Offices() {

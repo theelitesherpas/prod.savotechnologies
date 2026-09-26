@@ -1,5 +1,5 @@
 /**
- * Shared service create/edit fields — plain server-rendered form markup
+ * Shared service create/edit fields - plain server-rendered form markup
  * in the operations-console control language (boxed adm-* controls).
  */
 export function ServiceFields({

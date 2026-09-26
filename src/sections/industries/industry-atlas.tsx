@@ -6,7 +6,7 @@ import { IndustryIcon } from "@/components/shared/industry-icon";
 import { INDUSTRIES_ATLAS } from "@/constants/industries";
 
 /**
- * The industry atlas — the page's centerpiece. Ten hairline rows, each a
+ * The industry atlas - the page's centerpiece. Ten hairline rows, each a
  * gateway: index, hand-drawn sector icon, lead copy and capability chips,
  * with the whole row inverting to ink on hover (the cabinet grammar) and
  * linking to the sector's detail chapter at /industries/[slug]/.

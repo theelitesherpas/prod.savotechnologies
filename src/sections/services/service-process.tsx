@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import type { ServiceDetail } from "@/constants/services-detail";
 
 /**
- * How it runs — ink chapter. A vertical spine with a signal dot that
+ * How it runs - ink chapter. A vertical spine with a signal dot that
  * travels as the visitor scrolls, steps staggered alternately, and the
  * kit (toolchain chips) closing the chapter.
  */

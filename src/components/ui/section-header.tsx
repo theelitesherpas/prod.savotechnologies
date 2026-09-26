@@ -3,7 +3,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
 
 /**
- * Standardized section header — every narrative section opens with the
+ * Standardized section header - every narrative section opens with the
  * same alignment: serif display heading on the left rail, lead copy on
  * the right rail, baselines shared.
  */

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * The careers specimen — an animated code→UI loop, written in code (no gif).
+ * The careers specimen - an animated code→UI loop, written in code (no gif).
  * One panel, one thing at a time: careers.js types itself out (writer's
  * rhythm, blinking cursor), holds, then the UI the code produces builds in
  * element by element (maker's rhythm), holds, and the loop restarts.
@@ -151,7 +151,7 @@ export function CodeResultLoop() {
     };
   }, []);
 
-  /* Render the code up to `typed` characters — cursor rides the writing edge */
+  /* Render the code up to `typed` characters - cursor rides the writing edge */
   const codePane = useMemo(() => {
     const done = typed >= TOTAL_CHARS;
     const cursorTok =

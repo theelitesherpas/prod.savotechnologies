@@ -48,7 +48,7 @@ export async function sendTemplatedEmailAction(formData: FormData): Promise<void
   redirect(
     ok
       ? `/admin/email-compose?sent=1`
-      : `/admin/email-compose?e=${encodeURIComponent("Send failed — check SMTP settings or try again.")}`,
+      : `/admin/email-compose?e=${encodeURIComponent("Send failed - check SMTP settings or try again.")}`,
   );
 }
 
@@ -116,6 +116,6 @@ export async function sendCustomEmailAction(formData: FormData): Promise<void> {
   redirect(
     ok
       ? "/admin/email-compose?sent=1"
-      : `/admin/email-compose?e=${encodeURIComponent("Send failed — check SMTP settings or try again.")}`,
+      : `/admin/email-compose?e=${encodeURIComponent("Send failed - check SMTP settings or try again.")}`,
   );
 }

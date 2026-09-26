@@ -6,7 +6,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { ApplicationForm } from "@/sections/careers/application-form";
 
 /**
- * Apply — the application form with the role preselected via ?role=slug
+ * Apply - the application form with the role preselected via ?role=slug
  * (version-1 flow). Noindex: applications should enter through the
  * careers page, not search results.
  */

@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * AI practice chapters — /ai/[slug]/ (generative-ai, consulting,
+ * AI practice chapters - /ai/[slug]/ (generative-ai, consulting,
  * machine-learning) in the service-page grammar: specimen hero,
  * workbench, spine, FAQ, cross-links into the fleet and services.
  */

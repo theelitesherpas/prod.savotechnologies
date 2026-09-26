@@ -1,19 +1,19 @@
 /**
- * Global site configuration — single source of truth for meta, contact, footer.
+ * Global site configuration - single source of truth for meta, contact, footer.
  *
- * Brand hierarchy (one company, four names — never separate entities):
+ * Brand hierarchy (one company, four names - never separate entities):
  *   Primary brand:  Savo Technologies
  *   Short brand:    Savo
  *   Legal entity:   Savo Technologies Private Limited
  *   Recognized variant of the legal name: Savo Technologies Pvt Ltd
  *
- * Public-facing text uses "Savo Technologies" / "Savo" — never all-caps
+ * Public-facing text uses "Savo Technologies" / "Savo" - never all-caps
  * "SAVO" (the all-caps lockup exists only inside the logotype artwork).
  */
 
 import { canonicalOrigin } from "@/lib/env";
 
-/** Canonical production origin. Canonical URLs, sitemap, JSON-LD and OG must always use this — never a testing/preview deployment. */
+/** Canonical production origin. Canonical URLs, sitemap, JSON-LD and OG must always use this - never a testing/preview deployment. */
 export const CANONICAL_ORIGIN = canonicalOrigin;
 
 export const SITE = {
@@ -32,7 +32,7 @@ export const SITE = {
   email: "hello@savotechnologies.com",
   phone: "+91 75029 01234",
   phoneE164: "+917502901234",
-  /** HR line (verified) — shown alongside the main line on contact surfaces. */
+  /** HR line (verified) - shown alongside the main line on contact surfaces. */
   hrPhone: "+91 78988 52345",
   hrPhoneE164: "+917898852345",
   /** Verified headquarters (entity truth for schema, contact and About). */
@@ -45,7 +45,7 @@ export const SITE = {
     street: "139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54",
     postalCode: "452010",
   },
-  /** Company registration identifiers — slots only, populated when the company supplies verified values. */
+  /** Company registration identifiers - slots only, populated when the company supplies verified values. */
   registration: {
     cin: null as string | null,
     gst: null as string | null,
@@ -54,7 +54,7 @@ export const SITE = {
 } as const;
 
 /**
- * Social profiles — genuine, Savo-controlled company accounts, supplied by
+ * Social profiles - genuine, Savo-controlled company accounts, supplied by
  * Savo. Shown in the footer and referenced as `sameAs` in the Organization
  * structured data (verified profiles only, per the hard content rule).
  */
@@ -66,13 +66,13 @@ export const SOCIAL_LINKS = [
 ] as const;
 
 /**
- * Global presence (CONTENT_MODE gated — see src/lib/content-mode.ts).
+ * Global presence (CONTENT_MODE gated - see src/lib/content-mode.ts).
  *
  * VERIFIED: India is the engineering headquarters (Indore). Everything
  * else is a market/service presence, not a physical office claim:
  * the former "Bahnhofstrasse 10, Zürich" head-office address and the
  * +41 mobile were fabricated placeholders (never a real Savo location)
- * and have been removed — city-level lines and general market wording
+ * and have been removed - city-level lines and general market wording
  * only, pending Savo confirmation. Demo market cards render in demo mode;
  * production shows the verified HQ plus truthful non-specific wording.
  */
@@ -90,12 +90,12 @@ export const PRESENCE_LABEL: Record<"hq" | "office" | "market", string> = {
   market: "Market Presence",
 };
 
-/** Presence lead — offices are physical; the rest are market presence. */
+/** Presence lead - offices are physical; the rest are market presence. */
 export const PRESENCE_FALLBACK_NOTE =
-  "Two physical offices — Indore headquarters and the Switzerland head office — with confirmed market presence across four more regions. Wherever you are, someone senior is awake.";
+  "Two physical offices - Indore headquarters and the Switzerland head office - with confirmed market presence across four more regions. Wherever you are, someone senior is awake.";
 
 /**
- * Trust strip — NON-CERTIFICATION capability labels (safe in both modes).
+ * Trust strip - NON-CERTIFICATION capability labels (safe in both modes).
  * The v1 claims ("GDPR Compliant", "PCI DSS Ready", "ISO 27001 Aligned")
  * were unheld certifications and are removed: capability wording only,
  * never formal certification claims. See src/content/demo/index.ts.

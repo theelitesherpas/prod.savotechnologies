@@ -1,5 +1,5 @@
 /**
- * AI practice pages — content for /ai/[slug]/ (generative-ai,
+ * AI practice pages - content for /ai/[slug]/ (generative-ai,
  * consulting, machine-learning). Capability copy only.
  */
 

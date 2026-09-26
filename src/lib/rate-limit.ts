@@ -51,7 +51,7 @@ export function rateLimit(
 }
 
 /** Read-only: how many hits a key has inside its window, without
- *  registering a new one — powers the progressive captcha gate
+ *  registering a new one - powers the progressive captcha gate
  *  (first N submissions free, then verify). */
 export function rateCount(key: string, windowMs: number): number {
   const now = Date.now();

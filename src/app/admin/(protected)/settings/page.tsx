@@ -68,7 +68,7 @@ export default async function SettingsPage({
             name="announcement"
             maxLength={180}
             defaultValue={settings.announcement ?? ""}
-            placeholder="e.g. We are speaking at tech events this season — say hello."
+            placeholder="e.g. We are speaking at tech events this season - say hello."
             className="adm-input"
           />
           <p className="t-caption mt-1.5 text-muted">
@@ -81,7 +81,7 @@ export default async function SettingsPage({
           <p className="adm-label mb-4">Company impact metrics</p>
           <p className="t-caption mb-4 text-muted">
             Rendered in the homepage impact band and the About facts. Publish only figures you can
-            verify (policy §28) — a field left empty keeps the honest pending slot on the live site.
+            verify (policy §28) - a field left empty keeps the honest pending slot on the live site.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             {[

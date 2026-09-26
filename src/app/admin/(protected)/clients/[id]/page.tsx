@@ -31,7 +31,7 @@ export default async function EditClientPage({
     <div className="max-w-3xl">
       <BackLink href="/admin/clients" label="All clients" />
       <PageHeader title="Edit client" description={client.email} />
-      {e === "invalid" ? <Notice kind="alert">Check the fields — name and a valid email are required.</Notice> : null}
+      {e === "invalid" ? <Notice kind="alert">Check the fields - name and a valid email are required.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That email is already used by another client.</Notice> : null}
 
       <FormGuard action={updateClientAction} className="adm-card mb-6 space-y-5 p-5">

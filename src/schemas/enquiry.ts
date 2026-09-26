@@ -48,7 +48,7 @@ const email = z
 
 const company = z.string().trim().max(120, "Company name is too long.").optional().or(z.literal(""));
 
-/** Optional phone — contact page only. Loose format check; the callback
+/** Optional phone - contact page only. Loose format check; the callback
  *  form applies stricter country-aware rules when a call back is booked. */
 const phone = z
   .string()
@@ -69,7 +69,7 @@ const message = z
   .min(20, "Please tell us a little more, at least 20 characters.")
   .max(4000, "Message is too long (max 4000 characters).");
 
-/** Honeypot — humans never see or fill this. The handler short-circuits bots. */
+/** Honeypot - humans never see or fill this. The handler short-circuits bots. */
 const website = z.string().max(500).optional().or(z.literal(""));
 
 export const enquirySchema = z.object({
@@ -88,7 +88,7 @@ export type EnquiryInput = z.infer<typeof enquirySchema>;
 export type EnquiryFieldErrors = Partial<Record<keyof EnquiryInput, string>>;
 
 /**
- * Authoritative field limits for every public form — the input maxLength
+ * Authoritative field limits for every public form - the input maxLength
  * attributes mirror these so the browser enforces what the server validates.
  */
 export const ENQUIRY_FIELD_LIMITS = {

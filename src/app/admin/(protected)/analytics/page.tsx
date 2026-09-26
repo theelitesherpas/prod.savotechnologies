@@ -7,12 +7,12 @@ import { PageHeader, StatTile, Chip, Notice } from "@/components/admin/ui";
 export const metadata: Metadata = { title: "Analytics" };
 export const dynamic = "force-dynamic";
 
-/** Admin · Analytics — first-party, privacy-friendly traffic + engagement.
+/** Admin · Analytics - first-party, privacy-friendly traffic + engagement.
  *
  *  Data comes from the site's own collector (/api/analytics/collect):
  *  pageviews on every route change plus every tracked event (assistant
  *  questions, CTA clicks, form funnel…). No raw IPs or user agents are
- *  stored — uniques use a daily salted hash. The same events also flow to
+ *  stored - uniques use a daily salted hash. The same events also flow to
  *  Google Analytics when NEXT_PUBLIC_GA_ID is configured; this page is the
  *  zero-dependency view the business owns end to end.
  */
@@ -59,7 +59,7 @@ function sinceMinutes(min: number) {
   return new Date(Date.now() - min * 60000);
 }
 
-/** Funnel row — label, count, share of the funnel's first stage. */
+/** Funnel row - label, count, share of the funnel's first stage. */
 function FunnelRow({ label, value, pct }: { label: string; value: number; pct: number }) {
   return (
     <div>
@@ -120,7 +120,7 @@ export default async function AdminAnalyticsPage({
           dir: (pageviews.length >= prevViews ? "up" : "down") as "up" | "down",
           text: `${Math.abs(Math.round(((pageviews.length - prevViews) / prevViews) * 100))}% vs previous ${days}d`,
         };
-  const perVisitor = uniques > 0 ? (pageviews.length / uniques).toFixed(1) : "—";
+  const perVisitor = uniques > 0 ? (pageviews.length / uniques).toFixed(1) : "-";
 
   // ── funnels (share of first stage)
   const evCount = (name: string) => trackedEvents.filter((e) => e.eventName === name).length;
@@ -187,7 +187,7 @@ export default async function AdminAnalyticsPage({
     <div className="max-w-5xl">
       <PageHeader
         title="Analytics"
-        description="First-party traffic and engagement — owned end to end, no third-party dependency."
+        description="First-party traffic and engagement - owned end to end, no third-party dependency."
       />
 
       {/* Range switch */}
@@ -216,7 +216,7 @@ export default async function AdminAnalyticsPage({
         <div className="mb-6">
           <Notice kind="alert">
             Google Analytics is not connected. Set <code>NEXT_PUBLIC_GA_ID</code> (GA4 Measurement
-            ID, e.g. <code>G-XXXXXXX</code>) in the server environment and redeploy — every event
+            ID, e.g. <code>G-XXXXXXX</code>) in the server environment and redeploy - every event
             below already flows to GA4 automatically.
           </Notice>
         </div>
@@ -357,7 +357,7 @@ export default async function AdminAnalyticsPage({
 
       <p className="t-caption text-muted">
         Privacy: no raw IP addresses or user agents are stored. Unique visitors use a per-day salted
-        hash — counts are approximate by design and unlinkable across days. Bot user agents are
+        hash - counts are approximate by design and unlinkable across days. Bot user agents are
         filtered at collection.
       </p>
     </div>

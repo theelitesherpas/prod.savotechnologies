@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 /**
  * Default social card (1200×630) for every route that does not define its
  * own og:image (industry detail pages override with photography).
- * Statically generated at build time — no runtime cost. Visual language
+ * Statically generated at build time - no runtime cost. Visual language
  * mirrors the site's design system: warm paper, blue-black ink, one
  * vermilion signal, mono measurement labels.
  */

@@ -6,7 +6,7 @@ import { fillText, bodyToHtml, bodyToText, templateEntry } from "@/lib/mail/regi
 import { unsubscribeUrl } from "@/lib/mail/templates";
 
 /**
- * Transactional mail sender — one SMTP transport, every template.
+ * Transactional mail sender - one SMTP transport, every template.
  *
  * Configuration (server env):
  *   MAIL_HOST   e.g. smtp.hostinger.com
@@ -17,11 +17,11 @@ import { unsubscribeUrl } from "@/lib/mail/templates";
  *   MAIL_FROM   optional "Name <mailbox>" override
  *   TEAM_EMAIL  internal inbox for team notifications (default hello@)
  *
- * Sending through the existing Hostinger mailbox needs no DNS changes —
+ * Sending through the existing Hostinger mailbox needs no DNS changes -
  * SPF already includes Hostinger. Switching providers later (Brevo,
  * SES, Zoho…) is an env change, not a code change.
  *
- * Contract: mail NEVER breaks the action that triggered it — sendMail
+ * Contract: mail NEVER breaks the action that triggered it - sendMail
  * catches its own failures and logs them. When MAIL_HOST is unset
  * (local/dev), templates render to the log so behavior is inspectable.
  */
@@ -53,7 +53,7 @@ function transport(): Transporter | null {
 }
 
 /** Careers/HR department mailbox (hr@). Falls back to the default
- *  transport until MAIL_HR_PASS is configured — sends then go out as
+ *  transport until MAIL_HR_PASS is configured - sends then go out as
  *  hello@ and are logged, so nothing is ever lost. */
 function hrTransport(): Transporter | null {
   if (cachedHr !== undefined) return cachedHr;
@@ -78,14 +78,14 @@ export function mailFrom(): string {
   return process.env.MAIL_FROM || `Savo Technologies <${user}>`;
 }
 
-/** Send one template. Never throws — failures are logged for the audit trail.
+/** Send one template. Never throws - failures are logged for the audit trail.
  *  dept "hr" sends from the hr@ mailbox (careers); default is hello@. */
 export async function sendMail(to: string, tpl: MailTemplate, dept: "hello" | "hr" = "hello"): Promise<boolean> {
   const wantHr = dept === "hr";
   let t = wantHr ? hrTransport() : transport();
   let from = mailFrom();
   if (wantHr && !t) {
-    // HR mailbox not configured — fall back to the default mailbox.
+    // HR mailbox not configured - fall back to the default mailbox.
     logger.info("mail: hr mailbox not configured, sending via default", { to });
     t = transport();
   } else if (wantHr) {
@@ -120,12 +120,12 @@ export async function sendMail(to: string, tpl: MailTemplate, dept: "hello" | "h
   }
 }
 
-/** Fire-and-forget variant for request paths — response never waits on SMTP. */
+/** Fire-and-forget variant for request paths - response never waits on SMTP. */
 export function sendMailNow(to: string, tpl: MailTemplate): void {
   void sendMail(to, tpl);
 }
 
-/** Render a template by key — admin override if one exists (with
+/** Render a template by key - admin override if one exists (with
  *  {{placeholders}} filled from vars), the tested code default otherwise.
  *  Customer-facing templates get a real unsubscribe link for `to`. */
 export async function renderTemplate(
@@ -165,7 +165,7 @@ export async function renderTemplate(
   return entry.recipient === "customer" && to ? { ...tpl, unsubscribeEmail: to } : tpl;
 }
 
-/** Template send by key — override-aware, suppression-checked,
+/** Template send by key - override-aware, suppression-checked,
  *  fire-and-forget. */
 export function sendTemplateNow(
   key: string,

@@ -8,7 +8,7 @@ import { getManagedRoles, getManagedCaseDisciplines } from "@/lib/content-items"
 export const dynamic = "force-static";
 
 /**
- * /llms-full.txt — complete factual dump for LLM-based crawlers and answer
+ * /llms-full.txt - complete factual dump for LLM-based crawlers and answer
  * engines. Mirrors visible homepage content (no hidden or unverifiable
  * claims); numbers are omitted where the site itself omits them.
  */
@@ -73,7 +73,7 @@ deployed against real business workflows with enterprise security.
 - Contact page: ${absoluteUrl("/contact")}
 - Response promise: first reply within one business day; every message reaches a human
 - Channels: contact form, email (${SITE.email}), phone (${SITE.phone}), WhatsApp chat from the contact page
-- Offices: India headquarters — 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010 (+91 75029 01234, HR +91 78988 52345). Switzerland head office — Rue de la Fruiterie 13, 1523 Granges-Marnand (+41 76 408 28 72). Every other region (Saudi Arabia & GCC, Australia, United Kingdom, United States) is a market/service presence, not a claimed physical office; confirmed office addresses publish only as each region supplies a verified line.
+- Offices: India headquarters - 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010 (+91 75029 01234, HR +91 78988 52345). Switzerland head office - Rue de la Fruiterie 13, 1523 Granges-Marnand (+41 76 408 28 72). Every other region (Saudi Arabia & GCC, Australia, United Kingdom, United States) is a market/service presence, not a claimed physical office; confirmed office addresses publish only as each region supplies a verified line.
 - After you write: senior consultant replies → discovery call → fixed-scope proposal (NDA on request)
 
 ## Careers

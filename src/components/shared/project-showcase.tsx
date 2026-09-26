@@ -1,11 +1,11 @@
 /**
- * Project showcase — the big cinematic visual band that opens a case-study
+ * Project showcase - the big cinematic visual band that opens a case-study
  * dossier (the appinventiv-style "hero image" moment, in the v6 grammar).
  *
  * A dark product stage: radial glow tinted from the project's own palette,
  * the bespoke mockup (or the attached hero image) blown up large and
  * centered, hairline caption row with the design-concept badge. Pure SVG /
- * CSS — scales to any viewport without losing crispness.
+ * CSS - scales to any viewport without losing crispness.
  */
 
 import { ProjectMockup, type MockupSwatch } from "./project-mockup";
@@ -52,7 +52,7 @@ export function ProjectShowcase({
       className={cn("relative overflow-hidden border-b border-border", className)}
       style={{ backgroundColor: "#101319" }}
     >
-      {/* Stage glow — tinted from the project palette */}
+      {/* Stage glow - tinted from the project palette */}
       <div
         aria-hidden="true"
         className="absolute inset-0"
@@ -70,17 +70,17 @@ export function ProjectShowcase({
         }}
       />
 
-      {/* The big visual — spans the full content column (the shell),
+      {/* The big visual - spans the full content column (the shell),
           aligned with every other section's content outline */}
       <div className="shell relative">
         {heroImage ? (
           // Full shell width; the 82vh cap keeps the band cinematic on
-          // short screens (object-cover trims, never stretches — the
+          // short screens (object-cover trims, never stretches - the
           // studio already crops to exact 16:9).
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={heroImage.dataUrl}
-            alt={heroImage.alt || (title ? `${title} — project visual` : "Project visual")}
+            alt={heroImage.alt || (title ? `${title} - project visual` : "Project visual")}
             className="block max-h-[82vh] w-full rounded-[2px] border border-white/10 object-cover drop-shadow-[0_40px_80px_rgb(0_0_0/0.45)]"
           />
         ) : (
@@ -93,7 +93,7 @@ export function ProjectShowcase({
           </div>
         )}
 
-        {/* Caption row — same column */}
+        {/* Caption row - same column */}
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 py-5">
           <p className="t-caption flex items-center gap-3 text-white/60">
             <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0" style={{ backgroundColor: glow }} />

@@ -4,7 +4,7 @@ import { AdminIcon, type AdminIconName } from "./icons";
 import { ENQUIRY_STATUS_META, type EnquiryStatus } from "@/lib/enquiry-status";
 
 /**
- * Admin presentation primitives — NextAdmin-style operations language:
+ * Admin presentation primitives - NextAdmin-style operations language:
  * white rounded cards with soft shadows, pill badges with soft tints,
  * modern sans headings, vermilion reserved for primary actions and
  * attention states.

@@ -10,7 +10,7 @@ import type { HireRole } from "@/constants/hire";
 import type { CrossLink } from "@/sections/industries/industry-detail";
 
 /* ================================================================== */
-/* The role — editorial intro + skills rows                            */
+/* The role - editorial intro + skills rows                            */
 /* ================================================================== */
 
 export function HireRoleIntro({ role }: { role: HireRole }) {
@@ -53,7 +53,7 @@ export function HireRoleIntro({ role }: { role: HireRole }) {
 }
 
 /* ================================================================== */
-/* What they take on — workbench (sand)                                */
+/* What they take on - workbench (sand)                                */
 /* ================================================================== */
 
 export function HireRoleEngagements({ role }: { role: HireRole }) {
@@ -81,7 +81,7 @@ export function HireRoleEngagements({ role }: { role: HireRole }) {
 }
 
 /* ================================================================== */
-/* Hero — statement left, the rate plate right (interactive), then the */
+/* Hero - statement left, the rate plate right (interactive), then the */
 /* stack marquee                                                       */
 /* ================================================================== */
 
@@ -155,7 +155,7 @@ export function HireRoleHero({ role }: { role: HireRole }) {
 }
 
 /* ================================================================== */
-/* Why — paper rows                                                    */
+/* Why - paper rows                                                    */
 /* ================================================================== */
 
 export function HireRoleWhy({ role }: { role: HireRole }) {
@@ -188,7 +188,7 @@ export function HireRoleWhy({ role }: { role: HireRole }) {
 }
 
 /* ================================================================== */
-/* FAQ — sand band, sticky heading left                                */
+/* FAQ - sand band, sticky heading left                                */
 /* ================================================================== */
 
 export function HireRoleFaqs({ role }: { role: HireRole }) {
@@ -233,7 +233,7 @@ export function HireRoleFaqs({ role }: { role: HireRole }) {
 }
 
 /* ================================================================== */
-/* Explore further — roles + service                                   */
+/* Explore further - roles + service                                   */
 /* ================================================================== */
 
 export function HireRoleCrossLinks({

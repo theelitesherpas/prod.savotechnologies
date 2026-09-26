@@ -40,7 +40,7 @@ export function PanelLink({ link }: { link: NavLink }) {
   );
 }
 
-/** Square-node mini diagram — the motif, small, one per feature card. */
+/** Square-node mini diagram - the motif, small, one per feature card. */
 function FeatureArt({ variant }: { variant: number }) {
   const art = [
     // agent: core + satellites

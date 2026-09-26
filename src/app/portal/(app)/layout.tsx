@@ -8,7 +8,7 @@ import { clientLogoutAction } from "../actions";
 /**
  * Authenticated portal chrome: slim header (logo, client identity,
  * sign-out) over the dashboard pages. Every child page can rely on an
- * authenticated client — this layout enforces it.
+ * authenticated client - this layout enforces it.
  */
 
 export const metadata: Metadata = {

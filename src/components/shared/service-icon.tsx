@@ -1,7 +1,7 @@
 import type { ServiceDetail } from "@/constants/services-detail";
 
 /* ------------------------------------------------------------------ */
-/* Service icons — one stroke weight (1.5), 28px grid. The six core    */
+/* Service icons - one stroke weight (1.5), 28px grid. The six core    */
 /* marks carry over from the homepage set; four new ones extend it.    */
 /* ------------------------------------------------------------------ */
 

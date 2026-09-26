@@ -1,5 +1,5 @@
 /**
- * SAVO v6 navigation — ported from the version-1 site (/newdesign).
+ * SAVO v6 navigation - ported from the version-1 site (/newdesign).
  * Labels, hrefs and feature-card copy carry over unchanged; v6 renders
  * them in its own design language. Future routes (services/*, hire/*,
  * industries/*, careers, portal) resolve to the designed "in production"

@@ -8,7 +8,7 @@ import { CaseStudiesCta } from "@/sections/case-studies/closing-cta";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Case studies — the dossier, filed by discipline. Web development, mobile
+ * Case studies - the dossier, filed by discipline. Web development, mobile
  * products, AI & intelligent systems, software & SaaS, product & experience
  * design and growth; each entry is an honest slot in preparation until a
  * verified engagement publishes (PRODUCT.md hard content rule).

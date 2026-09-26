@@ -10,7 +10,7 @@ import { withBasePath } from "@/lib/utils";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Insights — the editorial index. Article cards as a hairline image
+ * Insights - the editorial index. Article cards as a hairline image
  * grid; each opens the full reading page.
  */
 

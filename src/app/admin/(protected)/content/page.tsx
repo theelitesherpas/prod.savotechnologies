@@ -7,7 +7,7 @@ import { AdminIcon } from "@/components/admin/icons";
 export const metadata: Metadata = { title: "Website content" };
 
 /**
- * Content hub — the submenu's landing page. One card per managed
+ * Content hub - the submenu's landing page. One card per managed
  * collection plus the two dedicated (services/industries), each with its
  * live row count and fallback state.
  */
@@ -44,7 +44,7 @@ export default async function ContentHubPage() {
         </h1>
         <p className="mt-1.5 max-w-2xl text-[0.875rem] leading-relaxed text-muted">
           Every dynamic collection on the public site. Collections fall back to the coded
-          defaults until rows exist — import them from each collection page to start editing.
+          defaults until rows exist - import them from each collection page to start editing.
         </p>
       </div>
 

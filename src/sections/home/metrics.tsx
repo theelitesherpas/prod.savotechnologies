@@ -4,10 +4,10 @@ import { IS_DEMO } from "@/lib/content-mode";
 import { getSettings } from "@/lib/settings";
 
 /**
- * Impact metrics — CONTENT_MODE gated. Demo mode renders polished design
- * figures (DEMO DATA — NOT VERIFIED, never in JSON-LD/SEO). Production
+ * Impact metrics - CONTENT_MODE gated. Demo mode renders polished design
+ * figures (DEMO DATA - NOT VERIFIED, never in JSON-LD/SEO). Production
  * renders the admin-managed verified figures (Settings → Company impact
- * metrics) with honest pending slots for anything not yet supplied —
+ * metrics) with honest pending slots for anything not yet supplied -
  * no invented statistics, ever.
  */
 export async function Metrics() {
@@ -30,7 +30,7 @@ export async function Metrics() {
           </h2>
           <p className="t-caption max-w-xs text-muted">
             {IS_DEMO
-              ? "Preview figures shown for design evaluation — verified numbers replace them at launch."
+              ? "Preview figures shown for design evaluation - verified numbers replace them at launch."
               : "Figures appear here only once they can be verified. We don't publish numbers we can't prove."}
           </p>
         </div>

@@ -6,7 +6,7 @@ import { getManagedHireRoles, getManagedAiServices, getManagedArticles } from "@
 import { getCaseStudies } from "@/lib/case-studies";
 
 /**
- * Production XML sitemap — canonical, indexable URLs only, always on the
+ * Production XML sitemap - canonical, indexable URLs only, always on the
  * canonical origin. Utility pages (client portal login) and admin/API
  * surfaces are excluded by design.
  */
@@ -34,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page("/industries", 0.9),
     ...INDUSTRY_DETAILS.map((d) => page(`/industries/${d.id}`, 0.8)),
     page("/case-studies", 0.8, "weekly"),
-    // Verified engagements only — demo dossiers never enter the sitemap.
+    // Verified engagements only - demo dossiers never enter the sitemap.
     ...CASE_STUDIES.filter((s) => s.status === "verified").map((s) =>
       page(`/case-studies/${s.slug}`, 0.7),
     ),

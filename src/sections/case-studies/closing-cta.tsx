@@ -5,7 +5,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { track } from "@/lib/analytics";
 
 /**
- * Closing moment — the vermilion chapter, the page's single shout. The
+ * Closing moment - the vermilion chapter, the page's single shout. The
  * visitor who just read the dossier policy is invited to become its
  * first verifiable entry.
  */

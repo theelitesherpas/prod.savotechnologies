@@ -7,7 +7,7 @@ import { AgentsHero, AgentChapters, AgentDeploy, AgentsFaqs } from "@/sections/a
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * The agent fleet — /ai-agents/. Six production personas, the
+ * The agent fleet - /ai-agents/. Six production personas, the
  * deployment path, and the honest engineering behind them.
  */
 

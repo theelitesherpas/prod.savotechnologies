@@ -16,7 +16,7 @@ const clientSchema = z.object({
 });
 
 /**
- * Canonical production origin — the domain every canonical URL, sitemap
+ * Canonical production origin - the domain every canonical URL, sitemap
  * entry, JSON-LD @id and Open Graph absolute URL must use.
  * https://savotechnologies.com by default; testing deployments NEVER change
  * this (they carry noindex instead), so previews cannot compete with the
@@ -58,10 +58,10 @@ export const env = { ...clientSchema.parse(processEnv), ...(isServer ? serverSch
 };
 
 /**
- * Absolute URL helper for metadata, sitemaps and JSON-LD — always built on
+ * Absolute URL helper for metadata, sitemaps and JSON-LD - always built on
  * the canonical production origin, never on the deployment host.
  * Path trailing slashes are normalized away (except the root) so every
- * emitted URL — canonical, sitemap entry, JSON-LD — matches the served
+ * emitted URL - canonical, sitemap entry, JSON-LD - matches the served
  * 200 URL instead of a 308 redirect.
  */
 export function absoluteUrl(path = "/"): string {

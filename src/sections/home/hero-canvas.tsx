@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 /**
- * SAVO system visual — the brand motif drawn live: square nodes
+ * SAVO system visual - the brand motif drawn live: square nodes
  * (WEB, MOBILE, AI, SOFTWARE, DESIGN, GROWTH) orbiting a SAVO core,
  * joined by hairlines. Subtle pointer parallax; pauses off-screen;
  * renders a single static frame under prefers-reduced-motion.
@@ -53,7 +53,7 @@ export function HeroCanvas({ className }: { className?: string }) {
     const style = getComputedStyle(document.documentElement);
     const ink = style.getPropertyValue("--foreground").trim() || "#17171a";
     const accent = style.getPropertyValue("--accent").trim() || "#d9480f";
-    // Canvas cannot parse var() inside ctx.font — resolve the mono stack first.
+    // Canvas cannot parse var() inside ctx.font - resolve the mono stack first.
     const monoStack = style.getPropertyValue("--font-fragment").trim() || "ui-monospace, monospace";
 
     function resize() {
@@ -121,7 +121,7 @@ export function HeroCanvas({ className }: { className?: string }) {
       });
       ctx.stroke();
 
-      // Satellites — square nodes
+      // Satellites - square nodes
       ctx.globalAlpha = 1;
       ctx.fillStyle = ink;
       for (let i = 0; i < pts.length; i++) {
@@ -142,7 +142,7 @@ export function HeroCanvas({ className }: { className?: string }) {
         ctx.globalAlpha = 1;
       }
 
-      // Core — accent square with pulse frame
+      // Core - accent square with pulse frame
       const coreS = compact ? 13 : 16;
       ctx.strokeStyle = accent;
       ctx.globalAlpha = 0.5;

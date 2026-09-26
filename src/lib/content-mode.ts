@@ -1,11 +1,11 @@
 /**
- * Demo Content System — central mode gate.
+ * Demo Content System - central mode gate.
  *
  * CONTENT_MODE controls how unverified business facts are presented:
  *
  *   demo       (default) Polished demo content renders so the complete
- *                        design — statistics, case studies, testimonial
- *                        layout, market presence — can be evaluated before
+ *                        design - statistics, case studies, testimonial
+ *                        layout, market presence - can be evaluated before
  *                        Savo supplies verified data. Demo builds are
  *                        always noindex.
  *   production             Demo records are suppressed: the site shows only
@@ -14,7 +14,7 @@
  *
  * Mode is set via NEXT_PUBLIC_CONTENT_MODE (needed in both server and
  * client bundles because constants feed both). Anything absent or misspelled
- * resolves to "demo" — the safe default: an unconfigured production launch
+ * resolves to "demo" - the safe default: an unconfigured production launch
  * can never accidentally publish demo facts.
  */
 
@@ -28,10 +28,10 @@ export const IS_DEMO = CONTENT_MODE === "demo";
 
 /**
  * Content lifecycle status for any record that states a business fact.
- * - "demo"     — fictional design data; staging only, never production.
- * - "verified" — confirmed by Savo; safe everywhere.
+ * - "demo"     - fictional design data; staging only, never production.
+ * - "verified" - confirmed by Savo; safe everywhere.
  * (The admin/DB layer additionally uses draft | review | published for
- * editorial workflow — see prisma/schema.prisma ContentItem.contentStatus.)
+ * editorial workflow - see prisma/schema.prisma ContentItem.contentStatus.)
  */
 export type ContentStatus = "demo" | "verified";
 

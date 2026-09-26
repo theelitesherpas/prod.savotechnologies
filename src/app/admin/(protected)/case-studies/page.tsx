@@ -15,7 +15,7 @@ const SAVED_MESSAGES: Record<string, string> = {
   updated: "Changes saved.",
   deleted: "Case study deleted.",
   status: "Lifecycle updated.",
-  imported: "Imported demo dossiers from the coded defaults — they are now editable rows (lifecycle: demo).",
+  imported: "Imported demo dossiers from the coded defaults - they are now editable rows (lifecycle: demo).",
 };
 
 const STATUS_TONE: Record<string, "default" | "accent" | "success" | "warning" | "muted"> = {
@@ -47,7 +47,7 @@ export default async function AdminCaseStudiesPage({
         id: row.id,
         slug: row.slug,
         title: row.title,
-        discipline: discipline?.title ?? String((row.data as Record<string, unknown>)?.discipline ?? "—"),
+        discipline: discipline?.title ?? String((row.data as Record<string, unknown>)?.discipline ?? "-"),
         contentStatus: row.contentStatus,
         published: row.contentStatus === "published",
         updatedAt: row.updatedAt,
@@ -85,12 +85,12 @@ export default async function AdminCaseStudiesPage({
           {sp.saved === "imported" && sp.n ? `${SAVED_MESSAGES.imported} (${sp.n} records)` : SAVED_MESSAGES[sp.saved]}
         </Notice>
       ) : null}
-      {sp.e === "invalid" ? <Notice kind="alert">Check the fields — the record failed validation.</Notice> : null}
+      {sp.e === "invalid" ? <Notice kind="alert">Check the fields - the record failed validation.</Notice> : null}
       {sp.e === "dup" ? <Notice kind="alert">That slug is already in use.</Notice> : null}
       {sp.e === "save" ? (
-        <Notice kind="alert">Saving failed — the database rejected the record (see the server log). If this persists, restart the dev server after schema changes.</Notice>
+        <Notice kind="alert">Saving failed - the database rejected the record (see the server log). If this persists, restart the dev server after schema changes.</Notice>
       ) : null}
-      {sp.e === "db" ? <Notice kind="alert">Database unavailable — start PostgreSQL and retry.</Notice> : null}
+      {sp.e === "db" ? <Notice kind="alert">Database unavailable - start PostgreSQL and retry.</Notice> : null}
 
       {parsed.length === 0 ? (
         <EmptyState

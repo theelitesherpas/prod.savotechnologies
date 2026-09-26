@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Edge middleware — cheap gates only (real authorization happens in the
+ * Edge middleware - cheap gates only (real authorization happens in the
  * admin layout, server actions and route handlers).
  *
- * 1. /admin/**  — requires the session cookie to exist; otherwise redirect
+ * 1. /admin/**  - requires the session cookie to exist; otherwise redirect
  *    to /admin/login (the login page itself and static assets are exempt).
- * 2. POST /api/** — when a browser sends an Origin header it must match the
+ * 2. POST /api/** - when a browser sends an Origin header it must match the
  *    request host (CSRF hardening alongside SameSite cookies).
  */
 

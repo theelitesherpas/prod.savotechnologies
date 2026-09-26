@@ -1,5 +1,5 @@
 /**
- * Email template registry — the bridge between code defaults and admin
+ * Email template registry - the bridge between code defaults and admin
  * overrides.
  *
  * Every transactional email has a key here: its variables (with sample
@@ -214,7 +214,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Delivery-log entry posted",
     recipient: "client",
     dept: "hello",
-    vars: { name: "Acme Trading", project: "Commerce Platform", title: "Weekly demo shipped", body: "Checkout v2 is live on staging — search filters land next week." },
+    vars: { name: "Acme Trading", project: "Commerce Platform", title: "Weekly demo shipped", body: "Checkout v2 is live on staging - search filters land next week." },
     default: (v) => projectUpdate(v.name, v.project, v.title, v.body),
   },
   {
@@ -324,7 +324,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Job openings broadcast",
     fires: "Bulk announcement of open positions",
     recipient: "candidate",
-    vars: { recipientName: "Team", openingsList: "· Flutter Developer — Indore / Remote\n· AI Engineer — Indore\n· UI/UX Designer — Remote" },
+    vars: { recipientName: "Team", openingsList: "· Flutter Developer - Indore / Remote\n· AI Engineer - Indore\n· UI/UX Designer - Remote" },
     default: (v) => jobOpeningsBroadcast(v),
   },
   /* ── HR OPERATIONS · OFFERS & ONBOARDING ─────────────────── */
@@ -500,7 +500,7 @@ export function templateEntry(key: string): TemplateEntry | undefined {
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** Substitute {{vars}} — HTML-escaped for safe interpolation. */
+/** Substitute {{vars}} - HTML-escaped for safe interpolation. */
 export function fill(template: string, vars: Record<string, string | number | null | undefined>): string {
   return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_m, name: string) => {
     const v = vars[name];

@@ -50,7 +50,7 @@ export default async function EditInvoicePage({
           <div>
             <label className="adm-label mb-1.5 block">Project</label>
             <select name="projectId" defaultValue={invoice.projectId ?? ""} className="adm-select w-full">
-              <option value="">— none —</option>
+              <option value="">- none -</option>
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>{p.code} · {p.title}</option>
               ))}

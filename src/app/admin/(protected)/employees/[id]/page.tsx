@@ -12,7 +12,7 @@ import { leaveSummary, EMPLOYEE_STATUS_META, LEAVE_TYPES, fmtDate } from "@/lib/
 export const metadata: Metadata = { title: "Employee record" };
 export const dynamic = "force-dynamic";
 
-/** Employee record — profile, lifecycle, leave ledger, quick HR emails. */
+/** Employee record - profile, lifecycle, leave ledger, quick HR emails. */
 export default async function EmployeeRecordPage({
   params,
   searchParams,
@@ -47,8 +47,8 @@ export default async function EmployeeRecordPage({
       {created ? <Notice>Employee created. The welcome email with their employee ID has been sent.</Notice> : null}
       {saved ? <Notice>Record updated.</Notice> : null}
       {leave === "added" ? <Notice>Leave request recorded.</Notice> : null}
-      {leave === "approved" ? <Notice>Leave approved — balance updated, email sent.</Notice> : null}
-      {leave === "rejected" ? <Notice>Leave declined — email sent.</Notice> : null}
+      {leave === "approved" ? <Notice>Leave approved - balance updated, email sent.</Notice> : null}
+      {leave === "rejected" ? <Notice>Leave declined - email sent.</Notice> : null}
       {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -237,9 +237,9 @@ export default async function EmployeeRecordPage({
                 ["Joining", fmtDate(employee.joiningDate)],
                 ["Probation ends", fmtDate(employee.probationEnds)],
                 ["Last working day", fmtDate(employee.lastWorkingDay)],
-                ["CTC", employee.ctc ?? "—"],
-                ["Reports to", employee.manager ?? "—"],
-                ["Location", employee.location ?? "—"],
+                ["CTC", employee.ctc ?? "-"],
+                ["Reports to", employee.manager ?? "-"],
+                ["Location", employee.location ?? "-"],
                 ["Leave balance", `${lv.balance}`],
               ].map(([k, v]) => (
                 <div key={k} className="flex items-baseline justify-between gap-3">

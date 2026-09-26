@@ -16,7 +16,7 @@ import { DetailCta } from "@/components/shared/detail-cta";
 import { CrewBand } from "@/sections/hire/crew-band";
 
 /**
- * Service chapters — one route per service from the catalogue. Rich,
+ * Service chapters - one route per service from the catalogue. Rich,
  * honest capability content structured for discovery: service keyword
  * metadata, FAQPage JSON-LD for AEO, and cross-links into the industries
  * the work lands in.

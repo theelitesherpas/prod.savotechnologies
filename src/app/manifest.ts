@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE } from "@/constants/site";
 
-/** Web app manifest — brand identity consistent with metadata and schema. */
+/** Web app manifest - brand identity consistent with metadata and schema. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: SITE.name,

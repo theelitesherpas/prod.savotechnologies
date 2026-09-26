@@ -7,7 +7,7 @@ import { leaveSummary, EMPLOYEE_STATUS_META, fmtDate } from "@/lib/employees";
 export const metadata: Metadata = { title: "Employee portal" };
 export const dynamic = "force-dynamic";
 
-/** Employee portal — dashboard: workforce stats, pending leaves, roster. */
+/** Employee portal - dashboard: workforce stats, pending leaves, roster. */
 export default async function EmployeesPage({
   searchParams,
 }: {
@@ -54,7 +54,7 @@ export default async function EmployeesPage({
     <div className="max-w-6xl">
       <PageHeader
         title="Employee portal"
-        description="Employee records, lifecycle and leave management — one record per employee, keyed by employee ID."
+        description="Employee records, lifecycle and leave management - one record per employee, keyed by employee ID."
       />
       {deleted ? <Notice>Employee record deleted.</Notice> : null}
       {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
@@ -154,7 +154,7 @@ export default async function EmployeesPage({
               <div className="p-6 text-center">
                 <p className="t-sm text-muted">
                   {employees.length === 0
-                    ? "No employees yet — create the first record and the welcome email with their employee ID goes out automatically."
+                    ? "No employees yet - create the first record and the welcome email with their employee ID goes out automatically."
                     : "No employees match this search."}
                 </p>
               </div>

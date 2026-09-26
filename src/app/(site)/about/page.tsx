@@ -14,15 +14,15 @@ import { cn, withBasePath } from "@/lib/utils";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * About — version-1 content (story, milestones, values, leadership)
+ * About - version-1 content (story, milestones, values, leadership)
  * rendered in the v6 document language. The team cards carry real
  * portraits; every claim is the company's own published story.
  */
 
-/** DEMO MILESTONES — NOT VERIFIED. Invented company history carried from
+/** DEMO MILESTONES - NOT VERIFIED. Invented company history carried from
  * version 1 (dates, client outcomes, scale figures). Demo mode only;
  * suppressed in production until Savo confirms the real timeline.
- * DEMO — REPLACE BEFORE PRODUCTION. */
+ * DEMO - REPLACE BEFORE PRODUCTION. */
 const MILESTONES_SEED = [
   { year: "2016", t: "Two engineers, one promise", d: "Savo starts in a Jaipur office with a simple rule: every client talks to the people building their software." },
   { year: "2018", t: "First platform at scale", d: "A logistics platform crosses 5,000 daily users and stays up through its first peak season. The reliability playbook we still use is written that winter." },
@@ -43,10 +43,10 @@ const VALUES = [
   { t: "Craft is respect", d: "Accessible, fast, documented software is how we respect the people who use it and the ones who maintain it." },
 ];
 
-/** DEMO LEADERSHIP ROSTER — NOT VERIFIED. Invented identities (names,
+/** DEMO LEADERSHIP ROSTER - NOT VERIFIED. Invented identities (names,
  * roles, bios, portraits, profile slugs) carried from version 1. Rendered
  * in demo mode only; suppressed in production until Savo supplies the
- * real leadership team. DEMO — REPLACE BEFORE PRODUCTION
+ * real leadership team. DEMO - REPLACE BEFORE PRODUCTION
  * (see DEMO_CONTENT_REPLACEMENT.md). */
 const LEADERSHIP_SEED = [
   { name: "Aarav Mehta", role: "Founder & CEO", bio: "Ex fintech architect. Still reviews every proposal personally.", img: "/images/team/aarav.webp", in: "aarav-mehta", mail: "aarav@savotechnologies.com" },
@@ -57,7 +57,7 @@ const LEADERSHIP_SEED = [
 
 const LEADERSHIP = IS_DEMO ? LEADERSHIP_SEED : [];
 
-/** Company facts — demo values on staging (DESIGN DATA ONLY); production
+/** Company facts - demo values on staging (DESIGN DATA ONLY); production
  * renders the admin-managed verified figures with pending slots for
  * anything not yet supplied. */
 const buildFacts = (metrics: { projectsDelivered: string; clientsSupported: string; industriesServed: string; marketsReached: string }) =>
@@ -306,7 +306,7 @@ export default async function AboutPage() {
         <SectionHeader
           id="presence-heading"
           heading="Where we are."
-          lead={<>Engineering, design and delivery from the Indore headquarters, with market presence across regions — one delivery standard everywhere.</>}
+          lead={<>Engineering, design and delivery from the Indore headquarters, with market presence across regions - one delivery standard everywhere.</>}
         />
         <Reveal>
           <ul className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">

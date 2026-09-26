@@ -1,11 +1,11 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- * DEMO TESTIMONIAL — PREVIEW STRUCTURE
- * DEMO — REPLACE BEFORE PRODUCTION
+ * DEMO TESTIMONIAL - PREVIEW STRUCTURE
+ * DEMO - REPLACE BEFORE PRODUCTION
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * Keeps the testimonial layout complete on staging WITHOUT manufacturing an
- * endorsement. This is an explicit preview placeholder — never attributed
+ * endorsement. This is an explicit preview placeholder - never attributed
  * to a believable person or company. Production suppresses the section
  * until an approved, publishable client quote exists.
  */
@@ -20,7 +20,7 @@ export type DemoTestimonial = {
   status: ContentStatus;
 };
 
-/** DEMO TESTIMONIAL — structure preview, not an endorsement. */
+/** DEMO TESTIMONIAL - structure preview, not an endorsement. */
 export const DEMO_TESTIMONIAL: DemoTestimonial = {
   kicker: "Client testimonial preview",
   quote:

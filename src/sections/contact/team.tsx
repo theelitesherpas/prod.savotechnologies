@@ -6,11 +6,11 @@ import { CONTACT_TEAM } from "@/constants/contact";
 import { IS_DEMO } from "@/lib/content-mode";
 
 /**
- * "The people who answer" — DEMO team content (invented members with
+ * "The people who answer" - DEMO team content (invented members with
  * placeholder portraits and LinkedIn slugs that may not be Savo-controlled).
  * Renders in demo mode so the layout stays complete for design review;
  * suppressed in production until Savo supplies the real team roster.
- * DEMO — REPLACE BEFORE PRODUCTION (see DEMO_CONTENT_REPLACEMENT.md)
+ * DEMO - REPLACE BEFORE PRODUCTION (see DEMO_CONTENT_REPLACEMENT.md)
  */
 export function Team() {
   if (!IS_DEMO) return null;

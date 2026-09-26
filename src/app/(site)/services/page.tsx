@@ -6,7 +6,7 @@ import { DetailCta } from "@/components/shared/detail-cta";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Services — the catalogue. Ten services, one standard; each row opens
+ * Services - the catalogue. Ten services, one standard; each row opens
  * its service chapter. Capability copy only (PRODUCT.md hard rule).
  */
 

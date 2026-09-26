@@ -7,13 +7,13 @@ import { AGENT_DEPLOY_STEPS, AGENT_FAQS, type Agent } from "@/constants/agents";
 import { cn } from "@/lib/utils";
 
 /**
- * AI agents — the fleet. Paper hero with the six-persona board, agent
+ * AI agents - the fleet. Paper hero with the six-persona board, agent
  * chapters as hairline accordions, the deployment spine on ink, FAQ and
- * close. Square-node agent marks, no gradients — the world's grammar.
+ * close. Square-node agent marks, no gradients - the world's grammar.
  */
 
 function AgentMark({ variant }: { variant: number }) {
-  // Six small square-node marks — same stroke weight, distinct topology.
+  // Six small square-node marks - same stroke weight, distinct topology.
   const marks = [
     // sales: two nodes, connecting route
     <g key="s" fill="none" stroke="currentColor" strokeWidth="1.4">
@@ -143,7 +143,7 @@ export function AgentsHero({ agents: AGENTS }: { agents: Agent[] }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Agent chapters — hairline accordions with deliverables + tags       */
+/* Agent chapters - hairline accordions with deliverables + tags       */
 /* ------------------------------------------------------------------ */
 
 export function AgentChapters({ agents: AGENTS }: { agents: Agent[] }) {
@@ -224,7 +224,7 @@ function AgentChapter({
 }
 
 /* ------------------------------------------------------------------ */
-/* Deployment — ink chapter, staggered steps on a spine                */
+/* Deployment - ink chapter, staggered steps on a spine                */
 /* ------------------------------------------------------------------ */
 
 export function AgentDeploy() {

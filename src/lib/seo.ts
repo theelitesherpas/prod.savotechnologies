@@ -4,7 +4,7 @@ import { SITE } from "@/constants/site";
  * Open Graph builder for page metadata.
  *
  * Next.js *replaces* (does not merge) the parent layout's openGraph object
- * when a page defines its own — so every page-level OG must carry the full
+ * when a page defines its own - so every page-level OG must carry the full
  * shape (type, site name, locale, default social card). Centralising it
  * here keeps og:* tags consistent across all routes.
  *
