@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SavoLogo } from "@/components/shared/savo-logo";
 import { FormGuard } from "@/components/admin/form-guard";
+import { AdminLoginCaptcha } from "./login-captcha";
 import { getAdminUser } from "@/lib/auth";
 import { loginAction } from "./actions";
 
@@ -77,6 +78,7 @@ export default async function AdminLoginPage({
             </p>
           ) : null}
 
+          <AdminLoginCaptcha />
           <button
             type="submit"
             className="h-11 w-full rounded-lg bg-accent text-[0.9375rem] font-semibold text-on-accent shadow-sm transition-colors hover:bg-accent-hover"

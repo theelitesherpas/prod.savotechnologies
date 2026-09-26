@@ -40,6 +40,65 @@ export function captchaRequired(ip: string): boolean {
   return submissionsFrom(ip) >= FREE_PER_WINDOW;
 }
 
+/* ── Login-attempt tracking (admin, employee, client portals) ──────── */
+
+const LOGIN_FREE = 2;
+const LOGIN_WINDOW = 15 * 60 * 1000; // 15 minutes
+
+function loginFailKey(portal: string, ip: string): string {
+  return `login-fail:${portal}:${ip}`;
+}
+
+/** Record a failed login attempt for this portal + IP. */
+export function recordLoginFailure(portal: string, ip: string): void {
+  rateLimit(loginFailKey(portal, ip), 20, LOGIN_WINDOW);
+}
+
+/** Clear failures on successful login (give them a fresh start). */
+export function clearLoginFailures(portal: string, ip: string): void {
+  // Rate-limit with limit 0 evicts the bucket on next read
+  rateLimit(loginFailKey(portal, ip), 0, 1);
+}
+
+/** Does this portal + IP need a captcha for the next login attempt? */
+export function loginCaptchaRequired(portal: string, ip: string): boolean {
+  return rateCount(loginFailKey(portal, ip), LOGIN_WINDOW) >= LOGIN_FREE;
+}
+
+/** Enforce captcha on a login attempt: after 2 failures, verify the token. */
+export async function enforceLoginCaptcha(
+  portal: string,
+  ip: string,
+  token: unknown,
+): Promise<CaptchaCheck> {
+  if (!loginCaptchaRequired(portal, ip)) return { ok: true };
+
+  const secret = process.env.RECAPTCHA_SECRET_KEY;
+  if (!secret) {
+    logger.warn("captcha: login secret not configured, gate skipped", { portal, ip });
+    return { ok: true };
+  }
+
+  if (typeof token !== "string" || token.length < 10) {
+    return { ok: false, captchaRequired: true };
+  }
+
+  try {
+    const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ secret, response: token, remoteip: ip }),
+    });
+    const json = (await res.json()) as { success?: boolean };
+    if (json.success === true) return { ok: true };
+    logger.warn("captcha: login verification failed", { portal, ip });
+    return { ok: false, captchaRequired: true };
+  } catch (err) {
+    logger.error("captcha: login verify error", { err: String(err).slice(0, 150) });
+    return { ok: false, error: "Verification could not be completed. Please try again." };
+  }
+}
+
 export type CaptchaCheck =
   | { ok: true }
   | { ok: false; captchaRequired: true }

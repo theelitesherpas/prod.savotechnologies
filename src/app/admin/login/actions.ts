@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { enforceLoginCaptcha, recordLoginFailure, clearLoginFailures } from "@/lib/captcha";
 import { login } from "@/lib/auth";
 
 /**
@@ -31,14 +32,25 @@ export async function loginAction(formData: FormData): Promise<void> {
     hdrs.get("x-real-ip") ??
     "unknown";
 
+  // Progressive captcha: after 2 failed attempts, verify before processing.
+  const cap = await enforceLoginCaptcha("admin", ip, formData.get("captchaToken"));
+  if (!cap.ok) {
+    if ("captchaRequired" in cap) {
+      redirect("/admin/login?e=captcha");
+    }
+    redirect(`/admin/login?e=${encodeURIComponent(cap.error)}`);
+  }
+
   const result = await login(parsed.data.email, parsed.data.password, {
     ip,
     userAgent: hdrs.get("user-agent"),
   });
 
   if (!result.ok) {
+    recordLoginFailure("admin", ip);
     redirect(`/admin/login?e=${result.reason === "rate_limited" ? "rate" : "invalid"}`);
   }
 
+  clearLoginFailures("admin", ip);
   redirect("/admin");
 }

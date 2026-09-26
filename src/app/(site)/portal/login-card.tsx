@@ -2,6 +2,8 @@
 
 import { clientLoginAction } from "@/app/portal/actions";
 import { FormGuard } from "@/components/admin/form-guard";
+import { CaptchaGate, useCaptcha, captchaBlocked } from "@/components/shared/captcha";
+import { useState } from "react";
 
 /**
  * Portal sign-in card - embedded in the /portal hero (right column).
@@ -9,6 +11,8 @@ import { FormGuard } from "@/components/admin/form-guard";
  * clients who need their credentials re-issued.
  */
 export function PortalLoginCard({ error }: { error?: string }) {
+  const captcha = useCaptcha("client");
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
   return (
     <div className="relative border border-border bg-surface p-8 sm:p-10">
       <div className="flex items-center justify-between">
@@ -31,7 +35,14 @@ export function PortalLoginCard({ error }: { error?: string }) {
         </p>
       ) : null}
 
-      <FormGuard action={clientLoginAction} className="mt-6 space-y-4">
+      <FormGuard action={clientLoginAction} validate={() => {
+        setCaptchaErr(null);
+        if (captchaBlocked(captcha)) {
+          setCaptchaErr("Please complete the verification.");
+          return [{ anchor: "pt-email", message: "Please complete the verification." }];
+        }
+        return [];
+      }} className="mt-6 space-y-4">
         <div>
           <label htmlFor="pt-email" className="t-label mb-1.5 block text-muted">
             Email
@@ -62,6 +73,7 @@ export function PortalLoginCard({ error }: { error?: string }) {
             className="field"
           />
         </div>
+        <CaptchaGate captcha={captcha} error={captchaErr} />
         <button
           type="submit"
           className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[2px] bg-foreground px-5 text-[0.875rem] font-semibold text-background transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-accent hover:text-on-accent"
@@ -71,6 +83,7 @@ export function PortalLoginCard({ error }: { error?: string }) {
             <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
           </svg>
         </button>
+              {captcha.token ? <input type="hidden" name="captchaToken" value={captcha.token} /> : null}
       </FormGuard>
 
       <p className="t-caption mt-5 text-muted">

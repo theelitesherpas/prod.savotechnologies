@@ -79,18 +79,19 @@ export type CaptchaState = {
   refresh: () => void;
 };
 
-export function useCaptcha(): CaptchaState {
+export function useCaptcha(portal?: "admin" | "employee" | "client"): CaptchaState {
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  const checkUrl = portal ? `/api/captcha/required?portal=${portal}` : "/api/captcha/required";
   const [required, setRequired] = useState(false);
   const [token, setToken] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     setToken(null);
-    fetch("/api/captcha/required", { cache: "no-store" })
+    fetch(checkUrl, { cache: "no-store" })
       .then((r) => r.json())
       .then((d: { required?: boolean }) => setRequired(Boolean(d.required) && Boolean(siteKey)))
       .catch(() => setRequired(false));
-  }, [siteKey]);
+  }, [siteKey, checkUrl]);
 
   const reset = useCallback(() => {
     setToken(null);
