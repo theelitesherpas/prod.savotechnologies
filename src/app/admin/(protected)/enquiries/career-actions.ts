@@ -108,7 +108,19 @@ export async function scheduleInterviewAction(formData: FormData): Promise<void>
   if (!enquiry) back(d!.id, "Enquiry not found.");
   const eq2 = enquiry!;
 
-  const date = new Date(`${d!.interviewDate}T${d!.interviewTime.includes(":") ? d!.interviewTime : d!.interviewTime + ":00"}`);
+  // Convert "10:00 AM" / "02:30 PM" to 24-hour "10:00" / "14:30" for Date parsing
+  const to24h = (t: string): string => {
+    const match = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!match) return t.includes(":") ? t : t + ":00";
+    let h = parseInt(match[1], 10);
+    const m = match[2];
+    const ap = match[3].toUpperCase();
+    if (ap === "PM" && h < 12) h += 12;
+    if (ap === "AM" && h === 12) h = 0;
+    return `${String(h).padStart(2, "0")}:${m}:00`;
+  };
+  const time24 = to24h(d!.interviewTime);
+  const date = new Date(`${d!.interviewDate}T${time24}`);
   if (isNaN(date.getTime())) back(d!.id, "Enter a valid date and time.");
 
   await prisma!.projectEnquiry.update({

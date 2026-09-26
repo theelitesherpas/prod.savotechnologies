@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, StatTile, Chip } from "@/components/admin/ui";
-import { SubmitButton } from "@/components/admin/form";
 import {
   shortlistEnquiryAction,
   rejectEnquiryAction,
@@ -153,42 +152,57 @@ export default async function HRPortalPage({
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap justify-end gap-1.5">
+                      <div className="flex flex-wrap justify-end gap-2">
                         {isNew ? (
                           <>
                             <form action={shortlistEnquiryAction}>
                               <input type="hidden" name="id" value={enq.id} />
-                              <SubmitButton label="Shortlist" compact />
+                              <button
+                                type="submit"
+                                className="inline-flex h-8 items-center rounded-lg bg-foreground px-3 text-[0.6875rem] font-bold text-background transition-colors hover:bg-accent"
+                              >
+                                Shortlist
+                              </button>
                             </form>
                             <form action={rejectEnquiryAction}>
                               <input type="hidden" name="id" value={enq.id} />
-                              <SubmitButton label="Reject" compact />
+                              <button
+                                type="submit"
+                                className="inline-flex h-8 items-center rounded-lg border border-error/40 px-3 text-[0.6875rem] font-bold text-error transition-colors hover:bg-error hover:text-white"
+                              >
+                                Reject
+                              </button>
                             </form>
                           </>
                         ) : enq.careerStatus === "shortlisted" ? (
                           <>
                             <Link
                               href={`/admin/enquiries/${enq.id}`}
-                              className="inline-flex h-8 items-center rounded-lg bg-accent px-2.5 text-[0.6875rem] font-bold text-on-accent transition-colors hover:bg-accent-hover"
+                              className="inline-flex h-8 items-center rounded-lg bg-accent px-3 text-[0.6875rem] font-bold text-on-accent transition-colors hover:bg-accent-hover"
                             >
                               Schedule interview
                             </Link>
                             <form action={rejectEnquiryAction}>
                               <input type="hidden" name="id" value={enq.id} />
-                              <SubmitButton label="Reject" compact />
+                              <button
+                                type="submit"
+                                className="inline-flex h-8 items-center rounded-lg border border-error/40 px-3 text-[0.6875rem] font-bold text-error transition-colors hover:bg-error hover:text-white"
+                              >
+                                Reject
+                              </button>
                             </form>
                           </>
                         ) : enq.careerStatus === "interview_scheduled" ? (
                           <Link
                             href={`/admin/enquiries/${enq.id}`}
-                            className="inline-flex h-8 items-center rounded-lg border border-border px-2.5 text-[0.6875rem] font-semibold text-muted hover:border-foreground/40"
+                            className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-[0.6875rem] font-semibold text-muted hover:border-foreground/40"
                           >
                             View details
                           </Link>
                         ) : (
                           <Link
                             href={`/admin/enquiries/${enq.id}`}
-                            className="inline-flex h-8 items-center rounded-lg border border-border px-2.5 text-[0.6875rem] font-semibold text-muted hover:border-foreground/40"
+                            className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-[0.6875rem] font-semibold text-muted hover:border-foreground/40"
                           >
                             View
                           </Link>
