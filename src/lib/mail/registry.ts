@@ -14,6 +14,7 @@ import {
   candidateRejection,
   documentVerification,
   employmentVerification,
+  employeeWelcome,
   exitInterview,
   holidayAnnouncement,
   interviewInvite,
@@ -327,6 +328,16 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     default: (v) => jobOpeningsBroadcast(v),
   },
   /* ── HR OPERATIONS · OFFERS & ONBOARDING ─────────────────── */
+  {
+    key: "employeeWelcome",
+    dept: "hr",
+    category: "onboarding",
+    label: "Employee record created (ID email)",
+    fires: "Automatically on employee creation in the portal",
+    recipient: "employee",
+    vars: { employeeName: "Aarav Mehta", employeeCode: "STPL00001", position: "Flutter Developer", department: "Engineering", joiningDate: "12 Oct 2026", reportTo: "Rohan Desai, Engineering Lead", leavePolicy: "One leave is credited for every completed month of service; unused leaves carry forward." },
+    default: (v) => employeeWelcome(v),
+  },
   {
     key: "offerLetter",
     dept: "hr",

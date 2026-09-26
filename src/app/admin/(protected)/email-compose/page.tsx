@@ -13,9 +13,15 @@ export default async function AdminComposePage({
   searchParams: Promise<{ sent?: string; e?: string }>;
 }) {
   const { sent, e } = await searchParams;
-  const clients = prisma
-    ? await prisma.clientUser.findMany({ where: { active: true }, select: { email: true, name: true }, orderBy: { name: "asc" }, take: 200 })
-    : [];
+  const [clients, employees] = prisma
+    ? await Promise.all([
+        prisma.clientUser.findMany({ where: { active: true }, select: { email: true, name: true }, orderBy: { name: "asc" }, take: 200 }),
+        prisma.employee.findMany({
+          orderBy: { createdAt: "desc" },
+          select: { id: true, employeeCode: true, name: true, email: true, position: true, department: true, joiningDate: true, probationEnds: true, lastWorkingDay: true, ctc: true, manager: true, location: true, status: true, leaves: { select: { status: true, days: true } } },
+        }),
+      ])
+    : [[], []];
 
   return (
     <div className="max-w-3xl">
@@ -25,7 +31,7 @@ export default async function AdminComposePage({
       />
       {sent ? <Notice>Sent.</Notice> : null}
       {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
-      <ComposeForm clients={clients} />
+      <ComposeForm clients={clients} employees={employees} />
     </div>
   );
 }

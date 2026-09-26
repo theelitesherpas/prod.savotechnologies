@@ -333,3 +333,54 @@ model MailSuppress {
 
   @@map("mail_suppress")
 }
+
+/// Employee master records — the single source of truth for the HR
+/// employee portal. Employee code (STPL00xxx) is the public identifier
+/// used across emails, leaves and records.
+model Employee {
+  id            String          @id @default(cuid())
+  employeeCode  String          @unique @map("employee_code")
+  name          String
+  email         String          @unique
+  phone         String?
+  position      String
+  department    String
+  /// joining | probation | active | notice | exited
+  status        String          @default("joining")
+  joiningDate   DateTime        @map("joining_date")
+  probationEnds DateTime?       @map("probation_ends")
+  lastWorkingDay DateTime?      @map("last_working_day")
+  ctc           String?
+  manager       String?
+  location      String?
+  notes         String          @default("")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  leaves        EmployeeLeave[]
+
+  @@index([status])
+  @@map("employees")
+}
+
+/// Leave records — requests and their outcomes. Balance is derived
+/// (credited months of service minus approved days), so approvals
+/// automatically reduce availability and unused months carry forward.
+model EmployeeLeave {
+  id          String    @id @default(cuid())
+  employeeId  String    @map("employee_id")
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  /// privilege | sick | casual | unpaid | other
+  type        String    @default("privilege")
+  fromDate    DateTime  @map("from_date")
+  toDate      DateTime  @map("to_date")
+  days        Float
+  reason      String    @default("")
+  /// pending | approved | rejected | cancelled
+  status      String    @default("pending")
+  actedBy     String?   @map("acted_by")
+  actedAt     DateTime? @map("acted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([employeeId, status])
+  @@map("employee_leaves")
+}

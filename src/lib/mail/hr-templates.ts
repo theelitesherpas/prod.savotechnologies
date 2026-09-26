@@ -152,6 +152,47 @@ export function jobOpeningsBroadcast(vars: Record<string, string>): MailTemplate
 
 /* ══════════════ OFFERS & ONBOARDING ══════════════ */
 
+/** Employee record created — the employee ID email. */
+export function employeeWelcome(vars: Record<string, string>): MailTemplate {
+  return {
+    subject: `Welcome to Savo Technologies — employee ID ${v(vars, "employeeCode")}`,
+    html: shell({
+      preheader: `Your employee ID is ${v(vars, "employeeCode")}. Joining on ${v(vars, "joiningDate")}.`,
+      eyebrowText: "Employee record created",
+      ref: "HR · EMPLOYEE",
+      heading: "Welcome to Savo Technologies.",
+      bodyHtml: [
+        lead(`Dear ${v(vars, "employeeName")},<br><br>Your employee record has been created for the position of <strong>${v(vars, "position")}</strong> (${v(vars, "department")}). Please keep your employee ID for all future correspondence.`),
+        spec([
+          ["Employee ID", v(vars, "employeeCode")],
+          ["Position", v(vars, "position")],
+          ["Department", v(vars, "department")],
+          ["Joining date", v(vars, "joiningDate")],
+          ["Reporting to", v(vars, "reportTo")],
+        ]),
+        p(`<strong>Leave policy:</strong> ${v(vars, "leavePolicy", "One leave is credited for every completed month of service; unused leaves carry forward.")}`),
+        p(`Your onboarding formalities and first-day details will follow in a separate email. For anything in the meantime, reply to this email — Human Resources reads it.`, true),
+      ].join(""),
+      closing: "Kind regards,",
+      reason: "You are receiving this email as a part of your employment onboarding at Savo Technologies.",
+    }),
+    text: `Dear ${v(vars, "employeeName")},
+
+Your employee record has been created.
+
+Employee ID: ${v(vars, "employeeCode")}
+Position: ${v(vars, "position")}
+Department: ${v(vars, "department")}
+Joining date: ${v(vars, "joiningDate")}
+Reporting to: ${v(vars, "reportTo")}
+
+Leave policy: ${v(vars, "leavePolicy", "One leave per completed month of service; unused leaves carry forward.")}
+
+${HR_SIGN}`,
+  };
+}
+
+
 /** Offer of employment. */
 export function offerLetter(vars: Record<string, string>): MailTemplate {
   return {

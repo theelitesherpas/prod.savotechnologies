@@ -5,6 +5,7 @@ import { sendCustomEmailAction, sendTemplatedEmailAction } from "@/app/admin/(pr
 import { FormGuard } from "@/components/admin/form-guard";
 import { SubmitButton } from "@/components/admin/form";
 import { TEMPLATE_REGISTRY, RECIPIENT_LABEL, CATEGORY_ORDER, CATEGORY_LABEL } from "@/lib/mail/registry";
+import { employeeVars } from "@/lib/employees";
 import { shell } from "@/lib/mail/templates";
 import { bodyToHtml } from "@/lib/mail/registry";
 import { cn } from "@/lib/utils";
@@ -15,11 +16,47 @@ import { cn } from "@/lib/utils";
  *     its variables, preview live, send with override + dept routing.
  *   · Blank: a one-off branded email from scratch.
  */
-export function ComposeForm({ clients }: { clients: { email: string; name: string }[] }) {
+type EmployeeLite = {
+  id: string;
+  employeeCode: string;
+  name: string;
+  email: string;
+  position: string;
+  department: string;
+  joiningDate: Date;
+  probationEnds: Date | null;
+  lastWorkingDay: Date | null;
+  ctc: string | null;
+  manager: string | null;
+  location: string | null;
+  leaves: { status: string; days: number }[];
+};
+
+export function ComposeForm({
+  clients,
+  employees,
+  preselectEmployeeId,
+  preselectTemplate,
+}: {
+  clients: { email: string; name: string }[];
+  employees: EmployeeLite[];
+  preselectEmployeeId?: string;
+  preselectTemplate?: string;
+}) {
   const [mode, setMode] = useState<"template" | "blank">("template");
-  const [templateKey, setTemplateKey] = useState(TEMPLATE_REGISTRY[0].key);
-  const [to, setTo] = useState("");
-  const [vars, setVars] = useState<Record<string, string>>(() => ({ ...TEMPLATE_REGISTRY[0].vars }));
+  const [templateKey, setTemplateKey] = useState(
+    preselectTemplate && TEMPLATE_REGISTRY.some((t) => t.key === preselectTemplate) ? preselectTemplate : TEMPLATE_REGISTRY[0].key,
+  );
+  const [autofilledFrom, setAutofilledFrom] = useState<string | null>(null);
+  const [to, setTo] = useState(() => {
+    const emp = preselectEmployeeId ? employees.find((em) => em.id === preselectEmployeeId) : undefined;
+    return emp?.email ?? "";
+  });
+  const [vars, setVars] = useState<Record<string, string>>(() => {
+    const first = TEMPLATE_REGISTRY.find((t) => t.key === (preselectTemplate ?? TEMPLATE_REGISTRY[0].key)) ?? TEMPLATE_REGISTRY[0];
+    const emp = preselectEmployeeId ? employees.find((em) => em.id === preselectEmployeeId) : undefined;
+    return emp ? { ...first.vars, ...employeeVars(emp, emp.leaves) } : { ...first.vars };
+  });
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -128,7 +165,41 @@ export function ComposeForm({ clients }: { clients: { email: string; name: strin
 
           {/* Variables */}
           <div className="adm-card p-5">
-            <p className="adm-label mb-3">Details (variables)</p>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <p className="adm-label">Details (variables)</p>
+              <span className="ml-auto flex items-center gap-2">
+                <label htmlFor="autofill-emp" className="t-caption text-muted">Autofill from employee</label>
+                <select
+                  id="autofill-emp"
+                  value={autofilledFrom ?? ""}
+                  onChange={(e) => {
+                    const emp = employees.find((em) => em.id === e.target.value);
+                    if (!emp) {
+                      setAutofilledFrom(null);
+                      resetVars(templateKey);
+                      return;
+                    }
+                    setAutofilledFrom(emp.id);
+                    setTo(emp.email);
+                    const entry2 = TEMPLATE_REGISTRY.find((t) => t.key === templateKey);
+                    setVars({ ...(entry2?.vars ?? {}), ...employeeVars(emp, emp.leaves) });
+                  }}
+                  className="adm-select h-9 max-w-[16rem] py-1"
+                >
+                  <option value="">— manual —</option>
+                  {employees.map((em) => (
+                    <option key={em.id} value={em.id}>
+                      {em.employeeCode} · {em.name}
+                    </option>
+                  ))}
+                </select>
+              </span>
+            </div>
+            {autofilledFrom ? (
+              <p className="t-caption mb-3 rounded-md border border-accent/30 bg-accent/[0.05] px-3 py-2 text-muted">
+                Fields filled from the employee record. Adjust anything below before sending.
+              </p>
+            ) : null}
             <div className="grid gap-3 sm:grid-cols-2">
               {Object.entries(entry.vars).map(([k, sample]) => (
                 <div key={k} className={k.length > 40 ? "sm:col-span-2" : undefined}>

@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 
 const CRUMB_LABELS: Record<string, string> = {
   enquiries: "Enquiries",
+  employees: "Employee portal",
   analytics: "Analytics",
   "email-templates": "Email templates",
   "email-compose": "Send email",
@@ -74,6 +75,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       icon: "inbox",
       href: "/admin/enquiries",
       badge: newEnquiries,
+    },
+    {
+      key: "employees",
+      label: "Employee portal",
+      icon: "crew",
+      href: "/admin/employees",
     },
     {
       key: "content",
