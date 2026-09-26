@@ -1,11 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { FormGuard } from "@/components/admin/form-guard";
+import { CaptchaGate, useCaptcha, captchaBlocked } from "@/components/shared/captcha";
 import { employeeLoginAction } from "./actions";
 
 export function EmployeeLoginForm() {
+  const captcha = useCaptcha("employee");
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
+
   return (
-    <FormGuard action={employeeLoginAction} className="space-y-5">
+    <FormGuard
+      action={employeeLoginAction}
+      className="space-y-5"
+      validate={() => {
+        setCaptchaErr(null);
+        if (captchaBlocked(captcha)) {
+          setCaptchaErr("Please complete the verification.");
+          return [{ anchor: "emp-email", message: "Please complete the verification." }];
+        }
+        return [];
+      }}
+    >
       <div>
         <label htmlFor="emp-email" className="mb-1.5 block text-[0.8125rem] font-semibold text-[#6a6e75]">
           Email
@@ -36,6 +52,8 @@ export function EmployeeLoginForm() {
           className="w-full border-0 border-b border-[#14161c]/20 bg-transparent py-2.5 text-[0.9375rem] text-[#14161c] outline-none transition-colors focus:border-[#14161c]/50"
         />
       </div>
+      <CaptchaGate captcha={captcha} error={captchaErr} />
+      {captcha.token ? <input type="hidden" name="captchaToken" value={captcha.token} /> : null}
       <button
         type="submit"
         className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-[8px] bg-[#14161c] text-[0.875rem] font-semibold tracking-wide text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#d9480f] hover:shadow-[0_8px_24px_rgb(217_72_15/0.3)]"

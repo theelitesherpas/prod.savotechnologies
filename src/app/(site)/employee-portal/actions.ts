@@ -1,12 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
-import { clientIp } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { enforceLoginCaptcha, recordLoginFailure, clearLoginFailures } from "@/lib/captcha";
 
@@ -34,8 +33,13 @@ export async function employeeLoginAction(formData: FormData): Promise<void> {
   }
   const { email, password } = parsed.data;
 
-  const req = await headers();
-  const ip = clientIp({ headers: Object.fromEntries(req.entries()) } as unknown as Request);
+  // IP extraction (same pattern as admin login)
+  const hdrs = await headers();
+  const ip =
+    hdrs.get("x-forwarded-for")?.split(",")[0].trim() ??
+    hdrs.get("x-real-ip") ??
+    "unknown";
+
   const limit = rateLimit(`employee-login:${ip}`, 10, 15 * 60 * 1000);
   if (!limit.ok) {
     redirect("/employee-portal?e=Too many attempts. Please wait a few minutes.");
@@ -45,19 +49,19 @@ export async function employeeLoginAction(formData: FormData): Promise<void> {
     redirect("/employee-portal?e=Portal not configured.");
   }
 
+  // Progressive captcha: after 2 failed attempts, verify before processing.
+  const cap = await enforceLoginCaptcha("employee", ip, formData.get("captchaToken"));
+  if (!cap.ok) {
+    if ("captchaRequired" in cap) {
+      redirect("/employee-portal?e=Please complete the human verification.");
+    }
+    redirect(`/employee-portal?e=${encodeURIComponent(cap.error)}`);
+  }
+
   const employee = await prisma.employee.findUnique({
     where: { email },
     include: { panelUsers: { take: 1, select: { passwordHash: true, role: true, permissions: true, id: true } } },
   });
-
-  // Progressive captcha after 2 failures
-  const cap = await enforceLoginCaptcha("employee", ip, formData.get("captchaToken"));
-  if (!cap.ok) {
-    if ("captchaRequired" in cap) {
-      redirect("/employee-portal?e=captcha");
-    }
-    redirect(`/employee-portal?e=${encodeURIComponent(cap.error)}`);
-  }
 
   if (!employee || employee.status === "exited") {
     logger.warn("employee_auth.login_failed", { email, reason: "not_found_or_exited" });
@@ -115,9 +119,4 @@ export async function employeeLogoutAction(): Promise<void> {
   }
   jar.delete(COOKIE);
   redirect("/employee-portal");
-}
-
-async function headers() {
-  const { headers: h } = await import("next/headers");
-  return h();
 }
