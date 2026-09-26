@@ -150,6 +150,9 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
     if (mine.length === 0) return d;
     const mapped = mine.map((s, i) => {
       const resolved = resolveCaseImages(s);
+      // Unverified figures are production-suppressed on cards exactly like
+      // the detail page (policy §27); demo records show all + the marker.
+      const shown = s.status === "demo" ? (s.results ?? []) : (s.results ?? []).filter((r) => r.verified);
       return ({
       featured: s.featured || i === 0,
       name: s.displayClientName || s.title,
@@ -157,8 +160,8 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
       services: (s.services ?? []).slice(0, 2).join(" · ") || (s.industry ?? ""),
       stack: (s.technologies ?? []).join(" · "),
       outcome:
-        (s.results ?? []).map((r) => `${r.value} ${r.label}`).join(" · ") +
-        (s.status === "demo" && (s.results?.length ?? 0) > 0 ? " - demo figures" : ""),
+        shown.map((r) => `${r.value} ${r.label}`).join(" · ") +
+        (s.status === "demo" && shown.length > 0 ? " - demo figures" : ""),
       slug: s.slug,
       images: {
         cardWide: resolved.cardWide ? { dataUrl: resolved.cardWide.dataUrl, alt: resolved.cardWide.alt } : null,

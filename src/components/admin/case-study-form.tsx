@@ -11,6 +11,7 @@
  */
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { FormGuard, type GuardProblem } from "@/components/admin/form-guard";
 import type { CaseStudyRecord } from "@/lib/case-study-schema";
@@ -45,7 +46,7 @@ export function CaseStudyForm({
   item,
 }: {
   action: (formData: FormData) => Promise<void>;
-  item?: { id: string; slug: string; contentStatus: string; record?: CaseStudyRecord };
+  item?: { id: string; slug: string; contentStatus: string; order?: number; record?: CaseStudyRecord };
 }) {
   const r = item?.record;
 
@@ -77,6 +78,7 @@ export function CaseStudyForm({
     card: r?.images?.card ?? null,
   });
   const [contentStatus, setContentStatus] = useState(item?.contentStatus ?? "draft");
+  const [order, setOrder] = useState(String(item?.order ?? 0));
 
   const disciplineCaps = useMemo(
     () => CASE_DISCIPLINES.find((d) => d.id === discipline)?.capabilities ?? [],
@@ -161,6 +163,7 @@ export function CaseStudyForm({
       {item ? <input type="hidden" name="slug" value={item.slug} /> : null}
       <input type="hidden" name="payload" value={payload} />
       <input type="hidden" name="contentStatus" value={contentStatus} />
+      <input type="hidden" name="order" value={Number.isFinite(Number(order)) ? Math.min(9999, Math.max(0, Math.trunc(Number(order)))) : 0} />
 
       {/* Publishing strip */}
       <div className="adm-card flex flex-wrap items-center gap-x-8 gap-y-4 px-4 py-3.5">
@@ -179,6 +182,22 @@ export function CaseStudyForm({
             ))}
           </select>
         </div>
+        <div className="flex items-center gap-3">
+          <label className="adm-label" htmlFor="cs-order">
+            Order
+          </label>
+          <input
+            id="cs-order"
+            className="adm-input h-9 w-20 py-1 tnum"
+            type="number"
+            min={0}
+            max={9999}
+            step={1}
+            value={order}
+            onChange={(e) => setOrder(e.target.value)}
+            title="Homepage + discipline order — lower numbers show first (0–9999). Ties break by most recently updated."
+          />
+        </div>
         <label className="flex cursor-pointer items-center gap-2 text-[0.875rem] font-medium text-foreground">
           <input
             type="checkbox"
@@ -186,7 +205,7 @@ export function CaseStudyForm({
             onChange={(e) => setFeatured(e.target.checked)}
             className="h-4 w-4 accent-[var(--accent)]"
           />
-          Featured in discipline
+          Featured on homepage
         </label>
         <p className="t-caption ml-auto text-muted">
           Only <strong>Published</strong> records render on the public site.
@@ -479,11 +498,52 @@ export function CaseStudyForm({
       {/* Actions */}
       <div className="flex items-center gap-3">
         <SubmitButton label={item ? "Save changes" : "Create case study"} pendingLabel="Saving…" />
-        <a href="/admin/case-studies" className={secondaryBtn}>
+        <Link href="/admin/case-studies" className={secondaryBtn}>
           Cancel
-        </a>
+        </Link>
       </div>
     </FormGuard>
+  );
+}
+
+/** One rendering-surface preview frame - hoisted so React sees a stable
+ *  component identity between renders. */
+function PreviewFrame({
+  image,
+  fallback,
+  discipline,
+  palette,
+  aspect,
+  label,
+  where,
+}: {
+  image: AttachedImage | null;
+  fallback: "showcase" | "cardWide" | "card";
+  discipline: CaseStudyRecord["discipline"];
+  palette: { name: string; hex: string }[];
+  aspect: string;
+  label: string;
+  where: string;
+}) {
+  return (
+    <div>
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="t-caption font-semibold">{label}</p>
+        <p className="t-caption text-muted">{where}</p>
+      </div>
+      <div className={`overflow-hidden rounded-[2px] border border-border ${aspect} bg-[var(--surface)]`}>
+        {image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={image.dataUrl} alt={`${label} preview`} className="h-full w-full object-cover" />
+        ) : fallback === "showcase" ? (
+          <ProjectMockup discipline={discipline} palette={palette} />
+        ) : (
+          <div className="flex h-full items-center justify-center px-4 text-center">
+            <p className="t-caption text-muted/70">Falls back to the {fallback === "card" ? "featured card" : "showcase"} image</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -502,34 +562,37 @@ function PreviewSurfaces({
   const resolved = resolveCaseImages({ images });
   const safePalette = palette.length ? palette : [{ name: "Ink", hex: "#14161c" }, { name: "Surface", hex: "#f4f2ec" }, { name: "Accent", hex: "#e8490f" }];
 
-  const Frame = ({ slot, aspect, label, where }: { slot: SlotKey; aspect: string; label: string; where: string }) => (
-    <div>
-      <div className="mb-2 flex items-baseline justify-between gap-2">
-        <p className="t-caption font-semibold">{label}</p>
-        <p className="t-caption text-muted">{where}</p>
-      </div>
-      <div className={`overflow-hidden rounded-[2px] border border-border ${aspect} bg-[var(--surface)]`}>
-        {resolved[slot] ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={resolved[slot]!.dataUrl} alt={`${label} preview`} className="h-full w-full object-cover" />
-        ) : slot === "showcase" ? (
-          <ProjectMockup discipline={discipline} palette={safePalette} />
-        ) : (
-          <div className="flex h-full items-center justify-center px-4 text-center">
-            <p className="t-caption text-muted/70">Falls back to the {slot === "card" ? "featured card" : "showcase"} image</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <div className="sm:col-span-2">
-        <Frame slot="showcase" aspect="aspect-[16/9]" label="Showcase" where={`Detail page - ${title || "Project"} big band`} />
+        <PreviewFrame
+          image={resolved.showcase}
+          fallback="showcase"
+          discipline={discipline}
+          palette={safePalette}
+          aspect="aspect-[16/9]"
+          label="Showcase"
+          where={`Detail page - ${title || "Project"} big band`}
+        />
       </div>
-      <Frame slot="cardWide" aspect="aspect-[16/7]" label="Featured card" where="Homepage · dossier index (desktop 16:7)" />
-      <Frame slot="card" aspect="aspect-[16/10]" label="Standard card" where="Homepage · dossier index" />
+      <PreviewFrame
+        image={resolved.cardWide}
+        fallback="cardWide"
+        discipline={discipline}
+        palette={safePalette}
+        aspect="aspect-[16/7]"
+        label="Featured card"
+        where="Homepage · dossier index (desktop 16:7)"
+      />
+      <PreviewFrame
+        image={resolved.card}
+        fallback="card"
+        discipline={discipline}
+        palette={safePalette}
+        aspect="aspect-[16/10]"
+        label="Standard card"
+        where="Homepage · dossier index"
+      />
     </div>
   );
 }

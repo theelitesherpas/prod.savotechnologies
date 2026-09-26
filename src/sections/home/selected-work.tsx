@@ -6,7 +6,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { WORK_PLACEHOLDERS } from "@/constants/content";
 import { DEMO_TESTIMONIAL } from "@/content/demo";
 import { getCaseStudies } from "@/lib/case-studies";
-import { resolveCaseImages } from "@/lib/case-study-schema";
+import { resolveCaseImages, type CaseStudy } from "@/lib/case-study-schema";
 import { IS_DEMO } from "@/lib/content-mode";
 
 /**
@@ -28,32 +28,57 @@ type WorkItem = {
   slug?: string;
   /** Attached visual slot-matched to this card (featured vs standard). */
   image?: { dataUrl: string; alt?: string } | null;
+  /** Corner badge - "Design concept" (demo), none (published), "In preparation" (pending). */
+  badge?: string | null;
 };
 
 /** Variant rotates across the three wireframe art sets. */
 const VARIANT_BY_INDEX = ["a", "b", "c"] as const;
 
-async function workItems(): Promise<WorkItem[]> {
-    if (IS_DEMO) {
-    const studies = await getCaseStudies();
-    return studies.slice(0, 3).map((c, i) => {
-      const resolved = resolveCaseImages(c);
-      const slot = i === 0 ? resolved.cardWide : resolved.card;
-      return {
-      name: c.displayClientName || c.title,
-      industry: c.industry ?? "",
-      services: (c.services ?? []).slice(0, 2).join(" · ") || (c.industry ?? ""),
-      stack: (c.technologies ?? []).join(" · "),
-      outcome:
-        (c.results ?? []).map((r) => `${r.value} ${r.label}`).join(" · ") +
-        ((c.results?.length ?? 0) > 0 ? " - demo figures" : ""),
-      variant: VARIANT_BY_INDEX[i % 3],
-      slug: c.slug,
-      image: slot ? { dataUrl: slot.dataUrl, alt: slot.alt } : null,
-      };
-    });
+/** Results that may render on a card surface - unverified figures are
+ *  production-suppressed exactly like the detail page (policy §27). */
+const cardResults = (study: CaseStudy) =>
+  study.status === "demo" ? (study.results ?? []) : (study.results ?? []).filter((r) => r.verified);
+
+async function workItems(): Promise<{ items: WorkItem[]; live: boolean; anyDemo: boolean }> {
+  const studies = await getCaseStudies();
+  if (studies.length > 0) {
+    // Featured records lead (stable - the (order, updatedAt) ranking from
+    // getCaseStudies is preserved inside each group), then take the first
+    // three: the big banner plus the two half cards.
+    const ranked = [...studies].sort(
+      (a, b) => Number(b.featured ?? false) - Number(a.featured ?? false),
+    );
+    const top = ranked.slice(0, 3);
+    return {
+      live: true,
+      anyDemo: top.some((c) => c.status === "demo"),
+      items: top.map((c, i) => {
+        const resolved = resolveCaseImages(c);
+        const slot = i === 0 ? resolved.cardWide : resolved.card;
+        const shown = cardResults(c);
+        return {
+          name: c.displayClientName || c.title,
+          industry: c.industry ?? "",
+          services: (c.services ?? []).slice(0, 2).join(" · ") || (c.industry ?? ""),
+          stack: (c.technologies ?? []).join(" · "),
+          outcome:
+            shown.map((r) => `${r.value} ${r.label}`).join(" · ") +
+            (c.status === "demo" && shown.length > 0 ? " - demo figures" : ""),
+          variant: VARIANT_BY_INDEX[i % 3],
+          slug: c.slug,
+          image: slot ? { dataUrl: slot.dataUrl, alt: slot.alt } : null,
+          badge: c.status === "demo" ? "Design concept" : null,
+        };
+      }),
+    };
   }
-  return WORK_PLACEHOLDERS.map((w) => ({ ...w }));
+  // Zero records in the current mode - the honest in-preparation slots.
+  return {
+    live: false,
+    anyDemo: IS_DEMO,
+    items: WORK_PLACEHOLDERS.map((w) => ({ ...w, badge: "In preparation" })),
+  };
 }
 
 const PHOTO_BY_VARIANT = {
@@ -158,9 +183,11 @@ function WorkCard({
             <Image
               src={PHOTO_BY_VARIANT[item.variant]}
               alt={
-                IS_DEMO
+                IS_DEMO && item.slug
                   ? `Design concept: ${item.name} - fictional demo project`
-                  : "Representative studio imagery, case study in preparation"
+                  : item.slug
+                    ? `Representative studio imagery for ${item.name}`
+                    : "Representative studio imagery, case study in preparation"
               }
               fill
               sizes={sizes}
@@ -173,9 +200,11 @@ function WorkCard({
           aria-hidden="true"
           className="absolute inset-0 bg-[rgb(16_19_25/0.28)] transition-colors duration-700 group-hover:bg-[rgb(16_19_25/0.14)]"
         />
-        <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.45)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
-          {IS_DEMO ? "Design concept" : "In preparation"}
-        </span>
+        {item.badge ? (
+          <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.45)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
+            {item.badge}
+          </span>
+        ) : null}
       </div>
       <div className="flex flex-wrap items-start justify-between gap-4 border-t border-border p-6 sm:p-8">
         <div>
@@ -232,7 +261,8 @@ function WorkCard({
 }
 
 export async function SelectedWork() {
-  const [featured, ...rest] = await workItems();
+  const { items, live, anyDemo } = await workItems();
+  const [featured, ...rest] = items;
 
   return (
     <Section id="work" index="Selected Work" labelledBy="work-heading">
@@ -240,7 +270,14 @@ export async function SelectedWork() {
         id="work-heading"
         heading="Selected work."
         lead={
-          IS_DEMO ? (
+          live && !anyDemo ? (
+            <>
+              Digital products designed around real business objectives. Each
+              engagement below is published with client-verified outcomes — the
+              full dossier, challenge, build and numbers, lives in the case-study
+              index.
+            </>
+          ) : live && anyDemo ? (
             <>
               Digital products designed around real business objectives. The
               engagements below are polished design concepts - fictional
@@ -267,7 +304,7 @@ export async function SelectedWork() {
         </Reveal>
         <div className="grid gap-8 md:grid-cols-2">
           {rest.map((item, i) => (
-            <Reveal key={item.name} delay={i * 120}>
+            <Reveal key={item.slug ?? item.name} delay={i * 120}>
               <WorkCard item={item} aspect="aspect-[16/10]" sizes="(max-width: 768px) 100vw, 640px" />
             </Reveal>
           ))}

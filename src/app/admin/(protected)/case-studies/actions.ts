@@ -27,7 +27,17 @@ const formSchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]{2,80}$/).optional(),
   payload: z.string().min(2),
   contentStatus: z.enum(LIFECYCLE),
+  order: z.coerce.number().int().min(0).max(9999).optional(),
 });
+
+/** Invalidate every surface that renders case studies: the homepage,
+ *  the dossier index and its detail pages (root-layout wide), plus the
+ *  sitemap whose URLs change as records publish/unpublish. */
+function revalidateCaseStudies(slug?: string) {
+  revalidatePath("/", "layout");
+  revalidatePath("/sitemap.xml");
+  if (slug) revalidatePath(`/case-studies/${slug}`);
+}
 
 export async function saveCaseStudyAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
@@ -38,6 +48,7 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
     slug: formData.get("slug") || undefined,
     payload: formData.get("payload"),
     contentStatus: formData.get("contentStatus"),
+    order: formData.get("order") ?? undefined,
   });
   if (!form.success) redirect("/admin/case-studies?e=invalid");
 
@@ -52,7 +63,7 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
     collection: "case-studies",
     slug,
     title: data.title,
-    order: 0,
+    order: form.data.order ?? 0,
     active: true,
     contentStatus: form.data.contentStatus,
     ...(form.data.contentStatus === "published" ? { publishedAt: new Date() } : {}),
@@ -79,9 +90,7 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
 
   await audit(user.id, form.data.id ? "caseStudy.update" : "caseStudy.create", "ContentItem", `case-studies:${slug}`);
 
-  revalidatePath("/");
-  revalidatePath("/case-studies");
-  revalidatePath(`/case-studies/${slug}`);
+  revalidateCaseStudies(slug);
   redirect(`/admin/case-studies?saved=${form.data.id ? "updated" : "created"}`);
 }
 
@@ -96,9 +105,7 @@ export async function deleteCaseStudyAction(formData: FormData): Promise<void> {
   await prisma.contentItem.delete({ where: { id } });
   await audit(user.id, "caseStudy.delete", "ContentItem", `case-studies:${item.slug}`);
 
-  revalidatePath("/");
-  revalidatePath("/case-studies");
-  revalidatePath(`/case-studies/${item.slug}`);
+  revalidateCaseStudies(item.slug);
   redirect("/admin/case-studies?saved=deleted");
 }
 
@@ -117,9 +124,7 @@ export async function setCaseStudyStatusAction(formData: FormData): Promise<void
   });
   await audit(user.id, "caseStudy.status", "ContentItem", `case-studies:${item.slug}→${status}`);
 
-  revalidatePath("/");
-  revalidatePath("/case-studies");
-  revalidatePath(`/case-studies/${item.slug}`);
+  revalidateCaseStudies(item.slug);
   redirect("/admin/case-studies?saved=status");
 }
 
@@ -155,8 +160,6 @@ export async function importCaseStudyDefaultsAction(): Promise<void> {
 
   await audit(user.id, "caseStudy.importDefaults", "ContentItem", `case-studies:${count} records`);
 
-  revalidatePath("/");
-  revalidatePath("/case-studies");
-  for (const s of CASE_STUDY_DETAILS) revalidatePath(`/case-studies/${s.slug}`);
+  revalidateCaseStudies();
   redirect(`/admin/case-studies?saved=imported&n=${count}`);
 }

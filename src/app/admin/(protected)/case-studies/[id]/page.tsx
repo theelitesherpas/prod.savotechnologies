@@ -32,7 +32,7 @@ export default async function EditCaseStudyPage({
           This record failed schema validation (it may predate the rich editor). Its data is preserved -
           re-enter the fields below once and save to migrate it.
         </Notice>
-        <CaseStudyForm action={saveCaseStudyAction} item={{ id: item.id, slug: item.slug, contentStatus: item.contentStatus }} />
+        <CaseStudyForm action={saveCaseStudyAction} item={{ id: item.id, slug: item.slug, contentStatus: item.contentStatus, order: item.order }} />
       </div>
     );
   }
@@ -53,7 +53,7 @@ export default async function EditCaseStudyPage({
       {e === "invalid" ? <Notice kind="alert">Check the fields - the record failed validation.</Notice> : null}
       <CaseStudyForm
         action={saveCaseStudyAction}
-        item={{ id: item.id, slug: item.slug, contentStatus: item.contentStatus, record }}
+        item={{ id: item.id, slug: item.slug, contentStatus: item.contentStatus, order: item.order, record }}
       />
     </div>
   );

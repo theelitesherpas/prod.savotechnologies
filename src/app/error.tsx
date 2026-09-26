@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { reportReactError } from "@/lib/report";
 
@@ -16,14 +16,16 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const [reported, setReported] = useState(false);
   const [note, setNote] = useState("");
   const [noteSent, setNoteSent] = useState(false);
+  const reportedRef = useRef(false);
 
   useEffect(() => {
     console.error("[route-error]", error.message, error.digest ?? "");
-    reportReactError(error);
-    setReported(true);
+    if (!reportedRef.current) {
+      reportedRef.current = true;
+      reportReactError(error);
+    }
   }, [error]);
 
   const sendUserReport = () => {
@@ -44,9 +46,7 @@ export default function Error({
         <div className="mb-12 flex items-center gap-4">
           <span className="t-label tnum text-muted">500</span>
           <span aria-hidden="true" className="h-px flex-1 bg-border" />
-          {reported ? (
-            <span className="t-caption text-muted">Reported to our team</span>
-          ) : null}
+          <span className="t-caption text-muted">Reported to our team</span>
         </div>
         <h1 className="t-statement max-w-[16ch]">
           Something interrupted this page

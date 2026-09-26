@@ -86,20 +86,20 @@ export function ImageCropField({
     [frameSize, dispW, dispH],
   );
 
-  /* Keep the crop covering the frame when geometry changes. */
-  useEffect(() => {
-    setOffset((o) => clamp(o.x, o.y));
-  }, [clamp]);
+  /* Keep the crop covering the frame: offsets are clamped at every point
+     of use (render transform + export math), so geometry changes can never
+     reveal the checkerboard - no state-sync effect needed. */
+  const safeOffset = frameSize ? clamp(offset.x, offset.y) : offset;
 
-  /* Center a fresh cover crop once dimensions are known. */
-  useEffect(() => {
-    if (!natural || !frameSize) return;
-    setOffset({
-      x: (frameSize.w - natural.w * base) / 2,
-      y: (frameSize.h - natural.h * base) / 2,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [natural, frameSize]);
+  /* Center a fresh cover crop when the source's dimensions arrive -
+     runs inside the load event (a handler, not an effect). */
+  const centerFreshCrop = (n: { w: number; h: number }) => {
+    const el = frameRef.current;
+    if (!el) return;
+    const fs = { w: el.clientWidth, h: el.clientHeight };
+    const b = Math.max(fs.w / n.w, fs.h / n.h);
+    setOffset({ x: (fs.w - n.w * b) / 2, y: (fs.h - n.h * b) / 2 });
+  };
 
   /* Zoom that keeps the framed center point fixed (no jump to a corner). */
   const zoomAroundCenter = (nextZoom: number) => {
@@ -169,8 +169,8 @@ export function ImageCropField({
     ctx.fillStyle = "#ffffff"; // flatten transparency onto white for JPEG
     ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-    const sx = -offset.x / scale;
-    const sy = -offset.y / scale;
+    const sx = -safeOffset.x / scale;
+    const sy = -safeOffset.y / scale;
     const sw = frameSize.w / scale;
     const sh = frameSize.h / scale;
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetWidth, targetHeight);
@@ -251,11 +251,15 @@ export function ImageCropField({
               src={sourceUrl}
               alt="Crop source"
               draggable={false}
-              onLoad={(e) => setNatural({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+              onLoad={(e) => {
+                const n = { w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight };
+                setNatural(n);
+                centerFreshCrop(n);
+              }}
               className="absolute left-0 top-0 max-w-none"
               style={
                 natural
-                  ? { width: `${dispW}px`, height: `${dispH}px`, transform: `translate(${offset.x}px, ${offset.y}px)` }
+                  ? { width: `${dispW}px`, height: `${dispH}px`, transform: `translate(${safeOffset.x}px, ${safeOffset.y}px)` }
                   : { opacity: 0 }
               }
             />

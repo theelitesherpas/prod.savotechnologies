@@ -36,26 +36,34 @@ const audit = await page.evaluate(() => {
   const policy = document.querySelector('[aria-labelledby="policy-heading"]');
   ok("policy band is ink chapter", bg(policy) === "rgb(16, 19, 25)", bg(policy));
 
-  // Cards: 13 entries (3+3+3+2+2+2), all with art + tag + loaded photo
-  const cards = document.querySelectorAll("main article");
+  // Cards: pending slots render as <article>, linked studies as <a.group>
+  // that carry an <h3> (the hero contents board cells are also a.group but
+  // hold no heading). With the 4 demo dossiers: 11 pending + 4 linked = 15
+  // (same total as the empty production state, where all 15 are pending).
+  const cardList = Array.from(document.querySelectorAll("main article, main a.group")).filter(
+    (c) => c.matches("article") || c.querySelector("h3"),
+  );
+  const cards = cardList; // stable alias for the checks below
   ok("15 specimen cards (3+3+3+2+2+2)", cards.length === 15, String(cards.length));
-  let artOk = 0, tagOk = 0, imgOk = 0, duotoneOk = 0;
+  let artOk = 0, tagOk = 0, imgOk = 0, photoOk = 0;
   cards.forEach((c) => {
-    if (c.querySelector("svg[viewBox='0 0 800 500'] rect.fill-accent")) artOk++;
-    if (c.textContent.includes("In preparation")) tagOk++;
+    if (c.querySelector("svg[viewBox='0 0 800 500'] rect.fill-accent") || c.querySelector("img")) artOk++;
+    const badge = c.querySelector(".t-label.absolute.left-4.top-4");
+    if (badge && (badge.textContent.includes("In preparation") || badge.textContent.includes("Design concept"))) tagOk++;
     const img = c.querySelector("img");
     if (img && img.complete && img.naturalWidth > 0) imgOk++;
-    if (img && (img.className || "").toString().includes("duotone")) duotoneOk++;
+    if (img && (img.className || "").toString().includes("photo")) photoOk++;
   });
-  ok("all cards carry wireframe art", artOk === cards.length, `${artOk}/${cards.length}`);
-  ok("all cards tagged In preparation", tagOk === cards.length, `${tagOk}/${cards.length}`);
-  ok("all photos loaded", imgOk === cards.length, `${imgOk}/${cards.length}`);
-  ok("all photos duotone", duotoneOk === cards.length, `${duotoneOk}/${cards.length}`);
+  ok("all cards carry wireframe art or attached visual", artOk === cards.length, `${artOk}/${cards.length}`);
+  ok("all cards tagged (In preparation / Design concept)", tagOk === cards.length, `${tagOk}/${cards.length}`);
+  ok("all images loaded", imgOk === cards.length, `${imgOk}/${cards.length}`);
+  ok("fallback photos use the .photo treatment", photoOk > 0, `${photoOk}`);
 
   // Featured rhythm: web/mobile/ai have a wide 16/7 card first
+  // (linked studies render as <a>, pending slots as <article>)
   ["web", "mobile", "ai"].forEach((id) => {
     const sec = document.getElementById(id);
-    const first = sec.querySelector("article .aspect-\\[16\\/7\\], article [class*='16/7']");
+    const first = sec.querySelector("article [class*='16/7'], a [class*='16/7'], a[class*='16/7'], article[class*='16/7']");
     ok(`${id} featured card is wide`, !!first);
   });
 
@@ -85,7 +93,8 @@ const audit = await page.evaluate(() => {
   ["MediBridge", "GulfPay", "Sahm", "RideLink", "ClearLedger", "InsightIQ"].forEach((n) => {
     ok(`no fabricated client "${n}"`, !text.includes(n));
   });
-  ok("outcome placeholders present", Array.from(document.querySelectorAll("main article .t-caption")).filter((p) => p.textContent.includes("Verified project result required")).length === 15);
+  const pending = document.querySelectorAll("main article");
+  ok("outcome placeholders present", Array.from(document.querySelectorAll("main article .t-caption")).filter((p) => p.textContent.includes("Verified project result required")).length === pending.length, `${pending.length} pending`);
 
   // Focus visible on a contents link
   const link = cells[0];

@@ -6,7 +6,7 @@
  */
 import { chromium } from "playwright-core";
 
-const BASE = "http://localhost:3000";
+const BASE = "http://localhost:4311";
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const browser = await chromium.launch({ executablePath: CHROME, headless: true });

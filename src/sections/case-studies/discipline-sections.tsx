@@ -40,8 +40,8 @@ export function DisciplineSection({ discipline }: { discipline: CaseDiscipline }
       </Reveal>
 
       <div className="space-y-8">
-        {featured.map((entry) => (
-          <Reveal key={entry.sector}>
+        {featured.map((entry, i) => (
+          <Reveal key={entry.slug ?? `featured-${entry.sector}-${i}`}>
             <CaseStudyCard
               entry={entry}
               variant={discipline.id}
@@ -53,7 +53,7 @@ export function DisciplineSection({ discipline }: { discipline: CaseDiscipline }
         {rest.length > 0 && (
           <div className="grid gap-8 md:grid-cols-2">
             {rest.map((entry, i) => (
-              <Reveal key={entry.sector} delay={i * 120}>
+              <Reveal key={entry.slug ?? `pending-${entry.sector}-${i}`} delay={i * 120}>
                 <CaseStudyCard
                   entry={entry}
                   variant={discipline.id}
