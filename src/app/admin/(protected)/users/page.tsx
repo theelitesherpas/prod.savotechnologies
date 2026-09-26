@@ -6,6 +6,7 @@ import { PageHeader, Notice, Chip, DangerZone } from "@/components/admin/ui";
 import { AdminIcon } from "@/components/admin/icons";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
+import { SECTIONS } from "@/lib/permissions";
 import { createUserAction, updateUserAction, deleteUserAction } from "./actions";
 
 export const metadata: Metadata = { title: "Panel users" };
@@ -27,6 +28,7 @@ export default async function UsersPage({
           name: true,
           email: true,
           role: true,
+          permissions: true,
           createdAt: true,
           _count: { select: { sessions: true, auditLogs: true } },
         },
@@ -37,7 +39,7 @@ export default async function UsersPage({
     <>
       <PageHeader
         title="Panel users"
-        description="Admins have full access including user management and deletions. Editors manage content and the inbox, nothing else."
+        description="Admins have full access including user management. Editors get exactly the sections you check — everything else is hidden and unreachable."
       />
 
       {sp.saved === "created" ? <Notice>User created. They can sign in immediately.</Notice> : null}
@@ -83,11 +85,29 @@ export default async function UsersPage({
                       <option value="admin">Admin</option>
                       <option value="editor">Editor</option>
                     </select>
-                    <SubmitButton label="Update name/role" pendingLabel="Saving…" compact />
+                    <SubmitButton label="Save user" pendingLabel="Saving…" compact />
                     <span className="t-caption block w-full truncate text-muted">
                       {u.email}
                       {u.id === user.id ? " · you" : ""}
                     </span>
+                    <fieldset className="w-full border-t border-border pt-2.5">
+                      <legend className="t-caption font-semibold text-muted">Section access {u.role === "admin" ? "(admin — full access)" : ""}</legend>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-1.5">
+                        {SECTIONS.map((sec) => (
+                          <label key={sec.key} className="flex cursor-pointer items-center gap-1.5 text-[0.75rem] font-medium text-foreground/85">
+                            <input
+                              type="checkbox"
+                              name="permissions"
+                              value={sec.key}
+                              defaultChecked={u.role === "admin" || (Array.isArray(u.permissions) && (u.permissions as string[]).includes(sec.key))}
+                              disabled={u.role === "admin"}
+                              className="h-3.5 w-3.5 accent-[var(--accent)]"
+                            />
+                            {sec.label}
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
                   </FormGuard>
                 </td>
                 <td className="hidden px-4 py-3 sm:table-cell">
@@ -161,6 +181,18 @@ export default async function UsersPage({
               </select>
             </div>
           </div>
+          <fieldset className="border-t border-border pt-4">
+            <legend className="t-caption font-semibold text-muted">Section access (for Editors)</legend>
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-2">
+              {SECTIONS.map((sec) => (
+                <label key={sec.key} className="flex cursor-pointer items-center gap-1.5 text-[0.75rem] font-medium text-foreground/85" title={sec.hint}>
+                  <input type="checkbox" name="permissions" value={sec.key} defaultChecked={false} className="h-3.5 w-3.5 accent-[var(--accent)]" />
+                  {sec.label}
+                </label>
+              ))}
+            </div>
+            <p className="t-caption mt-2 text-muted">Admins always get full access. Editors see and reach exactly the checked sections.</p>
+          </fieldset>
           <div className="flex items-center gap-3 border-t border-border pt-5">
             <SubmitButton label="Create user" />
             <p className="t-caption text-muted">Share the password privately; it is stored hashed.</p>

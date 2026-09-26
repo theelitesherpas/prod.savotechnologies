@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminRole, hashPassword } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import { sanitizePermissions } from "@/lib/permissions";
 
 /**
  * Panel user management — admin role only. Passwords are bcrypt-hashed
@@ -28,12 +29,14 @@ export async function createUserAction(formData: FormData): Promise<void> {
       email: emailSchema,
       password: passwordSchema,
       role: z.enum(["admin", "editor"]),
+      permissions: z.array(z.string()).optional(),
     })
     .safeParse({
       name: formData.get("name"),
       email: formData.get("email"),
       password: formData.get("password"),
       role: formData.get("role"),
+      permissions: formData.getAll("permissions"),
     });
   if (!parsed.success) {
     redirect(`/admin/users?e=${encodeURIComponent(parsed.error.issues[0]?.message ?? "invalid")}`);
@@ -42,7 +45,13 @@ export async function createUserAction(formData: FormData): Promise<void> {
 
   try {
     const created = await prisma!.adminUser.create({
-      data: { name: d.name, email: d.email, role: d.role, passwordHash: await hashPassword(d.password) },
+      data: {
+        name: d.name,
+        email: d.email,
+        role: d.role,
+        passwordHash: await hashPassword(d.password),
+        permissions: d.role === "editor" ? sanitizePermissions(d.permissions) : [],
+      },
     });
     await audit(admin.id, "user.create", "AdminUser", created.id, { email: d.email, role: d.role });
   } catch {
@@ -55,13 +64,30 @@ export async function createUserAction(formData: FormData): Promise<void> {
 export async function updateUserAction(formData: FormData): Promise<void> {
   const admin = await requireAdminRole();
   const parsed = z
-    .object({ id: z.string().min(10).max(32), name: nameSchema, role: z.enum(["admin", "editor"]) })
-    .safeParse({ id: formData.get("id"), name: formData.get("name"), role: formData.get("role") });
+    .object({
+      id: z.string().min(10).max(32),
+      name: nameSchema,
+      role: z.enum(["admin", "editor"]),
+      permissions: z.array(z.string()).optional(),
+    })
+    .safeParse({
+      id: formData.get("id"),
+      name: formData.get("name"),
+      role: formData.get("role"),
+      permissions: formData.getAll("permissions"),
+    });
   if (!parsed.success) redirect("/admin/users?e=invalid");
   const d = parsed.data;
   if (d.id === admin.id && d.role !== "admin") redirect("/admin/users?e=self");
 
-  await prisma!.adminUser.update({ where: { id: d.id }, data: { name: d.name, role: d.role } });
+  await prisma!.adminUser.update({
+    where: { id: d.id },
+    data: {
+      name: d.name,
+      role: d.role,
+      permissions: d.role === "editor" ? sanitizePermissions(d.permissions) : [],
+    },
+  });
   await audit(admin.id, "user.update", "AdminUser", d.id, { role: d.role });
   revalidatePath("/admin/users");
   redirect("/admin/users?saved=updated");

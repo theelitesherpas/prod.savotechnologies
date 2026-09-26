@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAdminUser } from "@/lib/auth";
+import { canAccess, enforcePathAccess, currentAdminPath, type SectionKey } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { AdminShell, type AdminNavNode } from "@/components/admin/shell";
 import { COLLECTION_KEYS, CONTENT_COLLECTIONS } from "@/lib/content-registry";
@@ -40,6 +41,8 @@ const CRUMB_LABELS: Record<string, string> = {
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getAdminUser();
+  // Central section guard — middleware forwards the request path.
+  await enforcePathAccess(await currentAdminPath());
   if (!user) redirect("/admin/login");
 
   // Live counts for the spine (null-safe: a missing DB keeps the panel usable).
@@ -65,16 +68,25 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     count: contentCounts[key] ?? 0,
   }));
 
-  const nav: AdminNavNode[] = [
+  const allow = (k: SectionKey) => canAccess(user, k);
+  const nav = ([
     { key: "overview", label: "Dashboard", icon: "gauge", href: "/admin" },
-    {
-      key: "leads",
-      label: "Enquiries",
-      icon: "inbox",
-      href: "/admin/enquiries",
-      badge: newEnquiries,
-    },
-    { key: "analytics", label: "Analytics", icon: "trend", href: "/admin/analytics" },
+    ...(allow("enquiries")
+      ? [
+          {
+            key: "leads",
+            label: "Enquiries",
+            icon: "inbox" as const,
+            href: "/admin/enquiries",
+            badge: newEnquiries,
+          },
+        ]
+      : []),
+    ...(allow("analytics")
+      ? [{ key: "analytics", label: "Analytics", icon: "trend" as const, href: "/admin/analytics" }]
+      : []),
+    ...(allow("employees")
+      ? [
     {
       key: "employees",
       label: "Employee portal",
@@ -86,6 +98,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/email-compose?dept=hr", label: "Send HR email", icon: "pen" },
       ],
     },
+        ]
+      : []),
+    ...(allow("clients")
+      ? [
     {
       key: "clients",
       label: "Client portal",
@@ -97,6 +113,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/email-compose?dept=hello", label: "Send client email", icon: "pen" },
       ],
     },
+        ]
+      : []),
+    ...(allow("content")
+      ? [
     {
       key: "content",
       label: "Content",
@@ -113,7 +133,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         ...contentItems,
       ],
     },
-    { key: "email-templates", label: "Email templates", icon: "pen", href: "/admin/email-templates" },
+        ]
+      : []),
+    ...(allow("email-templates")
+      ? [{ key: "email-templates", label: "Email templates", icon: "pen" as const, href: "/admin/email-templates" }]
+      : []),
+    ...(allow("settings")
+      ? [
     {
       key: "config",
       label: "Configuration",
@@ -125,7 +151,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           : []),
       ],
     },
-    { key: "system", label: "Audit log", icon: "trail", href: "/admin/audit" },  ];
+        ]
+      : []),
+    ...(allow("audit")
+      ? [{ key: "system", label: "Audit log", icon: "trail" as const, href: "/admin/audit" }]
+      : []),
+  ] satisfies unknown[]) as AdminNavNode[];
 
   return (
     <AdminShell user={user} nav={nav} crumbLabels={CRUMB_LABELS}>

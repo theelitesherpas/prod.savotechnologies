@@ -30,6 +30,7 @@ export type AdminSessionUser = {
   email: string;
   name: string;
   role: "admin" | "editor";
+  permissions?: unknown;
 };
 
 export function hashToken(token: string): string {
@@ -106,7 +107,7 @@ export async function login(
   logger.info("admin.login.success", { userId: user.id });
   return {
     ok: true,
-    user: { id: user.id, email: user.email, name: user.name, role: user.role as "admin" | "editor" },
+    user: { id: user.id, email: user.email, name: user.name, role: user.role as "admin" | "editor", permissions: user.permissions ?? [] },
   };
 }
 
@@ -146,6 +147,7 @@ export const getAdminUser = cache(async (): Promise<AdminSessionUser | null> => 
     email: session.user.email,
     name: session.user.name,
     role: session.user.role as "admin" | "editor",
+    permissions: session.user.permissions ?? [],
   };
 });
 

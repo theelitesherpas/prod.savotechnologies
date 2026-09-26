@@ -26,6 +26,10 @@ export function middleware(req: NextRequest) {
     }
   }
 
+  // ── Forward the pathname for server-side guards ────────────
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-pathname", pathname + req.nextUrl.search);
+
   // ── API cross-origin guard (mutations) ─────────────────────
   if (pathname.startsWith("/api/") && req.method === "POST") {
     const origin = req.headers.get("origin");
@@ -45,7 +49,7 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {

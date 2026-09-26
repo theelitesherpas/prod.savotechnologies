@@ -58,8 +58,11 @@ model AdminUser {
   /// bcrypt hash — plaintext never stored or logged.
   passwordHash String         @map("password_hash")
   name         String
-  /// admin (full access) | editor (content + inbox, no user management)
+  /// admin (full access) | editor (section access via permissions)
   role         String         @default("admin")
+  /// Section keys this editor may access (see lib/permissions.ts);
+  /// admins bypass and always see everything.
+  permissions  Json?
   createdAt    DateTime       @default(now()) @map("created_at")
   updatedAt    DateTime       @updatedAt @map("updated_at")
   sessions     AdminSession[]
