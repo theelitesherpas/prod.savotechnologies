@@ -106,7 +106,14 @@ export function PhoneField({
   const valid = !rule || digits.length === 0 ? true : digits.length >= rule.min && digits.length <= rule.max;
   reportValidity(onValidity, valid);
   const q = query.trim().toLowerCase();
-  const countries = Object.keys(COUNTRY_PHONE_RULES).sort();
+  // India first (primary market), then popular destinations, then the rest alphabetically.
+  const POPULAR = ["United States", "United Kingdom", "United Arab Emirates", "Canada", "Australia", "Singapore", "Saudi Arabia", "Germany", "Switzerland"];
+  const all = Object.keys(COUNTRY_PHONE_RULES).sort();
+  const countries = [
+    "India",
+    ...POPULAR.filter((c) => all.includes(c)),
+    ...all.filter((c) => c !== "India" && !POPULAR.includes(c)),
+  ];
   const filteredCountries = q
     ? countries.filter((c) => {
         const r = COUNTRY_PHONE_RULES[c];
