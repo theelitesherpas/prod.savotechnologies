@@ -99,6 +99,9 @@ export async function sendMail(to: string, tpl: MailTemplate, dept: "hello" | "h
   try {
     await t.sendMail({
       from,
+      // Reply-To routes replies through SendGrid Inbound Parse
+      // (reply.savotechnologies.com) into the admin panel.
+      replyTo: dept === "hr" ? "hr@reply.savotechnologies.com" : "hello@reply.savotechnologies.com",
       to,
       subject: tpl.subject,
       html: tpl.html,
