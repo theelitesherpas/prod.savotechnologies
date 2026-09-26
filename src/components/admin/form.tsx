@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { AdminIcon } from "./icons";
 import { FormGuard } from "./form-guard";
+import { fmtIST } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
 import type { CollectionFormDef, FieldDef, ObjectListSubField } from "@/lib/content-registry";
 
@@ -628,7 +629,7 @@ export function CollectionForm({
         </div>
         {item?.updatedAt ? (
           <p className="t-caption tnum ml-auto text-muted">
-            Last updated {new Date(item.updatedAt).toISOString().replace("T", " · ").slice(0, 17)}
+            Last updated {fmtIST(item.updatedAt)}
           </p>
         ) : (
           <p className="t-caption ml-auto text-muted">New {def.singular}</p>

@@ -6,6 +6,7 @@ import { COLLECTION_KEYS, CONTENT_COLLECTIONS } from "@/lib/content-registry";
 import { StatTile, PageHeader, EnquiryStatusChip, Chip } from "@/components/admin/ui";
 import { AdminIcon } from "@/components/admin/icons";
 import { ENQUIRY_STATUSES, ENQUIRY_STATUS_META } from "@/lib/enquiry-status";
+import { fmtIST } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -18,7 +19,7 @@ function twoWeeksAgoDate(): Date {
   return new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 }
 
-const fmtDateTime = (d: Date) => d.toISOString().replace("T", " · ").slice(0, 17);
+const fmtDateTime = (d: Date) => fmtIST(d);
 
 function monthAgoDate(): Date {
   return new Date(Date.now() - 30 * 86400000);

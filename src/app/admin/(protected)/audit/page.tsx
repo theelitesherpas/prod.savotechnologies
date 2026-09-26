@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { fmtISTFull } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Chip, EmptyState } from "@/components/admin/ui";
 
@@ -111,7 +112,7 @@ export default async function AuditLogPage({
               {entries.map((e) => (
                 <tr key={e.id}>
                   <td className="tnum px-4 py-2.5 font-mono text-[0.6875rem] text-muted">
-                    {e.createdAt.toISOString().replace("T", " ").slice(0, 19)}
+                    {fmtISTFull(e.createdAt)}
                   </td>
                   <td className="px-4 py-2.5 text-[0.8125rem] font-semibold text-foreground">
                     {userName(e.userId)}

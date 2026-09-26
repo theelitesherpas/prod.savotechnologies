@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { fmtIST, todayIST } from "@/lib/datetime";
 import { getAdminUser } from "@/lib/auth";
 import { ENQUIRY_STATUSES, ENQUIRY_STATUS_META } from "@/lib/enquiry-status";
 import {
@@ -127,7 +128,7 @@ export default async function EnquiryDetailPage({
       <BackLink href="/admin/enquiries" label="Back to inbox" />
       <PageHeader
         title={enquiry.name}
-        description={`Received ${enquiry.createdAt.toISOString().replace("T", " · ").slice(0, 17)}`}
+        description={`Received ${fmtIST(enquiry.createdAt)}`}
         actions={
           <>
             <EnquiryStatusChip status={enquiry.status} />
@@ -161,7 +162,7 @@ export default async function EnquiryDetailPage({
                 ["Type", enquiry.projectType],
                 ["Budget", enquiry.budget ?? "-"],
                 ["Source", enquiry.source],
-                ["Received", enquiry.createdAt.toISOString().replace("T", " · ").slice(0, 17)],
+                ["Received", fmtIST(enquiry.createdAt)],
                 ["IP (hashed prefix)", enquiry.ipHash ? enquiry.ipHash.slice(0, 12) : "-"],
               ].map(([label, value]) => (
                 <div key={label} className="bg-surface px-4 py-3">
@@ -211,7 +212,7 @@ export default async function EnquiryDetailPage({
                         <input type="hidden" name="id" value={enquiry.id} />
                         <div>
                           <label htmlFor="iv-date" className="adm-label mb-1 block">Date *</label>
-                          <input id="iv-date" name="interviewDate" type="date" required min={new Date().toISOString().slice(0, 10)} className="adm-input" />
+                          <input id="iv-date" name="interviewDate" type="date" required min={todayIST()} className="adm-input" />
                         </div>
                         <div>
                           <label htmlFor="iv-time" className="adm-label mb-1 block">Time (IST) *</label>

@@ -71,7 +71,7 @@ export const EMPLOYEE_STATUS_META: Record<string, { label: string; tone: "defaul
 export const LEAVE_TYPES = ["privilege", "sick", "casual", "unpaid", "other"] as const;
 
 export const fmtDate = (d: Date | null | undefined) =>
-  d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "-";
+  d ? d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" }) : "-";
 
 /** Variable map for email autofill from an employee record. */
 export function employeeVars(

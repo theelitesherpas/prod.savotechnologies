@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { fmtIST } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, StatTile, Chip } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
@@ -120,7 +121,7 @@ export default async function BugReportsPage({
                       <Chip tone={typeMeta.tone}>{typeMeta.label}</Chip>
                       <Chip tone={statusMeta.tone}>{statusMeta.label}</Chip>
                       <span className="tnum t-caption font-mono text-muted">
-                        {r.createdAt.toISOString().replace("T", " ").slice(0, 19)}
+                        {fmtIST(r.createdAt)}
                       </span>
                     </div>
                     <p className="mt-2 text-[0.875rem] font-semibold text-foreground">{r.message}</p>
