@@ -39,6 +39,7 @@ model ProjectEnquiry {
   interviewDate DateTime? @map("interview_date")
   meetingLink  String?   @map("meeting_link")
   interviewer  String?   @map("interviewer")
+  emailReplies EmailReply[] @relation("EmailReplies")
   /// new | in_progress | closed | archived (app-level enum, see lib/enquiry-status.ts)
   status      String   @default("new")
   adminNotes  String?  @map("admin_notes")
@@ -451,4 +452,38 @@ model BugReport {
   @@index([type, status])
   @@index([createdAt])
   @@map("bug_reports")
+}
+
+/// Inbound email replies - captured via webhook (SendGrid Inbound Parse,
+/// Mailgun Routes, or any email parsing service) or IMAP polling.
+/// Linked to the original enquiry/employee by the sender's email address.
+model EmailReply {
+  id          String   @id @default(cuid())
+  /// Sender's email (the person who replied)
+  fromEmail   String   @map("from_email")
+  fromName    String?  @map("from_name")
+  /// Recipient (our mailbox: hr@ or hello@)
+  toEmail     String   @map("to_email")
+  subject     String
+  /// Plain text body (preferred for display)
+  bodyText    String?  @map("body_text") @db.Text
+  /// HTML body (optional)
+  bodyHtml    String?  @map("body_html") @db.Text
+  /// Message-ID header for threading
+  messageId   String?  @map("message_id")
+  /// In-Reply-To header (links to the original message)
+  inReplyTo   String?  @map("in_reply_to")
+  /// Which department mailbox received it: "hr" | "hello"
+  dept        String   @default("hello")
+  /// Automatically matched enquiry (by sender email)
+  enquiryId   String?  @map("enquiry_id")
+  enquiry     ProjectEnquiry? @relation("EmailReplies", fields: [enquiryId], references: [id], onDelete: SetNull)
+  /// Spam score from the parsing service (0 = clean)
+  spamScore   Float?   @map("spam_score")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([fromEmail])
+  @@index([enquiryId])
+  @@index([createdAt])
+  @@map("email_replies")
 }

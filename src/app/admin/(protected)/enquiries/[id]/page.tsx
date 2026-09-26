@@ -93,7 +93,7 @@ export default async function EnquiryDetailPage({
 }) {
   const { id } = await params;
   const { saved } = await searchParams;
-  const [user, enquiry, trail] = await Promise.all([
+  const [user, enquiry, trail, replies] = await Promise.all([
     getAdminUser(),
     prisma ? prisma.projectEnquiry.findUnique({ where: { id } }) : Promise.resolve(null),
     prisma
@@ -101,6 +101,12 @@ export default async function EnquiryDetailPage({
           where: { entity: "ProjectEnquiry", entityId: id },
           orderBy: { createdAt: "desc" },
           include: { user: { select: { name: true } } },
+        })
+      : Promise.resolve([]),
+    prisma
+      ? prisma.emailReply.findMany({
+          where: { enquiryId: id },
+          orderBy: { createdAt: "desc" },
         })
       : Promise.resolve([]),
   ]);
@@ -382,6 +388,54 @@ export default async function EnquiryDetailPage({
           ) : null}
         </aside>
       </div>
+
+      {/* Email replies from the candidate */}
+      {replies.length > 0 ? (
+        <section aria-labelledby="replies-heading" className="mt-10">
+          <h2 id="replies-heading" className="adm-label mb-3">
+            Email replies from {replies[0]?.fromName ?? replies[0]?.fromEmail ?? "candidate"} ({replies.length})
+          </h2>
+          <div className="space-y-3">
+            {replies.map((reply) => (
+              <article key={reply.id} className="adm-card overflow-hidden">
+                {/* Reply header */}
+                <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2/50 px-4 py-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent/15 text-accent">
+                    <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6">
+                      <path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h9A1.5 1.5 0 0 1 14 4.5v5a1.5 1.5 0 0 1-1.5 1.5H6.5L3.5 13v-2A1.5 1.5 0 0 1 2 9.5v-5Z" />
+                    </svg>
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[0.8125rem] font-bold text-foreground">
+                      {reply.fromName ?? reply.fromEmail}
+                      <span className="ml-2 font-normal text-muted">{reply.fromEmail}</span>
+                    </p>
+                    <p className="text-[0.75rem] text-muted">
+                      to {reply.toEmail} · {reply.dept === "hr" ? "HR" : "General"}
+                    </p>
+                  </div>
+                  <span className="tnum text-[0.6875rem] font-mono text-muted">
+                    {reply.createdAt.toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+                {/* Subject */}
+                <div className="px-4 pt-3">
+                  <p className="text-[0.875rem] font-semibold text-foreground">{reply.subject}</p>
+                </div>
+                {/* Body */}
+                <div className="px-4 pb-4 pt-2">
+                  <div className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-surface-2/30 px-3.5 py-3 text-[0.8125rem] leading-relaxed text-foreground/90">
+                    {reply.bodyText ?? "(HTML only reply - open in webmail)"}
+                  </div>
+                  {reply.spamScore !== null && reply.spamScore > 5 ? (
+                    <p className="t-caption mt-2 text-error">⚠ Spam score: {reply.spamScore}</p>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* Action timeline */}
       <section aria-labelledby="trail-heading" className="mt-10">
