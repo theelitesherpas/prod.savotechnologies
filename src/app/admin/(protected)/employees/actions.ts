@@ -17,6 +17,7 @@ const backId = (id: string, e: string): never =>
   redirect(`/admin/employees/${id}?e=${encodeURIComponent(e)}`);
 
 const createSchema = z.object({
+  employeeCode: z.string().trim().optional().or(z.literal("")),
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().toLowerCase().email().max(120),
   phone: z.string().trim().max(24).optional().or(z.literal("")),
@@ -39,6 +40,7 @@ export async function createEmployeeAction(formData: FormData): Promise<void> {
   if (!prisma) redirect("/admin/employees?e=Database%20unavailable.");
 
   const parsed = createSchema.safeParse({
+    employeeCode: formData.get("employeeCode") ?? "",
     name: formData.get("name"),
     email: formData.get("email"),
     phone: formData.get("phone") ?? "",
@@ -63,7 +65,14 @@ export async function createEmployeeAction(formData: FormData): Promise<void> {
   const probationEnds = new Date(joining);
   probationEnds.setMonth(probationEnds.getMonth() + (isNaN(months) || months <= 0 ? 6 : months));
 
-  const code = await nextEmployeeCode();
+  // Manual ID (existing/older employees) or the next auto ID.
+  const manual = (d.employeeCode ?? "").trim().toUpperCase();
+  const code = manual.match(/^STPL\d{4}[A-Z]{2}$/)
+    ? manual
+    : await nextEmployeeCode();
+  if (prisma && await prisma.employee.findUnique({ where: { employeeCode: code } })) {
+    redirect("/admin/employees/new?e=" + encodeURIComponent(`Employee ID ${code} is already in use.`));
+  }
   let employee: { id: string; employeeCode: string; name: string; email: string; manager: string | null; position: string; department: string; joiningDate: Date } | null = null;
   try {
     employee = await prisma!.employee.create({
@@ -107,6 +116,7 @@ export async function createEmployeeAction(formData: FormData): Promise<void> {
 
 const updateSchema = createSchema.partial().extend({
   id: z.string().min(10).max(32),
+  employeeCode: z.string().trim().optional().or(z.literal("")),
   status: z.string().max(20).optional(),
   lastWorkingDay: z.string().trim().optional().or(z.literal("")),
   notes: z.string().max(2000).optional().or(z.literal("")),
@@ -128,6 +138,19 @@ export async function updateEmployeeAction(formData: FormData): Promise<void> {
   }
 
   const data: Record<string, unknown> = {};
+  if (d.employeeCode !== undefined && d.employeeCode !== "") {
+    const newCode = d.employeeCode.trim().toUpperCase();
+    if (!newCode.match(/^STPL\d{4}[A-Z]{2}$/)) {
+      redirect(`/admin/employees/${id}?e=` + encodeURIComponent("Employee ID must be STPL0300IN format (STPL + digits + country code)."));
+    }
+    if (newCode !== existing.employeeCode) {
+      const clash = await prisma!.employee.findUnique({ where: { employeeCode: newCode } });
+      if (clash) {
+        redirect(`/admin/employees/${id}?e=` + encodeURIComponent(`Employee ID ${newCode} is already in use.`));
+      }
+      data.employeeCode = newCode;
+    }
+  }
   if (d.name) data.name = d.name;
   if (d.email) data.email = d.email;
   if (d.phone !== undefined) data.phone = d.phone || null;

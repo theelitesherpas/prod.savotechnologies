@@ -41,15 +41,23 @@ export function leaveSummary(
   return { credited, approvedDays, pendingDays, balance: credited - approvedDays };
 }
 
-/** Next employee code in the STPL00xxx series. */
+/** Employee ID format: STPL + 4 digits + 2-letter country code (IN =
+ *  India). New IDs start after STPL0300IN; existing employees can be
+ *  entered with any valid ID in this format. */
+export const EMPLOYEE_CODE_PATTERN = /^STPL\d{4}[A-Z]{2}$/;
+export const EMPLOYEE_CODE_START = 301;
+export const EMPLOYEE_CODE_COUNTRY = "IN";
+
+/** Next suggested employee code — max existing + 1, floor at 301. */
 export async function nextEmployeeCode(): Promise<string> {
-  if (!prisma) return "STPL00001";
+  if (!prisma) return `STPL${String(EMPLOYEE_CODE_START).padStart(4, "0")}${EMPLOYEE_CODE_COUNTRY}`;
   const last = await prisma.employee.findFirst({
     orderBy: { employeeCode: "desc" },
     select: { employeeCode: true },
   });
-  const n = last ? parseInt(last.employeeCode.replace(/\D/g, ""), 10) + 1 : 1;
-  return `STPL${String(n).padStart(5, "0")}`;
+  const max = last ? parseInt(last.employeeCode.replace(/\D/g, ""), 10) : EMPLOYEE_CODE_START - 1;
+  const n = Math.max(EMPLOYEE_CODE_START, max + 1);
+  return `STPL${String(n).padStart(4, "0")}${EMPLOYEE_CODE_COUNTRY}`;
 }
 
 export const EMPLOYEE_STATUS_META: Record<string, { label: string; tone: "default" | "accent" | "success" | "warning" | "muted" }> = {

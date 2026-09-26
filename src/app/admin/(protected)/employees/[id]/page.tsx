@@ -162,6 +162,10 @@ export default async function EmployeeRecordPage({
               <input type="hidden" name="id" value={employee.id} />
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
+                  <label htmlFor="ed-code" className="adm-label mb-1.5 block">Employee ID</label>
+                  <input id="ed-code" name="employeeCode" defaultValue={employee.employeeCode} pattern="STPL\d{4}[A-Z]{2}" maxLength={10} className="adm-input font-mono" />
+                </div>
+                <div>
                   <label htmlFor="ed-name" className="adm-label mb-1.5 block">Name</label>
                   <input id="ed-name" name="name" defaultValue={employee.name} maxLength={80} className="adm-input" />
                 </div>
@@ -216,7 +220,7 @@ export default async function EmployeeRecordPage({
               </div>
               <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
                 <SubmitButton label="Save record" />
-                <p className="t-caption text-muted">Employee ID {employee.employeeCode} never changes.</p>
+                <p className="t-caption text-muted">ID format STPL0300IN (digits + country code) · uniqueness is validated on save.</p>
               </div>
             </FormGuard>
           </section>

@@ -10,7 +10,7 @@ import { nextEmployeeCode } from "@/lib/employees";
 export const metadata: Metadata = { title: "New employee" };
 export const dynamic = "force-dynamic";
 
-/** Create an employee — the next STPL00xxx ID is reserved and the
+/** Create an employee — the next STPL0300IN-style ID is reserved and the
  *  welcome email (ID, joining details, leave policy) sends automatically. */
 export default async function NewEmployeePage() {
   const code = prisma ? await nextEmployeeCode() : "STPL00001";
@@ -20,15 +20,33 @@ export default async function NewEmployeePage() {
     <div className="max-w-3xl">
       <PageHeader
         title="New employee"
-        description={`Employee ID ${code} will be assigned. The welcome email with these details is sent automatically on creation.`}
+        description="Create a new record, or enter an existing employee with their original ID. The welcome email sends automatically either way."
       />
       <Notice>
         On creation: record saved with status <strong>Pre-joining</strong>, welcome email sent from
-        hr@savotechnologies.com with the employee ID, joining date and leave policy.
+        hr@savotechnologies.com with the employee ID, joining date and leave policy. For existing
+        employees, set the joining date to their original date — leave credit accrues from it.
       </Notice>
 
       <FormGuard action={createEmployeeAction} className="adm-card mt-6 space-y-5 p-5 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <label htmlFor="emp-code" className="adm-label mb-1.5 block">Employee ID *</label>
+            <input
+              id="emp-code"
+              name="employeeCode"
+              defaultValue={code}
+              required
+              pattern="STPL\d{4}[A-Z]{2}"
+              maxLength={10}
+              className="adm-input font-mono"
+              aria-describedby="emp-code-hint"
+            />
+            <p id="emp-code-hint" className="t-caption mt-1.5 text-muted">
+              Suggested next ID: <span className="font-mono">{code}</span>. Change it only to enter an
+              existing employee with their original ID — format STPL + digits + country code (e.g. STPL0217IN).
+            </p>
+          </div>
           <div>
             <label htmlFor="emp-name" className="adm-label mb-1.5 block">Full name *</label>
             <input id="emp-name" name="name" required maxLength={80} className="adm-input" placeholder="Aarav Mehta" />
@@ -80,7 +98,7 @@ export default async function NewEmployeePage() {
           <Link href="/admin/employees" className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-[0.875rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground">
             Cancel
           </Link>
-          <p className="t-caption ml-auto font-mono text-muted">ID · {code}</p>
+          
         </div>
       </FormGuard>
     </div>
