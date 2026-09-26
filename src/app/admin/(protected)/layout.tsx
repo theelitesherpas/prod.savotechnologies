@@ -67,9 +67,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const nav: AdminNavNode[] = [
     { key: "overview", label: "Dashboard", icon: "gauge", href: "/admin" },
-    { key: "analytics", label: "Analytics", icon: "trend", href: "/admin/analytics" },
-    { key: "email-templates", label: "Email templates", icon: "pen", href: "/admin/email-templates" },
-    { key: "email-compose", label: "Send email", icon: "external", href: "/admin/email-compose" },
     {
       key: "leads",
       label: "Enquiries",
@@ -77,6 +74,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       href: "/admin/enquiries",
       badge: newEnquiries,
     },
+    { key: "analytics", label: "Analytics", icon: "trend", href: "/admin/analytics" },
     {
       key: "employees",
       label: "Employee portal",
@@ -85,6 +83,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/employees", label: "Dashboard · All employees", icon: "gauge" },
         { href: "/admin/employees/leaves", label: "Leave management", icon: "sun" },
         { href: "/admin/employees/new", label: "Add employee", icon: "plus" },
+        { href: "/admin/email-compose?dept=hr", label: "Send HR email", icon: "pen" },
+      ],
+    },
+    {
+      key: "clients",
+      label: "Client portal",
+      icon: "user",
+      items: [
+        { href: "/admin/clients", label: "Clients", icon: "user", count: clientCount },
+        { href: "/admin/projects", label: "Projects", icon: "folder", count: projectCount },
+        { href: "/admin/invoices", label: "Payments", icon: "gauge", count: invoiceCount },
+        { href: "/admin/email-compose?dept=hello", label: "Send client email", icon: "pen" },
       ],
     },
     {
@@ -103,16 +113,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         ...contentItems,
       ],
     },
-    {
-      key: "clients",
-      label: "Client Portal",
-      icon: "user",
-      items: [
-        { href: "/admin/clients", label: "Clients", icon: "user", count: clientCount },
-        { href: "/admin/projects", label: "Projects", icon: "folder", count: projectCount },
-        { href: "/admin/invoices", label: "Payments", icon: "gauge", count: invoiceCount },
-      ],
-    },
+    { key: "email-templates", label: "Email templates", icon: "pen", href: "/admin/email-templates" },
     {
       key: "config",
       label: "Configuration",
@@ -124,8 +125,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           : []),
       ],
     },
-    { key: "system", label: "Audit log", icon: "trail", href: "/admin/audit" },
-  ];
+    { key: "system", label: "Audit log", icon: "trail", href: "/admin/audit" },  ];
 
   return (
     <AdminShell user={user} nav={nav} crumbLabels={CRUMB_LABELS}>

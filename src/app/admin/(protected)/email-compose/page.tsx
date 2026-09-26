@@ -10,9 +10,13 @@ export const dynamic = "force-dynamic";
 export default async function AdminComposePage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; e?: string }>;
+  searchParams: Promise<{ sent?: string; e?: string; dept?: string }>;
 }) {
   const { sent, e } = await searchParams;
+  const dept = new URLSearchParams(
+    Object.entries(await searchParams).map(([k, v]) => [k, v ?? ""]),
+  ).get("dept");
+  const scoped: "hr" | "hello" | undefined = dept === "hr" || dept === "hello" ? dept : undefined;
   const [clients, employees] = prisma
     ? await Promise.all([
         prisma.clientUser.findMany({ where: { active: true }, select: { email: true, name: true }, orderBy: { name: "asc" }, take: 200 }),
@@ -31,7 +35,7 @@ export default async function AdminComposePage({
       />
       {sent ? <Notice>Sent.</Notice> : null}
       {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
-      <ComposeForm clients={clients} employees={employees} />
+      <ComposeForm clients={clients} employees={employees} dept={scoped} />
     </div>
   );
 }

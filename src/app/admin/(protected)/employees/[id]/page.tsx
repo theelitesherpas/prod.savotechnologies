@@ -250,7 +250,7 @@ export default async function EmployeeRecordPage({
             </dl>
             <div className="mt-4 border-t border-border pt-4">
               <Link
-                href={`/admin/email-compose?employee=${employee.id}&template=offerLetter`}
+                href={`/admin/email-compose?dept=hr&employee=${employee.id}&template=offerLetter`}
                 className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-accent px-4 text-[0.8125rem] font-semibold text-on-accent transition-colors hover:bg-accent-hover"
               >
                 Send HR email to {employee.name.split(" ")[0]}

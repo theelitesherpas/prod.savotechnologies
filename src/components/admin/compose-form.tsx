@@ -37,15 +37,20 @@ export function ComposeForm({
   employees,
   preselectEmployeeId,
   preselectTemplate,
+  dept,
 }: {
   clients: { email: string; name: string }[];
   employees: EmployeeLite[];
   preselectEmployeeId?: string;
   preselectTemplate?: string;
+  /** Scope to one department's templates (hr = HR/careers, hello = client). */
+  dept?: "hr" | "hello";
 }) {
-  const [mode, setMode] = useState<"template" | "blank">("template");
+  const scoped = dept ? TEMPLATE_REGISTRY.filter((t) => t.dept === dept) : TEMPLATE_REGISTRY;
+  const pool = scoped.length ? scoped : TEMPLATE_REGISTRY;
+  const [mode, setMode] = useState<"template" | "blank">(dept === "hr" ? "template" : "template");
   const [templateKey, setTemplateKey] = useState(
-    preselectTemplate && TEMPLATE_REGISTRY.some((t) => t.key === preselectTemplate) ? preselectTemplate : TEMPLATE_REGISTRY[0].key,
+    preselectTemplate && pool.some((t) => t.key === preselectTemplate) ? preselectTemplate : pool[0].key,
   );
   const [autofilledFrom, setAutofilledFrom] = useState<string | null>(null);
   const [to, setTo] = useState(() => {
@@ -53,7 +58,7 @@ export function ComposeForm({
     return emp?.email ?? "";
   });
   const [vars, setVars] = useState<Record<string, string>>(() => {
-    const first = TEMPLATE_REGISTRY.find((t) => t.key === (preselectTemplate ?? TEMPLATE_REGISTRY[0].key)) ?? TEMPLATE_REGISTRY[0];
+    const first = pool.find((t) => t.key === (preselectTemplate ?? pool[0].key)) ?? pool[0];
     const emp = preselectEmployeeId ? employees.find((em) => em.id === preselectEmployeeId) : undefined;
     return emp ? { ...first.vars, ...employeeVars(emp, emp.leaves) } : { ...first.vars };
   });
@@ -61,7 +66,7 @@ export function ComposeForm({
   const [body, setBody] = useState("");
   const [showPreview, setShowPreview] = useState(false);
 
-  const entry = TEMPLATE_REGISTRY.find((t) => t.key === templateKey) ?? TEMPLATE_REGISTRY[0];
+  const entry = pool.find((t) => t.key === templateKey) ?? pool[0];
 
   const resetVars = (key: string) => {
     setTemplateKey(key);
@@ -80,22 +85,24 @@ export function ComposeForm({
     <div className="space-y-4">
       {/* Mode switch */}
       <div className="adm-card flex flex-wrap items-center gap-2 p-3">
-        <div className="flex rounded-lg border border-border p-0.5" role="group" aria-label="Compose mode">
-          {(["template", "blank"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMode(m)}
-              aria-pressed={mode === m}
-              className={cn(
-                "rounded-md px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.08em] transition-colors",
-                mode === m ? "bg-foreground text-background" : "text-muted hover:text-foreground",
-              )}
-            >
-              {m === "template" ? "From template" : "Blank email"}
-            </button>
-          ))}
-        </div>
+        {dept === "hr" ? null : (
+          <div className="flex rounded-lg border border-border p-0.5" role="group" aria-label="Compose mode">
+            {(["template", "blank"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                aria-pressed={mode === m}
+                className={cn(
+                  "rounded-md px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.08em] transition-colors",
+                  mode === m ? "bg-foreground text-background" : "text-muted hover:text-foreground",
+                )}
+              >
+                {m === "template" ? "From template" : "Blank email"}
+              </button>
+            ))}
+          </div>
+        )}
         <p className="t-caption ml-auto hidden text-muted sm:block">
           {mode === "template"
             ? "Templates send via their department (HR templates from hr@, site templates from hello@)."
@@ -119,7 +126,7 @@ export function ComposeForm({
               className="adm-select"
             >
               {CATEGORY_ORDER.map((cat) => {
-                const entries = TEMPLATE_REGISTRY.filter((t) => t.category === cat);
+                const entries = pool.filter((t) => t.category === cat);
                 if (!entries.length) return null;
                 return (
                   <optgroup key={cat} label={CATEGORY_LABEL[cat]}>
@@ -169,6 +176,7 @@ export function ComposeForm({
               <p className="adm-label">Details (variables)</p>
               <span className="ml-auto flex items-center gap-2">
                 <label htmlFor="autofill-emp" className="t-caption text-muted">Autofill from employee</label>
+                {dept && dept !== "hr" ? null : (
                 <select
                   id="autofill-emp"
                   value={autofilledFrom ?? ""}
@@ -193,6 +201,7 @@ export function ComposeForm({
                     </option>
                   ))}
                 </select>
+                )}
               </span>
             </div>
             {autofilledFrom ? (
