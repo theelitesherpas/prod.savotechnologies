@@ -190,59 +190,71 @@ export default async function EnquiriesPage({
           }
         />
       ) : (
-        <div className="adm-card overflow-hidden">
-          <table className="adm-hairline-table w-full text-left">
-            <thead>
-              <tr className="border-b border-border">
-                <th scope="col" className="adm-label px-4 py-3">Lead</th>
-                <th scope="col" className="adm-label hidden px-4 py-3 lg:table-cell">Type</th>
-                <th scope="col" className="adm-label hidden px-4 py-3 md:table-cell">Source</th>
-                <th scope="col" className="adm-label hidden px-4 py-3 sm:table-cell">Received</th>
-                <th scope="col" className="adm-label px-4 py-3">Status</th>
-                <th scope="col" className="adm-label px-4 py-3 text-right"><span className="sr-only">Open</span></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {items.map((enq) => (
-                <tr key={enq.id}>
-                  <td className="px-4 py-3">
-                    <Link href={`/admin/enquiries/${enq.id}`} className="group block max-w-sm">
-                      <span className="block truncate text-[0.875rem] font-semibold text-foreground group-hover:text-accent">
+        <div className="space-y-2">
+              {items.map((enq) => {
+                const isCallback = enq.projectType === "Callback";
+                const isCareer = enq.message.includes("Applying for") || enq.projectType === "General application";
+                const kindLabel = isCallback ? "Callback" : isCareer ? "Application" : enq.projectType;
+                const kindTone = isCallback ? "default" : isCareer ? "accent" : "muted";
+                const sourceLabel = (enq.source ?? "")
+                  .replace("careers:", "Careers page")
+                  .replace("contact-page", "Contact page")
+                  .replace("homepage", "Homepage")
+                  .replace("footer-callback", "Footer callback")
+                  .replace("start-page", "Start a project")
+                  .replace("contact", "Contact page")
+                  .replace(/-/g, " ");
+                const timeAgo = (() => {
+                  const diff = Date.now() - enq.createdAt.getTime();
+                  const mins = Math.floor(diff / 60000);
+                  if (mins < 1) return "Just now";
+                  if (mins < 60) return `${mins}m ago`;
+                  const hrs = Math.floor(mins / 60);
+                  if (hrs < 24) return `${hrs}h ago`;
+                  const days = Math.floor(hrs / 24);
+                  if (days < 7) return `${days}d ago`;
+                  return enq.createdAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+                })();
+                return (
+                  <Link
+                    key={enq.id}
+                    href={`/admin/enquiries/${enq.id}`}
+                    className="adm-card group flex flex-wrap items-center gap-3 px-4 py-3.5 transition-colors hover:border-foreground/25"
+                  >
+                    {/* Name + email */}
+                    <div className="min-w-0 flex-1 sm:flex-[2]">
+                      <span className="block truncate text-[0.9375rem] font-bold text-foreground group-hover:text-accent">
                         {enq.name}
                       </span>
                       <span className="t-caption block truncate text-muted">
                         {enq.email ?? enq.company ?? "-"}
                       </span>
-                      <span className="t-caption mt-0.5 block truncate text-muted/80 lg:hidden">
-                        {enq.projectType}
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="hidden px-4 py-3 lg:table-cell">
-                    <Chip tone="muted">{enq.projectType}</Chip>
-                  </td>
-                  <td className="hidden px-4 py-3 font-mono text-[0.6875rem] text-muted md:table-cell">
-                    {enq.source}
-                  </td>
-                  <td className="tnum hidden px-4 py-3 font-mono text-[0.6875rem] text-muted sm:table-cell">
-                    {enq.createdAt.toISOString().replace("T", " ").slice(0, 16)}
-                  </td>
-                  <td className="px-4 py-3">
+                    </div>
+
+                    {/* Kind */}
+                    <div className="hidden shrink-0 sm:block">
+                      <Chip tone={kindTone as "default" | "accent" | "muted"}>{kindLabel}</Chip>
+                    </div>
+
+                    {/* Source */}
+                    <div className="hidden shrink-0 lg:block">
+                      <span className="t-caption block max-w-[8rem] truncate text-muted">{sourceLabel}</span>
+                    </div>
+
+                    {/* Time */}
+                    <span className="t-caption tnum shrink-0 font-mono text-muted">{timeAgo}</span>
+
+                    {/* Status */}
                     <EnquiryStatusChip status={enq.status} />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/admin/enquiries/${enq.id}`}
-                      className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-[0.75rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
-                    >
-                      Open
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+
+                    {/* Arrow */}
+                    <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3.5 w-3.5 shrink-0 text-muted transition-all group-hover:translate-x-0.5 group-hover:text-accent" fill="none" stroke="currentColor" strokeWidth="1.6">
+                      <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
+                    </svg>
+                  </Link>
+                );
+              })}
+            </div>
       )}
 
       {/* Pagination */}
