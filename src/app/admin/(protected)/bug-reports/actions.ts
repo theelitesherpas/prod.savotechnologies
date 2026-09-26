@@ -5,10 +5,13 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 
 export async function updateBugStatusAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("bug-reports");
+  await requireSection("bug-reports");
   if (!prisma) redirect("/admin/bug-reports?e=Database%20unavailable.");
 
   const parsed = z

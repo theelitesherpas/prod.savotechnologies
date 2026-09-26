@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { revalidateManagedContent } from "@/lib/collections";
 
@@ -37,6 +38,8 @@ const settingsSchema = z.object({
 
 export async function saveSettingsAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("settings");
+  await requireSection("settings");
   const parsed = settingsSchema.safeParse({
     contactEmail: formData.get("contactEmail"),
     contactPhone: formData.get("contactPhone"),

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { loginClient, logoutClient } from "@/lib/client-auth";
+import { clientIpFromHeaders } from "@/lib/api";
 import { enforceLoginCaptcha, recordLoginFailure, clearLoginFailures } from "@/lib/captcha";
 
 const loginSchema = z.object({
@@ -20,10 +21,7 @@ export async function clientLoginAction(formData: FormData): Promise<void> {
 
   // IP extraction (same pattern as admin/employee login)
   const hdrs = await headers();
-  const ip =
-    hdrs.get("x-forwarded-for")?.split(",")[0].trim() ??
-    hdrs.get("x-real-ip") ??
-    "unknown";
+  const ip = clientIpFromHeaders(hdrs);
 
   // Progressive captcha: after 2 failed attempts, verify before processing.
   const cap = await enforceLoginCaptcha("client", ip, formData.get("captchaToken"));

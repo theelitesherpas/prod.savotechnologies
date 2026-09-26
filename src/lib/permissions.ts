@@ -120,6 +120,23 @@ export async function currentAdminPath(): Promise<string> {
   return h.get("x-pathname") ?? "";
 }
 
+/**
+ * Action-level section guard - defense in depth for server actions.
+ *
+ * The admin layout blocks editors from restricted PAGES, but a server
+ * action is its own POST endpoint; this guard makes the same section
+ * check inside the action so an editor can never invoke a restricted
+ * mutation directly, regardless of how the request was crafted.
+ * Redirects (works in actions) with the same denial notice as the layout.
+ */
+export async function requireSection(section: SectionKey): Promise<void> {
+  const user = await getAdminUser();
+  if (!user) redirect("/admin/login");
+  if (canAccess(user, section)) return;
+  const label = SECTIONS.find((sec) => sec.key === section)?.label ?? section;
+  redirect(`/admin?denied=${encodeURIComponent(label)}`);
+}
+
 /** Which compose scopes this user may open. */
 export function allowedComposeDepts(user: PermittedUser): ("hr" | "hello")[] {
   if (user.role === "admin") return ["hr", "hello"];

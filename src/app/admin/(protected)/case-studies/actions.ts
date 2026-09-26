@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { requireAdmin } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { caseStudySchema, slugifyCaseStudy } from "@/lib/case-study-schema";
 import { CASE_STUDY_DETAILS } from "@/constants/case-studies";
@@ -41,6 +42,8 @@ function revalidateCaseStudies(slug?: string) {
 
 export async function saveCaseStudyAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("content");
+  await requireSection("content");
   if (!prisma) redirect("/admin/case-studies?e=db");
 
   const form = formSchema.safeParse({
@@ -96,6 +99,8 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
 
 export async function deleteCaseStudyAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("content");
+  await requireSection("content");
   if (!prisma) redirect("/admin/case-studies?e=db");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
 
@@ -111,6 +116,8 @@ export async function deleteCaseStudyAction(formData: FormData): Promise<void> {
 
 export async function setCaseStudyStatusAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("content");
+  await requireSection("content");
   if (!prisma) redirect("/admin/case-studies?e=db");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const status = z.enum(LIFECYCLE).parse(formData.get("contentStatus"));
@@ -137,6 +144,8 @@ export async function setCaseStudyStatusAction(formData: FormData): Promise<void
  */
 export async function importCaseStudyDefaultsAction(): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("content");
+  await requireSection("content");
   if (!prisma) redirect("/admin/case-studies?e=db");
 
   let count = 0;

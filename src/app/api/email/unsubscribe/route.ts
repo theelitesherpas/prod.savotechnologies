@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { unsubscribeSig } from "@/lib/mail/templates";
 
 /** One-click unsubscribe endpoint - Gmail/Outlook POST here directly
@@ -11,10 +12,18 @@ function paramsFrom(url: URL): { email: string; sig: string } | null {
   return { email, sig };
 }
 
+/** Constant-time signature comparison. */
+function sigValid(email: string, sig: string): boolean {
+  const expected = unsubscribeSig(email);
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 export async function POST(req: Request): Promise<Response> {
   const { prisma } = await import("@/lib/prisma");
   const parsed = paramsFrom(new URL(req.url));
-  if (!parsed || parsed.sig !== unsubscribeSig(parsed.email)) {
+  if (!parsed || !sigValid(parsed.email, parsed.sig)) {
     return new Response("Invalid link", { status: 400 });
   }
   if (prisma) {
@@ -35,7 +44,7 @@ export async function POST(req: Request): Promise<Response> {
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const parsed = paramsFrom(url);
-  if (!parsed || parsed.sig !== unsubscribeSig(parsed.email)) {
+  if (!parsed || !sigValid(parsed.email, parsed.sig)) {
     return new Response("Invalid link", { status: 400 });
   }
   // Humans land on the branded confirmation page (same URL, /unsubscribe).

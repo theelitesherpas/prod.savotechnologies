@@ -20,11 +20,28 @@ export function isJsonRequest(req: Request): boolean {
   return (req.headers.get("content-type") ?? "").includes("application/json");
 }
 
-/** First hop of x-forwarded-for, falling back to x-real-ip. */
+/** Best-effort client IP behind our trusted reverse proxy.
+ *
+ *  Security note: the FIRST x-forwarded-for hop is client-supplied and
+ *  trivially spoofable - trusting it would let an attacker rotate fake
+ *  IPs and evade every per-IP rate limit (login, enquiry, captcha
+ *  progression). nginx on this deployment sets x-real-ip to the actual
+ *  connecting address and APPENDS the real IP as the LAST xff hop, so we
+ *  prefer those and never trust a client-provided first hop. */
+export function clientIpFromHeaders(h: Headers): string {
+  const real = h.get("x-real-ip");
+  if (real && /^[0-9a-fA-F.:]+$/.test(real)) return real.trim();
+  const fwd = h.get("x-forwarded-for");
+  if (fwd) {
+    const hops = fwd.split(",").map((x) => x.trim()).filter((x) => /^[0-9a-fA-F.:]+$/.test(x));
+    if (hops.length > 0) return hops[hops.length - 1]; // last hop = appended by our proxy
+  }
+  return "unknown";
+}
+
+/** Headers-based variant for server actions (`await headers()`). */
 export function clientIp(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0].trim();
-  return req.headers.get("x-real-ip") ?? "unknown";
+  return clientIpFromHeaders(req.headers);
 }
 
 /**

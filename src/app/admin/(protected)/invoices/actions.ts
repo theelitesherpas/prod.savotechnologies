@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { sendTemplateNow } from "@/lib/mail";
 
@@ -39,6 +40,8 @@ async function nextNumber(): Promise<string> {
 
 export async function createInvoiceAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("clients");
+  await requireSection("clients");
   if (!prisma) redirect("/admin/invoices?e=Database%20unavailable.");
 
   const parsed = invoiceSchema.safeParse({
@@ -91,6 +94,8 @@ export async function createInvoiceAction(formData: FormData): Promise<void> {
 
 export async function updateInvoiceAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("clients");
+  await requireSection("clients");
   if (!prisma) redirect("/admin/invoices?e=Database%20unavailable.");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
 
@@ -149,6 +154,8 @@ export async function updateInvoiceAction(formData: FormData): Promise<void> {
 
 export async function markInvoicePaidAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("clients");
+  await requireSection("clients");
   if (!prisma) redirect("/admin/invoices?e=Database%20unavailable.");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
 
@@ -163,6 +170,8 @@ export async function markInvoicePaidAction(formData: FormData): Promise<void> {
 
 export async function deleteInvoiceAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("clients");
+  await requireSection("clients");
   if (!prisma) redirect("/admin/invoices?e=Database%20unavailable.");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
 

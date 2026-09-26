@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { enforceLoginCaptcha, recordLoginFailure, clearLoginFailures } from "@/lib/captcha";
+import { clientIpFromHeaders } from "@/lib/api";
 import { login } from "@/lib/auth";
 
 /**
@@ -27,10 +28,7 @@ export async function loginAction(formData: FormData): Promise<void> {
   }
 
   const hdrs = await headers();
-  const ip =
-    hdrs.get("x-forwarded-for")?.split(",")[0].trim() ??
-    hdrs.get("x-real-ip") ??
-    "unknown";
+  const ip = clientIpFromHeaders(hdrs);
 
   // Progressive captcha: after 2 failed attempts, verify before processing.
   const cap = await enforceLoginCaptcha("admin", ip, formData.get("captchaToken"));

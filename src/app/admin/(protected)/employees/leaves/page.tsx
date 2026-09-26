@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, StatTile, Chip } from "@/components/admin/ui";
-import { SubmitButton } from "@/components/admin/form";
+import { ConfirmAction } from "@/components/admin/confirm-dialog";
 import { decideLeaveAction } from "../actions";
 import { leaveSummary, fmtDate } from "@/lib/employees";
 
@@ -76,16 +76,28 @@ export default async function LeaveManagementPage({
                       </span>
                     </span>
                     <Chip tone="muted">Balance {bal.balance}</Chip>
-                    <form action={decideLeaveAction} className="flex items-center gap-2">
-                      <input type="hidden" name="id" value={l.id} />
-                      <input type="hidden" name="decision" value="approved" />
-                      <SubmitButton label="Approve" compact />
-                    </form>
-                    <form action={decideLeaveAction}>
-                      <input type="hidden" name="id" value={l.id} />
-                      <input type="hidden" name="decision" value="rejected" />
-                      <SubmitButton label="Decline" compact />
-                    </form>
+                    <ConfirmAction
+                      action={decideLeaveAction}
+                      id={l.id}
+                      extra={{ decision: "approved" }}
+                      label="Approve"
+                      title="Approve this leave?"
+                      description={`${l.employee.name} · ${l.type} · ${l.days} day${l.days === 1 ? "" : "s"}. They will receive a leave-approval email.`}
+                      confirmLabel="Yes, approve"
+                      tone="success"
+                      compact
+                    />
+                    <ConfirmAction
+                      action={decideLeaveAction}
+                      id={l.id}
+                      extra={{ decision: "rejected" }}
+                      label="Decline"
+                      title="Decline this leave?"
+                      description={`${l.employee.name} · ${l.type} · ${l.days} day${l.days === 1 ? "" : "s"}. They will receive a leave-rejection email.`}
+                      confirmLabel="Yes, decline"
+                      tone="danger"
+                      compact
+                    />
                   </li>
                 );
               })}

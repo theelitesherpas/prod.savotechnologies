@@ -59,9 +59,19 @@ describe("request helpers", () => {
     ).toBe(false);
   });
 
-  it("extracts the first forwarded IP", () => {
+  it("extracts the proxy-appended (last) forwarded hop - the first hop is client-spoofable", () => {
     const r = req({ headers: { "x-forwarded-for": "1.2.3.4, 5.6.7.8" } });
-    expect(clientIp(r)).toBe("1.2.3.4");
+    expect(clientIp(r)).toBe("5.6.7.8");
+  });
+
+  it("prefers x-real-ip over x-forwarded-for", () => {
+    const r = req({ headers: { "x-real-ip": "9.9.9.9", "x-forwarded-for": "1.2.3.4, 5.6.7.8" } });
+    expect(clientIp(r)).toBe("9.9.9.9");
+  });
+
+  it("ignores malformed forwarded hops", () => {
+    const r = req({ headers: { "x-forwarded-for": "evil.example.com, 5.6.7.8" } });
+    expect(clientIp(r)).toBe("5.6.7.8");
   });
 
   it("falls back to unknown", () => {

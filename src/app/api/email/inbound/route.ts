@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/api";
 import { logger } from "@/lib/logger";
+import { timingSafeEqual } from "node:crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,8 +22,12 @@ export const dynamic = "force-dynamic";
  *   4. Check "POST the raw, full MIME message" (unchecked = parsed fields)
  *   5. Add the MX record SendGrid shows you to your DNS
  *
- * Security: rate-limited per IP; rejects payloads > 1MB; validates
- * that the recipient is one of our mailboxes.
+ * Security: requires a shared secret when EMAIL_INBOUND_SECRET is
+ * configured (append `?secret=<value>` to the webhook URL in SendGrid,
+ * or send it as the x-webhook-secret header); rate-limited per IP;
+ * rejects payloads > 1MB; validates that the recipient is one of our
+ * mailboxes. With the secret unset the endpoint keeps working but logs
+ * a warning each delivery (configure it before relying on replies).
  */
 
 const OUR_MAILBOXES = new Set(["hr@savotechnologies.com", "hello@savotechnologies.com"]);
@@ -31,8 +36,28 @@ function detectDept(to: string): "hr" | "hello" {
   return to.startsWith("hr@") ? "hr" : "hello";
 }
 
+/** Shared-secret check - prevents anyone who discovers the URL from
+ *  injecting forged "client replies" into the admin inbox. */
+function webhookAuthorized(req: Request): boolean {
+  const secret = process.env.EMAIL_INBOUND_SECRET;
+  if (!secret) {
+    logger.warn("email-inbound: EMAIL_INBOUND_SECRET not configured - accepting unauthenticated delivery", {});
+    return true;
+  }
+  const url = new URL(req.url);
+  const provided = req.headers.get("x-webhook-secret") ?? url.searchParams.get("secret") ?? "";
+  const a = Buffer.from(provided);
+  const b = Buffer.from(secret);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 export async function POST(req: Request) {
   try {
+    if (!webhookAuthorized(req)) {
+      logger.warn("email-inbound: unauthorized delivery rejected", {});
+      return new Response(null, { status: 401 });
+    }
+
     const ip = clientIp(req);
     const limit = rateLimit(`email-inbound:${ip}`, 100, 60 * 60 * 1000);
     if (!limit.ok) return new Response(null, { status: 429 });

@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { enforceLoginCaptcha, recordLoginFailure, clearLoginFailures } from "@/lib/captcha";
+import { clientIpFromHeaders } from "@/lib/api";
 
 /**
  * Employee portal auth - employees log in with their registered email
@@ -35,10 +36,7 @@ export async function employeeLoginAction(formData: FormData): Promise<void> {
 
   // IP extraction (same pattern as admin login)
   const hdrs = await headers();
-  const ip =
-    hdrs.get("x-forwarded-for")?.split(",")[0].trim() ??
-    hdrs.get("x-real-ip") ??
-    "unknown";
+  const ip = clientIpFromHeaders(hdrs);
 
   const limit = rateLimit(`employee-login:${ip}`, 10, 15 * 60 * 1000);
   if (!limit.ok) {

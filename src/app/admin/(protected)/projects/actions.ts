@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { sendTemplateNow } from "@/lib/mail";
 
@@ -35,6 +36,8 @@ async function nextCode(): Promise<string> {
 
 export async function createProjectAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("clients");
+  await requireSection("clients");
   if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
 
   const parsed = projectSchema.safeParse({
@@ -64,6 +67,8 @@ export async function createProjectAction(formData: FormData): Promise<void> {
 
 export async function updateProjectAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("clients");
+  await requireSection("clients");
   if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
 
@@ -96,6 +101,8 @@ export async function updateProjectAction(formData: FormData): Promise<void> {
 
 export async function addMilestoneAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("clients");
+  await requireSection("clients");
   if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
   const projectId = z.string().min(10).max(32).parse(formData.get("projectId"));
   const title = z.string().trim().min(2).max(140).parse(formData.get("title"));
@@ -112,6 +119,7 @@ export async function addMilestoneAction(formData: FormData): Promise<void> {
 
 export async function cycleMilestoneAction(formData: FormData): Promise<void> {
   await requireAdmin();
+  await requireSection("clients");
   if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const projectId = z.string().min(10).max(32).parse(formData.get("projectId"));
@@ -141,6 +149,7 @@ export async function cycleMilestoneAction(formData: FormData): Promise<void> {
 
 export async function deleteMilestoneAction(formData: FormData): Promise<void> {
   await requireAdmin();
+  await requireSection("clients");
   if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const projectId = z.string().min(10).max(32).parse(formData.get("projectId"));
@@ -152,6 +161,8 @@ export async function deleteMilestoneAction(formData: FormData): Promise<void> {
 
 export async function addUpdateAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("clients");
+  await requireSection("clients");
   if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
   const projectId = z.string().min(10).max(32).parse(formData.get("projectId"));
   const title = z.string().trim().min(2).max(140).parse(formData.get("title"));
@@ -176,6 +187,7 @@ export async function addUpdateAction(formData: FormData): Promise<void> {
 
 export async function deleteUpdateAction(formData: FormData): Promise<void> {
   await requireAdmin();
+  await requireSection("clients");
   if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const projectId = z.string().min(10).max(32).parse(formData.get("projectId"));
@@ -187,6 +199,8 @@ export async function deleteUpdateAction(formData: FormData): Promise<void> {
 
 export async function deleteProjectAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("clients");
+  await requireSection("clients");
   if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const project = await prisma.clientProject.findUnique({ where: { id } });

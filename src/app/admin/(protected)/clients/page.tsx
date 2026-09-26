@@ -23,8 +23,6 @@ export default async function AdminClientsPage({
         .catch(() => [])
     : [];
 
-  const input = "adm-input w-full";
-
   return (
     <div className="max-w-4xl">
       <PageHeader

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { sendMail, renderTemplate } from "@/lib/mail";
 import { templateEntry } from "@/lib/mail/registry";
@@ -29,6 +30,8 @@ const customSchema = z.object({
  *  admin overrides still apply (renderTemplate), dept routing included. */
 export async function sendTemplatedEmailAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("email-templates");
+  await requireSection("email-templates");
   const to = z.string().trim().email().max(160).parse(formData.get("to"));
   const key = z.string().min(2).max(60).parse(formData.get("templateKey"));
   const entry = templateEntry(key);
@@ -58,6 +61,8 @@ function back(e: string): never {
 
 export async function saveTemplateAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("email-templates");
+  await requireSection("email-templates");
   if (!prisma) back("Database unavailable.");
 
   const parsed = templateSchema.safeParse({
@@ -80,6 +85,8 @@ export async function saveTemplateAction(formData: FormData): Promise<void> {
 
 export async function resetTemplateAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("email-templates");
+  await requireSection("email-templates");
   if (!prisma) back("Database unavailable.");
   const key = z.string().min(2).max(60).parse(formData.get("key"));
   if (!templateEntry(key)) back("Unknown template.");
@@ -93,6 +100,8 @@ export async function resetTemplateAction(formData: FormData): Promise<void> {
 /** Compose-and-send: a custom email from the panel, branded shell applied. */
 export async function sendCustomEmailAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("email-templates");
+  await requireSection("email-templates");
   if (!prisma) redirect("/admin/email-compose?e=Database%20unavailable.");
 
   const parsed = customSchema.safeParse({

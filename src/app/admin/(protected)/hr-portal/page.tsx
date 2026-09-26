@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, StatTile, Chip } from "@/components/admin/ui";
+import { ConfirmAction } from "@/components/admin/confirm-dialog";
 import {
   shortlistEnquiryAction,
   rejectEnquiryAction,
@@ -155,24 +156,25 @@ export default async function HRPortalPage({
                       <div className="flex flex-wrap justify-end gap-2">
                         {isNew ? (
                           <>
-                            <form action={shortlistEnquiryAction}>
-                              <input type="hidden" name="id" value={enq.id} />
-                              <button
-                                type="submit"
-                                className="inline-flex h-8 items-center rounded-lg bg-foreground px-3 text-[0.6875rem] font-bold text-background transition-colors hover:bg-accent"
-                              >
-                                Shortlist
-                              </button>
-                            </form>
-                            <form action={rejectEnquiryAction}>
-                              <input type="hidden" name="id" value={enq.id} />
-                              <button
-                                type="submit"
-                                className="inline-flex h-8 items-center rounded-lg border border-error/40 px-3 text-[0.6875rem] font-bold text-error transition-colors hover:bg-error hover:text-white"
-                              >
-                                Reject
-                              </button>
-                            </form>
+                            <ConfirmAction
+                              action={shortlistEnquiryAction}
+                              id={enq.id}
+                              label="Shortlist"
+                              title="Shortlist this candidate?"
+                              description={`${enq.name} will receive a shortlist acknowledgment email and move to the interview stage.`}
+                              confirmLabel="Yes, shortlist"
+                              compact
+                            />
+                            <ConfirmAction
+                              action={rejectEnquiryAction}
+                              id={enq.id}
+                              label="Reject"
+                              title="Reject this candidate?"
+                              description={`${enq.name} will receive a rejection email immediately. This cannot be undone from here.`}
+                              confirmLabel="Yes, reject"
+                              tone="danger"
+                              compact
+                            />
                           </>
                         ) : enq.careerStatus === "shortlisted" ? (
                           <>
@@ -182,15 +184,16 @@ export default async function HRPortalPage({
                             >
                               Schedule interview
                             </Link>
-                            <form action={rejectEnquiryAction}>
-                              <input type="hidden" name="id" value={enq.id} />
-                              <button
-                                type="submit"
-                                className="inline-flex h-8 items-center rounded-lg border border-error/40 px-3 text-[0.6875rem] font-bold text-error transition-colors hover:bg-error hover:text-white"
-                              >
-                                Reject
-                              </button>
-                            </form>
+                            <ConfirmAction
+                              action={rejectEnquiryAction}
+                              id={enq.id}
+                              label="Reject"
+                              title="Reject this candidate?"
+                              description={`${enq.name} will receive a rejection email immediately. This cannot be undone from here.`}
+                              confirmLabel="Yes, reject"
+                              tone="danger"
+                              compact
+                            />
                           </>
                         ) : enq.careerStatus === "interview_scheduled" ? (
                           <Link

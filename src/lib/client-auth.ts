@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { clientIpFromHeaders } from "@/lib/api";
 
 /**
  * Client-portal authentication - server-side sessions, mirroring the
@@ -53,7 +54,7 @@ export async function hashPassword(password: string): Promise<string> {
 
 async function requestIp(): Promise<string> {
   const h = await headers();
-  return (h.get("x-forwarded-for") ?? "local").split(",")[0].trim();
+  return clientIpFromHeaders(h) === "unknown" ? "local" : clientIpFromHeaders(h);
 }
 
 /**

@@ -1,4 +1,5 @@
 import { requiredForRequest, loginCaptchaRequired } from "@/lib/captcha";
+import { clientIpFromHeaders } from "@/lib/api";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
@@ -15,10 +16,7 @@ export async function GET(req: Request) {
     // Match the IP extraction used by server-action login handlers
     // (next/headers sees the same forwarded headers).
     const hdrs = await headers();
-    const ip =
-      hdrs.get("x-forwarded-for")?.split(",")[0].trim() ??
-      hdrs.get("x-real-ip") ??
-      "unknown";
+    const ip = clientIpFromHeaders(hdrs);
 
     const loginRequired =
       portal && ["admin", "employee", "client"].includes(portal)

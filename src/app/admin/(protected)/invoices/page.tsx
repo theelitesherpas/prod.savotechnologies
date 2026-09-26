@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, EmptyState } from "@/components/admin/ui";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
+import { ConfirmAction } from "@/components/admin/confirm-dialog";
 import { FormGuard } from "@/components/admin/form-guard";
 import { InvoiceStatusChip, money } from "@/components/portal/ui";
 import { createInvoiceAction, markInvoicePaidAction, deleteInvoiceAction } from "./actions";
@@ -56,12 +57,16 @@ export default async function AdminInvoicesPage({
               <p className="t-sm font-semibold tnum">{money(inv.amount, inv.currency)}</p>
               <div className="flex items-center gap-2">
                 {inv.status !== "paid" && inv.status !== "cancelled" ? (
-                  <form action={markInvoicePaidAction}>
-                    <input type="hidden" name="id" value={inv.id} />
-                    <button type="submit" className="t-caption rounded-lg border border-border px-3 py-1.5 text-muted transition-colors hover:border-[rgb(30_122_63/0.5)] hover:text-[rgb(30_122_63)]">
-                      Mark paid
-                    </button>
-                  </form>
+                  <ConfirmAction
+                    action={markInvoicePaidAction}
+                    id={inv.id}
+                    label="Mark paid"
+                    title="Mark this invoice as paid?"
+                    description={`Invoice ${inv.number} for ${inv.client.name} will be recorded as paid and the client will receive the paid-confirmation email.`}
+                    confirmLabel="Yes, mark paid"
+                    tone="success"
+                    compact
+                  />
                 ) : null}
                 <Link href={`/admin/invoices/${inv.id}`} className="t-caption rounded-lg border border-border px-3 py-1.5 text-muted transition-colors hover:border-foreground/40 hover:text-foreground">
                   Edit

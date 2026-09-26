@@ -15,6 +15,7 @@ export function ConfirmDialog({
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
   tone = "default",
+  compact = false,
   children,
 }: {
   label: string;
@@ -23,6 +24,8 @@ export function ConfirmDialog({
   confirmLabel?: string;
   cancelLabel?: string;
   tone?: "default" | "danger" | "success";
+  /** Smaller trigger for dense table rows. */
+  compact?: boolean;
   children?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -40,9 +43,13 @@ export function ConfirmDialog({
         type="button"
         onClick={() => setOpen(true)}
         className={
-          tone === "danger"
-            ? "inline-flex h-10 items-center rounded-lg border border-error/40 px-4 text-[0.8125rem] font-bold text-error transition-colors hover:bg-error hover:text-white"
-            : "inline-flex h-10 items-center rounded-lg bg-foreground px-4 text-[0.8125rem] font-bold text-background transition-colors hover:bg-accent"
+          compact
+            ? tone === "danger"
+              ? "inline-flex h-8 items-center rounded-lg border border-error/40 px-3 text-[0.6875rem] font-bold text-error transition-colors hover:bg-error hover:text-white"
+              : "inline-flex h-8 items-center rounded-lg bg-foreground px-3 text-[0.6875rem] font-bold text-background transition-colors hover:bg-accent"
+            : tone === "danger"
+              ? "inline-flex h-10 items-center rounded-lg border border-error/40 px-4 text-[0.8125rem] font-bold text-error transition-colors hover:bg-error hover:text-white"
+              : "inline-flex h-10 items-center rounded-lg bg-foreground px-4 text-[0.8125rem] font-bold text-background transition-colors hover:bg-accent"
         }
       >
         {label}
@@ -120,6 +127,8 @@ export function ConfirmAction({
   description,
   confirmLabel,
   tone,
+  compact,
+  extra,
 }: {
   action: (formData: FormData) => Promise<void>;
   id: string;
@@ -128,16 +137,25 @@ export function ConfirmAction({
   description?: string;
   confirmLabel?: string;
   tone?: "default" | "danger" | "success";
+  compact?: boolean;
+  /** Additional hidden fields submitted with the id (e.g. decision). */
+  extra?: Record<string, string>;
 }) {
   return (
     <form action={action}>
       <input type="hidden" name="id" value={id} />
+      {extra
+        ? Object.entries(extra).map(([k, v]) => (
+            <input key={k} type="hidden" name={k} value={v} />
+          ))
+        : null}
       <ConfirmDialog
         label={label}
         title={title}
         description={description}
         confirmLabel={confirmLabel}
         tone={tone}
+        compact={compact}
       />
     </form>
   );

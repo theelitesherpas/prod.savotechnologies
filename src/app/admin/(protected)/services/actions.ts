@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin, requireAdminRole } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { SERVICE_LINKS } from "@/constants/navigation";
 import { revalidateManagedContent } from "@/lib/collections";
@@ -44,6 +45,8 @@ function readServiceForm(formData: FormData) {
 
 export async function createServiceAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("content");
+  await requireSection("content");
   const parsed = readServiceForm(formData);
   if (!parsed.success) redirect("/admin/services?e=invalid");
   const d = parsed.data;
@@ -70,6 +73,8 @@ export async function createServiceAction(formData: FormData): Promise<void> {
 
 export async function updateServiceAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("content");
+  await requireSection("content");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const parsed = readServiceForm(formData);
   if (!parsed.success) redirect(`/admin/services/${id}?e=invalid`);
@@ -98,6 +103,8 @@ export async function updateServiceAction(formData: FormData): Promise<void> {
 
 export async function toggleServiceActiveAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("content");
+  await requireSection("content");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const active = formData.get("active") === "true";
 
@@ -124,6 +131,8 @@ export async function deleteServiceAction(formData: FormData): Promise<void> {
  */
 export async function importDefaultServicesAction(): Promise<void> {
   const user = await requireAdmin();
+  await requireSection("content");
+  await requireSection("content");
   let count = 0;
 
   for (const [i, link] of SERVICE_LINKS.entries()) {

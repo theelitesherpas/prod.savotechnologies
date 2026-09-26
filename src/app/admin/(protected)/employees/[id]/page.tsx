@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, Chip } from "@/components/admin/ui";
 import { ConfirmButton } from "@/components/admin/form";
+import { ConfirmAction } from "@/components/admin/confirm-dialog";
 import { FormGuard } from "@/components/admin/form-guard";
 import { SubmitButton } from "@/components/admin/form";
 import { updateEmployeeAction, addLeaveAction, decideLeaveAction, deleteEmployeeAction } from "../actions";
@@ -103,16 +104,28 @@ export default async function EmployeeRecordPage({
                         {fmtDate(l.fromDate)} → {fmtDate(l.toDate)}
                         {l.reason ? <span className="block text-muted">{l.reason}</span> : null}
                       </span>
-                      <form action={decideLeaveAction}>
-                        <input type="hidden" name="id" value={l.id} />
-                        <input type="hidden" name="decision" value="approved" />
-                        <SubmitButton label="Approve" compact />
-                      </form>
-                      <form action={decideLeaveAction}>
-                        <input type="hidden" name="id" value={l.id} />
-                        <input type="hidden" name="decision" value="rejected" />
-                        <SubmitButton label="Decline" compact />
-                      </form>
+                      <ConfirmAction
+                        action={decideLeaveAction}
+                        id={l.id}
+                        extra={{ decision: "approved" }}
+                        label="Approve"
+                        title="Approve this leave?"
+                        description={`${l.type} · ${l.days} day${l.days === 1 ? "" : "s"}. ${employee.name} will receive a leave-approval email.`}
+                        confirmLabel="Yes, approve"
+                        tone="success"
+                        compact
+                      />
+                      <ConfirmAction
+                        action={decideLeaveAction}
+                        id={l.id}
+                        extra={{ decision: "rejected" }}
+                        label="Decline"
+                        title="Decline this leave?"
+                        description={`${l.type} · ${l.days} day${l.days === 1 ? "" : "s"}. ${employee.name} will receive a leave-rejection email.`}
+                        confirmLabel="Yes, decline"
+                        tone="danger"
+                        compact
+                      />
                     </li>
                   ))}
                 </ul>
