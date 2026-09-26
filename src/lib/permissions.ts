@@ -26,7 +26,8 @@ export type SectionKey =
   | "settings"
   | "audit"
   | "bug-reports"
-  | "hr-portal";
+  | "hr-portal"
+  | "emails";
 
 export const SECTIONS: { key: SectionKey; label: string; hint: string }[] = [
   { key: "enquiries", label: "Enquiries", hint: "Lead inbox + detail" },
@@ -39,6 +40,7 @@ export const SECTIONS: { key: SectionKey; label: string; hint: string }[] = [
   { key: "audit", label: "Audit log", hint: "Action history" },
   { key: "bug-reports", label: "Bug reports", hint: "Captured errors and user reports" },
   { key: "hr-portal", label: "HR portal", hint: "Shortlisted candidates, recruitment pipeline" },
+  { key: "emails", label: "Emails", hint: "Inbound reply inbox" },
 ];
 
 export type PermittedUser = {
@@ -79,6 +81,7 @@ export function pathToSection(path: string): SectionKey | "dashboard" | "users" 
   if (p.startsWith("/admin/audit")) return "audit";
   if (p.startsWith("/admin/bug-reports")) return "bug-reports";
   if (p.startsWith("/admin/hr-portal")) return "hr-portal";
+  if (p.startsWith("/admin/emails")) return "emails";
   return null;
 }
 

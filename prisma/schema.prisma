@@ -480,6 +480,7 @@ model EmailReply {
   enquiry     ProjectEnquiry? @relation("EmailReplies", fields: [enquiryId], references: [id], onDelete: SetNull)
   /// Spam score from the parsing service (0 = clean)
   spamScore   Float?   @map("spam_score")
+  isRead      Boolean  @default(false) @map("is_read")
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@index([fromEmail])

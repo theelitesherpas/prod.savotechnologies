@@ -38,6 +38,8 @@ export function ComposeForm({
   preselectEmployeeId,
   preselectTemplate,
   dept,
+  preTo,
+  preSubject,
 }: {
   clients: { email: string; name: string }[];
   employees: EmployeeLite[];
@@ -45,6 +47,8 @@ export function ComposeForm({
   preselectTemplate?: string;
   /** Scope to one department's templates (hr = HR/careers, hello = client). */
   dept?: "hr" | "hello";
+  preTo?: string;
+  preSubject?: string;
 }) {
   const scoped = dept ? TEMPLATE_REGISTRY.filter((t) => t.dept === dept) : TEMPLATE_REGISTRY;
   const pool = scoped.length ? scoped : TEMPLATE_REGISTRY;
@@ -53,16 +57,16 @@ export function ComposeForm({
     preselectTemplate && pool.some((t) => t.key === preselectTemplate) ? preselectTemplate : pool[0].key,
   );
   const [autofilledFrom, setAutofilledFrom] = useState<string | null>(null);
-  const [to, setTo] = useState(() => {
+  const [to, setTo] = useState(() => preTo || (() => {
     const emp = preselectEmployeeId ? employees.find((em) => em.id === preselectEmployeeId) : undefined;
     return emp?.email ?? "";
-  });
+  })());
   const [vars, setVars] = useState<Record<string, string>>(() => {
     const first = pool.find((t) => t.key === (preselectTemplate ?? pool[0].key)) ?? pool[0];
     const emp = preselectEmployeeId ? employees.find((em) => em.id === preselectEmployeeId) : undefined;
     return emp ? { ...first.vars, ...employeeVars(emp, emp.leaves) } : { ...first.vars };
   });
-  const [subject, setSubject] = useState("");
+  const [subject, setSubject] = useState(preSubject ?? "");
   const [body, setBody] = useState("");
   const [showPreview, setShowPreview] = useState(false);
 

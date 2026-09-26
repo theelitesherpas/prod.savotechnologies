@@ -17,6 +17,7 @@ const CRUMB_LABELS: Record<string, string> = {
   "my-profile": "My profile",
   "bug-reports": "Bug reports",
   "hr-portal": "HR portal",
+  emails: "Emails",
   leaves: "Leave management",
   analytics: "Analytics",
   "email-templates": "Email templates",
@@ -74,6 +75,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const allow = (k: SectionKey) => canAccess(user, k);
   const nav = ([
     { key: "overview", label: "Dashboard", icon: "gauge", href: "/admin" },
+    { key: "emails", label: "Emails", icon: "inbox", href: "/admin/emails" },
     ...(allow("enquiries")
       ? [
           {
