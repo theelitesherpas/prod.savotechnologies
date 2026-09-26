@@ -106,6 +106,12 @@ export default async function ArticlePage({
                 {article.date}
                 <span className="mx-2.5 text-muted/60">·</span>
                 {article.time}
+                {article.authorName ? (
+                  <>
+                    <span className="mx-2.5 text-muted/60">·</span>
+                    By <span className="font-semibold text-foreground">{article.authorName}</span>
+                  </>
+                ) : null}
                 <span className="mx-2.5 text-muted/60">·</span>
                 Savo Technologies
               </p>

@@ -20,6 +20,9 @@ export default async function UsersPage({
   if (user?.role !== "admin") redirect("/admin");
   const sp = await searchParams;
 
+  const employeeList = prisma
+    ? await prisma.employee.findMany({ orderBy: { name: "asc" }, select: { id: true, employeeCode: true, name: true, email: true } })
+    : [];
   const users = prisma
     ? await prisma.adminUser.findMany({
         orderBy: { createdAt: "asc" },
@@ -29,6 +32,8 @@ export default async function UsersPage({
           email: true,
           role: true,
           permissions: true,
+          employeeId: true,
+          employee: { select: { employeeCode: true, name: true } },
           createdAt: true,
           _count: { select: { sessions: true, auditLogs: true } },
         },
@@ -90,6 +95,18 @@ export default async function UsersPage({
                       {u.email}
                       {u.id === user.id ? " · you" : ""}
                     </span>
+                    <div className="w-full">
+                      <label className="t-caption block font-semibold text-muted">Linked employee</label>
+                      <select name="employeeId" defaultValue={u.employeeId ?? ""} className="adm-select mt-1 h-9 max-w-[18rem] py-1">
+                        <option value="">— not linked —</option>
+                        {employeeList.map((emp) => (
+                          <option key={emp.id} value={emp.id}>{emp.employeeCode} · {emp.name}</option>
+                        ))}
+                      </select>
+                      {u.employee ? (
+                        <p className="t-caption mt-1 text-accent">→ {u.employee.employeeCode} · {u.employee.name}</p>
+                      ) : null}
+                    </div>
                     <fieldset className="w-full border-t border-border pt-2.5">
                       <legend className="t-caption font-semibold text-muted">Section access {u.role === "admin" ? "(admin — full access)" : ""}</legend>
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-1.5">
@@ -180,6 +197,16 @@ export default async function UsersPage({
                 <option value="editor">Editor</option>
               </select>
             </div>
+          </div>
+          <div>
+            <label htmlFor="new-employee" className="adm-label mb-1.5 block">Link to employee (optional)</label>
+            <select id="new-employee" name="employeeId" defaultValue="" className="adm-select">
+              <option value="">— not linked —</option>
+              {employeeList.map((emp) => (
+                <option key={emp.id} value={emp.id}>{emp.employeeCode} · {emp.name}</option>
+              ))}
+            </select>
+            <p className="t-caption mt-1 text-muted">Links the panel account to an employee record — enables the self-service profile.</p>
           </div>
           <fieldset className="border-t border-border pt-4">
             <legend className="t-caption font-semibold text-muted">Section access (for Editors)</legend>

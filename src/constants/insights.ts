@@ -15,6 +15,7 @@ export type Article = {
   time: string;
   date: string;
   body: { h?: string; p?: string; li?: string[] }[];
+  authorName?: string;
 };
 
 export const ARTICLES: Article[] = [

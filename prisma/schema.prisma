@@ -63,6 +63,9 @@ model AdminUser {
   /// Section keys this editor may access (see lib/permissions.ts);
   /// admins bypass and always see everything.
   permissions  Json?
+  /// Linked employee record — panel access granted by employee ID.
+  employeeId   String?        @map("employee_id")
+  employee     Employee?     @relation("PanelUserEmployee", fields: [employeeId], references: [id], onDelete: SetNull)
   createdAt    DateTime       @default(now()) @map("created_at")
   updatedAt    DateTime       @updatedAt @map("updated_at")
   sessions     AdminSession[]
@@ -127,6 +130,10 @@ model ContentItem {
   /// "published" — existence in PostgreSQL is never publication.
   contentStatus String    @default("draft") @map("content_status")
   publishedAt   DateTime? @map("published_at")
+  /// Author (employee) — shown on the frontend for insights & case studies.
+  authorId      String?   @map("author_id")
+  author        Employee? @relation("ContentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  authorName    String?   @map("author_name")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
@@ -357,9 +364,13 @@ model Employee {
   manager       String?
   location      String?
   notes         String          @default("")
+  incrementDate DateTime?       @map("increment_date")
+  bondExpiry    DateTime?       @map("bond_expiry")
   createdAt     DateTime        @default(now()) @map("created_at")
   updatedAt     DateTime        @updatedAt @map("updated_at")
   leaves        EmployeeLeave[]
+  panelUsers    AdminUser[]     @relation("PanelUserEmployee")
+  authoredItems ContentItem[]   @relation("ContentAuthor")
 
   @@index([status])
   @@map("employees")

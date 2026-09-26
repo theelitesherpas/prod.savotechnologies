@@ -137,6 +137,16 @@ export async function createItemAction(formData: FormData): Promise<void> {
   const base = `/admin/content/${collection}`;
   if (!parsed) redirect(`${base}/new?e=invalid`);
 
+  // Author tracking + approval workflow: editors create as "review"
+  // (pending admin approval); admins can publish directly.
+  const adminUser = await prisma.adminUser.findUnique({
+    where: { id: user.id },
+    select: { employeeId: true, employee: { select: { id: true, name: true } }, role: true },
+  });
+  const author = adminUser?.employee ?? null;
+  const isEditor = adminUser?.role !== "admin";
+  const effectiveStatus = isEditor && parsed.contentStatus === "published" ? "review" : parsed.contentStatus;
+
   try {
     await prisma!.contentItem.create({
       data: {
@@ -145,9 +155,10 @@ export async function createItemAction(formData: FormData): Promise<void> {
         title: parsed.title,
         order: parsed.order,
         active: parsed.active,
-        contentStatus: parsed.contentStatus,
-        publishedAt: parsed.contentStatus === "published" ? new Date() : null,
+        contentStatus: effectiveStatus,
+        publishedAt: effectiveStatus === "published" ? new Date() : null,
         data: parsed.data as Prisma.InputJsonValue,
+        ...(author ? { authorId: author.id, authorName: author.name } : {}),
       },
     });
   } catch {
@@ -169,6 +180,14 @@ export async function updateItemAction(formData: FormData): Promise<void> {
   const parsed = parseItemForm(collection, formData);
   if (!parsed) redirect(`${base}/${id}?e=invalid`);
 
+  // Approval workflow: editors cannot self-publish; their edits revert to review.
+  const adminUser2 = await prisma.adminUser.findUnique({
+    where: { id: user.id },
+    select: { role: true },
+  });
+  const isEditor2 = adminUser2?.role !== "admin";
+  const effectiveStatus2 = isEditor2 && parsed.contentStatus === "published" ? "review" : parsed.contentStatus;
+
   try {
     await prisma!.contentItem.update({
       where: { id },
@@ -177,8 +196,8 @@ export async function updateItemAction(formData: FormData): Promise<void> {
         title: parsed.title,
         order: parsed.order,
         active: parsed.active,
-        contentStatus: parsed.contentStatus,
-        ...(parsed.contentStatus === "published" ? { publishedAt: new Date() } : {}),
+        contentStatus: effectiveStatus2,
+        ...(effectiveStatus2 === "published" ? { publishedAt: new Date() } : {}),
         data: parsed.data as Prisma.InputJsonValue,
       },
     });

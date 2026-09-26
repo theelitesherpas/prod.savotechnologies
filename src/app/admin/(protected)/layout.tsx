@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 const CRUMB_LABELS: Record<string, string> = {
   enquiries: "Enquiries",
   employees: "Employee portal",
+  "my-profile": "My profile",
   leaves: "Leave management",
   analytics: "Analytics",
   "email-templates": "Email templates",
@@ -71,6 +72,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const allow = (k: SectionKey) => canAccess(user, k);
   const nav = ([
     { key: "overview", label: "Dashboard", icon: "gauge", href: "/admin" },
+    { key: "my-profile", label: "My profile", icon: "user", href: "/admin/my-profile" },
     ...(allow("enquiries")
       ? [
           {

@@ -30,6 +30,7 @@ export async function createUserAction(formData: FormData): Promise<void> {
       password: passwordSchema,
       role: z.enum(["admin", "editor"]),
       permissions: z.array(z.string()).optional(),
+      employeeId: z.string().trim().optional().or(z.literal("")),
     })
     .safeParse({
       name: formData.get("name"),
@@ -37,6 +38,7 @@ export async function createUserAction(formData: FormData): Promise<void> {
       password: formData.get("password"),
       role: formData.get("role"),
       permissions: formData.getAll("permissions"),
+      employeeId: formData.get("employeeId") ?? "",
     });
   if (!parsed.success) {
     redirect(`/admin/users?e=${encodeURIComponent(parsed.error.issues[0]?.message ?? "invalid")}`);
@@ -51,6 +53,7 @@ export async function createUserAction(formData: FormData): Promise<void> {
         role: d.role,
         passwordHash: await hashPassword(d.password),
         permissions: d.role === "editor" ? sanitizePermissions(d.permissions) : [],
+        employeeId: d.employeeId || null,
       },
     });
     await audit(admin.id, "user.create", "AdminUser", created.id, { email: d.email, role: d.role });
@@ -69,12 +72,14 @@ export async function updateUserAction(formData: FormData): Promise<void> {
       name: nameSchema,
       role: z.enum(["admin", "editor"]),
       permissions: z.array(z.string()).optional(),
+      employeeId: z.string().trim().optional().or(z.literal("")),
     })
     .safeParse({
       id: formData.get("id"),
       name: formData.get("name"),
       role: formData.get("role"),
       permissions: formData.getAll("permissions"),
+      employeeId: formData.get("employeeId") ?? "",
     });
   if (!parsed.success) redirect("/admin/users?e=invalid");
   const d = parsed.data;
@@ -86,6 +91,7 @@ export async function updateUserAction(formData: FormData): Promise<void> {
       name: d.name,
       role: d.role,
       permissions: d.role === "editor" ? sanitizePermissions(d.permissions) : [],
+      employeeId: d.employeeId || null,
     },
   });
   await audit(admin.id, "user.update", "AdminUser", d.id, { role: d.role });
