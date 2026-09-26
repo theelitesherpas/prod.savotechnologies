@@ -107,6 +107,31 @@ export function interviewReschedule(vars: Record<string, string>): MailTemplate 
   };
 }
 
+/** Shortlist acknowledgment - candidate moved to the shortlist. */
+export function shortlistAck(vars: Record<string, string>): MailTemplate {
+  return {
+    subject: `Your application has been shortlisted - ${v(vars, "position")} - Savo Technologies`,
+    html: shell({
+      preheader: "Your application has progressed to the next stage.",
+      eyebrowText: "Application shortlisted",
+      ref: "HR - SHORTLIST",
+      heading: "Your application has been shortlisted.",
+      bodyHtml: [
+        lead(`Dear ${v(vars, "candidateName")},<br><br>We are pleased to inform you that your application for the <strong>${v(vars, "position")}</strong> position at Savo Technologies has been shortlisted for the next stage of our hiring process.`),
+        p(`Our hiring team is reviewing shortlisted profiles and will contact you within <strong>two business days</strong> to schedule an interview. Please keep an eye on your inbox.`),
+        p(`If you have any questions in the meantime, simply reply to this email.`, true),
+      ].join(""),
+      closing: "Kind regards,",
+      reason: "You are receiving this email in relation to your application to Savo Technologies.",
+    }),
+    text: `Dear ${v(vars, "candidateName")},
+
+Your application for the ${v(vars, "position")} position has been shortlisted. Our hiring team will contact you within two business days to schedule an interview.
+
+${HR_SIGN}`,
+  };
+}
+
 /** Candidate rejection - respectful, keeps the door open. */
 export function candidateRejection(vars: Record<string, string>): MailTemplate {
   return {

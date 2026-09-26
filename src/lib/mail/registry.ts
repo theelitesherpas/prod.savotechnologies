@@ -12,6 +12,7 @@
 import {
   appointmentLetter,
   candidateRejection,
+  shortlistAck,
   documentVerification,
   employmentVerification,
   employeeWelcome,
@@ -306,6 +307,16 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     recipient: "candidate",
     vars: { candidateName: "Aarav Mehta", position: "Flutter Developer", newDate: "Wed, 30 Sep", newTime: "16:00", timezone: "IST", meetingLink: "https://meet.google.com/abc-defg-hij" },
     default: (v) => interviewReschedule(v),
+  },
+  {
+    key: "shortlistAck",
+    dept: "hr",
+    category: "recruitment",
+    label: "Shortlist acknowledgment",
+    fires: "HR shortlists a candidate from the enquiry",
+    recipient: "candidate",
+    vars: { candidateName: "Aarav Mehta", position: "Flutter Developer" },
+    default: (v) => shortlistAck(v),
   },
   {
     key: "candidateRejection",

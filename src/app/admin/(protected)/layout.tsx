@@ -16,6 +16,7 @@ const CRUMB_LABELS: Record<string, string> = {
   employees: "Employee portal",
   "my-profile": "My profile",
   "bug-reports": "Bug reports",
+  "hr-portal": "HR portal",
   leaves: "Leave management",
   analytics: "Analytics",
   "email-templates": "Email templates",
@@ -97,6 +98,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/employees", label: "Dashboard · All employees", icon: "gauge" },
         { href: "/admin/employees/leaves", label: "Leave management", icon: "sun" },
         { href: "/admin/employees/new", label: "Add employee", icon: "plus" },
+        { href: "/admin/email-compose?dept=hr", label: "Send HR email", icon: "pen" },
+      ],
+    },
+        ]
+      : []),
+    ...(allow("hr-portal")
+      ? [
+    {
+      key: "hr-portal",
+      label: "HR portal",
+      icon: "bot",
+      items: [
+        { href: "/admin/hr-portal", label: "Recruitment pipeline", icon: "inbox" },
         { href: "/admin/email-compose?dept=hr", label: "Send HR email", icon: "pen" },
       ],
     },

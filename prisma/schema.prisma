@@ -33,6 +33,12 @@ model ProjectEnquiry {
   /// Full structured form payload (careers application details, callback
   /// country, …) — rendered as its own panel in the admin inbox.
   data        Json?    @map("form_data")
+  /// Career pipeline: new | shortlisted | interview_scheduled | rejected | hired | archived
+  careerStatus String?  @map("career_status")
+  /// Interview scheduling (career enquiries only)
+  interviewDate DateTime? @map("interview_date")
+  meetingLink  String?   @map("meeting_link")
+  interviewer  String?   @map("interviewer")
   /// new | in_progress | closed | archived (app-level enum, see lib/enquiry-status.ts)
   status      String   @default("new")
   adminNotes  String?  @map("admin_notes")
