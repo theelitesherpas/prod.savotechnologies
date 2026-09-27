@@ -31,6 +31,7 @@ export type NavItem = {
 
 export const AI_LINKS: NavLink[] = [
   { label: "AI Agents", href: "/ai-agents", pro: true },
+  { label: "AI Automation", href: "/ai/automation/" },
   { label: "Generative AI & LLM Integration", href: "/ai/generative-ai/" },
   { label: "AI Consulting & Strategy", href: "/ai/consulting/" },
   { label: "Machine Learning & Analytics", href: "/ai/machine-learning/" },

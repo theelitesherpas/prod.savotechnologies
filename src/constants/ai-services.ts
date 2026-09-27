@@ -123,6 +123,41 @@ export const AI_SERVICES: AiService[] = [
       { q: "What about our data privacy?", a: "Data stays in your infrastructure with scoped access, and models are trained where your governance allows. Nothing about your data needs to leave your cloud." },
     ],
   },
+  {
+    slug: "automation",
+    title: "AI Automation",
+    short: "Automation",
+    tagline: "Automate the work between the work",
+    heroLead:
+      "We design AI-powered workflows that understand information, make bounded decisions, connect your systems and route exceptions to humans. Work that used to wait for a click, a copy-paste or an approval now runs itself, with guardrails.",
+    metaDescription:
+      "AI automation by Savo Technologies: intelligent workflows that connect your CRM, ERP, documents and approvals into processes that execute real work. Built on your existing systems, with human oversight where it matters.",
+    overview: [
+      "Between every pair of systems in your company sits work nobody was hired to do: re-keying invoices, chasing approvals, updating the CRM after the call, assembling the report from four tabs. AI automation is the engineering discipline that removes that work. It connects intelligence, business rules, data, applications and human approvals into workflows that actually execute, not chatbots that talk about executing.",
+      "We connect AI to the systems you already run. Your CRM, ERP, email, documents, spreadsheets and internal tools stay exactly where they are; the automation layer reads and writes through their APIs, makes the decisions you have bounded it to make, and hands the exceptions to a human with full context. Sales, marketing, support, finance, operations, HR, onboarding, reporting: the processes cross departments, so the automation does too.",
+    ],
+    engagements: [
+      { title: "Document processing", text: "Invoices, contracts, KYC and claims read, validated and posted into your systems, exceptions routed for review." },
+      { title: "Sales & CRM workflows", text: "Enrichment, follow-ups, pipeline updates and handoffs executed from real signals, not reminders." },
+      { title: "Finance & reporting", text: "Reconciliation, month-end packs and recurring reports assembled from source systems, checked and delivered." },
+      { title: "Onboarding & offboarding", text: "Customers or employees moved through every system, account, notification and approval in one tracked flow." },
+      { title: "Back-office operations", text: "Data entry, catalog updates, order processing and internal approvals, the quiet work, automated." },
+      { title: "Integration fabric", text: "API-driven connections between your existing tools, so automation reads and writes where the work already lives." },
+    ],
+    process: [
+      { name: "Map", text: "The process walked end to end, every system, handoff and wait state documented with the people who run it." },
+      { name: "Bound", text: "Decisions the machine may make defined explicitly, with thresholds, confidence gates and the human approval points." },
+      { name: "Connect", text: "The workflow wired into your existing systems through their APIs. Nothing gets replaced, everything gets connected." },
+      { name: "Run", text: "Live with full audit trails, monitoring on every step, and a tuning cadence that widens automation as trust earns." },
+    ],
+    stack: ["Workflow engines", "LLMs", "Document AI", "RAG", "CRM & ERP connectors", "Human-in-the-loop", "Audit trails"],
+    faqs: [
+      { q: "Do we have to replace our current systems?", a: "No. The automation layer connects through the APIs of the tools you already run, your CRM, ERP, mail, documents and internal apps. We integrate what works instead of demanding a migration." },
+      { q: "What happens when the AI is unsure?", a: "It stops and asks. Every decision has explicit bounds and confidence thresholds; anything outside them routes to a human with the full context attached. The machine handles the routine, people handle judgment." },
+      { q: "Which processes should we automate first?", a: "High volume, rule-shaped and currently eating someone's week: document intake, follow-ups, reconciliation, onboarding. We map your workflows and sequence by value delivered against effort, quick wins fund the deeper builds." },
+      { q: "Is it auditable and secure?", a: "Every step is logged: what was read, what was decided, on what basis, who approved what. Access follows your existing permissions, data stays in your infrastructure, and the trail answers any auditor's question." },
+    ],
+  },
 ];
 
 export function aiService(slug: string): AiService | undefined {

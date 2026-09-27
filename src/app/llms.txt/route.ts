@@ -75,7 +75,7 @@ ${HIRE_ROLES.map((r) => `- [Hire ${r.title}](${base}/hire/${r.slug}): ${r.short}
 
 ## AI practice
 - [The agent fleet](${base}/ai-agents): deployable agents and their deliverables
-${AI_SERVICES.map((s) => `- [${s.title}](${base}/ai/${s.slug}): ${s.short}`).join("\n")}
+${AI_SERVICES.map((s) => `- [${s.title}](${base}/ai/${s.slug}): ${s.tagline.replace(/\.$/, "")}`).join("\n")}
 
 ## Insights
 ${ARTICLES.map((a) => `- [${a.title}](${base}/insights/${a.slug}): ${a.excerpt}`).join("\n")}

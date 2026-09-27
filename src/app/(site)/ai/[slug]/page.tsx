@@ -109,7 +109,7 @@ export default async function AiServicePage({ params }: { params: Promise<{ slug
               <Reveal delay={160}>
                 <figure aria-label={`${svc.title}, schematic`} className="blueprint relative aspect-[4/3] border border-border bg-surface">
                   <div className="absolute inset-0 bottom-[3.25rem] p-8 text-foreground/80 sm:p-10">
-                    <ServiceSchematic slug={svc.slug === "generative-ai" ? "ai-agent-development" : svc.slug === "machine-learning" ? "data-analytics" : "product-engineering"} />
+                    <ServiceSchematic slug={svc.slug === "generative-ai" ? "ai-agent-development" : svc.slug === "machine-learning" ? "data-analytics" : svc.slug === "automation" ? "custom-software" : "product-engineering"} />
                   </div>
                   <figcaption className="absolute inset-x-0 bottom-0 flex h-[3.25rem] items-center justify-between border-t border-border px-5">
                     <span className="t-label text-muted">Specimen: {svc.short}</span>
