@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin, requireAdminRole } from "@/lib/auth";
@@ -112,6 +113,23 @@ export async function deleteIndustryAction(formData: FormData): Promise<void> {
 }
 
 /** Materialize the version-1 industry list into editable rows. */
+export async function reorderIndustriesAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  await requireSection("content");
+  if (!prisma) redirect("/admin/industries?e=Database%20unavailable.");
+  let ids: string[] = [];
+  try {
+    ids = z.array(z.string().min(10).max(32)).min(1).max(200).parse(JSON.parse(String(formData.get("order"))));
+  } catch {
+    redirect("/admin/industries?e=Invalid%20order.");
+  }
+  await prisma!.$transaction(
+    ids.map((id, i) => prisma!.industry.update({ where: { id }, data: { order: i } })),
+  );
+  await revalidateManagedContent();
+  revalidatePath("/admin/industries");
+}
+
 export async function importDefaultIndustriesAction(): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");

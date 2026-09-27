@@ -5,10 +5,12 @@ import { IndustryFields } from "@/components/admin/industry-fields";
 import { PageHeader, Notice, Chip, EmptyState } from "@/components/admin/ui";
 import { AdminIcon } from "@/components/admin/icons";
 import { SubmitButton } from "@/components/admin/form";
+import { DragOrderList } from "@/components/admin/drag-order-list";
 import { FormGuard } from "@/components/admin/form-guard";
 import {
   createIndustryAction,
   toggleIndustryActiveAction,
+  reorderIndustriesAction,
   importDefaultIndustriesAction,
 } from "./actions";
 
@@ -58,59 +60,43 @@ export default async function IndustriesPage({
           message="The public site currently renders the coded defaults. Import them above to make the collection editable, or add the first row below."
         />
       ) : (
-        <div className="adm-card mb-10 overflow-hidden">
-          <table className="adm-hairline-table w-full text-left">
-            <thead>
-              <tr className="border-b border-border">
-                <th scope="col" className=" w-14 px-4 py-3">Order</th>
-                <th scope="col" className=" px-4 py-3">Industry</th>
-                <th scope="col" className=" w-32 px-4 py-3">Status</th>
-                <th scope="col" className=" w-56 px-4 py-3 align-end">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {industries.map((s) => (
-                <tr key={s.id}>
-                  <td className="tnum px-4 py-3 font-mono text-[0.6875rem] text-muted">
-                    {String(s.order).padStart(2, "0")}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/industries/${s.id}`}
-                      className="block max-w-md truncate text-[0.875rem] font-semibold text-foreground transition-colors hover:text-accent"
-                    >
+        <div className="mb-10">
+          <DragOrderList
+            rows={industries.map((s) => ({
+              id: s.id,
+              node: (
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                  <div className="min-w-0">
+                    <Link href={`/admin/industries/${s.id}`} className="block max-w-md truncate text-[0.875rem] font-semibold text-foreground transition-colors hover:text-accent">
                       {s.title}
                     </Link>
                     <span className="t-caption font-mono text-muted">/industries/{s.slug}/</span>
-                  </td>
-                  <td className="px-4 py-3">
+                  </div>
+                  <div className="flex items-center gap-2">
                     {s.active ? <Chip tone="success">Published</Chip> : <Chip tone="warning">Hidden</Chip>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <form action={toggleIndustryActiveAction}>
-                        <input type="hidden" name="id" value={s.id} />
-                        <input type="hidden" name="active" value={s.active ? "false" : "true"} />
-                        <button
-                          type="submit"
-                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
-                        >
-                          <AdminIcon name={s.active ? "eyeOff" : "eye"} className="h-3.5 w-3.5" />
-                          {s.active ? "Hide" : "Show"}
-                        </button>
-                      </form>
-                      <Link
-                        href={`/admin/industries/${s.id}`}
-                        className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+                    <form action={toggleIndustryActiveAction}>
+                      <input type="hidden" name="id" value={s.id} />
+                      <input type="hidden" name="active" value={s.active ? "false" : "true"} />
+                      <button
+                        type="submit"
+                        className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
                       >
-                        Edit
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        <AdminIcon name={s.active ? "eyeOff" : "eye"} className="h-3.5 w-3.5" />
+                        {s.active ? "Hide" : "Show"}
+                      </button>
+                    </form>
+                    <Link
+                      href={`/admin/industries/${s.id}`}
+                      className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+                    >
+                      Edit
+                    </Link>
+                  </div>
+                </div>
+              ),
+            }))}
+            reorder={reorderIndustriesAction}
+          />
         </div>
       )}
 

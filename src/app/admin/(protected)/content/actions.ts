@@ -268,6 +268,22 @@ export async function deleteItemAction(formData: FormData): Promise<void> {
 }
 
 /** Materialize the constants baseline so the collection becomes editable. */
+export async function reorderItemsAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  await requireSection("content");
+  if (!prisma) redirect("/admin/content?e=Database%20unavailable.");
+  const collection = z.enum(["insights", "careers", "hire", "ai-services", "agents"]).parse(formData.get("collection"));
+  let ids: string[] = [];
+  try {
+    ids = z.array(z.string().min(10).max(32)).min(1).max(200).parse(JSON.parse(String(formData.get("order"))));
+  } catch {
+    redirect(`/admin/content/${collection}?e=Invalid%20order.`);
+  }
+  await prisma!.$transaction(ids.map((id, i) => prisma!.contentItem.updateMany({ where: { id, collection }, data: { order: i } })));
+  await revalidateManagedContent();
+  revalidatePath(`/admin/content/${collection}`);
+}
+
 export async function importDefaultsAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");

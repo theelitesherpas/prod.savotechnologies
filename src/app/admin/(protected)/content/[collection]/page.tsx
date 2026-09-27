@@ -7,9 +7,11 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, Chip, EmptyState } from "@/components/admin/ui";
 import { AdminIcon } from "@/components/admin/icons";
 import { ConfirmButton } from "@/components/admin/form";
+import { DragOrderList } from "@/components/admin/drag-order-list";
 import {
   toggleItemAction,
   moveItemAction,
+  reorderItemsAction,
   deleteItemAction,
   importDefaultsAction,
 } from "../actions";
@@ -107,102 +109,54 @@ export default async function CollectionPage({
           }
         />
       ) : (
-        <div className="adm-card overflow-hidden">
-          <table className="adm-hairline-table w-full text-left">
-            <thead>
-              <tr className="border-b border-border">
-                <th scope="col" className=" w-24 px-4 py-3">Order</th>
-                <th scope="col" className=" px-4 py-3">{def.singular}</th>
-                <th scope="col" className=" w-32 px-4 py-3">Status</th>
-                <th scope="col" className=" hidden w-28 px-4 py-3 md:table-cell">Updated</th>
-                <th scope="col" className=" w-[268px] px-4 py-3 align-end">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {items.map((item, i) => (
-                <tr key={item.id}>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="tnum font-mono text-[0.6875rem] text-muted">
-                        {String(item.order).padStart(2, "0")}
-                      </span>
-                      <form action={moveItemAction} className="flex gap-1">
-                        <input type="hidden" name="collection" value={def.key} />
-                        <input type="hidden" name="id" value={item.id} />
-                        <button
-                          type="submit"
-                          name="dir"
-                          value="up"
-                          aria-label="Move up"
-                          disabled={i === 0}
-                          className="flex h-6 w-6 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-foreground/40 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                        >
-                          <AdminIcon name="up" className="h-3 w-3" />
-                        </button>
-                        <button
-                          type="submit"
-                          name="dir"
-                          value="down"
-                          aria-label="Move down"
-                          disabled={i === items.length - 1}
-                          className="flex h-6 w-6 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-foreground/40 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                        >
-                          <AdminIcon name="down" className="h-3 w-3" />
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/content/${def.key}/${item.id}`}
-                      className="block max-w-md truncate text-[0.875rem] font-semibold text-foreground transition-colors hover:text-accent"
+        <DragOrderList
+          rows={items.map((item) => ({
+            id: item.id,
+            node: (
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <div className="min-w-0">
+                  <Link
+                    href={`/admin/content/${def.key}/${item.id}`}
+                    className="block max-w-md truncate text-[0.875rem] font-semibold text-foreground transition-colors hover:text-accent"
+                  >
+                    {item.title}
+                  </Link>
+                  <span className="t-caption font-mono text-muted">
+                    /{item.slug} · updated {item.updatedAt.toISOString().slice(0, 10)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {item.active ? <Chip tone="success">Published</Chip> : <Chip tone="warning">Hidden</Chip>}
+                  <Link
+                    href={`/admin/content/${def.key}/${item.id}`}
+                    className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
+                  >
+                    Edit
+                  </Link>
+                  <form action={toggleItemAction}>
+                    <input type="hidden" name="collection" value={def.key} />
+                    <input type="hidden" name="id" value={item.id} />
+                    <input type="hidden" name="active" value={item.active ? "false" : "true"} />
+                    <button
+                      type="submit"
+                      className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
                     >
-                      {item.title}
-                    </Link>
-                    <span className="t-caption font-mono text-muted">/{item.slug}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {item.active ? (
-                      <Chip tone="success">Published</Chip>
-                    ) : (
-                      <Chip tone="warning">Hidden</Chip>
-                    )}
-                  </td>
-                  <td className="tnum hidden px-4 py-3 font-mono text-[0.6875rem] text-muted md:table-cell">
-                    {item.updatedAt.toISOString().slice(0, 10)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        href={`/admin/content/${def.key}/${item.id}`}
-                        className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
-                      >
-                        Edit
-                      </Link>
-                      <form action={toggleItemAction}>
-                        <input type="hidden" name="collection" value={def.key} />
-                        <input type="hidden" name="id" value={item.id} />
-                        <input type="hidden" name="active" value={item.active ? "false" : "true"} />
-                        <button
-                          type="submit"
-                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
-                        >
-                          <AdminIcon name={item.active ? "eyeOff" : "eye"} className="h-3.5 w-3.5" />
-                          {item.active ? "Hide" : "Show"}
-                        </button>
-                      </form>
-                      <form action={deleteItemAction}>
-                        <input type="hidden" name="collection" value={def.key} />
-                        <input type="hidden" name="id" value={item.id} />
-                        <ConfirmButton label="Delete" confirmLabel="Confirm" />
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      <AdminIcon name={item.active ? "eyeOff" : "eye"} className="h-3.5 w-3.5" />
+                      {item.active ? "Hide" : "Show"}
+                    </button>
+                  </form>
+                  <form action={deleteItemAction}>
+                    <input type="hidden" name="collection" value={def.key} />
+                    <input type="hidden" name="id" value={item.id} />
+                    <ConfirmButton label="Delete" confirmLabel="Confirm" />
+                  </form>
+                </div>
+              </div>
+            ),
+          }))}
+          reorder={reorderItemsAction}
+          hidden={{ collection: def.key }}
+        />
       )}
     </div>
   );

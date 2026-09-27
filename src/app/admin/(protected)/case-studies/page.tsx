@@ -5,8 +5,9 @@ import { PageHeader, Notice, Chip, EmptyState } from "@/components/admin/ui";
 import { caseStudySchema } from "@/lib/case-study-schema";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
 import { IS_DEMO } from "@/lib/content-mode";
-import { deleteCaseStudyAction, importCaseStudyDefaultsAction } from "./actions";
+import { deleteCaseStudyAction, importCaseStudyDefaultsAction, reorderCaseStudiesAction } from "./actions";
 import { ConfirmButton, SubmitButton } from "@/components/admin/form";
+import { DragOrderList } from "@/components/admin/drag-order-list";
 
 export const metadata: Metadata = { title: "Case studies" };
 
@@ -98,45 +99,49 @@ export default async function AdminCaseStudiesPage({
           message="Create the first dossier, or keep running on the coded defaults. Published records replace the defaults on the public site."
         />
       ) : (
-        <ul className="adm-card divide-y divide-border">
-          {parsed.map((row) => (
-            <li key={row.id} className="flex flex-wrap items-center gap-x-5 gap-y-3 px-4 py-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Link href={`/admin/case-studies/${row.id}`} className="truncate text-[0.9375rem] font-semibold text-foreground hover:text-accent">
-                    {row.title}
-                  </Link>
-                  <Chip tone={STATUS_TONE[row.contentStatus] ?? "muted"}>{row.contentStatus}</Chip>
-                  {!row.valid ? <Chip tone="warning">invalid data</Chip> : null}
+        <DragOrderList
+          rows={parsed.map((row) => ({
+            id: row.id,
+            node: (
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link href={`/admin/case-studies/${row.id}`} className="truncate text-[0.9375rem] font-semibold text-foreground hover:text-accent">
+                      {row.title}
+                    </Link>
+                    <Chip tone={STATUS_TONE[row.contentStatus] ?? "muted"}>{row.contentStatus}</Chip>
+                    {!row.valid ? <Chip tone="warning">invalid data</Chip> : null}
+                  </div>
+                  <p className="t-caption mt-1 text-muted">
+                    {row.discipline} · /case-studies/{row.slug} · updated{" "}
+                    {new Date(row.updatedAt).toISOString().slice(0, 16).replace("T", " ")}
+                  </p>
                 </div>
-                <p className="t-caption mt-1 text-muted">
-                  {row.discipline} · /case-studies/{row.slug} · updated{" "}
-                  {new Date(row.updatedAt).toISOString().slice(0, 16).replace("T", " ")}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {row.published ? (
+                <div className="flex items-center gap-2">
+                  {row.published ? (
+                    <Link
+                      href={`/case-studies/${row.slug}`}
+                      className="t-caption rounded-lg border border-border px-3 py-1.5 text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
+                    >
+                      View live
+                    </Link>
+                  ) : null}
                   <Link
-                    href={`/case-studies/${row.slug}`}
+                    href={`/admin/case-studies/${row.id}`}
                     className="t-caption rounded-lg border border-border px-3 py-1.5 text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
                   >
-                    View live
+                    Edit
                   </Link>
-                ) : null}
-                <Link
-                  href={`/admin/case-studies/${row.id}`}
-                  className="t-caption rounded-lg border border-border px-3 py-1.5 text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
-                >
-                  Edit
-                </Link>
-                <form action={deleteCaseStudyAction}>
-                  <input type="hidden" name="id" value={row.id} />
-                  <ConfirmButton label="Delete" confirmLabel="Really delete?" />
-                </form>
+                  <form action={deleteCaseStudyAction}>
+                    <input type="hidden" name="id" value={row.id} />
+                    <ConfirmButton label="Delete" confirmLabel="Really delete?" />
+                  </form>
+                </div>
               </div>
-            </li>
-          ))}
-        </ul>
+            ),
+          }))}
+          reorder={reorderCaseStudiesAction}
+        />
       )}
     </div>
   );

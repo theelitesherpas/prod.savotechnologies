@@ -140,6 +140,23 @@ export async function setCaseStudyStatusAction(formData: FormData): Promise<void
  * "demo": visible on staging (never production) and fully editable from
  * the admin panel. Existing slugs are refreshed, not duplicated.
  */
+export async function reorderCaseStudiesAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  await requireSection("content");
+  if (!prisma) redirect("/admin/case-studies?e=Database%20unavailable.");
+  let ids: string[] = [];
+  try {
+    ids = z.array(z.string().min(10).max(32)).min(1).max(200).parse(JSON.parse(String(formData.get("order"))));
+  } catch {
+    redirect("/admin/case-studies?e=Invalid%20order.");
+  }
+  await prisma!.$transaction(
+    ids.map((id, i) => prisma!.contentItem.updateMany({ where: { id, collection: "case-studies" }, data: { order: i } })),
+  );
+  revalidateCaseStudies();
+  revalidatePath("/admin/case-studies");
+}
+
 export async function importCaseStudyDefaultsAction(): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");

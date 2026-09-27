@@ -126,6 +126,23 @@ export async function deleteServiceAction(formData: FormData): Promise<void> {
  * the database so the admin can edit from the known baseline. Existing
  * slugs are refreshed, not duplicated.
  */
+export async function reorderServicesAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  await requireSection("content");
+  if (!prisma) redirect("/admin/services?e=Database%20unavailable.");
+  let ids: string[] = [];
+  try {
+    ids = z.array(z.string().min(10).max(32)).min(1).max(200).parse(JSON.parse(String(formData.get("order"))));
+  } catch {
+    redirect("/admin/services?e=Invalid%20order.");
+  }
+  await prisma!.$transaction(
+    ids.map((id, i) => prisma!.service.update({ where: { id }, data: { order: i } })),
+  );
+  await revalidateManagedContent();
+  revalidatePath("/admin/services");
+}
+
 export async function importDefaultServicesAction(): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");

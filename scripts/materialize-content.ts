@@ -46,7 +46,7 @@ async function main() {
           order: seed.order ?? i,
           active: seed.active ?? true,
           contentStatus: "published",
-          data: seed.data as object,
+          data: seed.data as never,
         },
         update: { title: seed.title, order: seed.order ?? i },
       });
@@ -89,7 +89,7 @@ async function main() {
         order: i,
         active: true,
         contentStatus: record.status === "verified" ? "published" : "demo",
-        data,
+        data: data as never,
       },
       update: { title: record.title, order: i },
     });
