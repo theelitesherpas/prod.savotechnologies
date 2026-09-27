@@ -113,6 +113,43 @@ describe("salesbot conversation flow", () => {
     expect(t.reply.toLowerCase()).toContain("don't guess");
   });
 
+  it("bands every real-world budget phrasing (regression: the stuck loop)", () => {
+    expect(extractBudget("15-20 lakh rupees", { expectBudget: true })?.band).toBe("5k-25k"); // upper 20L ≈ $25k
+    expect(extractBudget("10k usd")?.band).toBe("5k-25k");
+    expect(extractBudget("₹8-10 lakh")?.band).toBe("5k-25k");
+    expect(extractBudget("$5-25k")?.band).toBe("5k-25k");
+    expect(extractBudget("maybe 20k", { expectBudget: true })?.band).toBe("5k-25k");
+    expect(extractBudget("1 crore")?.band).toBe("25k-plus");
+    expect(extractBudget("around ₹3 lakhs")?.band).toBe("under-5k");
+    expect(extractBudget("₹50,000")?.band).toBe("under-5k");
+  });
+
+  it("answers questions mid-qualification instead of repeating the prompt", () => {
+    const s = newSession("q1");
+    s.stage = "qualify-budget";
+    const t = step(s, "why do you ask about budget?");
+    expect(t.intent).toBe("question:unmatched");
+    expect(t.stage).toBe("qualify-budget"); // stage preserved
+    expect(t.reply).not.toContain("Noted. On budget");
+  });
+
+  it("accepts ok/yes as undecided instead of looping", () => {
+    const s = newSession("q2");
+    s.stage = "qualify-budget";
+    const t = step(s, "ok");
+    expect(t.slots.budgetBand).toBe("undisclosed");
+    expect(t.nextStage).toBe("qualify-timeline");
+  });
+
+  it("never loops: escapes after two unproductive budget turns", () => {
+    let s = newSession("q3");
+    s.stage = "qualify-budget";
+    s.stageAttempts = 1;
+    const t = step(s, "hmm maybe"); // still no budget signal
+    expect(t.nextStage).toBe("qualify-timeline");
+    expect(t.slots.budgetBand).toBe("undisclosed");
+  });
+
   it("restarts cleanly", () => {
     let s = newSession("t7");
     s.slots = { ...emptySlots(), budget: "$5k to $25k", budgetBand: "5k-25k" };

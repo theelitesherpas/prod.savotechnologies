@@ -65,6 +65,7 @@ export async function POST(req: Request) {
 
     const result = step(session, parsed.data.message);
     session.stage = result.nextStage;
+    session.stageAttempts = result.stageAttempts ?? 0;
     session.slots = result.slots;
     session.turns += 1;
     session.transcript.push({ role: "user", text: parsed.data.message }, { role: "bot", text: result.reply });

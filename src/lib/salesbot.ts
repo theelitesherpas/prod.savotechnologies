@@ -40,6 +40,8 @@ export type SalesbotTurn = {
   intent: string;
   leadScore: number;
   leadLabel: "Cold" | "Warm" | "Hot";
+  /** Attempts remaining in the current stage after this turn. */
+  stageAttempts: number;
   brief: SalesbotBrief | null;
 };
 
@@ -57,6 +59,9 @@ export type SalesbotSession = {
   stage: SalesbotStage;
   slots: SalesbotSlots;
   turns: number;
+  /** Consecutive non-productive turns in the current stage - powers the
+   *  never-loop guarantee: after 2, the agent accepts and moves on. */
+  stageAttempts: number;
   transcript: { role: "user" | "bot"; text: string }[];
   createdAt: number;
   updatedAt: number;
@@ -75,22 +80,102 @@ const SERVICE_MATCHERS: { title: string; why: string; keywords: string[] }[] = [
 
 /* ── Entity extraction ─────────────────────────────────────────────── */
 
-const BUDGET_PATTERNS: { re: RegExp; band: NonNullable<SalesbotSlots["budgetBand"]>; label: string }[] = [
-  { re: /\b(?:under|below|less than|max|up to|budget of)?\s*(?:₹|rs\.?|inr)?\s*([1-4](?:\.\d+)?)\s*(?:l|lakh|lac|lakhs)\b/i, band: "under-5k", label: "under $5k" },
-  { re: /\$\s*[1-4](?:\.\d+)?\s*k\b/i, band: "under-5k", label: "under $5k" },
-  { re: /\b(?:under|below|less than)\s*\$?\s*5\s*k\b/i, band: "under-5k", label: "under $5k" },
-  { re: /\b(?:₹|rs\.?|inr)?\s*([5-9]|1[0-9]|2[0-5])(?:\.\d+)?\s*(?:l|lakh|lac|lakhs)\b/i, band: "5k-25k", label: "$5k to $25k" },
-  { re: /\$\s*(?:5|6|7|8|9)(?:,\d{3})?\s*k?\b|\$\s*(?:1[0-9]|2[0-5])(?:,\d{3})?\s*k\b/i, band: "5k-25k", label: "$5k to $25k" },
-  { re: /\$\s*(?:2[6-9]|[3-9]\d|\d{3,})(?:,\d{3})?\s*k?\b/i, band: "25k-plus", label: "$25k+" },
-  { re: /\b(?:₹|rs\.?|inr)?\s*(?:2[6-9]|[3-9]\d|\d{2,})\s*(?:l|lakh|lac|lakhs)\b/i, band: "25k-plus", label: "$25k+" },
-  { re: /\b(?:not sure|unknown|no budget|flexible|undecided|don'?t know|no idea|discuss)\b/i, band: "undisclosed", label: "to be discussed" },
-];
+/**
+ * Budget extraction - normalizes currencies and ranges before banding.
+ * Bands (site-honest): under $5k ~ under ₹4L · $5-25k ~ ₹4-20L · $25k+.
+ * `expectBudget` allows bare numbers ("10k") when we just asked for one.
+ */
+function normalizeMoney(t: string): string {
+  return t
+    // symbol AFTER the amount ("10k usd", "15 lakh rupees") → before it
+    .replace(/(\d[\d.,]*\s*(?:k|thousand|million|lakh|crore)?)\s*(?:usd|dollars?|bucks)\b/gi, "$$$1")
+    .replace(/(\d[\d.,]*\s*(?:k|thousand|lakh|crore)?)\s*(?:rupees?|rs\.?|inr)\b/gi, "₹$1")
+    .replace(/\b(usd|dollars?|bucks)\b/gi, "$")
+    .replace(/\b(rupees?|rs\.?|inr)\b/gi, "₹")
+    .replace(/\b(lacs?|lakhs?)\b/gi, "lakh")
+    .replace(/\b(crores?)\b/gi, "crore")
+    .replace(/[–—]/g, "-");
+}
+
+const D = "(\\d+(?:\\.\\d+)?)";
+const RANGE = `${D}\\s*(?:-|to)\\s*(?:${D}\\s*)?`;
+const K_BAND = (upper: number): NonNullable<SalesbotSlots["budgetBand"]> =>
+  upper < 5 ? "under-5k" : upper <= 25 ? "5k-25k" : "25k-plus";
+const L_BAND = (upperL: number): NonNullable<SalesbotSlots["budgetBand"]> =>
+  upperL < 4 ? "under-5k" : upperL <= 20 ? "5k-25k" : "25k-plus";
+const BAND_LABEL: Record<NonNullable<SalesbotSlots["budgetBand"]>, string> = {
+  "under-5k": "under $5k",
+  "5k-25k": "$5k to $25k",
+  "25k-plus": "$25k+",
+  undisclosed: "to be discussed",
+};
+
+export function extractBudget(
+  text: string,
+  opts?: { expectBudget?: boolean },
+): { band: NonNullable<SalesbotSlots["budgetBand"]>; label: string } | null {
+  const t = normalizeMoney(text);
+
+  // explicit "not sure / flexible / discuss" family
+  if (/\b(?:not sure|no budget|flexible|undecided|don'?t know|dunno|no idea|no clue|to be discussed|discuss|depends)\b/i.test(t)) {
+    return { band: "undisclosed", label: BAND_LABEL.undisclosed };
+  }
+
+  // dollar ranges: $5-25k, $5k-$25k, $10 to $30k
+  let m = t.match(new RegExp(`\\$\\s*${RANGE}k?\\b`, "i"));
+  if (m) {
+    const upper = parseFloat(m[2] || m[1]);
+    if (!Number.isNaN(upper)) return { band: K_BAND(upper), label: BAND_LABEL[K_BAND(upper)] };
+  }
+  // dollar singles: $10k, $12,000, under/over $4k
+  m = t.match(new RegExp(`(?:under|below|less than|max|up to|over|above|more than|around|about|approx|budget of)?\\s*\\$\\s*${D}\\s*(k)?\\b`, "i"));
+  if (m) {
+    let v = parseFloat(m[1]);
+    if (m[2] !== "k" && v >= 1000) v = v / 1000; // $12,000 written plainly
+    if (!Number.isNaN(v)) return { band: K_BAND(v), label: BAND_LABEL[K_BAND(v)] };
+  }
+  // lakh ranges: ₹8-10 lakh, 5 to 6 lakh, 15-20 lakh
+  m = t.match(new RegExp(`(?:₹\\s*)?${RANGE}lakh\\b`, "i"));
+  if (m) {
+    const upper = parseFloat(m[2] || m[1]);
+    if (!Number.isNaN(upper)) return { band: L_BAND(upper), label: BAND_LABEL[L_BAND(upper)] };
+  }
+  // lakh singles: ₹3 lakhs, 12 lakh, around ₹7 lakh
+  m = t.match(new RegExp(`(?:₹\\s*)?${D}\\s*(?:lakh|l)\\b`, "i"));
+  if (m) {
+    const v = parseFloat(m[1]);
+    if (!Number.isNaN(v)) return { band: L_BAND(v), label: BAND_LABEL[L_BAND(v)] };
+  }
+  // crore: 1 crore, ₹1.5 crore
+  m = t.match(new RegExp(`(?:₹\\s*)?${D}\\s*crore\\b`, "i"));
+  if (m) return { band: "25k-plus", label: BAND_LABEL["25k-plus"] };
+  // absolute rupees: ₹50,000 / 50000 / ₹800000 (>= ₹40k treated as budget)
+  m = t.match(new RegExp(`₹\\s*${D}(?:,(\\d{3}))*(?:\\s*(?:k|thousand))?\\b`, "i")) || t.match(new RegExp(`\\b${D}(?:,(\\d{3}))+\\b`));
+  if (m) {
+    const raw = t.match(/([\d,]+(?:\.\d+)?)/g);
+    const v = raw ? parseFloat(raw[0].replace(/,/g, "")) : NaN;
+    if (!Number.isNaN(v)) {
+      const l = v >= 100000 ? v / 100000 : v / 100000; // rupees → lakh
+      return { band: L_BAND(l), label: BAND_LABEL[L_BAND(l)] };
+    }
+  }
+  // bare k values ("10k") - only when a budget was just requested or the
+  // message mentions spending
+  if (opts?.expectBudget || /budget|spend|spending|invest|cost/i.test(t)) {
+    m = t.match(new RegExp(`(?:under|below|less than|over|above|around|about|approx)?\\s*\\b${D}\\s*k\\b`, "i"));
+    if (m) {
+      const v = parseFloat(m[1]);
+      if (!Number.isNaN(v)) return { band: K_BAND(v), label: BAND_LABEL[K_BAND(v)] };
+    }
+  }
+  return null;
+}
 
 const TIMELINE_PATTERNS: { re: RegExp; urgency: NonNullable<SalesbotSlots["urgency"]>; label: string }[] = [
-  { re: /\b(?:asap|immediately|urgent|urgently|right away|this week|yesterday|right now|quickly)\b/i, urgency: "urgent", label: "Urgent (this week)" },
-  { re: /\b(?:this month|next month|few weeks|2 weeks|3 weeks|30 days|4 weeks|six weeks|1 month|one month)\b/i, urgency: "urgent", label: "Within a month" },
-  { re: /\b(?:this quarter|next quarter|q[1-4]|2 months|3 months|couple of months|by summer|by fall)\b/i, urgency: "this-quarter", label: "This quarter" },
-  { re: /\b(?:exploring|just looking|research|researching|no rush|later|next year|sometime|eventually|early stages|planning)\b/i, urgency: "exploring", label: "Exploring" },
+  { re: /\b(?:asap|as soon as possible|immediately|urgent|urgently|right away|this week|next week|yesterday|right now|quickly|emergency)\b/i, urgency: "urgent", label: "Urgent (days)" },
+  { re: /\b(?:this month|next month|few weeks|1 week|2 weeks|3 weeks|4 weeks|30 days|six weeks|1 month|one month|2 months|two months)\b/i, urgency: "urgent", label: "Within weeks" },
+  { re: /\b(?:this quarter|next quarter|q[1-4]|3 months|couple of months|by diwali|before (?:diwali|christmas|new year)|end of (?:the )?year|few months)\b/i, urgency: "this-quarter", label: "This quarter" },
+  { re: /\b(?:exploring|just looking|research|researching|no rush|later|next year|sometime|eventually|early stages|planning|not decided|no timeline)\b/i, urgency: "exploring", label: "Exploring" },
 ];
 
 export function extractServices(text: string): string[] {
@@ -106,14 +191,6 @@ export function extractServices(text: string): string[] {
     hits.delete("Mobile App Development");
   }
   return [...hits].slice(0, 3);
-}
-
-export function extractBudget(text: string): { band: NonNullable<SalesbotSlots["budgetBand"]>; label: string } | null {
-  for (const p of BUDGET_PATTERNS) {
-    const m = text.match(p.re);
-    if (m) return { band: p.band, label: p.label };
-  }
-  return null;
 }
 
 export function extractTimeline(text: string): { urgency: NonNullable<SalesbotSlots["urgency"]>; label: string } | null {
@@ -199,7 +276,7 @@ export function scoreLead(slots: SalesbotSlots): { score: number; label: "Cold" 
 
 export function newSession(id: string): SalesbotSession {
   const now = Date.now();
-  return { id, stage: "greet", slots: emptySlots(), turns: 0, transcript: [], createdAt: now, updatedAt: now };
+  return { id, stage: "greet", slots: emptySlots(), turns: 0, stageAttempts: 0, transcript: [], createdAt: now, updatedAt: now };
 }
 
 export function emptySlots(): SalesbotSlots {
@@ -234,7 +311,7 @@ export function step(session: SalesbotSession, message: string): SalesbotTurn {
   // ── entity extraction (runs on every turn, any stage) ──
   const services = extractServices(text);
   for (const s of services) if (!slots.services.includes(s)) slots.services.push(s);
-  const budget = extractBudget(text);
+  const budget = extractBudget(text, { expectBudget: stage === "qualify-budget" });
   if (budget) {
     slots.budget = budget.label;
     slots.budgetBand = budget.band;
@@ -255,6 +332,43 @@ export function step(session: SalesbotSession, message: string): SalesbotTurn {
   }
 
   // ── stage machine ──
+  const attempts = session.stageAttempts || 0;
+  const bumpAttempt = () => Math.min(attempts + 1, 2);
+
+  // Questions are answered at ANY stage first (guardrails apply), then
+  // the agent returns to its qualification thread.
+  if (intent === "question" && stage !== "qna" && stage !== "brief") {
+    const qa = matchQA(text);
+    const answer = qa
+      ? qa.answer
+      : "That one's outside my approved knowledge, and I don't guess - a senior consultant replies within one business day with the real answer.";
+    const backTo =
+      stage === "qualify-budget"
+        ? "\n\nBack to it: your budget band - under $5k, $5-25k, $25k+, or \"not sure yet\"?"
+        : stage === "qualify-timeline"
+          ? "\n\nBack to it: urgent, this quarter, or still exploring?"
+          : stage === "discover"
+            ? "\n\nSo - what are you looking to build or solve?"
+            : "";
+    return turn(answer + backTo, qa ? `question:${qa.id}` : "question:unmatched", slots, stage, stage, suggestionsFor(stage), session, null, bumpAttempt());
+  }
+
+  // A bare "yes / ok / sure" during qualification = not sure yet. Move on.
+  if (intent === "affirm" && (stage === "qualify-budget" || stage === "qualify-timeline")) {
+    if (stage === "qualify-budget") {
+      slots.budget = "to be discussed";
+      slots.budgetBand = "undisclosed";
+      reply = "No problem - I'll mark budget as to-be-discussed, the consultant will shape it with you. And timeline: urgent, this quarter, or still exploring?";
+      nextStage = "qualify-timeline";
+    } else {
+      slots.timeline = "not stated";
+      reply = "Noted - I'll leave the timeline open. Let me put the recommendation together.";
+      nextStage = slots.services.length ? "recommend" : "qualify-timeline";
+      if (nextStage === "recommend") return recommendTurn(slots, { ...session, stageAttempts: 0 });
+    }
+    return turn(reply, intent, slots, stage, nextStage, suggestionsFor(nextStage), session, null, 0);
+  }
+
   switch (stage) {
     case "greet": {
       if (intent === "greeting") {
@@ -272,52 +386,54 @@ export function step(session: SalesbotSession, message: string): SalesbotTurn {
 
     case "discover":
     case "qualify-budget": {
-      if (stage === "discover" && !slots.need) slots.need = text.slice(0, 240);
-      if (stage === "qualify-budget" && !slots.need && intent === "statement") slots.need = text.slice(0, 240);
+      if (!slots.need && intent === "statement" && text.length > 12) slots.need = text.slice(0, 240);
 
-      if (stage === "discover" && !slots.budget && intent !== "question") {
-        // discovery answer → move to budget
-        reply = slots.services.length
-          ? `Understood - ${slots.services[0].toLowerCase()} it is. Two quick qualification questions and I'll match you to the right engagement. First: do you have a budget range in mind? A band is fine ("under $5k", "$10k-ish", "not sure yet").`
-          : "Noted. Two quick qualification questions and I'll match you to the right engagement. First: do you have a budget range in mind? A band is fine (\"under $5k\", \"$10k-ish\", \"not sure yet\").";
-        nextStage = "qualify-budget";
-        suggestions.push("Around $10k", "₹15 lakhs", "Not sure yet");
-        break;
-      }
       if (slots.budget || intent === "decline") {
         if (!slots.budget) {
-          slots.budget = "not stated";
+          slots.budget = "to be discussed";
           slots.budgetBand = "undisclosed";
         }
-        reply = `${slots.timeline ? "Good - " : ""}And timeline: when does this need to be live? "Yesterday", this quarter, or still exploring?`;
+        reply = `And timeline: when does this need to be live - urgent, this quarter, or still exploring?`;
         nextStage = "qualify-timeline";
-        suggestions.push("ASAP - it's urgent", "This quarter", "Just exploring");
+        suggestions.push("Urgent", "This quarter", "Just exploring");
         break;
       }
-      // unanswered budget question at qualify-budget stage
-      reply = "Noted. On budget, even a rough band helps me route you correctly: under $5k, $5-25k, $25k+, or \"not sure yet\" - all valid answers.";
-      nextStage = "qualify-budget";
-      suggestions.push("Under $5k", "$5k to $25k", "Not sure yet");
-      break;
+
+      // Escape after two unproductive turns: accept and move on, never loop.
+      if (attempts >= 1) {
+        slots.budget = "not stated";
+        slots.budgetBand = "undisclosed";
+        reply = "Let's not belabour the budget - I'll mark it open and keep qualifying. Timeline: urgent, this quarter, or still exploring?";
+        nextStage = "qualify-timeline";
+        suggestions.push("Urgent", "This quarter", "Exploring");
+        return turn(reply, intent, slots, stage, nextStage, suggestions, session, null, 0);
+      }
+
+      reply = `Got it. Budget-wise, even a rough band helps me route you: under $5k, $5k to $25k, $25k+, or "not sure yet" - all valid answers.`;
+      return turn(reply, intent, slots, stage, "qualify-budget", ["Around $10k", "₹8-10 lakh", "Not sure yet"], session, null, bumpAttempt());
     }
 
     case "qualify-timeline": {
       if (slots.timeline || intent === "decline") {
         if (!slots.timeline) slots.timeline = "not stated";
         if (slots.services.length === 0) {
-          reply = "Thanks. One more thing so my recommendation is precise: which of these is closest to the work - a website or platform, a mobile app, an AI agent or automation, custom software, design, or growth/SEO?";
+          reply = "Thanks. One more so my recommendation is precise: which is closest - a website or platform, a mobile app, an AI agent or automation, custom software, design, or growth/SEO?";
           nextStage = "recommend";
           suggestions.push("Website or platform", "AI agent", "Custom software");
           break;
         }
-        stage = "recommend";
-        // fall through to recommend handling below
-        return recommendTurn(slots, session);
+        return recommendTurn(slots, { ...session, stageAttempts: 0 });
       }
-      reply = "Understood. Timeline-wise: urgent, this quarter, or still exploring the idea?";
-      nextStage = "qualify-timeline";
-      suggestions.push("Urgent", "This quarter", "Exploring");
-      break;
+
+      if (attempts >= 1) {
+        slots.timeline = "not stated";
+        reply = "I'll leave the timeline open - no problem. Let me put the recommendation together.";
+        nextStage = slots.services.length ? "recommend" : "qualify-timeline";
+        if (nextStage === "recommend") return recommendTurn(slots, { ...session, stageAttempts: 0 });
+        return turn(reply, intent, slots, stage, nextStage, ["Website or platform", "AI agent", "Custom software"], session, null, 0);
+      }
+
+      return turn("Understood. Timeline-wise: urgent, this quarter, or still exploring the idea?", intent, slots, stage, "qualify-timeline", ["Urgent", "This quarter", "Exploring"], session, null, bumpAttempt());
     }
 
     case "recommend":
@@ -327,30 +443,27 @@ export function step(session: SalesbotSession, message: string): SalesbotTurn {
         if (qa) {
           intent = `question:${qa.id}`;
           reply = qa.answer;
-          const { score, label } = scoreLead(slots);
+          const { score } = scoreLead(slots);
           if (score >= 40 || session.turns >= 4) {
-            reply += "\n\nAnything else I can answer - or shall I put the qualification brief together?";
+            reply += "\n\nAnything else - or shall I put the qualification brief together?";
             suggestions.push("Build the brief", "How do you price?", "What's your process?");
-            nextStage = "qna";
           } else {
-            nextStage = "qna";
             suggestions.push("Build the brief", "What tech do you use?");
           }
+          nextStage = "qna";
           break;
         }
-        // unmatched question → guardrail: honest deflection
         intent = "question:unmatched";
-        reply = "That one's outside my approved knowledge, and I don't guess - inventing answers is how agents lose trust. A senior consultant replies within one business day with the real answer; I'll flag it in the handoff brief. Meanwhile: pricing, process, tech stack, AI capability and who Savo is - all fair game.";
+        reply = "That one's outside my approved knowledge, and I don't guess - inventing answers is how agents lose trust. A senior consultant replies within one business day; I'll flag it in the handoff. Meanwhile: pricing, process, tech stack, AI capability and who Savo is - all fair game.";
         suggestions.push("How do you price?", "What's your process?", "Build the brief");
         nextStage = "qna";
         break;
       }
       if (/brief|summary|handoff|recommend|next step|what.*(recommend|suggest)|proposal/i.test(lower) || intent === "affirm") {
-        return recommendTurn(slots, session);
+        return recommendTurn(slots, { ...session, stageAttempts: 0 });
       }
-      // statements still slot-fill
       if (services.length || budget || timeline) {
-        const { score, label } = scoreLead(slots);
+        const { score } = scoreLead(slots);
         reply = `Captured: ${[
           slots.services.length ? `services (${slots.services.length})` : null,
           budget ? "budget" : null,
@@ -370,17 +483,14 @@ export function step(session: SalesbotSession, message: string): SalesbotTurn {
 
     case "brief":
     default: {
-      // After the brief, the agent stays available: questions get guarded
-      // answers, "restart" resets, anything else re-offers the handoff.
       if (intent === "question" || intent.startsWith("question:")) {
-        stage = "qna";
-        return step({ ...session, stage: "qna" }, text);
+        return step({ ...session, stage: "qna", stageAttempts: 0 }, text);
       }
-      return recommendTurn(slots, session);
+      return recommendTurn(slots, { ...session, stageAttempts: 0 });
     }
   }
 
-  return turn(reply, intent, slots, stage, nextStage, suggestions, session);
+  return turn(reply, intent, slots, stage, nextStage, suggestions, session, null, nextStage === stage ? bumpAttempt() : 0);
 }
 
 function recommendTurn(slots: SalesbotSlots, session: SalesbotSession): SalesbotTurn {
@@ -420,7 +530,16 @@ function turn(
   suggestions: string[],
   session: SalesbotSession,
   brief: SalesbotBrief | null = null,
+  stageAttempts = 0,
 ): SalesbotTurn {
   const { score, label } = scoreLead(slots);
-  return { reply, stage, nextStage, slots, suggestions: [...new Set(suggestions)].slice(0, 3), intent, leadScore: score, leadLabel: label, brief };
+  return { reply, stage, nextStage, slots, suggestions: [...new Set(suggestions)].slice(0, 3), intent, leadScore: score, leadLabel: label, stageAttempts, brief };
+}
+
+/** Quick replies matching the stage the conversation returns to. */
+function suggestionsFor(stage: SalesbotStage): string[] {
+  if (stage === "qualify-budget") return ["Around $10k", "₹8-10 lakh", "Not sure yet"];
+  if (stage === "qualify-timeline") return ["Urgent", "This quarter", "Exploring"];
+  if (stage === "discover") return ["A new website", "An AI agent", "A mobile app"];
+  return ["Build the brief", "How do you price?"];
 }
