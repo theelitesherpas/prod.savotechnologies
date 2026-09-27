@@ -18,6 +18,7 @@ export type AnalyticsEvent =
   | "role_open"
   | "role_filter_click"
   | "apply_click"
+  | "hr_channel_click"
   | "ai_section_engagement"
   | "project_view_click"
   | "enquiry_form_start"
