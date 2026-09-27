@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { useEnquiry } from "@/components/shared/enquiry-dialog";
@@ -9,63 +9,80 @@ import { track } from "@/lib/analytics";
 import { SITE } from "@/constants/site";
 
 /**
- * Homepage hero - Deloitte-grade cinematic intro (GSAP).
+ * Homepage hero - Deloitte-grade line reveal (GSAP).
  *
- * The premium detail: the headline reveals as WHOLE LINES rising out of
- * per-line masks (measured after layout), never per-word - so the type
- * reads as one continuous, unbroken sentence while it moves, exactly the
- * agency feel of the Deloitte hero. Supporting cast (eyebrow, lead, CTAs)
- * cascades behind; the system visual settles with a clip + scale reveal.
+ * Whole rendered LINES rise out of per-line masks (measured after
+ * layout), so the sentence moves as continuous units - never fragmented
+ * per word. Eyebrow, lead, CTAs and footer cascade behind; the system
+ * visual settles with a clip + scale reveal.
  *
- * Robustness: splitting happens in useLayoutEffect (before first paint,
- * no flash), re-validated once webfonts settle (self-hosted + preloaded,
- * so grouping is stable), guarded against double-runs, and the entire
- * timeline is skipped under prefers-reduced-motion - reduced users get
- * the finished hero instantly, and the un-split markup needs no JS at all.
+ * Cold-cache safety (the hard-refresh bug this replaces): webfonts can
+ * swap AFTER the first split and change line wrapping. So the split is
+ * re-measured once fonts settle (racing a 350ms ceiling so the intro is
+ * never held hostage by a slow font), rebuilt while still hidden, and
+ * only then does the timeline play. There is no kill-path that can leave
+ * content invisible: every animated element ends at its final state.
+ *
+ * Accessibility: initial hidden states are JS-applied pre-paint only;
+ * the un-split markup is fully readable without JS, and the whole
+ * timeline is skipped under prefers-reduced-motion.
  */
+
+const FONT_CEILING_MS = 350;
+
+function unwrapLines(h1: HTMLHeadingElement) {
+  for (const mask of Array.from(h1.querySelectorAll(":scope > span[data-line-mask]"))) {
+    const mover = mask.firstElementChild;
+    const parent = mask.parentElement;
+    if (!mover || !parent) continue;
+    while (mover.firstChild) parent.insertBefore(mover.firstChild, mask);
+    mask.remove();
+  }
+  h1.dataset.linesSplit = "";
+}
+
+function splitLines(h1: HTMLHeadingElement): HTMLElement[] {
+  const words = Array.from(h1.querySelectorAll<HTMLElement>("[data-word]"));
+  if (words.length === 0) return [];
+  const groups: { nodes: Node[] }[] = [];
+  let currentTop = -1;
+  for (const w of words) {
+    const top = w.offsetTop;
+    if (top !== currentTop) {
+      currentTop = top;
+      groups.push({ nodes: [] });
+    }
+    const prev = w.previousSibling;
+    if (prev && prev.nodeType === Node.TEXT_NODE) groups[groups.length - 1].nodes.push(prev);
+    groups[groups.length - 1].nodes.push(w);
+  }
+  const movers: HTMLElement[] = [];
+  for (const g of groups) {
+    const mask = document.createElement("span");
+    mask.dataset.lineMask = "";
+    mask.style.display = "block";
+    mask.style.overflow = "hidden";
+    mask.style.paddingBottom = "0.16em";
+    mask.style.marginBottom = "-0.16em";
+    const mover = document.createElement("span");
+    mover.style.display = "block";
+    mover.style.willChange = "transform";
+    mask.appendChild(mover);
+    h1.insertBefore(mask, g.nodes[0]);
+    for (const n of g.nodes) mover.appendChild(n);
+    movers.push(mover);
+  }
+  h1.dataset.linesSplit = "done";
+  return movers;
+}
+
+const lineCount = (h1: HTMLHeadingElement) =>
+  new Set(Array.from(h1.querySelectorAll<HTMLElement>("[data-word]"), (w) => w.offsetTop)).size;
 
 export function Hero() {
   const { open } = useEnquiry();
   const rootRef = useRef<HTMLElement | null>(null);
   const h1Ref = useRef<HTMLHeadingElement | null>(null);
-
-  /* Split headline words into per-LINE mask wrappers. Pure DOM, once. */
-  const splitLines = (h1: HTMLHeadingElement) => {
-    const words = Array.from(h1.querySelectorAll<HTMLElement>("[data-word]"));
-    if (words.length === 0) return [];
-    // Group word spans by their rendered line (offsetTop)
-    const groups: { top: number; nodes: Node[] }[] = [];
-    let currentTop = -1;
-    for (const w of words) {
-      const top = w.offsetTop;
-      if (top !== currentTop) {
-        currentTop = top;
-        groups.push({ top, nodes: [] });
-      }
-      // keep the whitespace text node that precedes the word (spacing)
-      const prev = w.previousSibling;
-      if (prev && prev.nodeType === Node.TEXT_NODE) groups[groups.length - 1].nodes.push(prev);
-      groups[groups.length - 1].nodes.push(w);
-    }
-    // Wrap each line group: mask (overflow hidden, descender-safe) + mover
-    const movers: HTMLElement[] = [];
-    for (const g of groups) {
-      const mask = document.createElement("span");
-      mask.style.display = "block";
-      mask.style.overflow = "hidden";
-      mask.style.paddingBottom = "0.16em";
-      mask.style.marginBottom = "-0.16em";
-      const mover = document.createElement("span");
-      mover.style.display = "block";
-      mover.style.willChange = "transform";
-      mask.appendChild(mover);
-      h1.insertBefore(mask, g.nodes[0]);
-      for (const n of g.nodes) mover.appendChild(n);
-      movers.push(mover);
-    }
-    h1.dataset.linesSplit = "done";
-    return movers;
-  };
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -74,49 +91,78 @@ export function Hero() {
 
     const mm = gsap.matchMedia();
     mm.add("(prefers-reduced-motion: no-preference)", () => {
-      const movers = splitLines(h1);
+      // 1. Split + hide pre-paint (no flash, no FOUC).
+      let movers = splitLines(h1);
       if (movers.length === 0) return;
 
       const q = gsap.utils.selector(root);
       const fades = q("[data-intro='fade']");
       const visual = q("[data-intro='visual']");
 
-      // Hidden states applied pre-paint: no flash, no FOUC
       gsap.set(movers, { yPercent: 118 });
-      gsap.set(fades, { autoAlpha: 0, y: 24 });
+      gsap.set(fades, { autoAlpha: 0, y: 26 });
       gsap.set(visual, { clipPath: "inset(16% 8% 24% 8%)", scale: 1.12, autoAlpha: 0 });
 
-      const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
-      tl.to(movers, { yPercent: 0, duration: 1.25, stagger: 0.11 }, 0.12)
-        .to(fades, { autoAlpha: 1, y: 0, duration: 1.05, stagger: 0.12 }, 0.55)
-        .to(visual, { clipPath: "inset(0% 0% 0% 0%)", scale: 1, autoAlpha: 1, duration: 1.7 }, 0.3);
+      let disposed = false;
+      let played = false;
 
-      /* Once webfonts settle, verify the line grouping still matches the
-         final metrics (self-hosted fonts are preloaded, so this almost
-         never changes). If it did, rebuild masks in the settled state. */
-      let cancelled = false;
-      document.fonts?.ready.then(() => {
-        if (cancelled) return;
-        const wordTops = Array.from(h1.querySelectorAll<HTMLElement>("[data-word]")).map((w) => w.offsetTop);
-        const distinct = new Set(wordTops).size;
-        if (distinct !== movers.length && tl.progress() > 0) {
+      // 2. Play once fonts settle (or the ceiling hits) - re-splitting
+      //    first if final font metrics changed the line breaks.
+      const play = () => {
+        if (disposed || played) return;
+        played = true;
+        if (lineCount(h1) !== movers.length) {
+          // final metrics differ: rebuild masks to the real lines, hidden
+          movers.forEach((m) => {
+            const mask = m.parentElement;
+            const parent = mask?.parentElement;
+            if (!mask || !parent) return;
+            while (m.firstChild) parent.insertBefore(m.firstChild, mask);
+            mask.remove();
+          });
+          h1.dataset.linesSplit = "";
+          movers = splitLines(h1);
+          gsap.set(movers, { yPercent: 118 });
+        }
+
+        const tl = gsap.timeline({
+          defaults: { ease: "expo.out" },
+          onComplete: () => {
+            gsap.set([...movers, ...fades], { clearProps: "transform,willChange" });
+          },
+        });
+        tl.to(movers, { yPercent: 0, duration: 1.3, stagger: 0.12 }, 0.12)
+          .to(fades, { autoAlpha: 1, y: 0, duration: 1.1, stagger: 0.14 }, 0.7)
+          .to(visual, { clipPath: "inset(0% 0% 0% 0%)", scale: 1, autoAlpha: 1, duration: 1.8 }, 0.35);
+        cleanupFns.push(() => {
+          // any teardown completes the intro: nothing may stay hidden
+          tl.progress(1);
           tl.kill();
-          gsap.set(movers, { yPercent: 0 });
+        });
+      };
+
+      const cleanupFns: Array<() => void> = [];
+      let ceiling: ReturnType<typeof setTimeout> | undefined;
+      const fontsReady = (document.fonts?.ready ?? Promise.resolve()).then(() => {
+        if (!disposed) {
+          if (ceiling) clearTimeout(ceiling);
+          play();
         }
       });
+      ceiling = setTimeout(() => {
+        if (!played) play();
+      }, FONT_CEILING_MS);
 
       return () => {
-        cancelled = true;
-        tl.kill();
+        disposed = true;
+        if (ceiling) clearTimeout(ceiling);
+        for (const fn of cleanupFns) fn();
+        // belt and braces: everything at its final, visible state
         gsap.set([...movers, ...fades, ...visual], { clearProps: "all" });
       };
     });
 
     return () => mm.revert();
-  }, []);
-
-  useEffect(() => {
-    // noop placeholder to keep import order stable (see useLayoutEffect above)
   }, []);
 
   return (
