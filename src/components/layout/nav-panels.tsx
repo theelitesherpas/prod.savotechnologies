@@ -8,10 +8,11 @@ import { cn } from "@/lib/utils";
  * v6 mega-panel pieces, rendered inside the ink panel bar under the header.
  */
 
-export function PanelLink({ link }: { link: NavLink }) {
+export function PanelLink({ link, onNavigate }: { link: NavLink; onNavigate?: () => void }) {
   return (
     <Link
       href={link.href}
+      onClick={onNavigate}
       className="group/panel-link flex items-center gap-3 py-2.5 text-[0.9375rem] font-medium text-foreground/75 transition-colors hover:text-foreground"
     >
       <span
@@ -81,7 +82,7 @@ function FeatureArt({ variant }: { variant: number }) {
   );
 }
 
-export function PanelFeature({ feature, variant }: { feature: NavFeature; variant: number }) {
+export function PanelFeature({ feature, variant, onNavigate }: { feature: NavFeature; variant: number; onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col border-border/70 pl-8 lg:border-l lg:pl-10">
       <div className="flex items-start justify-between gap-6">
@@ -91,6 +92,7 @@ export function PanelFeature({ feature, variant }: { feature: NavFeature; varian
       <p className="t-sm mt-4 max-w-[38ch] text-muted">{feature.copy}</p>
       <Link
         href={feature.href}
+        onClick={onNavigate}
         className="group/btn t-sm mt-6 inline-flex items-center gap-2 font-semibold text-accent transition-colors hover:text-accent-hover"
       >
         {feature.cta}
@@ -102,10 +104,11 @@ export function PanelFeature({ feature, variant }: { feature: NavFeature; varian
   );
 }
 
-export function PanelAllLink({ label, href }: { label: string; href: string }) {
+export function PanelAllLink({ label, href, onNavigate }: { label: string; href: string; onNavigate?: () => void }) {
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className="group/all t-label mt-4 inline-flex items-center gap-2 border-t border-border pt-4 text-muted transition-colors hover:text-accent"
     >
       {label}
@@ -126,6 +129,7 @@ export function MegaBar({
   featureVariant,
   twoCols,
   id,
+  onNavigate,
 }: {
   label: string;
   links: NavLink[];
@@ -135,6 +139,7 @@ export function MegaBar({
   featureVariant?: number;
   twoCols?: boolean;
   id: string;
+  onNavigate?: () => void;
 }) {
   return (
     <div
@@ -149,17 +154,17 @@ export function MegaBar({
           <ul className={cn(twoCols && "grid grid-cols-2 gap-x-10")}>
             {links.map((link) => (
               <li key={link.href} className="border-b border-border/60">
-                <PanelLink link={link} />
+                <PanelLink link={link} onNavigate={onNavigate} />
               </li>
             ))}
           </ul>
           {allLabel && allHref ? (
-            <PanelAllLink label={allLabel} href={allHref} />
+            <PanelAllLink label={allLabel} href={allHref} onNavigate={onNavigate} />
           ) : null}
         </div>
         {feature ? (
           <div className="lg:col-span-5 lg:col-start-8">
-            <PanelFeature feature={feature} variant={featureVariant ?? 0} />
+            <PanelFeature feature={feature} variant={featureVariant ?? 0} onNavigate={onNavigate} />
           </div>
         ) : null}
       </div>

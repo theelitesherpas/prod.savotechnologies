@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { HEADER_NAV, type NavItem, type NavLink } from "@/constants/navigation";
 import { SavoLogo } from "@/components/shared/savo-logo";
 import { useEnquiry } from "@/components/shared/enquiry-dialog";
@@ -20,12 +21,20 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileAcc, setMobileAcc] = useState<string | null>(null);
   const { open: openEnquiry } = useEnquiry();
+  const pathname = usePathname();
 
   const headerRef = useRef<HTMLElement | null>(null);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const burgerRef = useRef<HTMLButtonElement | null>(null);
   const mobileRef = useRef<HTMLDivElement | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Navigation closes the mega panel and the drawer - the visitor has
+     chosen a destination; hovering the menu again reopens it. */
+  useEffect(() => {
+    setOpenPanel(null);
+    setMobileAcc(null);
+  }, [pathname]);
 
   /* Scroll state */
   useEffect(() => {
@@ -265,6 +274,10 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
             )}
           >
             <MegaBar
+              onNavigate={() => {
+                keepOpen();
+                setOpenPanel(null);
+              }}
               id={panelId(item.label)}
               label={item.label === "AI" ? "AI Services" : item.label}
               links={item.children}
