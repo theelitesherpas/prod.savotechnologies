@@ -253,14 +253,12 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                     )}
                     aria-current={isActive(item) ? "page" : undefined}
                   >
-                    {isActive(item) ? (
-                      <span className="flex items-center gap-2">
-                        <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-accent" />
-                        {item.label}
-                      </span>
-                    ) : (
-                      item.label
-                    )}
+                    <span className="relative inline-flex flex-col items-center">
+                      {item.label}
+                      {isActive(item) ? (
+                        <span aria-hidden="true" className="absolute -bottom-1.5 left-1/2 h-1 w-4 -translate-x-1/2 rounded-[1px] bg-accent" />
+                      ) : null}
+                    </span>
                   </Link>
                 </li>
               ),
