@@ -153,11 +153,9 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     vars: {
       name: "Sara",
       company: "Acme Retail",
-      senderName: "Om Yadav",
-      senderTitle: "Director",
       focus: "presenting your brand more professionally, being easier to discover, generating more enquiries, or introducing automation where it makes sense",
     },
-    default: (v) => buildWhatsNext({ name: v.name, company: v.company, senderName: v.senderName, senderTitle: v.senderTitle, focus: v.focus, to: v.__to }),
+    default: (v) => buildWhatsNext({ name: v.name, company: v.company, focus: v.focus, to: v.__to }),
   },
   {
     key: "applicationAck",

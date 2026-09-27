@@ -610,17 +610,66 @@ function pitchBand(label: string): string {
 </div>`;
 }
 
-/* Capability triptych: three columns, geometric CSS marks, hairline cards. */
-function pitchTriptych(items: { mark: string; title: string; line: string }[]): string {
-  const cell = (it: { mark: string; title: string; line: string }) => `
+/* Capability triptych: three columns with drawn icons, hairline cards. */
+function pitchTriptych(items: { icon: string; title: string; line: string }[]): string {
+  const cell = (it: { icon: string; title: string; line: string }) => `
     <td width="33.33%" style="padding:0 5px;vertical-align:top;">
       <div style="border:1px solid ${LINE};border-radius:10px;padding:18px 12px;text-align:center;">
-        <div style="height:26px;margin:0 auto 12px;">${it.mark}</div>
+        <div style="height:46px;margin:0 0 12px;">${it.icon}</div>
         <p style="margin:0 0 6px;font-family:${SANS};font-size:12.5px;font-weight:800;color:${INK};letter-spacing:0.02em;">${esc(it.title)}</p>
         <p style="margin:0;font-family:${SANS};font-size:11.5px;line-height:1.55;color:${MUTED};">${esc(it.line)}</p>
       </div>
     </td>`;
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0;"><tr>${items.map(cell).join("")}</tr></table>`;
+}
+
+/* ── Drawn icons: flow-layout CSS only (no absolute, no images) ── */
+
+/** Browser window: title bar with lights + content lines. */
+const iconBrowser = () => {
+  const dot = `<span style="display:inline-block;width:3px;height:3px;border-radius:50%;background:#ffffff;margin:0 2px 0 0;"></span>`;
+  return `<div style="width:46px;margin:0 auto;border:2px solid ${ACCENT};border-radius:8px;background:${CARD};overflow:hidden;">
+  <div style="background:${ACCENT};height:9px;line-height:9px;font-size:0;text-align:left;padding-left:5px;">${dot}${dot}${dot}</div>
+  <div style="padding:7px 7px 8px;">
+    <div style="height:3px;background:${ACCENT};opacity:.35;border-radius:2px;margin-bottom:3px;width:82%;"></div>
+    <div style="height:3px;background:${ACCENT};opacity:.35;border-radius:2px;margin-bottom:3px;width:62%;"></div>
+    <div style="height:3px;background:${ACCENT};opacity:.35;border-radius:2px;width:38%;"></div>
+  </div>
+</div>`;
+};
+
+/** AI chip: pins around a die with a core. */
+const iconChip = () => {
+  const pinRow = `<div style="font-size:0;line-height:0;">${Array.from({ length: 4 })
+    .map(() => `<span style="display:inline-block;width:3px;height:6px;background:${ACCENT};margin:0 3px;"></span>`)
+    .join("")}</div>`;
+  return `<div style="width:50px;margin:0 auto;text-align:center;">
+  ${pinRow}
+  <div style="border:2px solid ${ACCENT};border-radius:8px;padding:9px;margin:0 1px;background:${CARD};">
+    <div style="width:14px;height:14px;border:3px solid ${ACCENT};border-radius:50%;margin:0 auto;"></div>
+  </div>
+  ${pinRow}
+</div>`;
+};
+
+/** Phone: notch, content lines, home button. */
+const iconPhone = () =>
+  `<div style="width:28px;margin:0 auto;border:2px solid ${ACCENT};border-radius:7px;background:${CARD};overflow:hidden;">
+  <div style="width:10px;height:4px;border-bottom:2px solid ${ACCENT};margin:0 auto;"></div>
+  <div style="padding:7px 5px 0;">
+    <div style="height:3px;background:${ACCENT};opacity:.35;border-radius:2px;margin-bottom:3px;"></div>
+    <div style="height:3px;background:${ACCENT};opacity:.35;border-radius:2px;width:60%;margin-bottom:9px;"></div>
+  </div>
+  <div style="text-align:center;padding-bottom:5px;"><span style="display:inline-block;width:6px;height:6px;border:2px solid ${ACCENT};border-radius:50%;"></span></div>
+</div>`;
+
+/* Dual CTA: primary action + secondary, side by side, email-safe. */
+function pitchCtas(primary: { href: string; label: string }, secondary: { href: string; label: string }, sub: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:26px auto 8px;"><tr>
+  <td style="padding:0 5px;"><a href="${primary.href}" style="display:inline-block;background:${INK};color:#ffffff;font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:15px 28px;border-radius:8px;">${esc(primary.label)}&nbsp;&nbsp;→</a></td>
+  <td style="padding:0 5px;"><a href="${secondary.href}" style="display:inline-block;border:2px solid ${INK};color:${INK};font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:13px 26px;border-radius:8px;">${esc(secondary.label)}</a></td>
+</tr></table>
+<p style="margin:10px 0 0;font-family:${SANS};font-size:12px;color:${MUTED};text-align:center;">${sub}</p>`;
 }
 
 /* Delivery stepper: numbered squares on a hairline rail. */
@@ -648,51 +697,46 @@ function pitchStats(rows: { v: string; k: string }[]): string {
 const pitchLabel = (t: string) =>
   `<p style="margin:24px 0 10px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};text-align:center;"><span style="display:inline-block;width:7px;height:7px;background:${ACCENT};margin-right:9px;vertical-align:1px;"></span>${esc(t)}</p>`;
 
-/** Savo Build What's Next - the client pitch, composed manually from the
- *  email centre. Personal and short: a warm introduction, what Savo
- *  builds, a soft ask for a 15-20 minute conversation, and a personal
- *  signature. The ink nameplate band and the capability triptych keep
- *  it unmistakably Savo; every infographic band is email-safe tables. */
+/** Savo Build What's Next - the client pitch, composed manually from
+ *  the email centre. Team voice, short and warm: an introduction, the
+ *  three offerings with drawn icons, the conversation-first offer, and
+ *  a direct Talk-to-us CTA row (WhatsApp, call, reply). */
 export function buildWhatsNext(v: {
   name: string;
   company: string;
-  senderName: string;
-  senderTitle?: string;
   focus?: string;
   to?: string;
 }): MailTemplate {
   const first = fn(v.name);
-  const title = v.senderTitle || "Director";
+  const wa = `https://wa.me/917502901234?text=${encodeURIComponent("Hi Savo team, I have a few minutes this week to talk.")}`;
   const focus = v.focus || "presenting your brand more professionally, being easier to discover, generating more enquiries, or introducing automation where it makes sense";
   return {
     subject: `A few ideas for ${v.company}`,
     html: shell({
-      preheader: `A short note from ${v.senderName} at Savo Technologies, and an invitation to a 15 minute conversation.`,
-      eyebrowText: "A note from Savo Technologies",
-      heading: "A few ideas for your business.",
+      preheader: "A short note from the Savo team: what we build, and an invitation to a few minutes of conversation.",
+      eyebrowText: "A note from the Savo team",
+      heading: `A few ideas for ${esc(v.company)}.`,
       bodyHtml: [
-        lead(`Hi ${esc(first)},<br><br>I came across <strong style="color:${INK};">${esc(v.company)}</strong> and wanted to introduce ourselves. I am ${esc(v.senderName)} from Savo Technologies, and we design and build modern websites, digital products, mobile applications, custom software and AI-powered solutions.`),
+        lead(`Hi ${esc(first)},<br><br>we came across <strong style="color:${INK};">${esc(v.company)}</strong> and wanted to introduce ourselves. Savo Technologies designs and builds modern websites, digital products, mobile applications, custom software and AI-powered solutions for businesses that want their online presence to work harder.`),
         pitchBand("Savo Build What's Next"),
         pitchLabel("What we do"),
         pitchTriptych([
-          { mark: `<span style="display:inline-block;width:22px;height:22px;border:2px solid ${ACCENT};border-radius:4px;margin-top:2px;"></span>`, title: "Websites & platforms", line: "Modern sites, portals and storefronts that present your brand professionally." },
-          { mark: `<span style="display:inline-block;width:22px;height:22px;border:2px solid ${ACCENT};border-radius:11px;margin-top:2px;"></span>`, title: "AI-powered solutions", line: "Agents, copilots and automation that do real work, where it makes sense." },
-          { mark: `<span style="display:inline-block;width:14px;height:14px;border:2px solid ${ACCENT};border-radius:3px 3px 3px 0;margin-top:5px;"></span>`, title: "Products & custom software", line: "Mobile apps and digital products, built for how your business runs." },
+          { icon: iconBrowser(), title: "Websites & platforms", line: "Modern sites, portals and storefronts that present your brand professionally." },
+          { icon: iconChip(), title: "AI-powered solutions", line: "Agents, copilots and automation that do real work, where it makes sense." },
+          { icon: iconPhone(), title: "Products & custom software", line: "Mobile apps and digital products, built for how your business runs." },
         ]),
         highlight(`No generic proposal. First a short conversation about your goals, then concrete ideas, whether that means ${esc(focus)}.`),
-        p(`Would you be available for a brief 15 to 20 minute conversation this week? Bring what you want to achieve; we will bring the ideas.`, true),
+        p(`Would a few minutes this week work? Tell us what you want to achieve; we will bring the ideas.`, true),
+        pitchCtas(
+          { href: wa, label: "Talk to us" },
+          { href: site("/"), label: "See our work" },
+          `WhatsApp +91 75029 01234 · hello@savotechnologies.com · or simply reply to this email`,
+        ),
       ].join(""),
-      cta: { href: site("/"), label: "See our work", sub: "savotechnologies.com - services, case studies, AI practice" },
-      closing: "Best regards,",
-      signature: {
-        name: v.senderName,
-        title,
-        company: "Savo Technologies Pvt. Ltd.",
-        tagline: "Bold Brands. Built by Savo.",
-      },
-      reason: "You are receiving this because a Savo consultant wrote to you directly.",
+      closing: "Warm regards,",
+      reason: "You are receiving this because the Savo team wrote to you directly.",
       unsubscribeEmail: v.to,
     }),
-    text: `HI ${first.toUpperCase()},\n\nI came across ${v.company} and wanted to introduce ourselves. I am ${v.senderName} from Savo Technologies; we design and build modern websites, digital products, mobile applications, custom software and AI-powered solutions.\n\nWHAT WE DO\n- Websites & platforms: modern sites, portals, storefronts\n- AI-powered solutions: agents, copilots, automation\n- Products & custom software: mobile apps, digital products\n\nNo generic proposal: first a short conversation about your goals, then concrete ideas, whether that means ${focus}.\n\nWould you be available for a brief 15 to 20 minute conversation this week?\n\nSee our work: ${site("/")}\n\nBest regards,\n${v.senderName}\n${title}\nSavo Technologies Pvt. Ltd.\nBold Brands. Built by Savo.\n${site("/")}`,
+    text: `HI ${first.toUpperCase()},\n\nWe came across ${v.company} and wanted to introduce ourselves. Savo Technologies designs and builds modern websites, digital products, mobile applications, custom software and AI-powered solutions.\n\nWHAT WE DO\n- Websites & platforms: modern sites, portals, storefronts\n- AI-powered solutions: agents, copilots, automation\n- Products & custom software: mobile apps, digital products\n\nNo generic proposal: first a short conversation about your goals, then concrete ideas, whether that means ${focus}.\n\nWould a few minutes this week work? Chat with us on WhatsApp (+91 75029 01234), write to hello@savotechnologies.com, or see our work at ${site("/")}\n\nWarm regards,\nThe Savo team\nBold Brands. Built by Savo.\n${site("/")}`,
   };
 }
