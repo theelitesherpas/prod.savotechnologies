@@ -192,7 +192,7 @@ export const HIRING_STEPS = [
   {
     step: "01",
     title: "Two business days",
-    text: "An engineer, not a recruiter, reads every application and replies personally. Yes or no, you hear back.",
+    text: "Our hiring team reads every application and replies personally. Yes or no, you hear back.",
   },
   {
     step: "02",

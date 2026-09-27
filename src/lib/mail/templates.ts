@@ -286,7 +286,7 @@ export function applicationAck(name: string, role: string): MailTemplate {
   return {
     subject: `Application received - ${role} · Savo Technologies`,
     html: shell({
-      preheader: "An engineer reads every application and replies personally within two business days.",
+      preheader: "Our hiring team reads every application and replies personally within two business days.",
       eyebrowText: `Application - ${role}`,
       heading: `Your application has been received.`,
       bodyHtml: [
@@ -296,14 +296,14 @@ export function applicationAck(name: string, role: string): MailTemplate {
           ["Status", "Under review"],
           ["Response", "Two business days"],
         ]),
-        p(`Every application is reviewed individually by an engineer. You will receive a personal response within two business days confirming the outcome and, where relevant, the next steps of our hiring process.`),
+        p(`Every application is reviewed individually by our hiring team. You will receive a personal response within two business days confirming the outcome and, where relevant, the next steps of our hiring process.`),
         p(`We appreciate the time you have invested in your application.`, true),
       ].join(""),
-      cta: { href: site("/careers"), label: "View our hiring process", sub: "Our complete process, salaries and remote policy are published." },
+      cta: { href: site("/careers"), label: "View our hiring process", sub: "Our complete hiring process is published." },
       closing: "Kind regards,",
       reason: "You are receiving this because you applied to Savo Technologies.",
     }),
-    text: `${fn(name).toUpperCase()}, YOUR APPLICATION IS IN\n\nYou applied for ${role}. An engineer reads every application and replies personally within two business days.\n\n1. Engineer review - within two business days\n2. Technical conversation\n3. Paid pairing session\n4. Written offer\n\nHow we hire: ${site("/careers")}\n\nSpeak soon,\nThe Savo team`,
+    text: `${fn(name).toUpperCase()}, YOUR APPLICATION IS IN\n\nYou applied for ${role}. Our hiring team reads every application and replies personally within two business days.\n\n1. Application review - within two business days\n2. Technical conversation\n3. Paid pairing session\n4. Written offer\n\nHow we hire: ${site("/careers")}\n\nSpeak soon,\nThe Savo team`,
   };
 }
 

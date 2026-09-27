@@ -177,8 +177,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
         <span aria-hidden="true" className="mb-6 block h-3 w-3 bg-accent" />
         <p className="t-h3 mb-3">Application received.</p>
         <p className="t-body text-muted">
-          An engineer reads every application and replies personally within two
-          business days. If it is urgent, write to{" "}
+          Our hiring team reads every application and replies personally
+          within two business days. If it is urgent, write to{" "}
           <a href={`mailto:${CAREERS_EMAIL}`} className="link-underline text-foreground">
             {CAREERS_EMAIL}
           </a>{" "}
@@ -367,8 +367,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           </svg>
         </button>
         <p className="t-caption max-w-xs text-muted">
-          Read by an engineer, personal reply within two business days. Your
-          data never leaves Savo Technologies.
+          Read by our hiring team, personal reply within two business days.
+          Your application stays with Savo Technologies.
         </p>
       </div>
     </form>
