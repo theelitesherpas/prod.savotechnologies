@@ -88,16 +88,42 @@ export default async function InsightsPage() {
             </div>
             <div className="lg:col-span-5">
               <Reveal delay={200}>
-                <div className="flex flex-wrap gap-2">
-                  {CATS.map((cat) => (
-                    <span key={cat} className="t-label rounded-[2px] border border-border bg-surface px-3.5 py-2.5 text-muted">
-                      {cat}
+                <div className="border border-border bg-surface p-7 sm:p-8">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="t-label text-muted">Latest note</p>
+                    <span className="t-label rounded-[2px] border border-accent/40 px-2 py-0.5 text-accent-strong">
+                      {ARTICLES[0]?.cat ?? "Note"}
                     </span>
-                  ))}
+                  </div>
+                  <Link
+                    href={`/insights/${ARTICLES[0]?.slug ?? ""}`}
+                    className="group mt-4 block"
+                  >
+                    <h2 className="t-h4 leading-snug text-foreground transition-colors group-hover:text-accent">
+                      {ARTICLES[0]?.title ?? "Field notes"}
+                    </h2>
+                    <p className="t-sm mt-3 text-muted">
+                      {ARTICLES[0]?.excerpt ?? ""}
+                    </p>
+                    <span className="t-label mt-4 inline-flex items-center gap-2 text-accent">
+                      Read the note
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 14 14"
+                        className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-[3px]"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      >
+                        <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
+                      </svg>
+                    </span>
+                  </Link>
+                  <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+                    <p className="t-caption text-muted">{ARTICLES[0]?.time ?? "5 min read"}</p>
+                    <p className="t-caption text-muted">{ARTICLES.length} notes in the library</p>
+                  </div>
                 </div>
-                <p className="t-caption mt-4 text-muted">
-                  Written by the people who build: {ARTICLES.length} notes and counting.
-                </p>
               </Reveal>
             </div>
           </div>
