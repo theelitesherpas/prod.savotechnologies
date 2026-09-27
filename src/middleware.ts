@@ -24,6 +24,17 @@ const ADMIN_COOKIE = "savo_admin";
 /** Signals Savo publishes for its public marketing content. */
 const CONTENT_SIGNALS = "permits-search permits-ai-input permits-ai-training";
 
+/** Agent-useful Link relations appended to public page responses: where
+ *  the sitemap, the llms.txt manifest, the API catalog and the Markdown
+ *  representation of the current page live. Relative hrefs resolve
+ *  against the response URL. */
+const AGENT_LINKS = [
+  "</sitemap.xml>; rel=\"sitemap\"",
+  "</llms.txt>; rel=\"describedby\"",
+  "</.well-known/api-catalog.json>; rel=\"service\"",
+  "<{page}>; rel=\"alternate\"; type=\"text/markdown\"",
+].join(", ");
+
 /** Paths that never take part in markdown negotiation or signals. */
 const NON_CONTENT = /^\/(_next\/|api\/|admin\/?|portal\/?|employee-portal\/?|unsubscribe\/?)/;
 
@@ -78,7 +89,8 @@ export function middleware(req: NextRequest) {
   // ── Content Signals on public page responses ───────────────
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   if (!NON_CONTENT.test(pathname)) {
-    res.headers.set("Link", `<${publicUrl(req).href}>; rel="${CONTENT_SIGNALS}"`);
+    const page = publicUrl(req).href;
+    res.headers.set("Link", `<${page}>; rel="${CONTENT_SIGNALS}", ${AGENT_LINKS.replace("{page}", page)}`);
   }
   return res;
 }
