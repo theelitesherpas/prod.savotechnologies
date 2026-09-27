@@ -145,6 +145,26 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
     track("nav_link_click", { label: item.label });
   };
 
+  /* Active-route highlighting: a nav item is active when the current
+     path starts with its href (so /services/web-development lights
+     "Services"). Mega-menu items match their section root; plain links
+     match exactly or by prefix. */
+  const isActive = (item: NavItem) => {
+    if (!item.href) return false;
+    const p = pathname.replace(/\/$/, "");
+    const h = item.href.replace(/\/$/, "");
+    if (h === "" || h === "/") return p === "/";
+    if (p === h || p.startsWith(h + "/")) return true;
+    // Mega-menu sections own multiple route prefixes (AI: /ai-agents + /ai/*)
+    if (item.children) {
+      return item.children.some((child) => {
+        const ch = child.href.replace(/\/$/, "");
+        return p === ch || p.startsWith(ch + "/");
+      });
+    }
+    return false;
+  };
+
   return (
     <header
       ref={headerRef}
@@ -183,7 +203,9 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                     }}
                     className={cn(
                       "t-sm group flex items-center gap-1.5 px-3 py-2 font-medium transition-colors",
-                      openPanel === item.label ? "text-accent" : "text-foreground/75 hover:text-accent",
+                      isActive(item) || openPanel === item.label
+                        ? "text-accent"
+                        : "text-foreground/75 hover:text-accent",
                     )}
                     aria-expanded={openPanel === item.label}
                     aria-controls={panelId(item.label)}
@@ -225,9 +247,20 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                        (careers) would prefetch a 404 and log console noise. */
                     prefetch={false}
                     onClick={() => track("nav_link_click", { label: item.label })}
-                    className="t-sm px-3 py-2 font-medium text-foreground/75 transition-colors duration-300 hover:text-accent"
+                    className={cn(
+                      "t-sm px-3 py-2 font-medium transition-colors duration-300 hover:text-accent",
+                      isActive(item) ? "text-accent" : "text-foreground/75",
+                    )}
+                    aria-current={isActive(item) ? "page" : undefined}
                   >
-                    {item.label}
+                    {isActive(item) ? (
+                      <span className="flex items-center gap-2">
+                        <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-accent" />
+                        {item.label}
+                      </span>
+                    ) : (
+                      item.label
+                    )}
                   </Link>
                 </li>
               ),
