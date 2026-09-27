@@ -122,11 +122,14 @@ export default function RootLayout({
 
         {gaId ? (
           <>
+            {/* lazyOnload: analytics loads on browser idle, out of the
+                render/LCP path - PSI counts gtag as 151 KiB initial JS,
+                two-thirds unused. Page_view still fires once loaded. */}
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              strategy="afterInteractive"
+              strategy="lazyOnload"
             />
-            <Script id="ga4" strategy="afterInteractive">
+            <Script id="ga4" strategy="lazyOnload">
               {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`}
             </Script>
           </>
