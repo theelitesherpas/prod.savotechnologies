@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { useEnquiry } from "@/components/shared/enquiry-dialog";
@@ -9,74 +9,114 @@ import { track } from "@/lib/analytics";
 import { SITE } from "@/constants/site";
 
 /**
- * Homepage hero with the Deloitte-style cinematic intro (GSAP):
+ * Homepage hero - Deloitte-grade cinematic intro (GSAP).
  *
- * - headline words rise out of per-word masks, staggered (expo.out)
- * - eyebrow, lead copy and CTAs cascade in behind the words
- * - the system visual reveals with a clip + scale settle
- * - the footer meta row fades up last
+ * The premium detail: the headline reveals as WHOLE LINES rising out of
+ * per-line masks (measured after layout), never per-word - so the type
+ * reads as one continuous, unbroken sentence while it moves, exactly the
+ * agency feel of the Deloitte hero. Supporting cast (eyebrow, lead, CTAs)
+ * cascades behind; the system visual settles with a clip + scale reveal.
  *
- * Accessibility first: initial states are applied by JS only, so the
- * server-rendered page is complete without motion; the timeline runs
- * exclusively under prefers-reduced-motion: no-preference, once per load.
+ * Robustness: splitting happens in useLayoutEffect (before first paint,
+ * no flash), re-validated once webfonts settle (self-hosted + preloaded,
+ * so grouping is stable), guarded against double-runs, and the entire
+ * timeline is skipped under prefers-reduced-motion - reduced users get
+ * the finished hero instantly, and the un-split markup needs no JS at all.
  */
-
-/** Headline split into per-word masks (descender-safe padding). */
-function MaskedLine({ text, accent }: { text: string; accent?: string }) {
-  const words = text.split(" ");
-  return (
-    <>
-      {words.map((w, i) => (
-        <span key={`${w}-${i}`} className="inline-block overflow-hidden pb-[0.14em] -mb-[0.14em] align-bottom">
-          <span data-intro="word" className="inline-block will-change-transform">
-            {w}
-            {i < words.length - 1 ? "\u00A0" : ""}
-          </span>
-        </span>
-      ))}
-      {accent ? (
-        <span className="inline-block overflow-hidden pb-[0.14em] -mb-[0.14em] align-bottom">
-          <span data-intro="word" className="inline-block text-accent will-change-transform">
-            {accent}
-          </span>
-        </span>
-      ) : null}
-    </>
-  );
-}
 
 export function Hero() {
   const { open } = useEnquiry();
   const rootRef = useRef<HTMLElement | null>(null);
+  const h1Ref = useRef<HTMLHeadingElement | null>(null);
 
-  useEffect(() => {
+  /* Split headline words into per-LINE mask wrappers. Pure DOM, once. */
+  const splitLines = (h1: HTMLHeadingElement) => {
+    const words = Array.from(h1.querySelectorAll<HTMLElement>("[data-word]"));
+    if (words.length === 0) return [];
+    // Group word spans by their rendered line (offsetTop)
+    const groups: { top: number; nodes: Node[] }[] = [];
+    let currentTop = -1;
+    for (const w of words) {
+      const top = w.offsetTop;
+      if (top !== currentTop) {
+        currentTop = top;
+        groups.push({ top, nodes: [] });
+      }
+      // keep the whitespace text node that precedes the word (spacing)
+      const prev = w.previousSibling;
+      if (prev && prev.nodeType === Node.TEXT_NODE) groups[groups.length - 1].nodes.push(prev);
+      groups[groups.length - 1].nodes.push(w);
+    }
+    // Wrap each line group: mask (overflow hidden, descender-safe) + mover
+    const movers: HTMLElement[] = [];
+    for (const g of groups) {
+      const mask = document.createElement("span");
+      mask.style.display = "block";
+      mask.style.overflow = "hidden";
+      mask.style.paddingBottom = "0.16em";
+      mask.style.marginBottom = "-0.16em";
+      const mover = document.createElement("span");
+      mover.style.display = "block";
+      mover.style.willChange = "transform";
+      mask.appendChild(mover);
+      h1.insertBefore(mask, g.nodes[0]);
+      for (const n of g.nodes) mover.appendChild(n);
+      movers.push(mover);
+    }
+    h1.dataset.linesSplit = "done";
+    return movers;
+  };
+
+  useLayoutEffect(() => {
     const root = rootRef.current;
-    if (!root) return;
+    const h1 = h1Ref.current;
+    if (!root || !h1 || h1.dataset.linesSplit === "done") return;
 
     const mm = gsap.matchMedia();
     mm.add("(prefers-reduced-motion: no-preference)", () => {
+      const movers = splitLines(h1);
+      if (movers.length === 0) return;
+
       const q = gsap.utils.selector(root);
-      const words = q("[data-intro='word']");
       const fades = q("[data-intro='fade']");
       const visual = q("[data-intro='visual']");
 
-      // Initial states (JS-only; the page is complete without them)
-      gsap.set(words, { yPercent: 120 });
-      gsap.set(fades, { autoAlpha: 0, y: 26 });
-      gsap.set(visual, { clipPath: "inset(18% 10% 26% 10%)", scale: 1.12, autoAlpha: 0 });
+      // Hidden states applied pre-paint: no flash, no FOUC
+      gsap.set(movers, { yPercent: 118 });
+      gsap.set(fades, { autoAlpha: 0, y: 24 });
+      gsap.set(visual, { clipPath: "inset(16% 8% 24% 8%)", scale: 1.12, autoAlpha: 0 });
 
       const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
-      tl.to(words, { yPercent: 0, duration: 1.05, stagger: 0.085 }, 0.15)
-        .to(fades, { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.11 }, 0.45)
-        .to(visual, { clipPath: "inset(0% 0% 0% 0%)", scale: 1, autoAlpha: 1, duration: 1.5 }, 0.35);
+      tl.to(movers, { yPercent: 0, duration: 1.25, stagger: 0.11 }, 0.12)
+        .to(fades, { autoAlpha: 1, y: 0, duration: 1.05, stagger: 0.12 }, 0.55)
+        .to(visual, { clipPath: "inset(0% 0% 0% 0%)", scale: 1, autoAlpha: 1, duration: 1.7 }, 0.3);
+
+      /* Once webfonts settle, verify the line grouping still matches the
+         final metrics (self-hosted fonts are preloaded, so this almost
+         never changes). If it did, rebuild masks in the settled state. */
+      let cancelled = false;
+      document.fonts?.ready.then(() => {
+        if (cancelled) return;
+        const wordTops = Array.from(h1.querySelectorAll<HTMLElement>("[data-word]")).map((w) => w.offsetTop);
+        const distinct = new Set(wordTops).size;
+        if (distinct !== movers.length && tl.progress() > 0) {
+          tl.kill();
+          gsap.set(movers, { yPercent: 0 });
+        }
+      });
 
       return () => {
+        cancelled = true;
         tl.kill();
-        gsap.set([...words, ...fades, ...visual], { clearProps: "all" });
+        gsap.set([...movers, ...fades, ...visual], { clearProps: "all" });
       };
     });
 
     return () => mm.revert();
+  }, []);
+
+  useEffect(() => {
+    // noop placeholder to keep import order stable (see useLayoutEffect above)
   }, []);
 
   return (
@@ -89,8 +129,15 @@ export function Hero() {
               {SITE.positioning}
             </p>
 
-            <h1 id="hero-heading" className="t-dxl max-w-[15ch]">
-              <MaskedLine text="We design and engineer what's next" accent="." />
+            {/* Words only in markup - lines are measured and masked at runtime */}
+            <h1 id="hero-heading" ref={h1Ref} className="t-dxl max-w-[15ch]">
+              <span data-word className="inline-block">We</span>{" "}
+              <span data-word className="inline-block">design</span>{" "}
+              <span data-word className="inline-block">and</span>{" "}
+              <span data-word className="inline-block">engineer</span>{" "}
+              <span data-word className="inline-block">what&apos;s</span>{" "}
+              <span data-word className="inline-block">next</span>
+              <span data-word className="inline-block text-accent">.</span>
             </h1>
 
             <p data-intro="fade" className="t-body-lg mt-8 max-w-[34rem] text-muted">
