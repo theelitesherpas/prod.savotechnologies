@@ -29,7 +29,9 @@ export default async function CareersApplyPage({
 }) {
   const { role } = await searchParams;
   const ROLES = await getManagedRoles();
-  const match = ROLES.find((r) => slugify(r.title) === (role ?? "").replace(/^\/|\/$/g, ""));
+  // Public shape only - compensation fields never reach the client payload.
+  const publicRoles = ROLES.map(({ band: _band, ctc: _ctc, ...role }) => role);
+  const match = publicRoles.find((r) => slugify(r.title) === (role ?? "").replace(/^\/|\/$/g, ""));
   const initialRole = match?.title;
 
   return (
@@ -57,7 +59,7 @@ export default async function CareersApplyPage({
               <Reveal delay={120}>
                 <p className="t-body-lg mt-6 max-w-xl text-muted">
                   {match
-                    ? `${match.track} · ${match.exp} · ${match.band} · Full time, remote first across India.`
+                    ? `${match.track} · ${match.exp} · Full time, remote first across India.`
                     : "Pick the role that fits inside the form and tell us about yourself. Ten minutes, one form."}
                 </p>
               </Reveal>
@@ -69,7 +71,7 @@ export default async function CareersApplyPage({
             <div className="lg:col-span-7">
               <Reveal delay={160}>
                 <div className="border border-border bg-surface p-7 sm:p-10">
-                  <ApplicationForm initialRole={initialRole} roles={ROLES} />
+                  <ApplicationForm initialRole={initialRole} roles={publicRoles} />
                 </div>
               </Reveal>
             </div>

@@ -32,6 +32,9 @@ export const metadata: Metadata = {
 
 export default async function CareersPage() {
   const ROLES = await getManagedRoles();
+  // Public shape only - compensation fields (band/ctc) never cross the
+  // server/client boundary, so they cannot leak into the HTML payload.
+  const publicRoles = ROLES.map(({ band: _band, ctc: _ctc, ...role }) => role);
   // JobPosting structured data - one entry per open role (Google Jobs / AEO).
   const jsonLd = {
     "@context": "https://schema.org",
@@ -47,7 +50,7 @@ export default async function CareersPage() {
         "What you bring:",
         ...role.brings.map((b) => `- ${b}`),
         "",
-        `${role.exp} · ${role.band} · Full time · Remote (India) · Indore`,
+        `${role.exp} · Full time · Remote (India) · Indore`,
       ].join("\n"),
       employmentType: "FULL_TIME",
       datePosted: ROLES_POSTED,
@@ -61,16 +64,6 @@ export default async function CareersPage() {
       applicantLocationRequirements: {
         "@type": "Country",
         name: "India",
-      },
-      baseSalary: {
-        "@type": "MonetaryAmount",
-        currency: "INR",
-        value: {
-          "@type": "QuantitativeValue",
-          minValue: role.ctc[0] * 100000,
-          maxValue: role.ctc[1] * 100000,
-          unitText: "YEAR",
-        },
       },
       url: absoluteUrl(`/careers/apply?role=${roleSlug(role.title)}`),
     })),
@@ -87,7 +80,7 @@ export default async function CareersPage() {
       <CareersHero roles={ROLES} />
 
       {/* 02: Open roles, filterable accordion */}
-      <OpenRoles roles={ROLES} />
+      <OpenRoles roles={publicRoles} />
 
       {/* 03: The four-step hiring promise (sand band) */}
       <HiringProcess />

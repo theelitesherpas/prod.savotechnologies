@@ -9,6 +9,10 @@
 
 export const CAREERS_EMAIL = "hr@savotechnologies.com";
 
+/** Public role shape - compensation fields (band, ctc) are admin-only
+ *  and never cross the server/client boundary or the HTML payload. */
+export type PublicRole = Omit<Role, "band" | "ctc">;
+
 /** Date the current role list was published (bump when roles change - feeds JobPosting schema). */
 export const ROLES_POSTED = "2026-09-24";
 
