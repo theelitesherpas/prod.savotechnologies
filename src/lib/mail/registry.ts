@@ -151,13 +151,13 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     recipient: "prospect",
     dept: "hello",
     vars: {
-      name: "Sara Khan",
+      name: "Sara",
       company: "Acme Retail",
       senderName: "Om Yadav",
-      project: "the commerce replatform and support automation",
-      whySavo: "Acme needs one partner for the storefront and the AI layer behind it. We have shipped both together since 2015, and you keep one accountable team from brief to run.",
+      senderTitle: "Director",
+      focus: "presenting your brand more professionally, being easier to discover, generating more enquiries, or introducing automation where it makes sense",
     },
-    default: (v) => buildWhatsNext({ name: v.name, company: v.company, senderName: v.senderName, project: v.project, whySavo: v.whySavo, to: v.__to }),
+    default: (v) => buildWhatsNext({ name: v.name, company: v.company, senderName: v.senderName, senderTitle: v.senderTitle, focus: v.focus, to: v.__to }),
   },
   {
     key: "applicationAck",

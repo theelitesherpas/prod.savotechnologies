@@ -134,11 +134,21 @@ const CTA = (href: string, label: string, sub?: string) => `
 ${sub ? `</td></tr><tr><td align="center" style="padding:11px 0 0;font-family:${SANS};font-size:12px;color:${MUTED};">${esc(sub)}` : ""}
 </td></tr></table>`;
 
-const signOff = (closing: string) => `
+const signOff = (
+  closing: string,
+  signature?: { name: string; title: string; company?: string; tagline?: string },
+) => `
 <div style="margin-top:30px;text-align:center;">
   <p style="margin:0;font-family:${SERIF};font-style:italic;font-size:14.5px;color:${BODY};">${esc(closing)}</p>
-  <p style="margin:5px 0 0;font-family:${SERIF};font-size:14.5px;font-weight:700;color:${INK};">The Savo team</p>
-  <p style="margin:3px 0 0;font-family:${SANS};font-size:10.5px;font-weight:600;color:${FAINT};">Reply to this email to reach our team</p>
+  ${
+    signature
+      ? `<p style="margin:7px 0 0;font-family:${SERIF};font-size:16px;font-weight:700;color:${INK};">${esc(signature.name)}</p>
+         <p style="margin:2px 0 0;font-family:${SANS};font-size:11.5px;font-weight:700;color:${MUTED};">${esc(signature.title)}</p>
+         ${signature.company ? `<p style="margin:2px 0 0;font-family:${SANS};font-size:11px;font-weight:600;color:${FAINT};">${esc(signature.company)}</p>` : ""}
+         ${signature.tagline ? `<p style="margin:7px 0 0;font-family:${MONO};font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${ACCENT};">${esc(signature.tagline)}</p>` : ""}`
+      : `<p style="margin:5px 0 0;font-family:${SERIF};font-size:14.5px;font-weight:700;color:${INK};">The Savo team</p>
+         <p style="margin:3px 0 0;font-family:${SANS};font-size:10.5px;font-weight:600;color:${FAINT};">Reply to this email to reach our team</p>`
+  }
 </div>`;
 
 /** Brand shell shared by every template (also wraps admin overrides). */
@@ -152,6 +162,9 @@ export function shell(opts: {
   closing?: string;
   reason?: string;
   unsubscribeEmail?: string;
+  /** Personal signature (name/title/tagline) - replaces the default
+   *  'The Savo team' sign-off for individually written pitches. */
+  signature?: { name: string; title: string; company?: string; tagline?: string };
   /** Department: "hr" switches footer contact to hr@ and the HR phone. */
   dept?: "hello" | "hr";
 }): string {
@@ -178,7 +191,7 @@ export function shell(opts: {
       ${opts.heading ? h1(opts.heading) : ""}
       ${opts.bodyHtml}
       ${opts.cta ? CTA(opts.cta.href, opts.cta.label, opts.cta.sub) : ""}
-      ${signOff(opts.closing ?? "Kind regards,")}
+      ${signOff(opts.closing ?? "Kind regards,", opts.signature)}
     </div>
   </td></tr>
 
@@ -636,57 +649,50 @@ const pitchLabel = (t: string) =>
   `<p style="margin:24px 0 10px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};text-align:center;"><span style="display:inline-block;width:7px;height:7px;background:${ACCENT};margin-right:9px;vertical-align:1px;"></span>${esc(t)}</p>`;
 
 /** Savo Build What's Next - the client pitch, composed manually from the
- *  email centre. Personal, engineered, honest: what we build, how the
- *  work runs, and one clear next step. All infographic bands are
- *  email-safe tables (no SVG, no external images beyond the wordmark). */
+ *  email centre. Personal and short: a warm introduction, what Savo
+ *  builds, a soft ask for a 15-20 minute conversation, and a personal
+ *  signature. The ink nameplate band and the capability triptych keep
+ *  it unmistakably Savo; every infographic band is email-safe tables. */
 export function buildWhatsNext(v: {
   name: string;
   company: string;
   senderName: string;
-  project: string;
-  whySavo: string;
+  senderTitle?: string;
+  focus?: string;
   to?: string;
 }): MailTemplate {
   const first = fn(v.name);
+  const title = v.senderTitle || "Director";
+  const focus = v.focus || "presenting your brand more professionally, being easier to discover, generating more enquiries, or introducing automation where it makes sense";
   return {
-    subject: `${v.company}: let's build what's next`,
+    subject: `A few ideas for ${v.company}`,
     html: shell({
-      preheader: `A short pitch for the ${v.project} work we discussed, and one clear next step.`,
-      eyebrowText: "A pitch from Savo",
-      heading: "Let's build what's next.",
+      preheader: `A short note from ${v.senderName} at Savo Technologies, and an invitation to a 15 minute conversation.`,
+      eyebrowText: "A note from Savo Technologies",
+      heading: "A few ideas for your business.",
       bodyHtml: [
-        lead(`Dear ${esc(first)},<br><br>thank you for the conversation about <strong style="color:${INK};">${esc(v.project)}</strong> for ${esc(v.company)}. This note is the short version of what we would build together, and how the work would run.`),
-        highlight(`${esc(v.whySavo)}`),
+        lead(`Hi ${esc(first)},<br><br>I came across <strong style="color:${INK};">${esc(v.company)}</strong> and wanted to introduce ourselves. I am ${esc(v.senderName)} from Savo Technologies, and we design and build modern websites, digital products, mobile applications, custom software and AI-powered solutions.`),
         pitchBand("Savo Build What's Next"),
-
-        pitchLabel("What we build"),
+        pitchLabel("What we do"),
         pitchTriptych([
-          { mark: `<span style="display:inline-block;width:22px;height:22px;border:2px solid ${ACCENT};border-radius:4px;margin-top:2px;"></span>`, title: "Web platforms", line: "Marketing sites, portals and storefronts on modern, fast architecture." },
-          { mark: `<span style="display:inline-block;width:22px;height:22px;border:2px solid ${ACCENT};border-radius:11px;margin-top:2px;"></span>`, title: "AI & automation", line: "Agents, copilots and workflows that execute real work, guarded and observable." },
-          { mark: `<span style="display:inline-block;width:14px;height:14px;border:2px solid ${ACCENT};border-radius:3px 3px 3px 0;margin-top:5px;"></span>`, title: "Mobile products", line: "Flutter and React Native apps shipped to both stores from one codebase." },
+          { mark: `<span style="display:inline-block;width:22px;height:22px;border:2px solid ${ACCENT};border-radius:4px;margin-top:2px;"></span>`, title: "Websites & platforms", line: "Modern sites, portals and storefronts that present your brand professionally." },
+          { mark: `<span style="display:inline-block;width:22px;height:22px;border:2px solid ${ACCENT};border-radius:11px;margin-top:2px;"></span>`, title: "AI-powered solutions", line: "Agents, copilots and automation that do real work, where it makes sense." },
+          { mark: `<span style="display:inline-block;width:14px;height:14px;border:2px solid ${ACCENT};border-radius:3px 3px 3px 0;margin-top:5px;"></span>`, title: "Products & custom software", line: "Mobile apps and digital products, built for how your business runs." },
         ]),
-
-        pitchLabel("How the work runs"),
-        pitchStepper([
-          { n: "01", title: "Brief", line: "One document: scope, constraints, success." },
-          { n: "02", title: "Blueprint", line: "Architecture and plan, priced honestly." },
-          { n: "03", title: "Build", line: "Weekly slices you can click, not decks." },
-          { n: "04", title: "Run", line: "Ship, measure, improve, stay accountable." },
-        ]),
-
-        pitchStats([
-          { v: "2015", k: "Building since" },
-          { v: "6", k: "Regions served" },
-          { v: "1", k: "Accountable team" },
-        ]),
-
-        p(`Everything starts with one conversation. Bring the problem and its constraints; a senior consultant replies within one business day, with questions worth answering.`, true),
+        highlight(`No generic proposal. First a short conversation about your goals, then concrete ideas, whether that means ${esc(focus)}.`),
+        p(`Would you be available for a brief 15 to 20 minute conversation this week? Bring what you want to achieve; we will bring the ideas.`, true),
       ].join(""),
-      cta: { href: site("/start"), label: "Start the brief", sub: "Takes ten minutes. Read by our team, personally." },
-      closing: `Until then,`,
+      cta: { href: site("/"), label: "See our work", sub: "savotechnologies.com - services, case studies, AI practice" },
+      closing: "Best regards,",
+      signature: {
+        name: v.senderName,
+        title,
+        company: "Savo Technologies Pvt. Ltd.",
+        tagline: "Bold Brands. Built by Savo.",
+      },
       reason: "You are receiving this because a Savo consultant wrote to you directly.",
       unsubscribeEmail: v.to,
     }),
-    text: `${first.toUpperCase()}, LET'S BUILD WHAT'S NEXT\n\nThank you for the conversation about ${v.project} for ${v.company}.\n\nWhy Savo: ${v.whySavo}\n\nWHAT WE BUILD\n- Web platforms: marketing sites, portals, storefronts\n- AI & automation: agents, copilots, executing workflows\n- Mobile products: Flutter and React Native, both stores\n\nHOW THE WORK RUNS\n01 Brief - scope, constraints, success\n02 Blueprint - architecture and honest pricing\n03 Build - weekly slices you can click\n04 Run - ship, measure, improve\n\nBuilding since 2015 - 6 regions - one accountable team\n\nStart the brief: ${site("/start")}\n\nUntil then,\n${v.senderName} and the Savo team\n${site("/")}`,
+    text: `HI ${first.toUpperCase()},\n\nI came across ${v.company} and wanted to introduce ourselves. I am ${v.senderName} from Savo Technologies; we design and build modern websites, digital products, mobile applications, custom software and AI-powered solutions.\n\nWHAT WE DO\n- Websites & platforms: modern sites, portals, storefronts\n- AI-powered solutions: agents, copilots, automation\n- Products & custom software: mobile apps, digital products\n\nNo generic proposal: first a short conversation about your goals, then concrete ideas, whether that means ${focus}.\n\nWould you be available for a brief 15 to 20 minute conversation this week?\n\nSee our work: ${site("/")}\n\nBest regards,\n${v.senderName}\n${title}\nSavo Technologies Pvt. Ltd.\nBold Brands. Built by Savo.\n${site("/")}`,
   };
 }
