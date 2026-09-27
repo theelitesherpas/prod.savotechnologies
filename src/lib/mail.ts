@@ -80,7 +80,12 @@ export function mailFrom(): string {
 
 /** Send one template. Never throws - failures are logged for the audit trail.
  *  dept "hr" sends from the hr@ mailbox (careers); default is hello@. */
-export async function sendMail(to: string, tpl: MailTemplate, dept: "hello" | "hr" = "hello"): Promise<boolean> {
+export async function sendMail(
+  to: string,
+  tpl: MailTemplate,
+  dept: "hello" | "hr" = "hello",
+  meta?: { templateKey?: string; sentBy?: string; toName?: string },
+): Promise<boolean> {
   const wantHr = dept === "hr";
   let t = wantHr ? hrTransport() : transport();
   let from = mailFrom();
@@ -116,6 +121,26 @@ export async function sendMail(to: string, tpl: MailTemplate, dept: "hello" | "h
         : {}),
     });
     logger.info("mail: sent", { to, subject: tpl.subject.slice(0, 80), dept });
+    // Sent-folder log - never blocks or fails the send itself.
+    try {
+      const { prisma } = await import("./prisma");
+      if (prisma) {
+        await prisma.sentEmail.create({
+          data: {
+            toEmail: to,
+            toName: meta?.toName ?? null,
+            subject: tpl.subject,
+            html: tpl.html,
+            text: tpl.text ?? null,
+            templateKey: meta?.templateKey ?? null,
+            dept,
+            sentBy: meta?.sentBy ?? null,
+          },
+        });
+      }
+    } catch {
+      /* logging is best-effort */
+    }
     return true;
   } catch (err) {
     logger.error("mail: send failed", { to, subject: tpl.subject, err: String(err).slice(0, 300) });

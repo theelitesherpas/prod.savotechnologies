@@ -28,14 +28,29 @@ const customSchema = z.object({
 
 /** Template-based send: pick a registry template, supply its variables;
  *  admin overrides still apply (renderTemplate), dept routing included. */
+/** Compose access mirrors the email-centre rule: admins always, editors
+ *  when the sending department matches their granted portal section. */
+async function requireComposeAccess(dept: "hello" | "hr"): Promise<void> {
+  const user = await requireAdmin();
+  if (user.role === "admin") return;
+  const has = Array.isArray(user.permissions) && (user.permissions as string[]).includes(dept === "hr" ? "employees" : "clients");
+  if (has) return;
+  redirect(`/admin?denied=${encodeURIComponent(dept === "hr" ? "HR email" : "Client email")}`);
+}
+
+const safeBack = (v: FormDataEntryValue | null): string => {
+  const s = typeof v === "string" ? v : "";
+  return s.startsWith("/admin") ? s : "/admin/email-compose";
+};
+
 export async function sendTemplatedEmailAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("email-templates");
-  await requireSection("email-templates");
   const to = z.string().trim().email().max(160).parse(formData.get("to"));
   const key = z.string().min(2).max(60).parse(formData.get("templateKey"));
   const entry = templateEntry(key);
   if (!entry) redirect(`/admin/email-compose?e=${encodeURIComponent("Unknown template.")}`);
+  await requireComposeAccess(entry.dept);
+  const backTo = safeBack(formData.get("back"));
 
   const vars: Record<string, string> = {};
   for (const [k, v] of formData.entries()) {
@@ -46,12 +61,12 @@ export async function sendTemplatedEmailAction(formData: FormData): Promise<void
 
   const tpl = await renderTemplate(key, vars, entry.recipient === "customer" ? to : undefined);
   if (!tpl) redirect(`/admin/email-compose?e=${encodeURIComponent("Template render failed.")}`);
-  const ok = await sendMail(to, tpl, entry.dept);
+  const ok = await sendMail(to, tpl, entry.dept, { templateKey: key, sentBy: user.name });
   await audit(user.id, ok ? "email.templatedSent" : "email.templatedFailed", "Email", to, { template: key });
   redirect(
     ok
-      ? `/admin/email-compose?sent=1`
-      : `/admin/email-compose?e=${encodeURIComponent("Send failed - check SMTP settings or try again.")}`,
+      ? `${backTo}${backTo.includes("?") ? "&" : "?"}sent=1`
+      : `${backTo}?e=${encodeURIComponent("Send failed - check SMTP settings or try again.")}`,
   );
 }
 
@@ -100,8 +115,9 @@ export async function resetTemplateAction(formData: FormData): Promise<void> {
 /** Compose-and-send: a custom email from the panel, branded shell applied. */
 export async function sendCustomEmailAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("email-templates");
-  await requireSection("email-templates");
+  const dept = z.enum(["hello", "hr"]).catch("hello").parse(formData.get("dept") ?? "hello");
+  await requireComposeAccess(dept);
+  const backTo = safeBack(formData.get("back"));
   if (!prisma) redirect("/admin/email-compose?e=Database%20unavailable.");
 
   const parsed = customSchema.safeParse({
@@ -114,17 +130,22 @@ export async function sendCustomEmailAction(formData: FormData): Promise<void> {
   }
   const d = parsed.data;
 
-  const ok = await sendMail(d.to, {
-    subject: d.subject,
-    html: shell({ preheader: d.subject.slice(0, 120), heading: "", bodyHtml: bodyToHtml(d.body) }),
-    text: bodyToText(d.body),
-  });
+  const ok = await sendMail(
+    d.to,
+    {
+      subject: d.subject,
+      html: shell({ preheader: d.subject.slice(0, 120), heading: "", bodyHtml: bodyToHtml(d.body) }),
+      text: bodyToText(d.body),
+    },
+    dept,
+    { sentBy: user.name },
+  );
   await audit(user.id, ok ? "email.customSent" : "email.customFailed", "Email", d.to, { subject: d.subject });
   // Header-safe redirect: the query string must be fully encoded (a raw
   // em-dash here once crashed the action with ERR_INVALID_CHAR).
   redirect(
     ok
-      ? "/admin/email-compose?sent=1"
-      : `/admin/email-compose?e=${encodeURIComponent("Send failed - check SMTP settings or try again.")}`,
+      ? `${backTo}${backTo.includes("?") ? "&" : "?"}sent=1`
+      : `${backTo}?e=${encodeURIComponent("Send failed - check SMTP settings or try again.")}`,
   );
 }

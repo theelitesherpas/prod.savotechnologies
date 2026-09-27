@@ -149,6 +149,26 @@ model ContentItem {
   @@map("content_items")
 }
 
+/// Outbound mail log - every email the panel sends (templates and
+/// custom), for the Sent folder of the admin mailbox.
+model SentEmail {
+  id          String   @id @default(cuid())
+  toEmail     String   @map("to_email")
+  toName      String?  @map("to_name")
+  subject     String
+  html        String   @db.Text
+  text        String?  @db.Text
+  /// Registry key when sent from a template, null for custom mail.
+  templateKey String?  @map("template_key")
+  /// Sending department mailbox: "hello" | "hr"
+  dept        String   @default("hello")
+  /// Admin user name who sent it.
+  sentBy      String?  @map("sent_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  @@index([createdAt])
+  @@map("sent_emails")
+}
+
 /// Website services, managed in the admin panel; seeds come from
 /// src/constants (which also act as the fallback when the DB is empty).
 model Service {
