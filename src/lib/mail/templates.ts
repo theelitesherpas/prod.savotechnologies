@@ -611,17 +611,21 @@ function pitchBand(label: string, href?: string): string {
 </div>`;
 }
 
-/* Capability triptych: three columns with drawn icons, hairline cards. */
-function pitchTriptych(items: { icon: string; title: string; line: string }[]): string {
+/* Capability grid: service cards with drawn icons, three per row. */
+function pitchGrid(items: { icon: string; title: string; line: string }[]): string {
   const cell = (it: { icon: string; title: string; line: string }) => `
-    <td width="33.33%" style="padding:0 5px;vertical-align:top;">
-      <div style="border:1px solid ${LINE};border-radius:10px;padding:16px 12px;text-align:center;">
-        <div style="height:32px;margin:0 0 10px;">${it.icon}</div>
-        <p style="margin:0 0 6px;font-family:${SANS};font-size:12.5px;font-weight:800;color:${INK};letter-spacing:0.02em;">${esc(it.title)}</p>
-        <p style="margin:0;font-family:${SANS};font-size:11.5px;line-height:1.55;color:${MUTED};">${esc(it.line)}</p>
-      </div>
-    </td>`;
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0;"><tr>${items.map(cell).join("")}</tr></table>`;
+      <td width="33.33%" style="padding:5px;vertical-align:top;">
+        <div style="border:1px solid ${LINE};border-radius:10px;padding:14px 10px;text-align:center;">
+          <div style="height:34px;margin:0 0 8px;font-size:0;line-height:0;">${it.icon}</div>
+          <p style="margin:0 0 5px;font-family:${SANS};font-size:12px;font-weight:800;color:${INK};letter-spacing:0.02em;">${esc(it.title)}</p>
+          <p style="margin:0;font-family:${SANS};font-size:11px;line-height:1.5;color:${MUTED};">${esc(it.line)}</p>
+        </div>
+      </td>`;
+  const rows: string[] = [];
+  for (let i = 0; i < items.length; i += 3) {
+    rows.push(`<tr>${items.slice(i, i + 3).map(cell).join("")}</tr>`);
+  }
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0;table-layout:fixed;">${rows.join("")}</table>`;
 }
 
 /* ── Drawn icons: flow-layout CSS only (no absolute, no images) ── */
@@ -655,12 +659,40 @@ const iconChip = () => {
 /** Phone: notch, content lines, home button. */
 const iconPhone = () =>
   `<div style="width:20px;margin:0 auto;border:2px solid ${ACCENT};border-radius:5px;background:${CARD};overflow:hidden;">
-  <div style="width:7px;height:3px;border-bottom:2px solid ${ACCENT};margin:0 auto;"></div>
-  <div style="padding:4px 3px 0;">
+  <div style="width:7px;height:2px;border-bottom:2px solid ${ACCENT};margin:0 auto;"></div>
+  <div style="padding:3px 3px 0;">
     <div style="height:2px;background:${ACCENT};opacity:.35;border-radius:1px;margin-bottom:2px;"></div>
-    <div style="height:2px;background:${ACCENT};opacity:.35;border-radius:1px;width:60%;margin-bottom:6px;"></div>
+    <div style="height:2px;background:${ACCENT};opacity:.35;border-radius:1px;width:60%;margin-bottom:3px;"></div>
   </div>
-  <div style="text-align:center;padding-bottom:3px;"><span style="display:inline-block;width:4px;height:4px;border:2px solid ${ACCENT};border-radius:50%;"></span></div>
+  <div style="text-align:center;padding-bottom:2px;"><span style="display:inline-block;width:3px;height:3px;border:2px solid ${ACCENT};border-radius:50%;"></span></div>
+</div>`;
+
+/** UI/UX design: wireframe layout with header bar and sidebar. */
+const iconLayout = () =>
+  `<div style="width:28px;margin:0 auto;border:2px solid ${ACCENT};border-radius:5px;background:${CARD};overflow:hidden;">
+  <div style="height:6px;border-bottom:2px solid ${ACCENT};"></div>
+  <div style="font-size:0;">
+    <span style="display:inline-block;width:8px;height:12px;border-right:2px solid ${ACCENT};vertical-align:top;"></span>
+    <span style="display:inline-block;padding:3px 3px 0;vertical-align:top;text-align:left;">
+      <span style="display:block;height:2px;background:${ACCENT};opacity:.35;border-radius:1px;margin-bottom:2px;width:11px;"></span>
+      <span style="display:block;height:2px;background:${ACCENT};opacity:.35;border-radius:1px;width:7px;"></span>
+    </span>
+  </div>
+</div>`;
+
+/** Custom software: code brackets in the mono voice. */
+const iconCode = () =>
+  `<div style="font-family:${MONO};font-size:14px;font-weight:700;color:${ACCENT};line-height:32px;letter-spacing:-0.04em;">&lt;/&gt;</div>`;
+
+/** Digital marketing & SEO: ascending bars on a baseline. */
+const iconChart = () =>
+  `<div style="width:30px;margin:0 auto;text-align:center;">
+  <div style="font-size:0;line-height:0;">
+    <span style="display:inline-block;width:5px;height:7px;background:${ACCENT};opacity:.4;margin:0 2px;vertical-align:bottom;"></span>
+    <span style="display:inline-block;width:5px;height:12px;background:${ACCENT};opacity:.65;margin:0 2px;vertical-align:bottom;"></span>
+    <span style="display:inline-block;width:5px;height:17px;background:${ACCENT};margin:0 2px;vertical-align:bottom;"></span>
+  </div>
+  <div style="height:2px;background:${ACCENT};margin-top:2px;border-radius:1px;"></div>
 </div>`;
 
 /* Dual CTA: primary action + secondary, side by side, email-safe. */
@@ -719,10 +751,13 @@ export function buildWhatsNext(v: {
         lead(`Hi ${esc(first)},<br><br>we came across <strong style="color:${INK};">${esc(v.company)}</strong> and wanted to introduce ourselves. Savo Technologies designs and builds modern websites, digital products, mobile applications, custom software and AI-powered solutions for businesses that want their online presence to work harder.`),
         pitchBand("Savo Build What's Next", site("/")),
         pitchLabel("What we do"),
-        pitchTriptych([
+        pitchGrid([
           { icon: iconBrowser(), title: "Web platforms", line: "Modern sites, portals and storefronts that present your brand professionally." },
           { icon: iconChip(), title: "AI & automation", line: "Agents, copilots and automation that do real work, where it makes sense." },
-          { icon: iconPhone(), title: "Mobile products", line: "Mobile apps and custom software, built for how your business runs." },
+          { icon: iconPhone(), title: "Mobile apps", line: "iOS and Android products from one codebase, shipped to both stores." },
+          { icon: iconLayout(), title: "UI/UX design", line: "Interfaces that make complex products obvious and desirable to use." },
+          { icon: iconCode(), title: "Custom software", line: "Portals, SaaS and internal systems shaped around how you operate." },
+          { icon: iconChart(), title: "Digital marketing & SEO", line: "Search, content and campaigns that compound after launch." },
         ]),
         highlight(`No generic proposal. First a short conversation about your goals, then concrete ideas, whether that means ${esc(focus)}.`),
         p(`Would a few minutes this week work? Tell us what you want to achieve; we will bring the ideas.`, true),
@@ -735,6 +770,6 @@ export function buildWhatsNext(v: {
       reason: "You are receiving this because the Savo team wrote to you directly.",
       unsubscribeEmail: v.to,
     }),
-    text: `HI ${first.toUpperCase()},\n\nWe came across ${v.company} and wanted to introduce ourselves. Savo Technologies designs and builds modern websites, digital products, mobile applications, custom software and AI-powered solutions.\n\nWHAT WE DO\n- Websites & platforms: modern sites, portals, storefronts\n- AI-powered solutions: agents, copilots, automation\n- Products & custom software: mobile apps, digital products\n\nNo generic proposal: first a short conversation about your goals, then concrete ideas, whether that means ${focus}.\n\nWould a few minutes this week work? Chat with us on WhatsApp (+91 75029 01234), write to hello@savotechnologies.com, or see our work at ${site("/case-studies")}\n\nWarm regards,\nThe Savo team\nBold Brands. Built by Savo.\n${site("/")}`,
+    text: `HI ${first.toUpperCase()},\n\nWe came across ${v.company} and wanted to introduce ourselves. Savo Technologies designs and builds modern websites, digital products, mobile applications, custom software and AI-powered solutions.\n\nWHAT WE DO\n- Web platforms: modern sites, portals, storefronts\n- AI & automation: agents, copilots, automation\n- Mobile apps: iOS and Android from one codebase\n- UI/UX design: interfaces that make products obvious\n- Custom software: portals, SaaS, internal systems\n- Digital marketing & SEO: search, content, campaigns\n\nNo generic proposal: first a short conversation about your goals, then concrete ideas, whether that means ${focus}.\n\nWould a few minutes this week work? Chat with us on WhatsApp (+91 75029 01234), write to hello@savotechnologies.com, or see our work at ${site("/case-studies")}\n\nWarm regards,\nThe Savo team\nBold Brands. Built by Savo.\n${site("/")}`,
   };
 }
