@@ -101,11 +101,11 @@ export default async function AuditLogPage({
           <table className="adm-hairline-table w-full text-left">
             <thead>
               <tr className="border-b border-border">
-                <th scope="col" className="adm-label w-44 px-4 py-3">When</th>
-                <th scope="col" className="adm-label px-4 py-3">User</th>
-                <th scope="col" className="adm-label px-4 py-3">Action</th>
-                <th scope="col" className="adm-label hidden px-4 py-3 md:table-cell">Entity</th>
-                <th scope="col" className="adm-label hidden px-4 py-3 lg:table-cell">Meta</th>
+                <th scope="col" className=" w-44 px-4 py-3">When</th>
+                <th scope="col" className=" px-4 py-3">User</th>
+                <th scope="col" className=" px-4 py-3">Action</th>
+                <th scope="col" className=" hidden px-4 py-3 md:table-cell">Entity</th>
+                <th scope="col" className=" hidden px-4 py-3 lg:table-cell">Meta</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

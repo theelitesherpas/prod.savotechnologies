@@ -111,11 +111,11 @@ export default async function CollectionPage({
           <table className="adm-hairline-table w-full text-left">
             <thead>
               <tr className="border-b border-border">
-                <th scope="col" className="adm-label w-24 px-4 py-3">Order</th>
-                <th scope="col" className="adm-label px-4 py-3">{def.singular}</th>
-                <th scope="col" className="adm-label w-32 px-4 py-3">Status</th>
-                <th scope="col" className="adm-label hidden w-28 px-4 py-3 md:table-cell">Updated</th>
-                <th scope="col" className="adm-label w-[268px] px-4 py-3 text-right">Actions</th>
+                <th scope="col" className=" w-24 px-4 py-3">Order</th>
+                <th scope="col" className=" px-4 py-3">{def.singular}</th>
+                <th scope="col" className=" w-32 px-4 py-3">Status</th>
+                <th scope="col" className=" hidden w-28 px-4 py-3 md:table-cell">Updated</th>
+                <th scope="col" className=" w-[268px] px-4 py-3 align-end">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

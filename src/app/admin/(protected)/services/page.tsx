@@ -61,10 +61,10 @@ export default async function ServicesPage({
           <table className="adm-hairline-table w-full text-left">
             <thead>
               <tr className="border-b border-border">
-                <th scope="col" className="adm-label w-14 px-4 py-3">Order</th>
-                <th scope="col" className="adm-label px-4 py-3">Service</th>
-                <th scope="col" className="adm-label hidden px-4 py-3 sm:table-cell">Flags</th>
-                <th scope="col" className="adm-label w-56 px-4 py-3 text-right">Actions</th>
+                <th scope="col" className=" w-14 px-4 py-3">Order</th>
+                <th scope="col" className=" px-4 py-3">Service</th>
+                <th scope="col" className=" hidden px-4 py-3 sm:table-cell">Flags</th>
+                <th scope="col" className=" w-56 px-4 py-3 align-end">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

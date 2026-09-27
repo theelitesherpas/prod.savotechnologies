@@ -703,6 +703,25 @@ div:has(> .adm-select[aria-invalid="true"]) > label {
   font-size: 0.8125rem;
 }
 
+/* Table headers — typography for <th> inside admin tables. Never use
+   .adm-label on a <th>: its display:block collapses the header row
+   into a column (the audit/enquiries header bug). */
+.adm-hairline-table thead th {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  text-align: left;
+  vertical-align: bottom;
+}
+.adm-hairline-table thead th.align-end {
+  text-align: right;
+}
+.adm-hairline-table thead th.align-center {
+  text-align: center;
+}
+
 .adm-hairline-table tbody tr {
   transition: background-color 0.15s var(--ease-out-expo);
 }
