@@ -75,7 +75,7 @@ export const viewport: Viewport = {
 };
 
 /** Marks JS availability so entrance motion only hides content when it can reveal it. */
-const jsMarker = "document.documentElement.dataset.js='true'";
+const jsMarker = "document.documentElement.classList.add('js');";
 
 const designContract = `<!--
   SAVO TECHNOLOGIES: HOMEPAGE DESIGN CONTRACT (v2)
