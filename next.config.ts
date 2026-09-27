@@ -52,6 +52,13 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Case-study records carry cropped hero images (data URLs up to ~4 MB)
   // through server actions — the 1 MB default would reject them.
+  images: {
+    // Optimized /_next/image responses are content-addressed (url+width+q)
+    // and immutable for a given build - tell browsers and CDNs to keep
+    // them (Cloudflare edge-caches /_next/image via a Cache Rule; the
+    // origin TTL is the ceiling it respects).
+    minimumCacheTTL: 2592000,
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "8mb",
