@@ -183,7 +183,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                     }}
                     className={cn(
                       "t-sm group flex items-center gap-1.5 px-3 py-2 font-medium transition-colors",
-                      openPanel === item.label ? "text-accent" : "text-foreground/75 hover:text-foreground",
+                      openPanel === item.label ? "text-accent" : "text-foreground/75 hover:text-accent",
                     )}
                     aria-expanded={openPanel === item.label}
                     aria-controls={panelId(item.label)}
@@ -212,7 +212,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                 <li key={item.label}>
                   <button
                     onClick={() => activate(item)}
-                    className="t-sm px-3 py-2 font-medium text-foreground/75 transition-colors hover:text-foreground"
+                    className="t-sm px-3 py-2 font-medium text-foreground/75 transition-colors duration-300 hover:text-accent"
                   >
                     {item.label}
                   </button>
@@ -225,7 +225,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                        (careers) would prefetch a 404 and log console noise. */
                     prefetch={false}
                     onClick={() => track("nav_link_click", { label: item.label })}
-                    className="t-sm px-3 py-2 font-medium text-foreground/75 transition-colors hover:text-foreground"
+                    className="t-sm px-3 py-2 font-medium text-foreground/75 transition-colors duration-300 hover:text-accent"
                   >
                     {item.label}
                   </Link>
