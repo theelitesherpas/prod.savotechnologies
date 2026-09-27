@@ -476,7 +476,7 @@ export default async function EnquiryDetailPage({
                       </div>
                       <p className="mt-0.5 text-[0.75rem] text-muted">
                         by {log.user?.name ?? "system"}
-                        {typeof meta.candidate === "string" ? ` — ${meta.candidate}` : ""}
+                        {typeof meta.candidate === "string" ? ` · ${meta.candidate}` : ""}
                         {typeof meta.role === "string" ? ` (${meta.role})` : ""}
                       </p>
                       {typeof meta.date === "string" || typeof meta.time === "string" || typeof meta.interviewer === "string" ? (

@@ -195,7 +195,7 @@ export function CaseStudyForm({
             step={1}
             value={order}
             onChange={(e) => setOrder(e.target.value)}
-            title="Homepage + discipline order — lower numbers show first (0–9999). Ties break by most recently updated."
+            title="Homepage + discipline order: lower numbers show first (0 to 9999). Ties break by most recently updated."
           />
         </div>
         <label className="flex cursor-pointer items-center gap-2 text-[0.875rem] font-medium text-foreground">

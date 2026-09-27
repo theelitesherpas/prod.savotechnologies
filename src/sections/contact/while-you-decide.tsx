@@ -32,7 +32,7 @@ export async function WhileYouDecide() {
         lead={
           <>
             No whitepapers behind a form, no thought-leadership theatre. A few
-            recent field notes from the build — if the thinking fits, the work
+            recent field notes from the build: if the thinking fits, the work
             will too.
           </>
         }

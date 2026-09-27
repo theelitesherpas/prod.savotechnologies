@@ -273,9 +273,9 @@ export async function SelectedWork() {
           live && !anyDemo ? (
             <>
               Digital products designed around real business objectives. Each
-              engagement below is published with client-verified outcomes — the
-              full dossier, challenge, build and numbers, lives in the case-study
-              index.
+              engagement below is published with client-verified outcomes. The
+              full dossier, from challenge and build to numbers, lives in the
+              case-study index.
             </>
           ) : live && anyDemo ? (
             <>

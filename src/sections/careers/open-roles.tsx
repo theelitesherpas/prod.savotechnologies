@@ -179,7 +179,7 @@ export function OpenRoles({ roles: ROLES }: { roles: PublicRole[] }) {
                 <Link href="/careers/apply/" className="link-underline font-semibold text-foreground">
                   a general application
                 </Link>{" "}
-                and tell us what you would want to build here — or reach the HR
+                and tell us what you would want to build here, or reach the HR
                 team directly on any channel alongside.
               </p>
             </div>
@@ -197,7 +197,7 @@ export function OpenRoles({ roles: ROLES }: { roles: PublicRole[] }) {
               value={SITE.hrPhone}
               caption="Quick questions on roles, interviews and offers."
               href={`https://wa.me/${SITE.hrPhoneE164.replace("+", "")}?text=${encodeURIComponent(
-                "Hi Savo HR — I have a question about a role/career opportunity.",
+                "Hi Savo HR, I have a question about a role/career opportunity.",
               )}`}
               external
             />
