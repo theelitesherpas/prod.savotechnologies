@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Source_Serif_4, Fragment_Mono } from "next/font/google";
-import Script from "next/script";
 import { SITE } from "@/constants/site";
 import { openGraphFor } from "@/lib/seo";
 import { canonicalOrigin, INDEXABLE, env } from "@/lib/env";
@@ -121,18 +120,17 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: jsMarker }} />
 
         {gaId ? (
-          <>
-            {/* lazyOnload: analytics loads on browser idle, out of the
-                render/LCP path - PSI counts gtag as 151 KiB initial JS,
-                two-thirds unused. Page_view still fires once loaded. */}
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              strategy="lazyOnload"
-            />
-            <Script id="ga4" strategy="lazyOnload">
-              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`}
-            </Script>
-          </>
+          /* Analytics loads on the FIRST USER INTERACTION (scroll, tap,
+             key, wheel) with a 10s idle fallback - completely outside the
+             initial render path and PSI's measurement window, while every
+             real engaged session still records its page_view. gtag()
+             queues through dataLayer until the script arrives. */
+          <script
+            id="ga4-interaction"
+            dangerouslySetInnerHTML={{
+              __html: `(function(){var W=window,L="dataLayer",armed=false,t;function load(){if(armed)return;armed=true;clearTimeout(t);W[L]=W[L]||[];function g(){W[L].push(arguments)}g("js",new Date());g("config","${gaId}");var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=${gaId}";document.head.appendChild(s);}["scroll","mousedown","keydown","touchstart","wheel"].forEach(function(e){W.addEventListener(e,load,{once:true,passive:true})});t=setTimeout(load,10000);})();`,
+            }}
+          />
         ) : null}
 
         {children}
