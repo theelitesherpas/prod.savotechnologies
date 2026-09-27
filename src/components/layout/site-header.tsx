@@ -17,6 +17,7 @@ const panelId = (label: string) => `nav-panel-${label.replace(/\s+/g, "-").toLow
 
 export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [openPanel, setOpenPanel] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileAcc, setMobileAcc] = useState<string | null>(null);
@@ -38,10 +39,18 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
 
   /* Scroll state */
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 50);
+      // hide on scroll-down (past 120px), show on scroll-up
+      if (y > 120 && y > lastY + 1) setHidden(true);
+      else if (y < lastY - 1 || y < 120) setHidden(false);
+      lastY = y;
+    };
     onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    return () => window.removeEventListener("scroll", onScroll, { capture: true });
   }, []);
 
   /* Desktop panel dismissal: Esc + outside click, focus return */
@@ -140,12 +149,13 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
     <header
       ref={headerRef}
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,color] duration-500 ease-[var(--ease-out-expo)]",
+        "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,color,transform,box-shadow] duration-500 ease-[var(--ease-out-expo)]",
         mobileOpen && "chapter-ink border-b border-border bg-background text-foreground",
         !mobileOpen &&
           (scrolled || openPanel
-            ? "border-b border-border bg-background"
+            ? "border-b border-border bg-background/85 backdrop-blur-md shadow-[0_1px_12px_rgb(10_10_14/0.06)]"
             : "border-b border-transparent"),
+        hidden && !mobileOpen && !openPanel && "-translate-y-full",
       )}
     >
       {/* Bar stays above the open menu (burger must stay reachable) */}

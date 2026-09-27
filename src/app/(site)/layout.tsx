@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/components/layout/site-header";
+import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { EnquiryProvider } from "@/components/shared/enquiry-dialog";
 import { AskSavoBar } from "@/components/shared/ask-savo-bar";
@@ -156,12 +157,14 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         </div>
       ) : null}
 
-      <SiteHeader nav={nav} />
+      <SmoothScroll>
+        <SiteHeader nav={nav} />
       <main id="main">{children}</main>
       <SiteFooter
         contact={{ email: settings.contactEmail, phone: settings.contactPhone, phoneE164: SITE.phoneE164 }}
       />
       <AskSavoBar />
+      </SmoothScroll>
     </EnquiryProvider>
   );
 }

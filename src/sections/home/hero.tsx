@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { useEnquiry } from "@/components/shared/enquiry-dialog";
+import { Magnetic } from "@/components/ui/magnetic";
 import { HeroCanvas } from "./hero-canvas";
 import { track } from "@/lib/analytics";
 import { SITE } from "@/constants/site";
@@ -167,6 +168,11 @@ export function Hero() {
 
   return (
     <section id="top" ref={rootRef} aria-labelledby="hero-heading" className="relative overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="hero-blob pointer-events-none absolute inset-0 z-0"
+        style={{ background: "radial-gradient(ellipse 500px 400px at 70% 40%, rgba(217,72,15,0.05), transparent 70%)" }}
+      />
       <div className="shell flex min-h-[100svh] flex-col justify-center pt-[calc(var(--nav-h)+3rem)] pb-24 lg:pt-[calc(var(--nav-h)+2rem)]">
         <div className="grid items-center gap-10 lg:grid-cols-12">
           <div className="relative z-10 lg:col-span-7 xl:col-span-7">
@@ -192,6 +198,7 @@ export function Hero() {
             </p>
 
             <div data-intro="fade" className="mt-10 flex flex-wrap items-center gap-4">
+              <Magnetic strength={0.25}>
               <button
                 onClick={() => {
                   track("hero_cta_click");
@@ -204,6 +211,8 @@ export function Hero() {
                   <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
                 </svg>
               </button>
+              </Magnetic>
+              <Magnetic strength={0.2}>
               <Link
                 href="#work"
                 onClick={() => track("explore_work_click")}
@@ -211,6 +220,7 @@ export function Hero() {
               >
                 Explore Our Work
               </Link>
+              </Magnetic>
             </div>
           </div>
 

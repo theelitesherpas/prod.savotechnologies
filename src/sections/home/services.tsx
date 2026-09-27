@@ -129,7 +129,8 @@ export function Services() {
                           setOpenId(next);
                           if (next) track("service_open", { service: service.title });
                         }}
-                        className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 py-6 text-left sm:grid-cols-[4rem_minmax(0,1fr)_auto] sm:py-7"
+                        data-open={isOpen}
+                        className="service-row group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 py-6 text-left sm:grid-cols-[4rem_minmax(0,1fr)_auto] sm:py-7"
                       >
                         <span
                           className={cn(
@@ -158,6 +159,7 @@ export function Services() {
                           <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-current" />
                         </span>
                       </button>
+                      <span aria-hidden="true" className="service-underline" />
                     </h3>
 
                     <div

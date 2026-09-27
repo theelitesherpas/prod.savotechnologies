@@ -753,3 +753,41 @@ div:has(> .adm-select[aria-invalid="true"]) > label {
   border-radius: 99px;
   border: 2px solid var(--surface);
 }
+
+/* Hero gradient blob - follows cursor, sits behind content */
+.hero-blob {
+  transition: background 0.6s ease;
+  will-change: background;
+}
+
+/* Header hide/show polish */
+@media (prefers-reduced-motion: reduce) {
+  header[class*="-translate-y-full"] {
+    transform: none !important;
+  }
+}
+
+/* Service card hover: 3D tilt + underline draw */
+.service-row {
+  position: relative;
+  transition: transform 0.4s var(--ease-out-expo);
+  transform-style: preserve-3d;
+}
+.service-row:hover {
+  transform: perspective(800px) rotateX(1.5deg) translateY(-2px);
+}
+.service-row .service-underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.service-row:hover .service-underline,
+.service-row[data-open="true"] .service-underline {
+  transform: scaleX(1);
+}

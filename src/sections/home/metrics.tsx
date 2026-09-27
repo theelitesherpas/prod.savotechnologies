@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/ui/reveal";
+import { CountUp } from "@/components/ui/count-up";
 import { METRICS } from "@/constants/content";
 import { IS_DEMO } from "@/lib/content-mode";
 import { getSettings } from "@/lib/settings";
@@ -42,7 +43,7 @@ export async function Metrics() {
                 <dt className="t-label order-2 mt-4 text-muted">{metric.label}</dt>
                 <dd className="order-1 t-dl flex items-start text-foreground/85">
                   {IS_DEMO ? (
-                    metric.value
+                    <CountUp value={metric.value} />
                   ) : (
                     <>
                       <span aria-label="figure pending verification">{metric.value}</span>
