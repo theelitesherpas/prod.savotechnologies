@@ -155,7 +155,7 @@ export function OpenRoles({ roles: ROLES }: { roles: PublicRole[] }) {
                           </svg>
                         </Link>
                         <p className="t-caption text-muted">
-                          Full time · Remote (India) · Indore
+                          Full time · Office (Indore) · Hybrid available
                         </p>
                       </div>
                     </div>

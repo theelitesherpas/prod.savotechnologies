@@ -226,8 +226,8 @@ export const LIFE_POINTS = [
     text: "Designers and engineers decide together, daily. The best interface is the one you stop noticing, and everyone here can argue both halves of that sentence.",
   },
   {
-    title: "Remote first, India",
-    text: "Indore · remote across India, with clients across five regions. Async by default, honest in writing, meetings only when they earn their slot.",
+    title: "Office + hybrid, India",
+    text: "Office-first in Indore, hybrid options across India, with clients across five regions. Async by default, honest in writing, meetings only when they earn their slot.",
   },
   {
     title: "Learn in production",

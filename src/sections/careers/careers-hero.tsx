@@ -40,7 +40,7 @@ export function CareersHero({ roles }: { roles: Role[] }) {
                 <p className="t-body-lg mt-8 max-w-xl text-muted">
                   Every commit you push here lands in a real product: hospital
                   systems, payment rails, AI agents in production. Small teams,
-                  genuine ownership, remote first across India.
+                  genuine ownership, office-first in Indore with hybrid options.
                 </p>
               </Reveal>
 

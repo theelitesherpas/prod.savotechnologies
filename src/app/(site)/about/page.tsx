@@ -26,7 +26,7 @@ import { openGraphFor } from "@/lib/seo";
 const MILESTONES_SEED = [
   { year: "2015", t: "Two engineers, one promise", d: "Savo starts in a Jaipur office with a simple rule: every client talks to the people building their software." },
   { year: "2018", t: "First platform at scale", d: "A logistics platform crosses 5,000 daily users and stays up through its first peak season. The reliability playbook we still use is written that winter." },
-  { year: "2020", t: "Remote, fully", d: "We go remote first and turn it into an advantage: senior engineers across India, one delivery standard, zero geography tax on clients." },
+  { year: "2020", t: "Hybrid, deliberately", d: "Remote taught us to write everything down; the Indore office keeps the bar high. One delivery standard, zero geography tax on clients." },
   { year: "2022", t: "AI practice begins", d: "The first production copilot ships for a healthcare client and deflects 70% of tier 1 queries. AI becomes a practice, not a pitch." },
   { year: "2024", t: "Across three regions", d: "Wallets in the GCC, banking dashboards in the UK, education for 200,000 students in India. Same model: matched in 48 hours, two week trial." },
   { year: "2026", t: "Still accountable", d: "Forty people, ten industries, one rule unchanged: you always know exactly who is building your software and why." },
@@ -173,7 +173,7 @@ export default async function AboutPage() {
                 </ImageReveal>
                 <div className="mt-4 border-l-2 border-accent pl-4">
                   <p className="t-sm font-semibold">{IS_DEMO ? "Jaipur to everywhere" : "Indore to everywhere"}</p>
-                  <p className="t-caption text-muted">Remote first since 2020, delivery standard unchanged.</p>
+                  <p className="t-caption text-muted">Office-first in Indore, hybrid across India, standard unchanged.</p>
                 </div>
               </Reveal>
             </div>

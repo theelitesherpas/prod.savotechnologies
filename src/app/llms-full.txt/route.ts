@@ -79,7 +79,7 @@ deployed against real business workflows with enterprise security.
 ## Careers
 - Careers page: ${absoluteUrl("/careers")} · Apply: ${absoluteUrl("/careers/apply")}
 - Hiring promise: engineer-read applications, personal reply within two business days, four steps to a written offer (technical conversation, paid pairing session)
-- Work model: full time, remote first across India (Indore), INR salaries
+- Work model: full time, office-first from the Indore headquarters with hybrid options, INR salaries
 - Open roles (experience): ${ROLES.map((r) => `${r.title} (${r.exp})`).join("; ")}
 - Applications: hr@ contact or the apply form; no matching role → general application accepted
 

@@ -59,7 +59,7 @@ export default async function CareersApplyPage({
               <Reveal delay={120}>
                 <p className="t-body-lg mt-6 max-w-xl text-muted">
                   {match
-                    ? `${match.track} · ${match.exp} · Full time, remote first across India.`
+                    ? `${match.track} · ${match.exp} · Full time, office-first in Indore with hybrid options.`
                     : "Pick the role that fits inside the form and tell us about yourself. Ten minutes, one form."}
                 </p>
               </Reveal>

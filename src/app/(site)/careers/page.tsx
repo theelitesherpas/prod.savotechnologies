@@ -21,7 +21,7 @@ import { openGraphFor } from "@/lib/seo";
  */
 
 const DESCRIPTION =
-  "Open engineering and design roles at Savo Technologies: frontend, backend, AI and ML, mobile, DevOps and UI/UX. Remote first in India, INR salaries, honest hiring in four steps.";
+  "Open engineering and design roles at Savo Technologies: frontend, backend, AI and ML, mobile, DevOps and UI/UX. Full time from our Indore office with hybrid options, INR salaries, honest hiring in four steps.";
 
 export const metadata: Metadata = {
   title: "Careers",
@@ -50,7 +50,7 @@ export default async function CareersPage() {
         "What you bring:",
         ...role.brings.map((b) => `- ${b}`),
         "",
-        `${role.exp} · Full time · Remote (India) · Indore`,
+        `${role.exp} · Full time · Office (Indore) · Hybrid available`,
       ].join("\n"),
       employmentType: "FULL_TIME",
       datePosted: ROLES_POSTED,
@@ -60,10 +60,16 @@ export default async function CareersPage() {
         name: SITE.name,
         sameAs: absoluteUrl("/"),
       },
-      jobLocationType: "TELECOMMUTE",
-      applicantLocationRequirements: {
-        "@type": "Country",
-        name: "India",
+      jobLocation: {
+        "@type": "Place",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: SITE.hq.street,
+          addressLocality: SITE.hq.city,
+          addressRegion: SITE.hq.region,
+          postalCode: SITE.hq.postalCode,
+          addressCountry: SITE.hq.countryCode,
+        },
       },
       url: absoluteUrl(`/careers/apply?role=${roleSlug(role.title)}`),
     })),

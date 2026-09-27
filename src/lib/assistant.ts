@@ -209,7 +209,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Are you hiring?",
     keywords: ["hiring", "job", "jobs", "career", "careers", "vacancy", "openings", "positions", "apply", "role"],
     paragraphs: [
-      "We hire engineers and designers who are curious, ship weekly and check their ego in, remote first across India, INR salaries.",
+      "We hire engineers and designers who are curious, ship weekly and check their ego in, office-first in Indore with hybrid options, INR salaries.",
       "Applications get an engineer-read review and a personal reply within two business days. Four steps to a written offer, including a paid pairing session.",
     ],
     links: [

@@ -335,7 +335,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     label: "Job openings broadcast",
     fires: "Bulk announcement of open positions",
     recipient: "candidate",
-    vars: { recipientName: "Team", openingsList: "· Flutter Developer - Indore / Remote\n· AI Engineer - Indore\n· UI/UX Designer - Remote" },
+    vars: { recipientName: "Team", openingsList: "· Flutter Developer - Indore / Hybrid\n· AI Engineer - Indore / Hybrid\n· UI/UX Designer - Indore / Hybrid" },
     default: (v) => jobOpeningsBroadcast(v),
   },
   /* ── HR OPERATIONS · OFFERS & ONBOARDING ─────────────────── */
