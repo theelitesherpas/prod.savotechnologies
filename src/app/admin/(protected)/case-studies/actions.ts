@@ -11,6 +11,7 @@ import { audit } from "@/lib/audit";
 import { caseStudySchema, slugifyCaseStudy } from "@/lib/case-study-schema";
 import { CASE_STUDY_DETAILS } from "@/constants/case-studies";
 import { DEMO_CASE_STUDIES } from "@/content/demo/case-studies";
+import { IS_DEMO } from "@/lib/content-mode";
 
 /**
  * Case-study mutations for the dedicated rich editor (/admin/case-studies).
@@ -191,7 +192,7 @@ export async function importCaseStudyDefaultsAction(): Promise<void> {
     count += 1;
   }
 
-  await audit(user.id, "caseStudy.importDefaults", "ContentItem", `case-studies:${count} records`);
+  await audit(user.id, "caseStudy.importDefaults", "ContentItem", `case-studies:${count} records`, { mode: IS_DEMO ? "demo" : "production" });
 
   revalidateCaseStudies();
   redirect(`/admin/case-studies?saved=imported&n=${count}`);
