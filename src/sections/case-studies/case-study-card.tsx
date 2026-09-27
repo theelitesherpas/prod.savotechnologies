@@ -242,8 +242,8 @@ export function CaseStudyCard({
           <p className="t-label mt-2.5 text-muted">
             {entry.sector} · {entry.services}
           </p>
-          <p className="t-label mt-1.5 text-muted/80">{entry.stack}</p>
-          <p className="t-caption mt-3 text-muted/80">{entry.outcome}</p>
+          <p className="t-label mt-1.5 text-muted">{entry.stack}</p>
+          <p className="t-caption mt-3 text-muted">{entry.outcome}</p>
         </div>
         {hasDetail ? (
           <span
@@ -259,7 +259,7 @@ export function CaseStudyCard({
         <span
           aria-disabled="true"
           title="Case study in preparation"
-          className="t-sm inline-flex items-center gap-2 font-semibold text-muted/60"
+          className="t-sm inline-flex items-center gap-2 font-semibold text-muted"
         >
           View Project
           <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6">

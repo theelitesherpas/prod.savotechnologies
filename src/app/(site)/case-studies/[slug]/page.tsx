@@ -102,7 +102,7 @@ export default async function CaseStudyPage({
               <h1 id="cs-heading" className="t-h1">
                 {displayName}
               </h1>
-              {study.industry ? <p className="t-label mt-5 text-accent">{study.industry}</p> : null}
+              {study.industry ? <p className="t-label mt-5 text-accent-strong">{study.industry}</p> : null}
             </div>
             <div className="lg:col-span-5">
               {study.summary ? <p className="t-body-lg text-muted">{study.summary}</p> : null}
@@ -267,7 +267,7 @@ export default async function CaseStudyPage({
           <div className="mx-auto max-w-4xl">
             <Reveal>
               <figure className="border border-border bg-surface p-8 sm:p-12">
-                <p className="t-label text-accent">
+                <p className="t-label text-accent-strong">
                   {isDemo ? "Client testimonial preview" : "Client testimonial"}
                 </p>
                 <blockquote className="t-serif-italic mt-6 text-2xl leading-snug text-foreground/90 sm:text-3xl">

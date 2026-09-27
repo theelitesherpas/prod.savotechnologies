@@ -212,7 +212,7 @@ function WorkCard({
           <p className="t-label mt-2.5 text-muted">
             {item.industry} · {item.services} · {item.stack}
           </p>
-          <p className="t-caption mt-3 text-muted/80">{item.outcome}</p>
+          <p className="t-caption mt-3 text-muted">{item.outcome}</p>
         </div>
         {item.slug ? (
           <span
@@ -228,7 +228,7 @@ function WorkCard({
         <span
           aria-disabled="true"
           title="Case study in preparation"
-          className="t-sm inline-flex items-center gap-2 font-semibold text-muted/60"
+          className="t-sm inline-flex items-center gap-2 font-semibold text-muted"
         >
           View Project
           <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -316,7 +316,7 @@ export async function SelectedWork() {
       {IS_DEMO ? (
         <Reveal className="mt-16">
           <figure className="border border-border bg-surface p-8 sm:p-12" aria-label="Client testimonial preview">
-            <p className="t-label text-accent">{DEMO_TESTIMONIAL.kicker}</p>
+            <p className="t-label text-accent-strong">{DEMO_TESTIMONIAL.kicker}</p>
             <blockquote className="t-serif-italic mt-6 max-w-3xl text-2xl leading-snug text-foreground/90 sm:text-3xl">
               &ldquo;{DEMO_TESTIMONIAL.quote}&rdquo;
             </blockquote>

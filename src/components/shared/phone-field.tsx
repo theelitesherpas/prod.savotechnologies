@@ -237,7 +237,7 @@ export function PhoneField({
           onChange={(e) => setDigits(e.target.value)}
           placeholder={country && rule ? (rule.min === rule.max ? `${rule.min} digits` : `${rule.min}–${rule.max} digits`) : "Select country first"}
           aria-invalid={shown ? "true" : undefined}
-          className="field !border-0 flex-1 rounded-none pl-2 disabled:cursor-not-allowed disabled:placeholder:text-muted/70"
+          className="field !border-0 flex-1 rounded-none pl-2 disabled:cursor-not-allowed disabled:placeholder:text-muted"
         />
       </div>
       {shown ? (

@@ -60,7 +60,7 @@ export async function WhileYouDecide() {
               <div className="flex flex-1 flex-col p-6 sm:p-7">
                 <p className="t-label text-muted transition-colors duration-300 group-hover:text-background/70">
                   {article.date}
-                  <span className="mx-2 text-muted/60 group-hover:text-background/50">·</span>
+                  <span className="mx-2 text-muted group-hover:text-background/50">·</span>
                   {article.time}
                 </p>
                 <h3 className="t-h4 mt-3 leading-snug transition-colors duration-300 group-hover:text-background">
@@ -69,7 +69,7 @@ export async function WhileYouDecide() {
                 <p className="t-sm mt-3 flex-1 text-muted transition-colors duration-300 group-hover:text-background/75">
                   {article.excerpt}
                 </p>
-                <span className="t-label mt-5 inline-flex items-center gap-2 text-accent">
+                <span className="t-label mt-5 inline-flex items-center gap-2 text-accent-strong">
                   Read the note
                   <svg
                     aria-hidden="true"

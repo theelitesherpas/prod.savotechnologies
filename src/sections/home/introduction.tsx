@@ -59,7 +59,7 @@ export function Introduction() {
             <span className="t-caption text-muted">
               Strategy, design and engineering under one roof.
             </span>
-            <span className="t-label hidden shrink-0 text-muted/70 sm:block">The Studio</span>
+            <span className="t-label hidden shrink-0 text-muted sm:block">The Studio</span>
           </figcaption>
         </figure>
       </Reveal>

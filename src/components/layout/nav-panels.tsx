@@ -22,7 +22,7 @@ export function PanelLink({ link }: { link: NavLink }) {
         {link.label}
       </span>
       {link.pro ? (
-        <span className="t-label rounded-[2px] border border-accent/40 px-1.5 py-0.5 text-accent">
+        <span className="t-label rounded-[2px] border border-accent/40 px-1.5 py-0.5 text-accent-strong">
           PRO
         </span>
       ) : null}

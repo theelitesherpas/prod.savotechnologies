@@ -433,7 +433,7 @@ function Field({
             rows={4}
             maxLength={max}
           />
-          <p className="t-caption tnum mt-1 text-right text-muted/70">
+          <p className="t-caption tnum mt-1 text-right text-muted">
             {len} / {max}
           </p>
         </>

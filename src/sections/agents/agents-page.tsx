@@ -67,7 +67,7 @@ export function AgentsHero({ agents: AGENTS }: { agents: Agent[] }) {
           <span className="h-2 w-2 shrink-0 bg-accent" />
           <span className="t-label text-muted">
             AI
-            <span className="mx-2.5 text-muted/60">·</span>
+            <span className="mx-2.5 text-muted">·</span>
             The Agent Fleet
           </span>
           <span className="h-px flex-1 bg-border" />

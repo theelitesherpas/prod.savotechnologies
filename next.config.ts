@@ -14,7 +14,7 @@ const csp = [
     isProd ? "" : " 'unsafe-eval'"
   } https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://www.google.com https://www.gstatic.com https://www.googletagmanager.com",
+  "img-src 'self' data: blob: https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com",
   "font-src 'self'",
   "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com",
   "frame-src https://www.google.com https://recaptcha.google.com",

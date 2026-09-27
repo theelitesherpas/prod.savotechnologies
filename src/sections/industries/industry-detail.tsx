@@ -30,7 +30,7 @@ export function IndustryDetailHero({
           <span className="h-2 w-2 shrink-0 bg-accent" />
           <span className="t-label text-muted">
             <Link href="/industries" className="transition-colors hover:text-foreground">Industries</Link>
-            <span className="mx-2.5 text-muted/60">·</span>
+            <span className="mx-2.5 text-muted">·</span>
             {detail.title}
           </span>
           <span className="h-px flex-1 bg-border" />
@@ -101,7 +101,7 @@ export function IndustryDetailHero({
             </ImageReveal>
             <figcaption className="mt-4 flex items-center justify-between gap-6">
               <span className="t-caption text-muted">{detail.imageCaption}</span>
-              <span className="t-label hidden shrink-0 text-muted/70 sm:block">{detail.title}</span>
+              <span className="t-label hidden shrink-0 text-muted sm:block">{detail.title}</span>
             </figcaption>
           </figure>
         </Reveal>

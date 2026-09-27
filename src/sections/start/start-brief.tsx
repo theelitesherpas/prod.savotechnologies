@@ -209,7 +209,7 @@ export function StartBrief() {
         {step === 0 ? (
           <div className="workbench-panel space-y-8">
             <div>
-              <p className="t-label text-accent">Step, you</p>
+              <p className="t-label text-accent-strong">Step, you</p>
               <h3 className="t-h2 mt-3">Who is building with us?</h3>
             </div>
             <div className="grid gap-8 sm:grid-cols-2">
@@ -251,7 +251,7 @@ export function StartBrief() {
         {step === 1 ? (
           <div className="workbench-panel space-y-9">
             <div>
-              <p className="t-label text-accent">Step, the project</p>
+              <p className="t-label text-accent-strong">Step, the project</p>
               <h3 className="t-h2 mt-3">What are we building?</h3>
             </div>
 
@@ -284,7 +284,7 @@ export function StartBrief() {
         {step === 2 ? (
           <div className="workbench-panel">
             <div>
-              <p className="t-label text-accent">Step, review</p>
+              <p className="t-label text-accent-strong">Step, review</p>
               <h3 className="t-h2 mt-3">Read it back, then send.</h3>
             </div>
             <dl className="mt-9 border-t border-border">

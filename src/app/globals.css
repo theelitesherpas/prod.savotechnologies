@@ -18,6 +18,9 @@
   --border: rgb(23 23 26 / 0.13);
   --accent: #d9480f;
   --accent-hover: #b23a09;
+  /* Accessible accent for small text on paper - the brand vermilion at
+     11-15px misses 4.5:1 (3.84:1); this deepened tone clears it (5.35:1). */
+  --accent-strong: #b23a09;
   --on-accent: #f7f5f0;
   --success: #1e7a3f;
   --warning: #94660f;
@@ -37,6 +40,7 @@
   --border: rgb(238 240 244 / 0.13);
   --accent: #ff5a24;
   --accent-hover: #ff7c4d;
+  --accent-strong: #ff7c4d;
   --on-accent: #101319;
 }
 
@@ -52,6 +56,7 @@
   --border: rgb(22 19 15 / 0.26);
   --accent: #16130f;
   --accent-hover: #2b251e;
+  --accent-strong: #16130f;
   --on-accent: #f7f5f0;
 }
 
@@ -64,6 +69,7 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-strong: var(--accent-strong);
   --color-on-accent: var(--on-accent);
   --color-success: var(--success);
   --color-warning: var(--warning);

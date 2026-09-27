@@ -240,7 +240,7 @@ export function CallbackForm() {
             disabled={!rule}
             maxLength={rule ? rule.max + 2 : 0}
             className={cn(
-              "min-w-0 flex-1 bg-transparent py-2.5 pr-1 tnum text-[0.9375rem] text-foreground placeholder:text-muted/70 focus:outline-none",
+              "min-w-0 flex-1 bg-transparent py-2.5 pr-1 tnum text-[0.9375rem] text-foreground placeholder:text-muted focus:outline-none",
               !rule && "cursor-not-allowed",
             )}
             placeholder={rule ? `${digitsHint} after ${rule.dial}` : "Select your country first"}

@@ -352,7 +352,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                                 />
                                 {link.label}
                                 {link.pro ? (
-                                  <span className="t-label rounded-[2px] border border-accent/40 px-1.5 py-0.5 text-accent">PRO</span>
+                                  <span className="t-label rounded-[2px] border border-accent/40 px-1.5 py-0.5 text-accent-strong">PRO</span>
                                 ) : null}
                               </Link>
                             </li>
@@ -362,7 +362,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                               <Link
                                 href={item.href}
                                 onClick={() => setMobileOpen(false)}
-                                className="t-label py-2 text-accent"
+                                className="t-label py-2 text-accent-strong"
                               >
                                 All {item.label} →
                               </Link>

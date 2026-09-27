@@ -61,7 +61,7 @@ export function RatePlate({ monthly, short }: { monthly: number; short: string }
             >
               <span className="t-label">{c.label}</span>
               {c.discount > 0 ? (
-                <span className={cn("t-label", active ? "text-background/70" : "text-accent")}>
+                <span className={cn("t-label", active ? "text-background/70" : "text-accent-strong")}>
                   −{Math.round(c.discount * 100)}%
                 </span>
               ) : (

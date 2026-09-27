@@ -26,7 +26,7 @@ export function CrewBand({ variant }: { variant: string }) {
               {copy.title}
             </h2>
             <p className="t-caption mt-4 text-muted">{copy.note}.</p>
-            <p className="t-label mt-8 text-muted/70">
+            <p className="t-label mt-8 text-muted">
               Doodles from the studio, drawn the way we build, by hand
             </p>
           </Reveal>

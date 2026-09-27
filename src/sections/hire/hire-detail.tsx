@@ -94,7 +94,7 @@ export function HireRoleHero({ role }: { role: HireRole }) {
           <span className="h-2 w-2 shrink-0 bg-accent" />
           <span className="t-label text-muted">
             <Link href="/hire" className="transition-colors hover:text-foreground">Hire Resources</Link>
-            <span className="mx-2.5 text-muted/60">·</span>
+            <span className="mx-2.5 text-muted">·</span>
             {role.title}
           </span>
           <span className="h-px flex-1 bg-border" />

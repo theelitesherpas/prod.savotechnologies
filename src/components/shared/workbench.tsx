@@ -82,7 +82,7 @@ export function Workbench({
             className="flex min-h-[17rem] flex-col border border-border bg-background p-8 sm:p-10"
           >
             <div key={active} className="workbench-panel grow">
-              <p className="t-label text-accent">{includedLabel}</p>
+              <p className="t-label text-accent-strong">{includedLabel}</p>
               <h3 className="t-h2 mt-4 max-w-[16ch]">{current.title}</h3>
               <p className="t-body mt-5 max-w-xl text-muted">{current.text}</p>
             </div>

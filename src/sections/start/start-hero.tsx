@@ -99,7 +99,7 @@ export function WhatHappensNext() {
             <li key={step.when} className={i % 2 === 1 ? "lg:ml-16" : ""}>
               <div className="relative pl-8 sm:pl-10">
                 <span aria-hidden="true" className="absolute left-0 top-[0.45rem] h-[11px] w-[11px] border border-border bg-surface" />
-                <p className="t-label text-accent">{step.when}</p>
+                <p className="t-label text-accent-strong">{step.when}</p>
                 <p className="t-body mt-3 max-w-lg text-muted">{step.what}</p>
               </div>
             </li>
