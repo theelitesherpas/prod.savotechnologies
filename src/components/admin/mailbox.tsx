@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { ConfirmButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
 import { markReadAction, markUnreadAction, deleteReplyAction } from "@/app/admin/(protected)/emails/actions";
+import { TEMPLATE_REGISTRY, bodyToHtml } from "@/lib/mail/registry";
+import { shell } from "@/lib/mail/templates";
 import {
   sendTemplatedEmailAction,
   sendCustomEmailAction,
@@ -182,6 +184,22 @@ export function Mailbox({
 
   return (
     <div>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <p className="t-caption text-muted">
+          {folder === "inbox" ? `${list.length} message${list.length === 1 ? "" : "s"}` : `${list.length} sent`} · {unread} unread
+        </p>
+        <button
+          type="button"
+          onClick={() => startCompose("")}
+          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-accent px-5 text-[0.875rem] font-semibold text-on-accent shadow-sm transition-colors hover:bg-accent-hover"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <path d="M10 4v12M4 10h12" />
+          </svg>
+          Compose
+        </button>
+      </div>
+
       {(notice || error) && (
         <div
           className={cn(
@@ -196,17 +214,6 @@ export function Mailbox({
       <div className="grid gap-4 lg:grid-cols-[190px_320px_minmax(0,1fr)]">
         {/* ── Folder rail ─────────────────────────────── */}
         <aside className="space-y-1.5" aria-label="Mail folders">
-          <button
-            type="button"
-            onClick={() => startCompose("")}
-            className="mb-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 text-[0.875rem] font-semibold text-on-accent shadow-sm transition-colors hover:bg-accent-hover"
-          >
-            <svg viewBox="0 0 20 20" aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <path d="M10 4v12M4 10h12" />
-            </svg>
-            Compose
-          </button>
-
           {([
             ["inbox", `Inbox${unread ? ` · ${unread}` : ""}`],
             ["sent", "Sent"],
@@ -440,12 +447,22 @@ function ComposePanel({
   const [vars, setVars] = useState<Record<string, string>>({});
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   const isCustom = templateKey === TEMPLATES_CUSTOM_KEY;
   const entry = useMemo(
     () => grouped.flatMap(([, ts]) => ts).find((t) => t.key === templateKey),
     [grouped, templateKey],
   );
+
+  /* Live preview - the exact email that will be sent (same machinery as
+     the compose page: registry default with the current variables). */
+  const previewHtml = useMemo(() => {
+    if (isCustom) return shell({ preheader: subject.slice(0, 120), heading: "", bodyHtml: bodyToHtml(body || "…") });
+    const reg = TEMPLATE_REGISTRY.find((t) => t.key === templateKey);
+    if (!reg) return "";
+    return reg.default({ ...reg.vars, ...vars }).html;
+  }, [isCustom, templateKey, vars, subject, body]);
 
   const switchTemplate = (key: string) => {
     setTemplateKey(key);
@@ -477,8 +494,8 @@ function ComposePanel({
         <p className="adm-label mb-1.5">Send from</p>
         <div className="flex gap-2">
           {([
-            ["hello", "Clients · hello@savotechnologies.com"],
-            ["hr", "HR · hr@savotechnologies.com"],
+            ["hello", "Clients · hello@"],
+            ["hr", "HR · hr@"],
           ] as const).map(([key, label]) => (
             <button
               key={key}
@@ -487,22 +504,37 @@ function ComposePanel({
                 setDept(key);
                 setTemplateKey(TEMPLATES_CUSTOM_KEY);
               }}
+              aria-pressed={dept === key}
               className={cn(
-                "h-9 flex-1 rounded-lg border px-3 text-[0.8125rem] font-semibold transition-colors",
+                "inline-flex h-9 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-[0.8125rem] font-semibold transition-colors",
                 dept === key ? "border-foreground bg-foreground text-background" : "border-border text-muted hover:border-foreground/40",
               )}
             >
+              {key === "hello" ? (
+                <svg viewBox="0 0 20 20" aria-hidden="true" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 5.5h14v9H3z" /><path d="m3.5 6.5 6.5 4.5 6.5-4.5" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 20 20" aria-hidden="true" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="10" cy="7" r="3.2" /><path d="M4 16.5c1.2-2.8 3.4-4 6-4s4.8 1.2 6 4" />
+                </svg>
+              )}
               {label}
             </button>
           ))}
         </div>
+        <p className="t-caption mt-1.5 text-muted">
+          {dept === "hello" ? "hello@savotechnologies.com · client and general mail" : "hr@savotechnologies.com · careers and employee mail"}
+        </p>
       </div>
 
       {/* Template selector, grouped by category within the department */}
-      {!isCustom || grouped.length > 0 ? (
-        <div>
-          <label className="adm-label mb-1.5 block" htmlFor="mb-template">Template</label>
-          <select
+      <div>
+        <div className="mb-1.5 flex items-baseline justify-between gap-3">
+          <label className="adm-label" htmlFor="mb-template">Template</label>
+          <span className="t-caption text-muted">grouped by {dept === "hello" ? "client" : "HR"} category</span>
+        </div>
+        <select
             id="mb-template"
             className="adm-select w-full"
             value={templateKey}
@@ -515,12 +547,11 @@ function ComposePanel({
                 ))}
               </optgroup>
             ))}
-            <optgroup label="—">
-              <option value={TEMPLATES_CUSTOM_KEY}>Custom (write your own)</option>
+            <optgroup label="Write your own">
+              <option value={TEMPLATES_CUSTOM_KEY}>Custom email</option>
             </optgroup>
           </select>
         </div>
-      ) : null}
 
       {/* To */}
       <div>
@@ -582,6 +613,26 @@ function ComposePanel({
           </div>
         </div>
       ) : null}
+
+      {/* Preview + send */}
+      <div className="rounded-lg border border-border">
+        <button
+          type="button"
+          onClick={() => setShowPreview((v) => !v)}
+          aria-expanded={showPreview}
+          className="flex h-10 w-full items-center justify-between px-4 text-[0.8125rem] font-semibold text-muted transition-colors hover:text-foreground"
+        >
+          {showPreview ? "Hide preview" : "Preview before sending"}
+          <svg viewBox="0 0 14 14" aria-hidden="true" className={cn("h-3 w-3 transition-transform duration-300", showPreview && "rotate-90")} fill="none" stroke="currentColor" strokeWidth="1.7">
+            <path d="M5 3l4 4-4 4" />
+          </svg>
+        </button>
+        {showPreview ? (
+          <div className="border-t border-border p-2">
+            <iframe title="Compose preview" sandbox="" srcDoc={previewHtml} className="h-96 w-full rounded-md border-0 bg-[#f5f4f0]" />
+          </div>
+        ) : null}
+      </div>
 
       <div className="flex items-center gap-3 pt-1">
         <button
