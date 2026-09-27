@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
  */
 
 const bodySchema = z.object({
-  sessionId: z.string().regex(/^[a-zA-Z0-9_-]{6,64}$/).optional(),
+  sessionId: z.string().regex(/^[a-zA-Z0-9_-]{6,64}$/).nullish(),
   message: z.string().trim().min(1).max(1000),
 });
 
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 
     gc();
 
-    let id = parsed.data.sessionId;
+    let id = parsed.data.sessionId ?? undefined;
     let session = id ? sessions.get(id) : undefined;
     if (!session) {
       id = randomBytes(9).toString("base64url");

@@ -73,10 +73,10 @@ export function SalesbotDemo() {
       const res = await fetch("/api/agents/salesbot/demo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: state.sessionId, message }),
+        body: JSON.stringify({ ...(state.sessionId ? { sessionId: state.sessionId } : {}), message }),
       });
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "error");
+      if (!data.ok) throw new Error(data.error || "The demo could not process that - try again.");
       await new Promise((r) => setTimeout(r, 320 + Math.random() * 280));
       setTurns((t) => [...t, { role: "bot", text: data.reply }]);
       setState({
@@ -89,8 +89,12 @@ export function SalesbotDemo() {
         suggestions: data.suggestions ?? [],
         brief: data.brief ?? null,
       });
-    } catch {
-      setTurns((t) => [...t, { role: "bot", text: "Something slipped on the wire - try that again." }]);
+    } catch (err) {
+      const msg = err instanceof Error && err.message && !err.message.startsWith("Unexpected") ? err.message : null;
+      setTurns((t) => [
+        ...t,
+        { role: "bot", text: msg ?? "Something slipped on the wire - try that again in a moment." },
+      ]);
     } finally {
       setBusy(false);
     }
