@@ -39,7 +39,6 @@ const settingsSchema = z.object({
 export async function saveSettingsAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("settings");
-  await requireSection("settings");
   const parsed = settingsSchema.safeParse({
     contactEmail: formData.get("contactEmail"),
     contactPhone: formData.get("contactPhone"),

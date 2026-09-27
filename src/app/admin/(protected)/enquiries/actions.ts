@@ -18,7 +18,6 @@ const idSchema = z.string().min(10).max(32);
 export async function updateEnquiryStatusAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("enquiries");
-  await requireSection("enquiries");
   const parsed = z
     .object({ id: idSchema, status: enquiryStatusSchema })
     .safeParse({ id: formData.get("id"), status: formData.get("status") });
@@ -40,7 +39,6 @@ export async function updateEnquiryStatusAction(formData: FormData): Promise<voi
 
 export async function saveEnquiryNotesAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("enquiries");
   await requireSection("enquiries");
   const parsed = z
     .object({ id: idSchema, notes: z.string().max(4000) })

@@ -132,7 +132,6 @@ async function readCollection(formData: FormData): Promise<CollectionKey | null>
 export async function createItemAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");
-  await requireSection("content");
   const collection = await readCollection(formData);
   if (!collection || !prisma) redirect("/admin?e=invalid");
 
@@ -176,7 +175,6 @@ export async function createItemAction(formData: FormData): Promise<void> {
 export async function updateItemAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");
-  await requireSection("content");
   const collection = await readCollection(formData);
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const base = `/admin/content/${collection ?? ""}`;
@@ -218,7 +216,6 @@ export async function updateItemAction(formData: FormData): Promise<void> {
 export async function toggleItemAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");
-  await requireSection("content");
   const collection = await readCollection(formData);
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const active = formData.get("active") === "true";
@@ -232,7 +229,6 @@ export async function toggleItemAction(formData: FormData): Promise<void> {
 
 export async function moveItemAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("content");
   await requireSection("content");
   const collection = await readCollection(formData);
   const id = z.string().min(10).max(32).parse(formData.get("id"));
@@ -274,7 +270,6 @@ export async function deleteItemAction(formData: FormData): Promise<void> {
 /** Materialize the constants baseline so the collection becomes editable. */
 export async function importDefaultsAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("content");
   await requireSection("content");
   const collection = await readCollection(formData);
   if (!collection || !prisma) redirect("/admin?e=invalid");

@@ -29,7 +29,6 @@ function slugError(e: string) {
 export async function createClientAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("clients");
-  await requireSection("clients");
   if (!prisma) redirect(slugError("Database unavailable."));
 
   const parsed = clientSchema.safeParse({
@@ -65,7 +64,6 @@ export async function createClientAction(formData: FormData): Promise<void> {
 export async function updateClientAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("clients");
-  await requireSection("clients");
   if (!prisma) redirect(slugError("Database unavailable."));
   const id = z.string().min(10).max(32).parse(formData.get("id"));
 
@@ -98,7 +96,6 @@ export async function updateClientAction(formData: FormData): Promise<void> {
 export async function resetClientPasswordAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("clients");
-  await requireSection("clients");
   if (!prisma) redirect(slugError("Database unavailable."));
   const id = z.string().min(10).max(32).parse(formData.get("id"));
 
@@ -117,7 +114,6 @@ export async function resetClientPasswordAction(formData: FormData): Promise<voi
 
 export async function deleteClientAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("clients");
   await requireSection("clients");
   if (!prisma) redirect(slugError("Database unavailable."));
   const id = z.string().min(10).max(32).parse(formData.get("id"));

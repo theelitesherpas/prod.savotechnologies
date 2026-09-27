@@ -77,7 +77,6 @@ function back(e: string): never {
 export async function saveTemplateAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("email-templates");
-  await requireSection("email-templates");
   if (!prisma) back("Database unavailable.");
 
   const parsed = templateSchema.safeParse({
@@ -100,7 +99,6 @@ export async function saveTemplateAction(formData: FormData): Promise<void> {
 
 export async function resetTemplateAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("email-templates");
   await requireSection("email-templates");
   if (!prisma) back("Database unavailable.");
   const key = z.string().min(2).max(60).parse(formData.get("key"));

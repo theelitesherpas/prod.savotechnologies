@@ -39,7 +39,6 @@ function parseDate(v: string): Date | null {
 export async function createEmployeeAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("employees");
-  await requireSection("employees");
   if (!prisma) redirect("/admin/employees?e=Database%20unavailable.");
 
   const parsed = createSchema.safeParse({
@@ -128,7 +127,6 @@ const updateSchema = createSchema.partial().extend({
 export async function updateEmployeeAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("employees");
-  await requireSection("employees");
   if (!prisma) redirect("/admin/employees?e=Database%20unavailable.");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const parsed = updateSchema.safeParse(Object.fromEntries(formData.entries()));
@@ -190,7 +188,6 @@ const leaveSchema = z.object({
 export async function addLeaveAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("employees");
-  await requireSection("employees");
   if (!prisma) redirect("/admin/employees?e=Database%20unavailable.");
   const parsed = leaveSchema.safeParse({
     employeeId: formData.get("employeeId"),
@@ -241,7 +238,6 @@ export async function addLeaveAction(formData: FormData): Promise<void> {
 export async function decideLeaveAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("employees");
-  await requireSection("employees");
   const db = prisma;
   if (!db) redirect("/admin/employees?e=Database%20unavailable.");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
@@ -277,7 +273,6 @@ export async function decideLeaveAction(formData: FormData): Promise<void> {
 
 export async function deleteEmployeeAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("employees");
   await requireSection("employees");
   const db = prisma;
   if (!db) redirect("/admin/employees?e=Database%20unavailable.");

@@ -46,7 +46,6 @@ function readServiceForm(formData: FormData) {
 export async function createServiceAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");
-  await requireSection("content");
   const parsed = readServiceForm(formData);
   if (!parsed.success) redirect("/admin/services?e=invalid");
   const d = parsed.data;
@@ -73,7 +72,6 @@ export async function createServiceAction(formData: FormData): Promise<void> {
 
 export async function updateServiceAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("content");
   await requireSection("content");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const parsed = readServiceForm(formData);
@@ -104,7 +102,6 @@ export async function updateServiceAction(formData: FormData): Promise<void> {
 export async function toggleServiceActiveAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");
-  await requireSection("content");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const active = formData.get("active") === "true";
 
@@ -131,7 +128,6 @@ export async function deleteServiceAction(formData: FormData): Promise<void> {
  */
 export async function importDefaultServicesAction(): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("content");
   await requireSection("content");
   let count = 0;
 

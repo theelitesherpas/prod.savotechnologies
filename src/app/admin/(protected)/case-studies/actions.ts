@@ -10,6 +10,7 @@ import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { caseStudySchema, slugifyCaseStudy } from "@/lib/case-study-schema";
 import { CASE_STUDY_DETAILS } from "@/constants/case-studies";
+import { DEMO_CASE_STUDIES } from "@/content/demo/case-studies";
 
 /**
  * Case-study mutations for the dedicated rich editor (/admin/case-studies).
@@ -42,7 +43,6 @@ function revalidateCaseStudies(slug?: string) {
 
 export async function saveCaseStudyAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("content");
   await requireSection("content");
   if (!prisma) redirect("/admin/case-studies?e=db");
 
@@ -100,7 +100,6 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
 export async function deleteCaseStudyAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");
-  await requireSection("content");
   if (!prisma) redirect("/admin/case-studies?e=db");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
 
@@ -116,7 +115,6 @@ export async function deleteCaseStudyAction(formData: FormData): Promise<void> {
 
 export async function setCaseStudyStatusAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("content");
   await requireSection("content");
   if (!prisma) redirect("/admin/case-studies?e=db");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
@@ -145,24 +143,33 @@ export async function setCaseStudyStatusAction(formData: FormData): Promise<void
 export async function importCaseStudyDefaultsAction(): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");
-  await requireSection("content");
   if (!prisma) redirect("/admin/case-studies?e=db");
 
+  // In production mode CASE_STUDY_DETAILS is empty (demo is gated out),
+  // so import the demo dossiers directly: editable starting points that
+  // stay invisible on the public site until individually published.
+  const source = CASE_STUDY_DETAILS.length > 0
+    ? CASE_STUDY_DETAILS.map(({ slug, ...record }) => ({ slug, record: record as Omit<typeof record, never>, status: record.status }))
+    : DEMO_CASE_STUDIES.map((record) => ({
+        slug: slugifyCaseStudy(record.title),
+        record: record as unknown as Record<string, unknown>,
+        status: record.status,
+      }));
+
   let count = 0;
-  for (const [i, study] of CASE_STUDY_DETAILS.entries()) {
-    const { slug, ...record } = study;
+  for (const [i, { slug, record, status }] of source.entries()) {
     await prisma.contentItem.upsert({
       where: { collection_slug: { collection: "case-studies", slug } },
       create: {
         collection: "case-studies",
         slug,
-        title: record.title,
+        title: record.title as string,
         order: i,
         active: true,
-        contentStatus: record.status === "verified" ? "published" : "demo",
+        contentStatus: (status as string) === "verified" ? "published" : "demo",
         data: record as unknown as import("@prisma/client").Prisma.InputJsonValue,
       },
-      update: { title: record.title, order: i },
+      update: { title: record.title as string, order: i },
     });
     count += 1;
   }

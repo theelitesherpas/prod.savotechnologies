@@ -38,7 +38,6 @@ function readForm(formData: FormData) {
 export async function createIndustryAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");
-  await requireSection("content");
   const parsed = readForm(formData);
   if (!parsed.success) redirect("/admin/industries?e=invalid");
   const d = parsed.data;
@@ -64,7 +63,6 @@ export async function createIndustryAction(formData: FormData): Promise<void> {
 
 export async function updateIndustryAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("content");
   await requireSection("content");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const parsed = readForm(formData);
@@ -94,7 +92,6 @@ export async function updateIndustryAction(formData: FormData): Promise<void> {
 export async function toggleIndustryActiveAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("content");
-  await requireSection("content");
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const active = formData.get("active") === "true";
 
@@ -117,7 +114,6 @@ export async function deleteIndustryAction(formData: FormData): Promise<void> {
 /** Materialize the version-1 industry list into editable rows. */
 export async function importDefaultIndustriesAction(): Promise<void> {
   const user = await requireAdmin();
-  await requireSection("content");
   await requireSection("content");
   let count = 0;
 

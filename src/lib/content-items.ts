@@ -267,6 +267,9 @@ export async function importDefaults(collection: CollectionKey): Promise<number>
         title: seed.title,
         order: seed.order ?? i,
         active: seed.active ?? true,
+        // The coded defaults ARE the live site content - materialize them
+        // as published so admin edits take effect immediately.
+        contentStatus: "published",
         data: seed.data as import("@prisma/client").Prisma.InputJsonValue,
       },
       update: { title: seed.title, order: seed.order ?? i },

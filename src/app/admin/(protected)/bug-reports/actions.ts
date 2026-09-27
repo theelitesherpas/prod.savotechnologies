@@ -11,7 +11,6 @@ import { audit } from "@/lib/audit";
 export async function updateBugStatusAction(formData: FormData): Promise<void> {
   const user = await requireAdmin();
   await requireSection("bug-reports");
-  await requireSection("bug-reports");
   if (!prisma) redirect("/admin/bug-reports?e=Database%20unavailable.");
 
   const parsed = z
