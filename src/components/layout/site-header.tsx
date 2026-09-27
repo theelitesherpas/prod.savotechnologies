@@ -42,7 +42,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
     let lastY = window.scrollY;
     const onScroll = () => {
       const y = window.scrollY;
-      setScrolled(y > 50);
+      setScrolled(y > 12);
       // hide on scroll-down (past 120px), show on scroll-up
       if (y > 120 && y > lastY + 1) setHidden(true);
       else if (y < lastY - 1 || y < 120) setHidden(false);
@@ -174,7 +174,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
         !mobileOpen &&
           (scrolled || openPanel
             ? "border-b border-border bg-background/85 backdrop-blur-md shadow-[0_1px_12px_rgb(10_10_14/0.06)]"
-            : "border-b border-transparent"),
+            : "border-b border-transparent bg-background/60 backdrop-blur-sm"),
         hidden && !mobileOpen && !openPanel && "-translate-y-full",
       )}
     >
@@ -253,12 +253,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                     )}
                     aria-current={isActive(item) ? "page" : undefined}
                   >
-                    <span className="relative inline-flex flex-col items-center">
-                      {item.label}
-                      {isActive(item) ? (
-                        <span aria-hidden="true" className="absolute -bottom-1.5 left-1/2 h-1 w-4 -translate-x-1/2 rounded-[1px] bg-accent" />
-                      ) : null}
-                    </span>
+                    {item.label}
                   </Link>
                 </li>
               ),
