@@ -30,6 +30,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page("/services", 0.9),
     ...SERVICE_DETAILS.map((s) => page(`/services/${s.slug}`, 0.8)),
     page("/ai-agents", 0.9),
+    // Agent detail chapters with live demos
+    ...["salesbot"].map((s) => page(`/ai-agents/${s}`, 0.8)),
     ...AI_SERVICES.map((s) => page(`/ai/${s.slug}`, 0.8)),
     page("/industries", 0.9),
     ...INDUSTRY_DETAILS.map((d) => page(`/industries/${d.id}`, 0.8)),

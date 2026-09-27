@@ -74,7 +74,7 @@ ${INDUSTRY_DETAILS.map((d) => `- [${d.title}](${base}/industries${d.id}/): ${d.t
 ${HIRE_ROLES.map((r) => `- [Hire ${r.title}](${base}/hire/${r.slug}): ${r.short}`).join("\n")}
 
 ## AI practice
-- [The agent fleet](${base}/ai-agents): deployable agents and their deliverables
+- [The agent fleet](${base}/ai-agents): deployable agents and their deliverables\n- [Savo SalesBot](${base}/ai-agents/salesbot): the AI sales agent, with a live interactive demo (qualification, lead scoring, CRM handoff brief)
 ${AI_SERVICES.map((s) => `- [${s.title}](${base}/ai/${s.slug}): ${s.tagline.replace(/\.$/, "")}`).join("\n")}
 
 ## Insights

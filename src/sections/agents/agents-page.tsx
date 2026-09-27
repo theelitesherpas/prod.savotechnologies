@@ -185,7 +185,18 @@ function AgentChapter({
           <AgentMark variant={variant} />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="t-h3">{agent.name}</h3>
+          <div className="flex flex-wrap items-center gap-3">
+            <h3 className="t-h3">{agent.name}</h3>
+            {agent.slug === "salesbot" ? (
+              <Link
+                href="/ai-agents/salesbot"
+                className="t-caption inline-flex items-center gap-1.5 rounded-[2px] border border-accent/50 bg-accent/[0.06] px-2.5 py-1 font-bold text-accent transition-colors hover:bg-accent hover:text-on-accent"
+              >
+                <span aria-hidden="true" className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+                Live demo
+              </Link>
+            ) : null}
+          </div>
           <p className="t-body mt-2 max-w-xl text-muted">{agent.desc}</p>
         </div>
         <span
@@ -199,6 +210,17 @@ function AgentChapter({
       <div className="grid gap-10 pb-10 pt-2 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-7 lg:pl-[4.5rem]">
           <p className="t-body-lg max-w-xl text-muted">{agent.detail}</p>
+          {agent.slug === "salesbot" ? (
+            <Link
+              href="/ai-agents/salesbot"
+              className="group/btn mt-8 inline-flex h-12 items-center gap-2.5 rounded-[2px] bg-foreground px-6 text-[0.9375rem] font-semibold text-background transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-accent hover:text-on-accent"
+            >
+              Run the SalesBot demo
+              <svg viewBox="0 0 14 14" aria-hidden="true" className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:translate-x-[3px]" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
+              </svg>
+            </Link>
+          ) : null}
           <ul className="mt-6 flex flex-wrap gap-2" aria-label={`${agent.name} tags`}>
             {agent.tags.map((tag) => (
               <li key={tag} className="t-caption rounded-[2px] border border-border px-2.5 py-1 text-muted">
