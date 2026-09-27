@@ -156,7 +156,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Who is Savo Technologies?",
     keywords: ["who is savo", "about", "savo", "agency", "background", "history", "experience", "old"],
     paragraphs: [
-      "An independent digital product and technology company, web platforms, mobile apps and AI systems, engineered by one accountable team since 2016.",
+      "An independent digital product and technology company, web platforms, mobile apps and AI systems, engineered by one accountable team since 2015.",
       "Ten years of global delivery from India, for clients across India, Switzerland, the Gulf, the UK, the USA and Australia.",
     ],
     links: [{ label: "Case studies", href: "/case-studies" }],

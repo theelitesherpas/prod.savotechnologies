@@ -28,7 +28,7 @@ export const SITE = {
   positioning: "Independent digital product & technology company · Indore, India",
   /** Version-1 company statement (ported from /newdesign). */
   statement:
-    "AI agents, web platforms and mobile apps, engineered by one accountable team since 2016. 10 years of global delivery from India.",
+    "AI agents, web platforms and mobile apps, engineered by one accountable team since 2015. 11 years of global delivery from India.",
   email: "hello@savotechnologies.com",
   phone: "+91 75029 01234",
   phoneE164: "+917502901234",
@@ -49,7 +49,7 @@ export const SITE = {
   registration: {
     cin: null as string | null,
     gst: null as string | null,
-    foundedYear: "2016",
+    foundedYear: "2015",
   },
 } as const;
 

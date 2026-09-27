@@ -24,7 +24,7 @@ import { openGraphFor } from "@/lib/seo";
  * suppressed in production until Savo confirms the real timeline.
  * DEMO - REPLACE BEFORE PRODUCTION. */
 const MILESTONES_SEED = [
-  { year: "2016", t: "Two engineers, one promise", d: "Savo starts in a Jaipur office with a simple rule: every client talks to the people building their software." },
+  { year: "2015", t: "Two engineers, one promise", d: "Savo starts in a Jaipur office with a simple rule: every client talks to the people building their software." },
   { year: "2018", t: "First platform at scale", d: "A logistics platform crosses 5,000 daily users and stays up through its first peak season. The reliability playbook we still use is written that winter." },
   { year: "2020", t: "Remote, fully", d: "We go remote first and turn it into an advantage: senior engineers across India, one delivery standard, zero geography tax on clients." },
   { year: "2022", t: "AI practice begins", d: "The first production copilot ships for a healthcare client and deflects 70% of tier 1 queries. AI becomes a practice, not a pitch." },
@@ -70,7 +70,7 @@ const buildFacts = (metrics: { projectsDelivered: string; clientsSupported: stri
         { v: metrics.marketsReached || "…", l: "Markets Reached" },
       ];
 
-const DESCRIPTION = `About Savo Technologies: one accountable team engineering AI agents, web platforms and mobile apps since 2016. Our story, values, leadership and how we work.`;
+const DESCRIPTION = `About Savo Technologies: one accountable team engineering AI agents, web platforms and mobile apps since 2015. Our story, values, leadership and how we work.`;
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -120,7 +120,7 @@ export default async function AboutPage() {
             <div className="lg:col-span-7">
               <Reveal>
                 <h1 id="about-heading" className="t-statement max-w-[15ch]">
-                  One team, accountable since 2016
+                  One team, accountable since 2015
                   <span aria-hidden="true" className="text-accent">.</span>
                 </h1>
               </Reveal>

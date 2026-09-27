@@ -57,7 +57,7 @@ export function LifeAtSavo() {
                 className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[rgb(16_19_25/0.4)] to-transparent"
               />
               <p className="t-label absolute bottom-4 left-4 text-white/85">
-                One team · since 2016
+                One team · since 2015
               </p>
             </ImageReveal>
             <p className="t-caption mt-4 text-muted">
