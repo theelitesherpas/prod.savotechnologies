@@ -118,8 +118,10 @@ export function IndustryLandscape({ detail }: { detail: IndustryDetail }) {
   return (
     <Section index="The Landscape" labelledBy={headingId}>
       <SectionHeader id={headingId} heading="The landscape." lead={detail.overview[0]} />
-      <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
-        <div className="lg:col-span-7">
+      <div className="grid items-start gap-10 lg:grid-cols-12 lg:gap-10">
+        {/* Editorial text rail - markers anchor the column's base so the
+            copy block and the figure read as one balanced band. */}
+        <div className="order-last lg:order-none lg:col-span-7">
           <Reveal delay={120}>
             <div className="max-w-[42rem] space-y-6 border-l border-border pl-8 text-muted">
               <p className="t-body-lg">{detail.overview[1]}</p>
@@ -135,22 +137,30 @@ export function IndustryLandscape({ detail }: { detail: IndustryDetail }) {
             </ul>
           </Reveal>
         </div>
-        <div className="lg:col-span-5">
-          <Reveal delay={240} className="lg:sticky lg:top-28">
-            <ImageReveal className="relative aspect-[4/5] overflow-hidden border border-border">
-              <Image
-                src={`/images/sectors/${detail.id}-detail.webp`}
-                alt={detail.detailCaption}
-                fill
-                sizes="(max-width: 1024px) 100vw, 480px"
-                className="photo object-cover"
-              />
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[rgb(16_19_25/0.4)] to-transparent"
-              />
-            </ImageReveal>
-            <p className="t-caption mt-4 text-muted">{detail.detailCaption}</p>
+        {/* Figure - landscape crop sized to the text block (a portrait
+            4:5 here towered over the copy and stacked awkwardly below it
+            on small screens). Mobile reads header → image → copy. */}
+        <div className="order-first lg:order-none lg:col-span-5">
+          <Reveal delay={240}>
+            <figure>
+              <ImageReveal className="relative aspect-[4/3] overflow-hidden border border-border">
+                <Image
+                  src={`/images/sectors/${detail.id}-detail.webp`}
+                  alt={detail.detailCaption}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 480px"
+                  className="photo object-cover"
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[rgb(16_19_25/0.4)] to-transparent"
+                />
+              </ImageReveal>
+              <figcaption className="mt-4 flex items-center gap-3">
+                <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-accent" />
+                <span className="t-caption text-muted">{detail.detailCaption}</span>
+              </figcaption>
+            </figure>
           </Reveal>
         </div>
       </div>
