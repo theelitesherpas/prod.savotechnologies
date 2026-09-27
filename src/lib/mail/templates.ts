@@ -182,8 +182,8 @@ export function shell(opts: {
   <!-- Card -->
   <tr><td style="background:${CARD};border:1px solid ${LINE};border-radius:12px;">
     <!-- Wordmark -->
-    <div style="padding:38px 40px 0;text-align:center;">
-      <img src="${logoUrl()}" width="112" alt="Savo Technologies" style="display:block;width:112px;height:auto;border:0;margin:0 auto;">
+    <div style="padding:32px 40px 0;text-align:center;">
+      <img src="${logoUrl()}" width="84" alt="Savo Technologies" style="display:block;width:84px;height:auto;border:0;margin:0 auto;">
     </div>
     <!-- Body -->
     <div style="padding:30px 40px 40px;">
