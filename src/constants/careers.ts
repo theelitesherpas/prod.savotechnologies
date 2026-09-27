@@ -247,4 +247,4 @@ export const EXPERIENCE_OPTIONS = ["0 to 1 year", "1 to 3 years", "3 to 5 years"
 
 export const NOTICE_OPTIONS = ["Immediate", "15 days", "30 days", "60 days", "90 days"] as const;
 
-export const CTC_OPTIONS = ["Under ₹10L", "₹10L to ₹20L", "₹20L to ₹35L", "₹35L+", "Open to discussion"] as const;
+export const CTC_OPTIONS = ["Under ₹3L", "₹3L to ₹5L", "₹5L to ₹10L", "₹10L to ₹20L", "₹20L+", "Open to discussion"] as const;
