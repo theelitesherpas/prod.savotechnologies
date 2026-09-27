@@ -78,12 +78,20 @@ export function middleware(req: NextRequest) {
   // ── Content Signals on public page responses ───────────────
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   if (!NON_CONTENT.test(pathname)) {
-    res.headers.set(
-      "Link",
-      `<${new URL(pathname, req.url).href}>; rel="${CONTENT_SIGNALS}"`,
-    );
+    res.headers.set("Link", `<${publicUrl(req).href}>; rel="${CONTENT_SIGNALS}"`);
   }
   return res;
+}
+
+/* ───────────────────── URL helpers ─────────────────────────────── */
+
+/** Public canonical URL for the request - built from the forwarded Host
+ *  (set by nginx) and proto, because Next reconstructs req.url from its
+ *  own listener (http://localhost:4300) behind the reverse proxy. */
+function publicUrl(req: NextRequest): URL {
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
+  const proto = req.headers.get("x-forwarded-proto")?.split(",")[0] ?? "https";
+  return new URL(`${proto}://${host}${req.nextUrl.pathname}${req.nextUrl.search}`);
 }
 
 /* ───────────────────── Markdown rendering ─────────────────────── */
@@ -91,14 +99,18 @@ export function middleware(req: NextRequest) {
 async function renderMarkdown(req: NextRequest): Promise<NextResponse> {
   try {
     // Fetch the page as a browser would - Accept: text/html keeps the
-    // sub-request out of this branch (no recursion).
-    const page = await fetch(req.url, {
+    // sub-request out of this branch (no recursion). req.url points at
+    // Next's own listener; force plain http to that listener so the
+    // fetch does not attempt TLS against the HTTP-only app server.
+    const listener = new URL(req.url);
+    const self = `http://127.0.0.1:${listener.port || "3000"}${listener.pathname}${listener.search}`;
+    const page = await fetch(self, {
       headers: { accept: "text/html", "user-agent": req.headers.get("user-agent") ?? "" },
       redirect: "follow",
     });
     if (!page.ok) return new NextResponse(null, { status: page.status });
     const html = await page.text();
-    const url = new URL(req.url);
+    const url = publicUrl(req);
     const md = htmlToMarkdown(html, url);
     if (!md) return new NextResponse(null, { status: 204 });
 
