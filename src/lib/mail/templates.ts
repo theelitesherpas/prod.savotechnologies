@@ -604,9 +604,10 @@ export function teamAskSavo(d: { email: string; question: string }): MailTemplat
 /* ══════════════ CLIENT PITCH ══════════════ */
 
 /* Infographic band: dark specimen strip, the blueprint-plate voice. */
-function pitchBand(label: string): string {
+function pitchBand(label: string, href?: string): string {
+  const text = `<span style="display:inline-block;width:8px;height:8px;background:${ACCENT};margin-right:10px;vertical-align:1px;"></span><span style="font-family:${MONO};font-size:11px;letter-spacing:0.28em;color:#eef0f4;text-transform:uppercase;">${esc(label)}</span>`;
   return `<div style="margin:26px 0 22px;background:${INK};border-radius:10px;padding:20px 26px;text-align:center;">
-  <span style="display:inline-block;width:8px;height:8px;background:${ACCENT};margin-right:10px;vertical-align:1px;"></span><span style="font-family:${MONO};font-size:11px;letter-spacing:0.28em;color:#eef0f4;text-transform:uppercase;">${esc(label)}</span>
+  ${href ? `<a href="${href}" style="text-decoration:none;">${text}</a>` : text}
 </div>`;
 }
 
@@ -614,8 +615,8 @@ function pitchBand(label: string): string {
 function pitchTriptych(items: { icon: string; title: string; line: string }[]): string {
   const cell = (it: { icon: string; title: string; line: string }) => `
     <td width="33.33%" style="padding:0 5px;vertical-align:top;">
-      <div style="border:1px solid ${LINE};border-radius:10px;padding:18px 12px;text-align:center;">
-        <div style="height:46px;margin:0 0 12px;">${it.icon}</div>
+      <div style="border:1px solid ${LINE};border-radius:10px;padding:16px 12px;text-align:center;">
+        <div style="height:32px;margin:0 0 10px;">${it.icon}</div>
         <p style="margin:0 0 6px;font-family:${SANS};font-size:12.5px;font-weight:800;color:${INK};letter-spacing:0.02em;">${esc(it.title)}</p>
         <p style="margin:0;font-family:${SANS};font-size:11.5px;line-height:1.55;color:${MUTED};">${esc(it.line)}</p>
       </div>
@@ -627,26 +628,25 @@ function pitchTriptych(items: { icon: string; title: string; line: string }[]): 
 
 /** Browser window: title bar with lights + content lines. */
 const iconBrowser = () => {
-  const dot = `<span style="display:inline-block;width:3px;height:3px;border-radius:50%;background:#ffffff;margin:0 2px 0 0;"></span>`;
-  return `<div style="width:46px;margin:0 auto;border:2px solid ${ACCENT};border-radius:8px;background:${CARD};overflow:hidden;">
-  <div style="background:${ACCENT};height:9px;line-height:9px;font-size:0;text-align:left;padding-left:5px;">${dot}${dot}${dot}</div>
-  <div style="padding:7px 7px 8px;">
-    <div style="height:3px;background:${ACCENT};opacity:.35;border-radius:2px;margin-bottom:3px;width:82%;"></div>
-    <div style="height:3px;background:${ACCENT};opacity:.35;border-radius:2px;margin-bottom:3px;width:62%;"></div>
-    <div style="height:3px;background:${ACCENT};opacity:.35;border-radius:2px;width:38%;"></div>
+  const dot = `<span style="display:inline-block;width:2px;height:2px;border-radius:50%;background:#ffffff;margin:0 2px 0 0;"></span>`;
+  return `<div style="width:32px;margin:0 auto;border:2px solid ${ACCENT};border-radius:5px;background:${CARD};overflow:hidden;">
+  <div style="background:${ACCENT};height:6px;line-height:6px;font-size:0;text-align:left;padding-left:4px;">${dot}${dot}${dot}</div>
+  <div style="padding:4px 4px 5px;">
+    <div style="height:2px;background:${ACCENT};opacity:.35;border-radius:1px;margin-bottom:2px;width:84%;"></div>
+    <div style="height:2px;background:${ACCENT};opacity:.35;border-radius:1px;width:56%;"></div>
   </div>
 </div>`;
 };
 
 /** AI chip: pins around a die with a core. */
 const iconChip = () => {
-  const pinRow = `<div style="font-size:0;line-height:0;">${Array.from({ length: 4 })
-    .map(() => `<span style="display:inline-block;width:3px;height:6px;background:${ACCENT};margin:0 3px;"></span>`)
+  const pinRow = `<div style="font-size:0;line-height:0;">${Array.from({ length: 3 })
+    .map(() => `<span style="display:inline-block;width:2px;height:5px;background:${ACCENT};margin:0 4px;"></span>`)
     .join("")}</div>`;
-  return `<div style="width:50px;margin:0 auto;text-align:center;">
+  return `<div style="width:34px;margin:0 auto;text-align:center;">
   ${pinRow}
-  <div style="border:2px solid ${ACCENT};border-radius:8px;padding:9px;margin:0 1px;background:${CARD};">
-    <div style="width:14px;height:14px;border:3px solid ${ACCENT};border-radius:50%;margin:0 auto;"></div>
+  <div style="border:2px solid ${ACCENT};border-radius:6px;padding:6px;margin:0 1px;background:${CARD};">
+    <div style="width:9px;height:9px;border:2px solid ${ACCENT};border-radius:50%;margin:0 auto;"></div>
   </div>
   ${pinRow}
 </div>`;
@@ -654,22 +654,21 @@ const iconChip = () => {
 
 /** Phone: notch, content lines, home button. */
 const iconPhone = () =>
-  `<div style="width:28px;margin:0 auto;border:2px solid ${ACCENT};border-radius:7px;background:${CARD};overflow:hidden;">
-  <div style="width:10px;height:4px;border-bottom:2px solid ${ACCENT};margin:0 auto;"></div>
-  <div style="padding:7px 5px 0;">
-    <div style="height:3px;background:${ACCENT};opacity:.35;border-radius:2px;margin-bottom:3px;"></div>
-    <div style="height:3px;background:${ACCENT};opacity:.35;border-radius:2px;width:60%;margin-bottom:9px;"></div>
+  `<div style="width:20px;margin:0 auto;border:2px solid ${ACCENT};border-radius:5px;background:${CARD};overflow:hidden;">
+  <div style="width:7px;height:3px;border-bottom:2px solid ${ACCENT};margin:0 auto;"></div>
+  <div style="padding:4px 3px 0;">
+    <div style="height:2px;background:${ACCENT};opacity:.35;border-radius:1px;margin-bottom:2px;"></div>
+    <div style="height:2px;background:${ACCENT};opacity:.35;border-radius:1px;width:60%;margin-bottom:6px;"></div>
   </div>
-  <div style="text-align:center;padding-bottom:5px;"><span style="display:inline-block;width:6px;height:6px;border:2px solid ${ACCENT};border-radius:50%;"></span></div>
+  <div style="text-align:center;padding-bottom:3px;"><span style="display:inline-block;width:4px;height:4px;border:2px solid ${ACCENT};border-radius:50%;"></span></div>
 </div>`;
 
 /* Dual CTA: primary action + secondary, side by side, email-safe. */
-function pitchCtas(primary: { href: string; label: string }, secondary: { href: string; label: string }, sub: string): string {
+function pitchCtas(primary: { href: string; label: string }, secondary: { href: string; label: string }): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:26px auto 8px;"><tr>
   <td style="padding:0 5px;"><a href="${primary.href}" style="display:inline-block;background:${INK};color:#ffffff;font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:15px 28px;border-radius:8px;">${esc(primary.label)}&nbsp;&nbsp;→</a></td>
   <td style="padding:0 5px;"><a href="${secondary.href}" style="display:inline-block;border:2px solid ${INK};color:${INK};font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:13px 26px;border-radius:8px;">${esc(secondary.label)}</a></td>
-</tr></table>
-<p style="margin:10px 0 0;font-family:${SANS};font-size:12px;color:${MUTED};text-align:center;">${sub}</p>`;
+</tr></table>`;
 }
 
 /* Delivery stepper: numbered squares on a hairline rail. */
@@ -718,25 +717,24 @@ export function buildWhatsNext(v: {
       heading: `A few ideas for ${esc(v.company)}.`,
       bodyHtml: [
         lead(`Hi ${esc(first)},<br><br>we came across <strong style="color:${INK};">${esc(v.company)}</strong> and wanted to introduce ourselves. Savo Technologies designs and builds modern websites, digital products, mobile applications, custom software and AI-powered solutions for businesses that want their online presence to work harder.`),
-        pitchBand("Savo Build What's Next"),
+        pitchBand("Savo Build What's Next", site("/")),
         pitchLabel("What we do"),
         pitchTriptych([
-          { icon: iconBrowser(), title: "Websites & platforms", line: "Modern sites, portals and storefronts that present your brand professionally." },
-          { icon: iconChip(), title: "AI-powered solutions", line: "Agents, copilots and automation that do real work, where it makes sense." },
-          { icon: iconPhone(), title: "Products & custom software", line: "Mobile apps and digital products, built for how your business runs." },
+          { icon: iconBrowser(), title: "Web platforms", line: "Modern sites, portals and storefronts that present your brand professionally." },
+          { icon: iconChip(), title: "AI & automation", line: "Agents, copilots and automation that do real work, where it makes sense." },
+          { icon: iconPhone(), title: "Mobile products", line: "Mobile apps and custom software, built for how your business runs." },
         ]),
         highlight(`No generic proposal. First a short conversation about your goals, then concrete ideas, whether that means ${esc(focus)}.`),
         p(`Would a few minutes this week work? Tell us what you want to achieve; we will bring the ideas.`, true),
         pitchCtas(
           { href: wa, label: "Talk to us" },
-          { href: site("/"), label: "See our work" },
-          `WhatsApp +91 75029 01234 · hello@savotechnologies.com · or simply reply to this email`,
+          { href: site("/case-studies"), label: "See our work" },
         ),
       ].join(""),
       closing: "Warm regards,",
       reason: "You are receiving this because the Savo team wrote to you directly.",
       unsubscribeEmail: v.to,
     }),
-    text: `HI ${first.toUpperCase()},\n\nWe came across ${v.company} and wanted to introduce ourselves. Savo Technologies designs and builds modern websites, digital products, mobile applications, custom software and AI-powered solutions.\n\nWHAT WE DO\n- Websites & platforms: modern sites, portals, storefronts\n- AI-powered solutions: agents, copilots, automation\n- Products & custom software: mobile apps, digital products\n\nNo generic proposal: first a short conversation about your goals, then concrete ideas, whether that means ${focus}.\n\nWould a few minutes this week work? Chat with us on WhatsApp (+91 75029 01234), write to hello@savotechnologies.com, or see our work at ${site("/")}\n\nWarm regards,\nThe Savo team\nBold Brands. Built by Savo.\n${site("/")}`,
+    text: `HI ${first.toUpperCase()},\n\nWe came across ${v.company} and wanted to introduce ourselves. Savo Technologies designs and builds modern websites, digital products, mobile applications, custom software and AI-powered solutions.\n\nWHAT WE DO\n- Websites & platforms: modern sites, portals, storefronts\n- AI-powered solutions: agents, copilots, automation\n- Products & custom software: mobile apps, digital products\n\nNo generic proposal: first a short conversation about your goals, then concrete ideas, whether that means ${focus}.\n\nWould a few minutes this week work? Chat with us on WhatsApp (+91 75029 01234), write to hello@savotechnologies.com, or see our work at ${site("/case-studies")}\n\nWarm regards,\nThe Savo team\nBold Brands. Built by Savo.\n${site("/")}`,
   };
 }
