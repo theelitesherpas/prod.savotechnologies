@@ -260,15 +260,20 @@ body {
    content is always visible. */
 .js .reveal {
   opacity: 0;
-  transform: translateY(26px);
+  transform: translateY(38px) scale(0.985);
+  filter: blur(6px);
   transition:
-    opacity 0.9s var(--ease-out-expo),
-    transform 0.9s var(--ease-out-expo);
+    opacity 1.15s var(--ease-out-expo),
+    transform 1.15s var(--ease-out-expo),
+    filter 1.15s var(--ease-out-expo);
   transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform, filter;
 }
 .js .reveal.is-inview {
   opacity: 1;
   transform: none;
+  filter: blur(0);
+  will-change: auto;
 }
 
 /* Image mask reveal — the frame wipes up, the photo settles */
