@@ -49,13 +49,15 @@ import {
   teamAskSavo,
   teamCallback,
   teamEnquiry,
+  buildWhatsNext,
   type MailTemplate,
 } from "@/lib/mail/templates";
 
-export type TemplateRecipient = "customer" | "team" | "hr" | "client" | "candidate" | "employee" | "external";
+export type TemplateRecipient = "customer" | "team" | "hr" | "client" | "candidate" | "employee" | "external" | "prospect";
 
 export type TemplateCategory =
   | "enquiries"
+  | "pitches"
   | "careers"
   | "portal"
   | "team"
@@ -65,6 +67,7 @@ export type TemplateCategory =
 
 export const CATEGORY_LABEL: Record<TemplateCategory, string> = {
   enquiries: "Enquiries & Assistant",
+  pitches: "Client Pitch & Projects",
   careers: "Careers & Applications",
   portal: "Client Portal & Billing",
   team: "Team Notifications",
@@ -75,6 +78,7 @@ export const CATEGORY_LABEL: Record<TemplateCategory, string> = {
 
 export const CATEGORY_ORDER: TemplateCategory[] = [
   "enquiries",
+  "pitches",
   "careers",
   "recruitment",
   "onboarding",
@@ -105,6 +109,7 @@ export const RECIPIENT_LABEL: Record<TemplateRecipient, string> = {
   candidate: "Candidate · hr@",
   employee: "Employee · hr@",
   external: "External · hr@",
+  prospect: "Prospective client · hello@",
 };
 
 export const TEMPLATE_REGISTRY: TemplateEntry[] = [
@@ -137,6 +142,22 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     dept: "hello",
     vars: { question: "How do you price a Flutter app with a backend panel?" },
     default: (v) => askSavoHandoffAck(v.question, v.__to),
+  },
+  {
+    key: "buildWhatsNext",
+    category: "pitches",
+    label: "Savo Build What's Next",
+    fires: "Composed manually in the email centre (client pitch)",
+    recipient: "prospect",
+    dept: "hello",
+    vars: {
+      name: "Sara Khan",
+      company: "Acme Retail",
+      senderName: "Om Yadav",
+      project: "the commerce replatform and support automation",
+      whySavo: "Acme needs one partner for the storefront and the AI layer behind it. We have shipped both together since 2015, and you keep one accountable team from brief to run.",
+    },
+    default: (v) => buildWhatsNext({ name: v.name, company: v.company, senderName: v.senderName, project: v.project, whySavo: v.whySavo, to: v.__to }),
   },
   {
     key: "applicationAck",

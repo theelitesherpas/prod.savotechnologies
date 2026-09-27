@@ -587,3 +587,106 @@ export function teamAskSavo(d: { email: string; question: string }): MailTemplat
     text: `ASSISTANT HANDOFF\n\nVisitor: ${d.email}\n\n"${d.question}"\n\nReply within one business day - promise made.\n${site("/admin/enquiries")}\n\nBefore the day ends,\nThe Savo team`,
   };
 }
+
+/* ══════════════ CLIENT PITCH ══════════════ */
+
+/* Infographic band: dark specimen strip, the blueprint-plate voice. */
+function pitchBand(label: string): string {
+  return `<div style="margin:26px 0 22px;background:${INK};border-radius:10px;padding:20px 26px;text-align:center;">
+  <span style="display:inline-block;width:8px;height:8px;background:${ACCENT};margin-right:10px;vertical-align:1px;"></span><span style="font-family:${MONO};font-size:11px;letter-spacing:0.28em;color:#eef0f4;text-transform:uppercase;">${esc(label)}</span>
+</div>`;
+}
+
+/* Capability triptych: three columns, geometric CSS marks, hairline cards. */
+function pitchTriptych(items: { mark: string; title: string; line: string }[]): string {
+  const cell = (it: { mark: string; title: string; line: string }) => `
+    <td width="33.33%" style="padding:0 5px;vertical-align:top;">
+      <div style="border:1px solid ${LINE};border-radius:10px;padding:18px 12px;text-align:center;">
+        <div style="height:26px;margin:0 auto 12px;">${it.mark}</div>
+        <p style="margin:0 0 6px;font-family:${SANS};font-size:12.5px;font-weight:800;color:${INK};letter-spacing:0.02em;">${esc(it.title)}</p>
+        <p style="margin:0;font-family:${SANS};font-size:11.5px;line-height:1.55;color:${MUTED};">${esc(it.line)}</p>
+      </div>
+    </td>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0;"><tr>${items.map(cell).join("")}</tr></table>`;
+}
+
+/* Delivery stepper: numbered squares on a hairline rail. */
+function pitchStepper(steps: { n: string; title: string; line: string }[]): string {
+  const cell = (st: { n: string; title: string; line: string }, i: number) => `
+    <td width="25%" style="padding:0 5px;vertical-align:top;text-align:center;">
+      <div style="width:30px;height:30px;line-height:30px;margin:0 auto 10px;background:${i === 0 ? ACCENT : CARD};color:${i === 0 ? "#ffffff" : ACCENT};border:1px solid ${i === 0 ? ACCENT : LINE};border-radius:6px;font-family:${MONO};font-size:12px;font-weight:700;">${esc(st.n)}</div>
+      <p style="margin:0 0 4px;font-family:${SANS};font-size:12px;font-weight:800;color:${INK};">${esc(st.title)}</p>
+      <p style="margin:0;font-family:${SANS};font-size:11px;line-height:1.5;color:${MUTED};">${esc(st.line)}</p>
+    </td>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0;"><tr>${steps.map(cell).join("")}</tr></table>`;
+}
+
+/* Stat strip: three quiet numbers. */
+function pitchStats(rows: { v: string; k: string }[]): string {
+  const cell = (r: { v: string; k: string }) => `
+    <td width="33.33%" style="padding:0 5px;text-align:center;">
+      <p style="margin:0;font-family:${SERIF};font-size:24px;font-weight:700;color:${INK};line-height:1.15;">${esc(r.v)}</p>
+      <p style="margin:4px 0 0;font-family:${SANS};font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${FAINT};">${esc(r.k)}</p>
+    </td>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 6px;"><tr>${rows.map(cell).join("")}</tr></table>`;
+}
+
+/* Section label inside the pitch body. */
+const pitchLabel = (t: string) =>
+  `<p style="margin:24px 0 10px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};text-align:center;"><span style="display:inline-block;width:7px;height:7px;background:${ACCENT};margin-right:9px;vertical-align:1px;"></span>${esc(t)}</p>`;
+
+/** Savo Build What's Next - the client pitch, composed manually from the
+ *  email centre. Personal, engineered, honest: what we build, how the
+ *  work runs, and one clear next step. All infographic bands are
+ *  email-safe tables (no SVG, no external images beyond the wordmark). */
+export function buildWhatsNext(v: {
+  name: string;
+  company: string;
+  senderName: string;
+  project: string;
+  whySavo: string;
+  to?: string;
+}): MailTemplate {
+  const first = fn(v.name);
+  return {
+    subject: `${v.company}: let's build what's next`,
+    html: shell({
+      preheader: `A short pitch for the ${v.project} work we discussed, and one clear next step.`,
+      eyebrowText: "A pitch from Savo",
+      heading: "Let's build what's next.",
+      bodyHtml: [
+        lead(`Dear ${esc(first)},<br><br>thank you for the conversation about <strong style="color:${INK};">${esc(v.project)}</strong> for ${esc(v.company)}. This note is the short version of what we would build together, and how the work would run.`),
+        highlight(`${esc(v.whySavo)}`),
+        pitchBand("Savo Build What's Next"),
+
+        pitchLabel("What we build"),
+        pitchTriptych([
+          { mark: `<span style="display:inline-block;width:22px;height:22px;border:2px solid ${ACCENT};border-radius:4px;margin-top:2px;"></span>`, title: "Web platforms", line: "Marketing sites, portals and storefronts on modern, fast architecture." },
+          { mark: `<span style="display:inline-block;width:22px;height:22px;border:2px solid ${ACCENT};border-radius:11px;margin-top:2px;"></span>`, title: "AI & automation", line: "Agents, copilots and workflows that execute real work, guarded and observable." },
+          { mark: `<span style="display:inline-block;width:14px;height:14px;border:2px solid ${ACCENT};border-radius:3px 3px 3px 0;margin-top:5px;"></span>`, title: "Mobile products", line: "Flutter and React Native apps shipped to both stores from one codebase." },
+        ]),
+
+        pitchLabel("How the work runs"),
+        pitchStepper([
+          { n: "01", title: "Brief", line: "One document: scope, constraints, success." },
+          { n: "02", title: "Blueprint", line: "Architecture and plan, priced honestly." },
+          { n: "03", title: "Build", line: "Weekly slices you can click, not decks." },
+          { n: "04", title: "Run", line: "Ship, measure, improve, stay accountable." },
+        ]),
+
+        pitchStats([
+          { v: "2015", k: "Building since" },
+          { v: "6", k: "Regions served" },
+          { v: "1", k: "Accountable team" },
+        ]),
+
+        p(`Everything starts with one conversation. Bring the problem and its constraints; a senior consultant replies within one business day, with questions worth answering.`, true),
+      ].join(""),
+      cta: { href: site("/start"), label: "Start the brief", sub: "Takes ten minutes. Read by our team, personally." },
+      closing: `Until then,`,
+      reason: "You are receiving this because a Savo consultant wrote to you directly.",
+      unsubscribeEmail: v.to,
+    }),
+    text: `${first.toUpperCase()}, LET'S BUILD WHAT'S NEXT\n\nThank you for the conversation about ${v.project} for ${v.company}.\n\nWhy Savo: ${v.whySavo}\n\nWHAT WE BUILD\n- Web platforms: marketing sites, portals, storefronts\n- AI & automation: agents, copilots, executing workflows\n- Mobile products: Flutter and React Native, both stores\n\nHOW THE WORK RUNS\n01 Brief - scope, constraints, success\n02 Blueprint - architecture and honest pricing\n03 Build - weekly slices you can click\n04 Run - ship, measure, improve\n\nBuilding since 2015 - 6 regions - one accountable team\n\nStart the brief: ${site("/start")}\n\nUntil then,\n${v.senderName} and the Savo team\n${site("/")}`,
+  };
+}
