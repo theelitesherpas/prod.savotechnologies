@@ -41,14 +41,14 @@ export default function NotFound() {
         </div>
 
         <h1 className="t-statement max-w-[16ch]">
-          This page isn&apos;t here anymore
+          We&apos;ve redesigned our website
           <span aria-hidden="true" className="text-accent">.</span>
         </h1>
 
         <p className="t-body-lg mt-8 max-w-lg text-muted">
-          The link may be outdated, or the page moved when we redesigned
-          our website. Everything is still here — the menu above or the
-          links below will take you to the right place.
+          The page you&apos;re looking for moved during the redesign, or the
+          link is from an older version of our site. Everything you need
+          is here — use the menu above or pick a destination below.
         </p>
 
         <div className="mt-10 flex flex-wrap gap-4">
