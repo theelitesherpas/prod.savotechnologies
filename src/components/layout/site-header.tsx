@@ -31,11 +31,15 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* Navigation closes the mega panel and the drawer - the visitor has
-     chosen a destination; hovering the menu again reopens it. */
-  useEffect(() => {
+     chosen a destination; hovering the menu again reopens it. Adjusting
+     state during render (guarded by the previous pathname) is the
+     React-recommended alternative to setState-in-effect. */
+  const [prevPath, setPrevPath] = useState(pathname);
+  if (prevPath !== pathname) {
+    setPrevPath(pathname);
     setOpenPanel(null);
     setMobileAcc(null);
-  }, [pathname]);
+  }
 
   /* Scroll state */
   useEffect(() => {

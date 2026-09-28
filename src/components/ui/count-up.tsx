@@ -11,6 +11,13 @@ import { useEffect, useRef, useState } from "react";
 export function CountUp({ value, className }: { value: string; className?: string }) {
   const ref = useRef<HTMLSpanElement | null>(null);
   const [display, setDisplay] = useState(value);
+  /* Rare value changes reset display via the React-recommended render-time
+     adjustment, so reduced-motion stays static without setState-in-effect. */
+  const [prevValue, setPrevValue] = useState(value);
+  if (prevValue !== value) {
+    setPrevValue(value);
+    setDisplay(value);
+  }
 
   useEffect(() => {
     const el = ref.current;
@@ -24,10 +31,7 @@ export function CountUp({ value, className }: { value: string; className?: strin
     const suffix = match[2];
     if (target === 0) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setDisplay(value);
-      return;
-    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const io = new IntersectionObserver(
       (entries) => {

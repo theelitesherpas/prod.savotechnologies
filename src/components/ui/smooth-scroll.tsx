@@ -7,6 +7,12 @@ import { useEffect, useRef, type ReactNode } from "react";
  * site-wide. Integrates with GSAP ScrollTrigger when present.
  * Disabled under prefers-reduced-motion.
  */
+/** Minimal structural types for the globals GSAP registers as a UMD tag. */
+type GsapWindow = Window & {
+  gsap?: { ticker: { add: (cb: (time: number) => void) => void; lagSmoothing: (ms: number) => void } };
+  ScrollTrigger?: { update: () => void };
+};
+
 export function SmoothScroll({ children }: { children: ReactNode }) {
   const lenisRef = useRef<import("lenis").default | null>(null);
 
@@ -25,9 +31,10 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
       lenisRef.current = lenis;
 
       // integrate with ScrollTrigger if GSAP is loaded
-      if (typeof window !== "undefined" && (window as any).gsap) {
-        const gsap = (window as any).gsap;
-        const ScrollTrigger = (window as any).ScrollTrigger;
+      const w = window as GsapWindow;
+      if (w.gsap) {
+        const gsap = w.gsap;
+        const ScrollTrigger = w.ScrollTrigger;
         if (ScrollTrigger) {
           lenis.on("scroll", ScrollTrigger.update);
           gsap.ticker.add((time: number) => lenis.raf(time * 1000));

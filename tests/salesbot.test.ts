@@ -97,7 +97,7 @@ describe("salesbot conversation flow", () => {
   });
 
   it("answers pricing questions without inventing numbers", () => {
-    let s = newSession("t5");
+    const s = newSession("t5");
     s.stage = "qna";
     const t = step(s, "how much does a website cost?");
     expect(t.intent).toBe("question:pricing");
@@ -106,7 +106,7 @@ describe("salesbot conversation flow", () => {
   });
 
   it("deflects out-of-knowledge questions honestly", () => {
-    let s = newSession("t6");
+    const s = newSession("t6");
     s.stage = "qna";
     const t = step(s, "what is the meaning of life?");
     expect(t.intent).toBe("question:unmatched");
@@ -142,7 +142,7 @@ describe("salesbot conversation flow", () => {
   });
 
   it("never loops: escapes after two unproductive budget turns", () => {
-    let s = newSession("q3");
+    const s = newSession("q3");
     s.stage = "qualify-budget";
     s.stageAttempts = 1;
     const t = step(s, "hmm maybe"); // still no budget signal
@@ -151,7 +151,7 @@ describe("salesbot conversation flow", () => {
   });
 
   it("restarts cleanly", () => {
-    let s = newSession("t7");
+    const s = newSession("t7");
     s.slots = { ...emptySlots(), budget: "$5k to $25k", budgetBand: "5k-25k" };
     const t = step(s, "restart");
     expect(t.slots.budget).toBeNull();

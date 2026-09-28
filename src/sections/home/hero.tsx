@@ -107,8 +107,8 @@ export function Hero() {
       let disposed = false;
       let played = false;
 
-      // 2. Play once fonts settle (or the ceiling hits) - re-splitting
-      //    first if final font metrics changed the line breaks.
+      // 2. Play when the ceiling hits - re-splitting first if final
+      //    font metrics changed the line breaks.
       const play = () => {
         if (disposed || played) return;
         played = true;
@@ -143,14 +143,7 @@ export function Hero() {
       };
 
       const cleanupFns: Array<() => void> = [];
-      let ceiling: ReturnType<typeof setTimeout> | undefined;
-      const fontsReady = (document.fonts?.ready ?? Promise.resolve()).then(() => {
-        if (!disposed) {
-          if (ceiling) clearTimeout(ceiling);
-          play();
-        }
-      });
-      ceiling = setTimeout(() => {
+      const ceiling = setTimeout(() => {
         if (!played) play();
       }, FONT_CEILING_MS);
 
