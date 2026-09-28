@@ -22,6 +22,7 @@ import {
 import { track } from "@/lib/analytics";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { PhoneField } from "@/components/shared/phone-field";
+import { SuccessDialog, type SuccessStep } from "@/components/shared/success-dialog";
 import { cn, withBasePath } from "@/lib/utils";
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -33,6 +34,26 @@ type Status = "idle" | "submitting" | "success" | "error";
  * Details the inbox schema has no column for (city, skills, links…) are
  * composed into the message, exactly like version 1.
  */
+/** Condensed from HIRING_STEPS - the same process, trimmed for the
+ *  confirmation moment. Faithful to the careers page copy. */
+const NEXT_STEPS: SuccessStep[] = [
+  {
+    step: "01",
+    title: "Two business days",
+    text: "Every application read, a personal reply - yes or no, you hear back.",
+  },
+  {
+    step: "02",
+    title: "Technical conversation",
+    text: "Sixty minutes on real problems from our products, not puzzles.",
+  },
+  {
+    step: "03",
+    title: "Paid pairing session",
+    text: "Two hours on a small real task with the team, compensated.",
+  },
+];
+
 export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: string; roles: PublicRole[] }) {
   const roles: readonly string[] = [...ROLES.map((r) => r.title), GENERAL_APPLICATION];
   const [role, setRole] = useState<string>(
@@ -46,6 +67,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
   const [phoneOk, setPhoneOk] = useState(true);
   const [localErrors, setLocalErrors] = useState<{ city?: string; consent?: string }>({});
   const [serverMessage, setServerMessage] = useState("");
+  const [confirmation, setConfirmation] = useState<{ name: string; email: string } | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const captcha = useCaptcha();
   const [captchaErr, setCaptchaErr] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -150,6 +173,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
       };
       if (res.ok && json.ok) {
         setStatus("success");
+        setConfirmation({ name: data.name ?? "", email: data.email ?? "" });
+        setDialogOpen(true);
         captcha.refresh();
         track("enquiry_form_success", { form: "careers", role });
         return;
@@ -171,20 +196,59 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
     }
   }
 
-  if (status === "success") {
+  function resetForAnother() {
+    setStatus("idle");
+    setConfirmation(null);
+    setDialogOpen(false);
+    setErrors({});
+    setLocalErrors({});
+    setServerMessage("");
+    setSkills([]);
+    setPhone("");
+    startedRef.current = false;
+  }
+
+  if (status === "success" && confirmation) {
+    const firstName = confirmation.name.trim().split(/\s+/)[0] || "there";
     return (
-      <div className="py-4" role="status">
-        <span aria-hidden="true" className="mb-6 block h-3 w-3 bg-accent" />
-        <p className="t-h3 mb-3">Application received.</p>
-        <p className="t-body text-muted">
-          Our hiring team reads every application and replies personally
-          within two business days. If it is urgent, write to{" "}
-          <a href={`mailto:${CAREERS_EMAIL}`} className="link-underline text-foreground">
-            {CAREERS_EMAIL}
-          </a>{" "}
-          directly.
-        </p>
-      </div>
+      <>
+        <SuccessDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          eyebrow={`Application · ${role}`}
+          title="Application received."
+          email={confirmation.email}
+          steps={NEXT_STEPS}
+          contactEmail={CAREERS_EMAIL}
+        >
+          Thank you{firstName !== "there" ? `, ${firstName}` : ""}. Our hiring team reads
+          every application personally - you will hear back within two business days,
+          whatever the outcome.
+        </SuccessDialog>
+
+        {/* Durable confirmation - stays after the dialog closes */}
+        <div className="py-4" role="status">
+          <span aria-hidden="true" className="mb-6 block h-3 w-3 bg-accent" />
+          <p className="t-h3 mb-3">Application received.</p>
+          <p className="t-body text-muted">
+            Thank you{firstName !== "there" ? ", " + firstName : ""}. Our hiring team reads every
+            application and replies personally within two business days. A confirmation is on its
+            way to <span className="font-mono text-foreground">{confirmation.email}</span>. If it
+            is urgent, write to{" "}
+            <a href={`mailto:${CAREERS_EMAIL}`} className="link-underline text-foreground">
+              {CAREERS_EMAIL}
+            </a>
+            .
+          </p>
+          <button
+            type="button"
+            onClick={resetForAnother}
+            className="mt-7 inline-flex h-12 items-center justify-center rounded-[2px] border border-border px-6 text-sm font-semibold text-foreground transition-colors duration-300 ease-[var(--ease-out-expo)] hover:border-foreground/40 hover:bg-surface"
+          >
+            Submit another application
+          </button>
+        </div>
+      </>
     );
   }
 
