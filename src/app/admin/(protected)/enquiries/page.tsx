@@ -243,11 +243,14 @@ export default async function EnquiriesPage({
                   <Link
                     key={enq.id}
                     href={`/admin/enquiries/${enq.id}`}
-                    className="adm-card group flex flex-wrap items-center gap-3 px-4 py-3.5 transition-colors hover:border-foreground/25"
+                    className={`adm-card group flex flex-wrap items-center gap-3 px-4 py-3.5 transition-colors hover:border-foreground/25 ${enq.status === "new" ? "border-accent/30 bg-accent/[0.03]" : ""}`}
                   >
                     {/* Name + email */}
                     <div className="min-w-0 flex-1 sm:flex-[2]">
-                      <span className="block truncate text-[0.9375rem] font-bold text-foreground group-hover:text-accent">
+                      <span className={`flex items-center gap-2 truncate text-[0.9375rem] ${enq.status === "new" ? "font-bold" : "font-medium"} text-foreground group-hover:text-accent`}>
+                        {enq.status === "new" ? (
+                          <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+                        ) : null}
                         {enq.name}
                       </span>
                       <span className="t-caption block truncate text-muted">

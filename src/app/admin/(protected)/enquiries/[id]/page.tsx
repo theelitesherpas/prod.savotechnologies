@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { fmtIST, todayIST } from "@/lib/datetime";
 import { getAdminUser } from "@/lib/auth";
@@ -113,6 +114,23 @@ export default async function EnquiryDetailPage({
   ]);
 
   if (!enquiry) notFound();
+
+  // Auto-read: opening a new enquiry marks it in_progress (reduces the
+  // sidebar badge count, matches email unread behaviour).
+  let currentStatus = enquiry.status;
+  if (enquiry.status === "new" && prisma) {
+    try {
+      await prisma.projectEnquiry.update({
+        where: { id },
+        data: { status: "in_progress" },
+      });
+      currentStatus = "in_progress";
+      revalidatePath("/admin/enquiries");
+      revalidatePath("/admin");
+    } catch {
+      // non-fatal: badge count stays until next action
+    }
+  }
 
   const formData =
     enquiry.data && typeof enquiry.data === "object" ? (enquiry.data as Record<string, unknown>) : null;
