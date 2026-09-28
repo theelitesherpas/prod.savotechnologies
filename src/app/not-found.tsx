@@ -48,7 +48,7 @@ export default function NotFound() {
         <p className="t-body-lg mt-8 max-w-lg text-muted">
           The page you&apos;re looking for moved during the redesign, or the
           link is from an older version of our site. Everything you need
-          is here — use the menu above or pick a destination below.
+          is here. Use the menu above or pick a destination below.
         </p>
 
         <div className="mt-10 flex flex-wrap gap-4">
