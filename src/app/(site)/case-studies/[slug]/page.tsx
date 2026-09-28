@@ -6,6 +6,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { SectionHeader } from "@/components/ui/section-header";
 import { DetailCta } from "@/components/shared/detail-cta";
+import { StartProjectButton } from "@/components/shared/start-project-button";
 import { GalleryCarousel } from "@/components/shared/gallery-carousel";
 import { DisciplineDoodle } from "@/components/shared/discipline-doodle";
 import { getCaseStudies, getCaseStudy } from "@/lib/case-studies";
@@ -86,7 +87,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                     <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3 transition-transform group-hover/live:translate-x-[3px] group-hover/live:-translate-y-[3px]" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M6 2h6v6M12 2 4 10M4 4H2v8h8v-2" /></svg>
                   </a>
                 ) : null}
-                <Link href="/#start" className="inline-flex h-11 items-center rounded-[2px] border border-foreground/25 px-6 text-[0.9375rem] font-semibold transition-colors hover:border-foreground hover:bg-foreground/[0.04]">Start a Similar Project</Link>
+                <StartProjectButton source="case-study-hero" />
               </div>
             </div>
             <div className="lg:col-span-5">
@@ -120,7 +121,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               <figure className="relative overflow-hidden rounded-xl border border-border bg-background shadow-[0_8px_32px_rgb(10_10_14/0.08)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={showcaseImage.dataUrl} alt={showcaseImage.alt || `${displayName} — project showcase`}
-                  className="aspect-[21/9] w-full object-cover" />
+                  className="w-full object-cover" style={{ aspectRatio: "16/9" }} />
                 {showcaseImage.alt || displayName ? (
                   <figcaption className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-4 rounded-lg border border-white/20 bg-white/70 px-4 py-3 backdrop-blur-md">
                     <p className="t-caption font-medium text-foreground/80">{showcaseImage.alt || `${displayName} — project showcase`}</p>

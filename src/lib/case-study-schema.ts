@@ -168,9 +168,10 @@ export function resolveCaseImages(study: {
   heroImage?: AttachedImageRecord | null;
 }): Record<SlotKey, AttachedImageRecord | null> {
   const slots = study.images ?? {};
-  const showcase = slots.showcase ?? study.heroImage ?? slots.cardWide ?? null;
-  const cardWide = slots.cardWide ?? slots.showcase ?? study.heroImage ?? null;
-  const card = slots.card ?? cardWide;
+  const galleryFirst = (study as { gallery?: { dataUrl: string; width: number; height: number; alt: string }[] }).gallery?.[0] ?? null;
+  const showcase = slots.showcase ?? study.heroImage ?? slots.cardWide ?? galleryFirst ?? null;
+  const cardWide = slots.cardWide ?? slots.showcase ?? study.heroImage ?? galleryFirst ?? null;
+  const card = slots.card ?? cardWide ?? galleryFirst ?? null;
   return { showcase, cardWide, card };
 }
 
