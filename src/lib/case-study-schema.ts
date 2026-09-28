@@ -73,9 +73,9 @@ export const caseStudySchema = z.object({
     .nullish(),
   /** Attached visuals - one slot per rendering surface, each cropped to
    * the exact aspect that surface shows (no distortion anywhere):
-   *   showcase (1920×1080) - detail-page big band
-   *   cardWide  (1600×900)  - featured cards (home + index)
-   *   card      (1280×800)  - standard cards (home + index)
+   *   showcase (1600×700) - detail-page band + fallback for cards
+   *   cardWide  (1600×700) - featured cards (home + index)
+   *   card      (legacy)   - kept for old records, not in the admin form
    * Empty slots fall back down the chain (card → cardWide → showcase),
    * then to the generated mockup. Data URLs live inside the record JSON
    * so images travel with the database everywhere. */
@@ -134,25 +134,18 @@ export type AttachedImageRecord = z.infer<typeof attachedImageSchema>;
 /** Fixed slot dimensions (single source for the admin crop fields). */
 export const CASE_IMAGE_SLOTS = {
   showcase: {
-    width: 1920,
-    height: 1080,
+    width: 1600,
+    height: 700,
     label: "Showcase",
-    where: "Detail page - the big cinematic band",
-    hint: "16:9",
+    where: "Detail page - the wide image band",
+    hint: "16:7",
   },
   cardWide: {
     width: 1600,
     height: 700,
     label: "Featured card",
-    where: "Homepage + dossier index - full-width featured card (16:7 on desktop)",
+    where: "Homepage + case studies index - featured cards",
     hint: "16:7",
-  },
-  card: {
-    width: 1280,
-    height: 800,
-    label: "Standard card",
-    where: "Homepage + dossier index - two-up half cards",
-    hint: "16:10",
   },
 } as const;
 
@@ -166,12 +159,12 @@ export type SlotKey = keyof typeof CASE_IMAGE_SLOTS;
 export function resolveCaseImages(study: {
   images?: { showcase?: AttachedImageRecord | null; cardWide?: AttachedImageRecord | null; card?: AttachedImageRecord | null } | null;
   heroImage?: AttachedImageRecord | null;
-}): Record<SlotKey, AttachedImageRecord | null> {
+}): { showcase: AttachedImageRecord | null; cardWide: AttachedImageRecord | null; card: AttachedImageRecord | null } {
   const slots = study.images ?? {};
   const galleryFirst = (study as { gallery?: { dataUrl: string; width: number; height: number; alt: string }[] }).gallery?.[0] ?? null;
   const showcase = slots.showcase ?? study.heroImage ?? slots.cardWide ?? galleryFirst ?? null;
   const cardWide = slots.cardWide ?? slots.showcase ?? study.heroImage ?? galleryFirst ?? null;
-  const card = slots.card ?? cardWide ?? galleryFirst ?? null;
+  const card = cardWide ?? slots.card ?? galleryFirst ?? null;
   return { showcase, cardWide, card };
 }
 

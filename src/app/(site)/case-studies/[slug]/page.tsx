@@ -122,7 +122,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               <figure className="relative overflow-hidden rounded-xl border border-border bg-background shadow-[0_8px_32px_rgb(10_10_14/0.08)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={showcaseImage.dataUrl} alt={showcaseImage.alt || `${displayName} — project showcase`}
-                  className="w-full object-cover" style={{ aspectRatio: "16/9" }} />
+                  className="w-full object-cover" style={{ aspectRatio: "16/7" }} />
                 {showcaseImage.alt || displayName ? (
                   <figcaption className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-4 rounded-lg border border-white/20 bg-white/70 px-4 py-3 backdrop-blur-md">
                     <p className="t-caption font-medium text-foreground/80">{showcaseImage.alt || `${displayName} — project showcase`}</p>
@@ -342,7 +342,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {others.map((other, i) => {
               const oi = resolveCaseImages(other);
-              const art = oi.card ?? oi.cardWide;
+              const art = oi.cardWide;
               return (
                 <Reveal key={other.slug} delay={i * 80}>
                   <Link href={`/case-studies/${other.slug}`} className="group block overflow-hidden rounded-xl border border-border bg-surface transition-all hover:border-foreground/30 hover:shadow-[0_4px_20px_rgb(10_10_14/0.08)]">

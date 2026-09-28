@@ -219,10 +219,9 @@ export function CaseStudyForm({
 
   // Images
   const legacyHero = r?.heroImage ?? null;
-  const [images, setImages] = useState<Record<SlotKey, AttachedImage | null>>({
+  const [images, setImages] = useState<Pick<Record<SlotKey, AttachedImage | null>, SlotKey>>({
     showcase: r?.images?.showcase ?? legacyHero ?? null,
     cardWide: r?.images?.cardWide ?? null,
-    card: r?.images?.card ?? null,
   });
   const [gallery, setGallery] = useState<AttachedImage[]>(r?.gallery ?? []);
 
@@ -267,7 +266,7 @@ export function CaseStudyForm({
     palette: filledPalette.map((p) => ({ name: p.name.trim(), hex: p.hex })),
     year, duration, teamSize,
     testimonial: hasTestimonial && tQuote && tName && tRole ? { quote: tQuote, name: tName, role: tRole } : null,
-    images: { showcase: images.showcase, cardWide: images.cardWide, card: images.card },
+    images: { showcase: images.showcase, cardWide: images.cardWide, card: images.cardWide },
     gallery: gallery.map((g) => ({ dataUrl: g.dataUrl, width: g.width, height: g.height, alt: g.alt })),
     featured,
     liveUrl: liveUrl.trim() || null,
@@ -428,7 +427,7 @@ export function CaseStudyForm({
               <div className="mb-2 flex items-baseline justify-between gap-3">
                 <p className="adm-label">
                   {CASE_IMAGE_SLOTS[slot].label}
-                  {slot !== "card" ? <span className="text-error"> *</span> : null}
+                   <span className="text-error">*</span>
                 </p>
                 <p className="t-caption tnum text-muted">
                   {CASE_IMAGE_SLOTS[slot].width} × {CASE_IMAGE_SLOTS[slot].height}px · max 4MB · {CASE_IMAGE_SLOTS[slot].hint}
