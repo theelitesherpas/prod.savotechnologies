@@ -142,7 +142,7 @@ export function GalleryUploader({
               Click to add images ({images.length}/8)
             </span>
             <span className="t-caption text-muted">
-              JPEG, PNG or WebP · auto-resized to 1600px · compressed for web
+              JPEG, PNG or WebP · best at 1600 × 1200 (4:3) · auto-compressed
             </span>
           </span>
         )}

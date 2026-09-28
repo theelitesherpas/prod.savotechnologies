@@ -432,7 +432,7 @@ export function CaseStudyForm({
             <label className={label} htmlFor="cs-author">Case study author</label>
             <input id="cs-author" className={input} value={authorName}
               onChange={(e) => setAuthorName(e.target.value)} placeholder="Arun Nigam" maxLength={120} />
-            <p className="t-caption mt-1 text-muted">Shown as "Case study by [name]" on the detail page. Leave empty to hide.</p>
+            <p className="t-caption mt-1 text-muted">Shown as &ldquo;Case study by [name]&rdquo; on the detail page. Leave empty to hide.</p>
           </div>
         </div>
       </div>
@@ -473,8 +473,9 @@ export function CaseStudyForm({
       <div className={sectionCard}>
         <p className={sectionTitle}>3 · Project Gallery</p>
         <p className="t-caption text-muted">
-          Additional screenshots and detail views (optional). Up to 8 images,
-          auto-resized to 1600px and compressed. Displayed as a swipeable carousel.
+          Additional screenshots and detail views (optional). Up to 8 images.
+          Recommended: 1600 × 1200 px (4:3) JPEG — other ratios are center-cropped.
+          Displayed as a swipeable carousel.
         </p>
         <GalleryUploader images={gallery} onChange={setGallery} />
       </div>
@@ -578,7 +579,7 @@ export function CaseStudyForm({
         <div className="rounded-lg border border-border bg-surface-2/40 px-4 py-3">
           <p className="t-sm text-muted">
             <strong>What is this?</strong> These are the 3 most notable capabilities you delivered —
-            like "Real-time order tracking" or "AI-powered recommendations". Each gets an animated
+            like &ldquo;Real-time order tracking&rdquo; or &ldquo;AI-powered recommendations&rdquo;. Each gets an animated
             infographic icon, a bold title, and a one-line description on the public detail page.
             Think of them as the highlights a potential client would ask about first.
           </p>
@@ -588,7 +589,7 @@ export function CaseStudyForm({
         </p>
         <div className={cn("space-y-2 rounded-lg border p-3", errors.keyFeatures && "border-error/40")}>
           {keyFeatures.length === 0 ? (
-            <p className="t-caption text-center text-muted/60 py-3">No features yet — e.g. "Real-time tracking: Live GPS map of deliveries."</p>
+            <p className="t-caption text-center text-muted/60 py-3">No features yet — e.g. &ldquo;Real-time tracking: Live GPS map of deliveries.&rdquo;</p>
           ) : null}
           {keyFeatures.map((f, i) => (
             <div key={i} className="grid grid-cols-[1fr_2fr_auto] items-start gap-2">
