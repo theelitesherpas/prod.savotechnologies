@@ -104,9 +104,11 @@ export async function sendMail(
   try {
     await t.sendMail({
       from,
-      // Reply-To routes replies through SendGrid Inbound Parse
-      // (reply.savotechnologies.com) into the admin panel.
-      replyTo: dept === "hr" ? "hr@reply.savotechnologies.com" : "hello@reply.savotechnologies.com",
+      // Reply-To points to the real mailbox on this domain. Replies land
+      // directly in the Hostinger inbox (hr@ or hello@) and are also
+      // captured by the admin email centre via IMAP/Inbound Parse if
+      // configured. Never use a subdomain that doesn't have MX records.
+      replyTo: dept === "hr" ? "hr@savotechnologies.com" : "hello@savotechnologies.com",
       to,
       subject: tpl.subject,
       html: tpl.html,
