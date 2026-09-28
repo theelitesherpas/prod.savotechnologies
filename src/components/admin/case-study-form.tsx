@@ -216,6 +216,7 @@ export function CaseStudyForm({
   const [duration, setDuration] = useState(r?.duration ?? "");
   const [teamSize, setTeamSize] = useState(r?.teamSize ?? "");
   const [liveUrl, setLiveUrl] = useState(r?.liveUrl ?? "");
+  const [authorName, setAuthorName] = useState(r?.authorName ?? "");
 
   // Images
   const legacyHero = r?.heroImage ?? null;
@@ -271,6 +272,7 @@ export function CaseStudyForm({
     gallery: gallery.map((g) => ({ dataUrl: g.dataUrl, width: g.width, height: g.height, alt: g.alt })),
     featured,
     liveUrl: liveUrl.trim() || null,
+    authorName,
     status: contentStatus === "published" ? "verified" : "demo",
   });
 

@@ -92,6 +92,8 @@ export const caseStudySchema = z.object({
   featured: z.boolean().optional().default(false),
   /** Live project URL - shown as "View Live" on the detail page. */
   liveUrl: z.string().url().max(500).nullish(),
+  /** Author credit — who wrote this case study. Shown after the palette. */
+  authorName: z.string().max(120).optional().default(""),
   /** Client location - e.g. "Dubai, UAE" or "Indore, India". */
   clientLocation: z.string().max(120).optional().default(""),
   /** Business model - B2B / B2C / B2B2C / Marketplace / SaaS. */
