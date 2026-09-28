@@ -31,6 +31,8 @@ export async function generateStaticParams() {
   return studies.map((s) => ({ slug: s.slug }));
 }
 
+export const revalidate = 0; // always fresh — managed content
+
 export async function generateMetadata({
   params,
 }: {

@@ -14,6 +14,8 @@ import { openGraphFor } from "@/lib/seo";
  * verified engagement publishes (PRODUCT.md hard content rule).
  */
 
+export const revalidate = 0; // always fresh — managed content
+
 const DESCRIPTION = `Case studies from Savo Technologies, filed by discipline: web development, mobile products, AI and intelligent systems, software and SaaS, product design and growth. Published only with verified outcomes.`;
 
 export const metadata: Metadata = {
