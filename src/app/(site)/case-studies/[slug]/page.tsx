@@ -1,31 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { openGraphFor } from "@/lib/seo";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { SectionHeader } from "@/components/ui/section-header";
 import { DetailCta } from "@/components/shared/detail-cta";
+import { GalleryCarousel } from "@/components/shared/gallery-carousel";
+import { DisciplineDoodle } from "@/components/shared/discipline-doodle";
 import { getCaseStudies, getCaseStudy } from "@/lib/case-studies";
 import { resolveCaseImages } from "@/lib/case-study-schema";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
-
-/**
- * Case-study dossier — premium detail page.
- *
- * Chapter flow (balanced, dense, no wasted space):
- *   01 Hero + Facts     (paper)  — title, CTAs, inline meta
- *   02 Showcase         (framed) — bordered image with glass caption
- *   03 Challenge        (ink)    — the problem
- *   04 Solution         (paper)  — what we built + sidebar
- *   05 Key Features     (sand)   — feature grid
- *   06 Results          (ink)    — headline number + metrics
- *   07 Gallery          (paper)  — screenshots
- *   08 Palette + Quote  (sand)   — side by side
- *   09 More Work        (paper)  — 3 related cards
- *   10 CTA              (accent) — start your project
- */
 
 export async function generateStaticParams() {
   const studies = await getCaseStudies();
@@ -76,15 +61,14 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
   return (
     <>
-      {/* ═══ 01 · HERO + FACTS (paper) ═══ */}
+      {/* ═══ 01 · HERO + FACTS ═══ */}
       <section aria-labelledby="cs-heading" className="border-b border-border">
         <div className="shell pb-10 pt-[calc(var(--nav-h)+3rem)] sm:pb-14">
           <div aria-hidden="true" className="mb-8 flex items-center gap-4">
             <span className="h-2 w-2 shrink-0 bg-accent" />
             <p className="t-label text-muted">
               <Link href="/case-studies" className="transition-colors hover:text-foreground">Case Studies</Link>
-              <span className="mx-2 text-muted/50">/</span>
-              {discipline?.title ?? "Dossier"}
+              <span className="mx-2 text-muted/50">/</span>{discipline?.title ?? "Dossier"}
               {study.year ? <span className="text-muted/50"> · {study.year}</span> : null}
             </p>
             <span className="h-px flex-1 bg-border" />
@@ -92,9 +76,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
           <div className="grid items-end gap-10 lg:grid-cols-12">
             <div className="lg:col-span-7">
-              <h1 id="cs-heading" className="t-h1">
-                {displayName}<span aria-hidden="true" className="text-accent">.</span>
-              </h1>
+              <h1 id="cs-heading" className="t-h1">{displayName}<span aria-hidden="true" className="text-accent">.</span></h1>
               {study.industry ? <p className="t-label mt-4 text-accent-strong">{study.industry}</p> : null}
               <div className="mt-7 flex flex-wrap items-center gap-4">
                 {study.liveUrl ? (
@@ -104,24 +86,19 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                     <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3 transition-transform group-hover/live:translate-x-[3px] group-hover/live:-translate-y-[3px]" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M6 2h6v6M12 2 4 10M4 4H2v8h8v-2" /></svg>
                   </a>
                 ) : null}
-                <Link href="/#start" className="inline-flex h-11 items-center rounded-[2px] border border-foreground/25 px-6 text-[0.9375rem] font-semibold transition-colors hover:border-foreground hover:bg-foreground/[0.04]">
-                  Start a Similar Project
-                </Link>
+                <Link href="/#start" className="inline-flex h-11 items-center rounded-[2px] border border-foreground/25 px-6 text-[0.9375rem] font-semibold transition-colors hover:border-foreground hover:bg-foreground/[0.04]">Start a Similar Project</Link>
               </div>
             </div>
             <div className="lg:col-span-5">
               {study.summary ? <p className="t-body-lg text-muted">{study.summary}</p> : null}
               {study.services.length > 0 ? (
                 <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Capabilities">
-                  {study.services.map((s) => (
-                    <li key={s} className="t-caption rounded-[2px] border border-border px-2.5 py-1 text-muted">{s}</li>
-                  ))}
+                  {study.services.map((s) => (<li key={s} className="t-caption rounded-[2px] border border-border px-2.5 py-1 text-muted">{s}</li>))}
                 </ul>
               ) : null}
             </div>
           </div>
 
-          {/* Meta facts strip — dense, scannable */}
           {metaFacts.length > 0 ? (
             <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-border pt-5 sm:grid-cols-4 lg:grid-cols-8">
               {metaFacts.map((f) => (
@@ -135,24 +112,18 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         </div>
       </section>
 
-      {/* ═══ 02 · SHOWCASE (framed, light, glass caption) ═══ */}
+      {/* ═══ 02 · SHOWCASE (framed, glass caption) ═══ */}
       {showcaseImage ? (
         <section aria-label="Project showcase" className="border-b border-border bg-surface-2/40 py-10 sm:py-14">
           <div className="shell">
             <Reveal>
-              <figure className="relative overflow-hidden rounded-lg border border-border bg-background shadow-[0_8px_32px_rgb(10_10_14/0.08)]">
+              <figure className="relative overflow-hidden rounded-xl border border-border bg-background shadow-[0_8px_32px_rgb(10_10_14/0.08)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={showcaseImage.dataUrl}
-                  alt={showcaseImage.alt || `${displayName} — project showcase`}
-                  className="aspect-[21/9] w-full object-cover"
-                />
-                {/* Glass caption bar */}
+                <img src={showcaseImage.dataUrl} alt={showcaseImage.alt || `${displayName} — project showcase`}
+                  className="aspect-[21/9] w-full object-cover" />
                 {showcaseImage.alt || displayName ? (
                   <figcaption className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-4 rounded-lg border border-white/20 bg-white/70 px-4 py-3 backdrop-blur-md">
-                    <p className="t-caption font-medium text-foreground/80">
-                      {showcaseImage.alt || `${displayName} — project showcase`}
-                    </p>
+                    <p className="t-caption font-medium text-foreground/80">{showcaseImage.alt || `${displayName} — project showcase`}</p>
                     <span className="t-label hidden shrink-0 text-muted/60 sm:block">{discipline?.title}</span>
                   </figcaption>
                 ) : null}
@@ -162,85 +133,96 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         </section>
       ) : null}
 
-      {/* ═══ 03 · THE CHALLENGE (ink) ═══ */}
-      {study.challenge ? (
-        <Section index="The Challenge" chapter="ink" labelledBy="cs-challenge-heading" className="!py-14 sm:!py-18 lg:!py-22">
-          <div className="grid gap-10 lg:grid-cols-12 lg:gap-10">
-            <div className="lg:col-span-4">
-              <SectionHeader id="cs-challenge-heading" heading="The problem." lead="What was holding the client back." />
-            </div>
-            <div className="lg:col-span-7 lg:col-start-6">
-              <Reveal><p className="t-body-lg leading-relaxed text-muted">{study.challenge}</p></Reveal>
-            </div>
-          </div>
-        </Section>
-      ) : null}
+      {/* ═══ 03 · THE CHALLENGE → SOLUTION PROCESS (ink) ═══ */}
+      {study.challenge || study.solution ? (
+        <Section index="The Story" chapter="ink" labelledBy="cs-story-heading" className="!py-14 sm:!py-18 lg:!py-22">
+          <SectionHeader id="cs-story-heading" heading="Problem to solution." lead={<>How the challenge was understood, approached and solved.</>} />
 
-      {/* ═══ 04 · THE SOLUTION (paper) ═══ */}
-      {study.solution ? (
-        <Section index="The Solution" labelledBy="cs-solution-heading" className="!py-14 sm:!py-18 lg:!py-22">
-          <div className="grid gap-10 lg:grid-cols-12 lg:gap-10">
-            <div className="lg:col-span-7">
-              <SectionHeader id="cs-solution-heading" heading="What we built." lead="Approach, architecture and how it shipped." />
-              <Reveal><p className="t-body-lg leading-relaxed text-muted">{study.solution}</p></Reveal>
-
-              {/* Integrations inline chips */}
-              {study.integrations && study.integrations.length > 0 ? (
-                <Reveal delay={120}>
-                  <div className="mt-8 border-t border-border pt-6">
-                    <p className="t-label mb-3 text-muted">Integrations</p>
-                    <ul className="flex flex-wrap gap-2">
-                      {study.integrations.map((int) => (
-                        <li key={int} className="t-caption rounded-[2px] border border-border bg-surface-2/60 px-3 py-1.5 text-foreground/75">{int}</li>
-                      ))}
-                    </ul>
+          {/* Process flow: Problem → Approach → Solution */}
+          <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
+            {/* Step 1: The Problem */}
+            {study.challenge ? (
+              <Reveal>
+                <div className="h-full rounded-xl border border-border/50 bg-surface/10 p-6 sm:p-7">
+                  <div className="mb-5 flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-error/30 bg-error/10 font-mono text-[0.75rem] font-bold text-error">01</span>
+                    <p className="t-label text-error">The Problem</p>
                   </div>
-                </Reveal>
-              ) : null}
-            </div>
-
-            <aside className="lg:col-span-5">
-              <Reveal delay={140}>
-                {study.technologies.length > 0 ? (
-                  <div className="border border-border bg-surface-2/60 p-6">
-                    <p className="t-label mb-4 text-muted">Technology stack</p>
-                    <ul className="flex flex-wrap gap-2">
-                      {study.technologies.map((t) => (
-                        <li key={t} className="t-caption flex items-center gap-2 rounded-[2px] border border-border bg-background px-3 py-1.5 text-foreground/80">
-                          <span aria-hidden="true" className="h-1 w-1 rounded-full bg-accent" />{t}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-                {study.services.length > 0 ? (
-                  <div className="mt-6 border border-border bg-surface p-6">
-                    <p className="t-label mb-4 text-muted">Services delivered</p>
-                    <ul className="space-y-2.5">
-                      {study.services.map((s) => (
-                        <li key={s} className="flex items-start gap-3">
-                          <span aria-hidden="true" className="mt-[0.5em] h-1.5 w-1.5 shrink-0 bg-accent" />
-                          <span className="t-sm font-medium text-foreground/85">{s}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
+                  <p className="t-sm leading-relaxed text-muted">{study.challenge}</p>
+                </div>
               </Reveal>
-            </aside>
+            ) : null}
+
+            {/* Step 2: The Approach (discipline doodle) */}
+            <Reveal delay={80}>
+              <div className="flex h-full flex-col rounded-xl border border-border/50 bg-surface/10 p-6 sm:p-7">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-accent/30 bg-accent/10 font-mono text-[0.75rem] font-bold text-accent">02</span>
+                  <p className="t-label text-accent">The Approach</p>
+                </div>
+                <p className="t-sm leading-relaxed text-muted">
+                  We approached this as a {discipline?.title?.toLowerCase() ?? "product"} engagement,
+                  applying our proven delivery rhythm: understand the constraints, architect for the
+                  real load, and ship in weekly slices.
+                </p>
+                {/* Discipline doodle */}
+                <div className="mt-4 h-28 rounded-lg bg-surface/20 p-3">
+                  <DisciplineDoodle discipline={study.discipline} className="h-full w-full" />
+                </div>
+              </div>
+            </Reveal>
+
+            {/* Step 3: The Solution */}
+            {study.solution ? (
+              <Reveal delay={160}>
+                <div className="h-full rounded-xl border border-border/50 bg-surface/10 p-6 sm:p-7">
+                  <div className="mb-5 flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-success/30 bg-success/10 font-mono text-[0.75rem] font-bold text-success">03</span>
+                    <p className="t-label text-success">The Solution</p>
+                  </div>
+                  <p className="t-sm leading-relaxed text-muted">{study.solution}</p>
+                </div>
+              </Reveal>
+            ) : null}
           </div>
+
+          {/* Tech stack + integrations inline */}
+          {study.technologies.length > 0 || (study.integrations && study.integrations.length > 0) ? (
+            <Reveal delay={200}>
+              <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4 border-t border-border/30 pt-6">
+                {study.technologies.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="t-label text-muted">Stack:</span>
+                    {study.technologies.map((t) => (
+                      <span key={t} className="t-caption rounded-full border border-border/40 bg-surface/20 px-3 py-1 text-foreground/70">{t}</span>
+                    ))}
+                  </div>
+                ) : null}
+                {study.integrations && study.integrations.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="t-label text-muted">Integrations:</span>
+                    {study.integrations.map((int) => (
+                      <span key={int} className="t-caption rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-accent">{int}</span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </Reveal>
+          ) : null}
         </Section>
       ) : null}
 
-      {/* ═══ 05 · KEY FEATURES (sand) ═══ */}
+      {/* ═══ 04 · KEY FEATURES (sand) ═══ */}
       {study.keyFeatures && study.keyFeatures.length > 0 ? (
         <Section index="Key Features" labelledBy="cs-features-heading" className="bg-surface-2/60 !py-14 sm:!py-18 lg:!py-22">
           <SectionHeader id="cs-features-heading" heading="Notable features." lead={<>What makes this build stand out.</>} />
-          <div className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {study.keyFeatures.map((f, i) => (
               <Reveal key={i} delay={i * 60}>
-                <div className="h-full bg-background p-6 sm:p-7">
-                  <span aria-hidden="true" className="mb-4 block h-2 w-2 bg-accent" />
+                <div className="h-full rounded-xl border border-border bg-background p-6 transition-shadow hover:shadow-[0_4px_20px_rgb(10_10_14/0.06)]">
+                  <span aria-hidden="true" className="mb-4 flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
+                    <svg viewBox="0 0 16 16" className="h-4 w-4 text-accent" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m3 8 3.5 3.5L13 5" /></svg>
+                  </span>
                   <h3 className="t-h4">{f.title}</h3>
                   <p className="t-sm mt-3 text-muted">{f.text}</p>
                 </div>
@@ -250,28 +232,28 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         </Section>
       ) : null}
 
-      {/* ═══ 06 · RESULTS (ink) ═══ */}
+      {/* ═══ 05 · RESULTS (paper) ═══ */}
       {shownResults.length > 0 ? (
-        <Section index="Results" chapter="ink" labelledBy="cs-results-heading" className="!py-14 sm:!py-18 lg:!py-22">
+        <Section index="Results" labelledBy="cs-results-heading" className="!py-14 sm:!py-18 lg:!py-22">
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-10">
             {headlineResult ? (
               <div className="lg:col-span-5">
                 <Reveal>
-                  <div className="flex h-full flex-col justify-center">
-                    <p className="t-label mb-4 text-accent">{isDemo ? "Design-preview result" : "Headline result"}</p>
+                  <div className="flex h-full flex-col justify-center rounded-2xl border border-border bg-surface-2/40 p-8 sm:p-10">
+                    <p className="t-label mb-4 text-accent-strong">{isDemo ? "Design-preview result" : "Headline result"}</p>
                     <p className="font-[family-name:var(--font-serif)] text-[clamp(3.5rem,7vw,6rem)] font-semibold leading-none tracking-[-0.03em] text-foreground">
                       {headlineResult.value}
                     </p>
-                    <p className="t-body-lg mt-4 max-w-sm text-muted">{headlineResult.label}</p>
+                    <p className="t-body-lg mt-4 text-muted">{headlineResult.label}</p>
                   </div>
                 </Reveal>
               </div>
             ) : null}
             <div className={headlineResult ? "lg:col-span-7" : "lg:col-span-10 lg:col-start-2"}>
               <Reveal delay={100}>
-                <dl className="grid grid-cols-2 gap-px border border-border bg-border lg:grid-cols-3">
+                <dl className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                   {shownResults.map((r, i) => (
-                    <div key={i} className="flex flex-col bg-background p-6 sm:p-8">
+                    <div key={i} className="rounded-xl border border-border bg-background p-6 sm:p-8">
                       <dd className="font-[family-name:var(--font-serif)] text-3xl font-semibold text-foreground/85 sm:text-4xl">{r.value}</dd>
                       <dt className="t-label mt-3 text-muted">{r.label}</dt>
                     </div>
@@ -284,77 +266,88 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         </Section>
       ) : null}
 
-      {/* ═══ 07 · GALLERY (paper) ═══ */}
+      {/* ═══ 06 · GALLERY CAROUSEL (sand) ═══ */}
       {study.gallery && study.gallery.length > 0 ? (
-        <Section index="Gallery" labelledBy="cs-gallery-heading" className="!py-14 sm:!py-16 lg:!py-20">
-          <SectionHeader id="cs-gallery-heading" heading="Inside the project." lead={<>Screens and detail views from the build.</>} />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {study.gallery.map((img, i) => (
-              <Reveal key={i} delay={i * 60}>
-                <figure className="group relative overflow-hidden rounded-lg border border-border">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.dataUrl} alt={img.alt || `${displayName} — image ${i + 1}`}
-                    className="aspect-[4/3] w-full object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]" loading="lazy" />
-                  {img.alt ? (
-                    <figcaption className="absolute inset-x-3 bottom-3 rounded-md bg-white/70 px-3 py-2 backdrop-blur-md">
-                      <p className="t-caption font-medium text-foreground/80">{img.alt}</p>
-                    </figcaption>
-                  ) : null}
-                </figure>
-              </Reveal>
-            ))}
-          </div>
+        <Section index="Gallery" labelledBy="cs-gallery-heading" className="bg-surface-2/60 !py-14 sm:!py-18 lg:!py-22">
+          <SectionHeader id="cs-gallery-heading" heading="Inside the project." lead={<>Screens and detail views — swipe or use the arrows.</>} />
+          <Reveal>
+            <GalleryCarousel
+              images={study.gallery.map(g => ({ dataUrl: g.dataUrl, alt: g.alt, width: g.width, height: g.height }))}
+              title={displayName}
+            />
+          </Reveal>
         </Section>
       ) : null}
 
-      {/* ═══ 08 · PALETTE + TESTIMONIAL (sand) ═══ */}
-      {study.palette.length > 0 || study.testimonial ? (
-        <Section index="Details" labelledBy="cs-details-heading" className="bg-surface-2/60 !py-14 sm:!py-18 lg:!py-22">
+      {/* ═══ 07 · TESTIMONIAL (accent spotlight) ═══ */}
+      {study.testimonial ? (
+        <section aria-labelledby="cs-testimonial-heading" className="chapter-accent border-y border-border">
+          <div className="shell py-16 sm:py-20 lg:py-24">
+            <Reveal>
+              <div className="mx-auto max-w-3xl text-center">
+                {/* Big quote mark */}
+                <span aria-hidden="true" className="mb-8 block font-[family-name:var(--font-serif)] text-[5rem] leading-none text-foreground/20 select-none">&ldquo;</span>
+
+                <blockquote className="t-serif-italic text-2xl leading-relaxed text-foreground sm:text-3xl lg:text-[2.25rem]">
+                  {study.testimonial.quote}
+                </blockquote>
+
+                {/* Rating stars */}
+                <div className="mt-8 flex items-center justify-center gap-1.5" aria-label="Client rating">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} viewBox="0 0 20 20" className="h-5 w-5 text-foreground" fill="currentColor" aria-hidden="true">
+                      <path d="M10 1.5 12.6 7l5.9.9-4.3 4.1 1 5.9L10 15.1 4.8 17.9l1-5.9L1.5 7.9 7.4 7z" />
+                    </svg>
+                  ))}
+                </div>
+
+                <div className="mt-8 flex items-center justify-center gap-4">
+                  <span aria-hidden="true" className="h-px w-12 bg-foreground/20" />
+                  <div className="text-center">
+                    <p className="text-[0.9375rem] font-bold text-foreground">{study.testimonial.name}</p>
+                    <p className="t-caption mt-1 text-foreground/60">{study.testimonial.role}</p>
+                  </div>
+                  <span aria-hidden="true" className="h-px w-12 bg-foreground/20" />
+                </div>
+
+                <p className="t-label mt-6 text-foreground/40">
+                  {isDemo ? "Client testimonial preview" : "Verified client feedback"}
+                </p>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+      ) : null}
+
+      {/* ═══ 08 · PALETTE (paper) ═══ */}
+      {study.palette.length > 0 ? (
+        <Section index="Palette" labelledBy="cs-palette-heading" className="!py-14 sm:!py-18 lg:!py-22">
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-10">
-            {study.palette.length > 0 ? (
-              <div className={study.testimonial ? "lg:col-span-5" : "lg:col-span-8"}>
-                <Reveal>
-                  <p className="t-label mb-5 text-muted">Project palette</p>
-                  <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4 lg:grid-cols-2">
-                    {study.palette.map((c) => (
-                      <li key={c.hex} className="bg-background">
-                        <div className="h-20 w-full" style={{ backgroundColor: c.hex }} />
-                        <div className="p-3">
-                          <p className="t-caption font-medium text-foreground/90">{c.name}</p>
-                          <p className="t-caption tnum mt-0.5 text-muted">{c.hex.toUpperCase()}</p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </Reveal>
-              </div>
-            ) : null}
-            {study.testimonial ? (
-              <div className={study.palette.length > 0 ? "lg:col-span-7" : "lg:col-span-10 lg:col-start-2"}>
-                <Reveal delay={100}>
-                  <figure className="flex h-full flex-col justify-center rounded-lg border border-border bg-surface p-8 sm:p-10">
-                    <p className="t-label text-accent-strong">{isDemo ? "Client testimonial preview" : "Client testimonial"}</p>
-                    <blockquote className="t-serif-italic mt-5 text-xl leading-relaxed text-foreground/90 sm:text-2xl">
-                      &ldquo;{study.testimonial.quote}&rdquo;
-                    </blockquote>
-                    <figcaption className="mt-6 flex items-center gap-3 border-t border-border pt-5">
-                      <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-accent" />
-                      <div>
-                        <p className="t-sm font-semibold">{study.testimonial.name}</p>
-                        <p className="t-caption mt-0.5 text-muted">{study.testimonial.role}</p>
+            <div className="lg:col-span-4">
+              <SectionHeader id="cs-palette-heading" heading="Project palette." lead={<>The color system behind the interface.</>} />
+            </div>
+            <div className="lg:col-span-8">
+              <Reveal>
+                <ul className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  {study.palette.map((c) => (
+                    <li key={c.hex} className="group overflow-hidden rounded-xl border border-border transition-shadow hover:shadow-[0_4px_16px_rgb(10_10_14/0.08)]">
+                      <div className="h-24 w-full transition-transform duration-300 group-hover:scale-[1.02]" style={{ backgroundColor: c.hex }} />
+                      <div className="bg-background p-3.5">
+                        <p className="t-sm font-semibold text-foreground/90">{c.name}</p>
+                        <p className="t-caption tnum mt-1 font-mono text-muted">{c.hex.toUpperCase()}</p>
                       </div>
-                    </figcaption>
-                  </figure>
-                </Reveal>
-              </div>
-            ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
+            </div>
           </div>
         </Section>
       ) : null}
 
-      {/* ═══ 09 · MORE WORK (paper) ═══ */}
+      {/* ═══ 09 · MORE WORK (sand) ═══ */}
       {others.length > 0 ? (
-        <Section index="More Work" labelledBy="cs-more-heading" className="!py-14 sm:!py-18 lg:!py-22">
+        <Section index="More Work" labelledBy="cs-more-heading" className="bg-surface-2/60 !py-14 sm:!py-18 lg:!py-22">
           <SectionHeader id="cs-more-heading" heading="More from the dossier." lead={<>Other verified engagements.</>} />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {others.map((other, i) => {
@@ -362,7 +355,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               const art = oi.card ?? oi.cardWide;
               return (
                 <Reveal key={other.slug} delay={i * 80}>
-                  <Link href={`/case-studies/${other.slug}`} className="group block overflow-hidden rounded-lg border border-border bg-surface transition-colors hover:border-foreground/30">
+                  <Link href={`/case-studies/${other.slug}`} className="group block overflow-hidden rounded-xl border border-border bg-surface transition-all hover:border-foreground/30 hover:shadow-[0_4px_20px_rgb(10_10_14/0.08)]">
                     <div className="relative aspect-[16/10] overflow-hidden">
                       {art ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -396,7 +389,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         </Section>
       ) : null}
 
-      {/* ═══ 10 · CTA (accent) ═══ */}
+      {/* ═══ 10 · CTA ═══ */}
       <DetailCta
         headingId="cs-cta-heading"
         heading="Start your project."
