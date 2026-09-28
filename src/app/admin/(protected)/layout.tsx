@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { AdminShell, type AdminNavNode } from "@/components/admin/shell";
 import { COLLECTION_KEYS, CONTENT_COLLECTIONS } from "@/lib/content-registry";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: { default: "Admin", template: "%s · SAVO Admin" },
   robots: { index: false, follow: false, nocache: true },

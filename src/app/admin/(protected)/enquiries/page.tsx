@@ -8,6 +8,9 @@ import {
 } from "@/lib/enquiry-status";
 import { PageHeader, Notice, EnquiryStatusChip, Chip, EmptyState } from "@/components/admin/ui";
 import { AdminIcon } from "@/components/admin/icons";
+import { RefreshOnMount } from "@/components/admin/refresh-on-mount";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Enquiries" };
 
@@ -140,6 +143,7 @@ export default async function EnquiriesPage({
 
   return (
     <>
+      <RefreshOnMount />
       <PageHeader
         title="Enquiries"
         description={`Every public form - Start a project, Contact, Careers applications and callbacks - lands in this one pipeline. ${total} shown for the current filter.`}
@@ -243,17 +247,21 @@ export default async function EnquiriesPage({
                   <Link
                     key={enq.id}
                     href={`/admin/enquiries/${enq.id}`}
-                    className={`adm-card group flex flex-wrap items-center gap-3 px-4 py-3.5 transition-colors hover:border-foreground/25 ${enq.status === "new" ? "border-accent/30 bg-accent/[0.03]" : ""}`}
+                    className={`group flex flex-wrap items-center gap-3 border px-4 py-3.5 transition-colors hover:border-foreground/25 ${
+                      enq.status === "new"
+                        ? "border-l-4 border-l-accent border-y-border border-r-border bg-accent/[0.06] shadow-sm"
+                        : "border-border bg-surface"
+                    }`}
                   >
                     {/* Name + email */}
                     <div className="min-w-0 flex-1 sm:flex-[2]">
-                      <span className={`flex items-center gap-2 truncate text-[0.9375rem] ${enq.status === "new" ? "font-bold" : "font-medium"} text-foreground group-hover:text-accent`}>
+                      <span className={`flex items-center gap-2.5 truncate text-[0.9375rem] ${enq.status === "new" ? "font-extrabold" : "font-medium text-foreground/80"} text-foreground group-hover:text-accent`}>
                         {enq.status === "new" ? (
-                          <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+                          <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent ring-2 ring-accent/20" />
                         ) : null}
                         {enq.name}
                       </span>
-                      <span className="t-caption block truncate text-muted">
+                      <span className={`t-caption block truncate ${enq.status === "new" ? "font-semibold text-foreground/70" : "text-muted"}`}>
                         {enq.email ?? enq.company ?? "-"}
                       </span>
                     </div>
