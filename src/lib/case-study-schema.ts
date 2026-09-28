@@ -144,8 +144,15 @@ export const CASE_IMAGE_SLOTS = {
     width: 1600,
     height: 700,
     label: "Featured card",
-    where: "Homepage + case studies index - featured cards",
+    where: "Homepage first card + index featured cards (full-width)",
     hint: "16:7",
+  },
+  card: {
+    width: 1280,
+    height: 800,
+    label: "Standard card",
+    where: "Homepage cards 2-3 + index half-size cards",
+    hint: "16:10",
   },
 } as const;
 
@@ -164,7 +171,7 @@ export function resolveCaseImages(study: {
   const galleryFirst = (study as { gallery?: { dataUrl: string; width: number; height: number; alt: string }[] }).gallery?.[0] ?? null;
   const showcase = slots.showcase ?? study.heroImage ?? slots.cardWide ?? slots.card ?? galleryFirst ?? null;
   const cardWide = slots.cardWide ?? slots.showcase ?? study.heroImage ?? slots.card ?? galleryFirst ?? null;
-  const card = cardWide ?? slots.card ?? galleryFirst ?? null;
+  const card = slots.card ?? cardWide ?? galleryFirst ?? null;
   return { showcase, cardWide, card };
 }
 

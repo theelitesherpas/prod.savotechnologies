@@ -55,7 +55,7 @@ async function workItems(): Promise<{ items: WorkItem[]; live: boolean; anyDemo:
       anyDemo: top.some((c) => c.status === "demo"),
       items: top.map((c, i) => {
         const resolved = resolveCaseImages(c);
-        const slot = resolved.cardWide;
+        const slot = i === 0 ? resolved.cardWide : resolved.card;
         const shown = cardResults(c);
         return {
           name: c.displayClientName || c.title,
