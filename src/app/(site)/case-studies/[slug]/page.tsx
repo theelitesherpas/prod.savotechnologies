@@ -9,6 +9,7 @@ import { DetailCta } from "@/components/shared/detail-cta";
 import { StartProjectButton } from "@/components/shared/start-project-button";
 import { GalleryCarousel } from "@/components/shared/gallery-carousel";
 import { DisciplineDoodle } from "@/components/shared/discipline-doodle";
+import { FeatureIcon } from "@/components/shared/feature-icon";
 import { getCaseStudies, getCaseStudy } from "@/lib/case-studies";
 import { resolveCaseImages } from "@/lib/case-study-schema";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
@@ -216,16 +217,19 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       {/* ═══ 04 · KEY FEATURES (sand) ═══ */}
       {study.keyFeatures && study.keyFeatures.length > 0 ? (
         <Section index="Key Features" labelledBy="cs-features-heading" className="bg-surface-2/60 !py-14 sm:!py-18 lg:!py-22">
-          <SectionHeader id="cs-features-heading" heading="Notable features." lead={<>What makes this build stand out.</>} />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {study.keyFeatures.map((f, i) => (
-              <Reveal key={i} delay={i * 60}>
-                <div className="h-full rounded-xl border border-border bg-background p-6 transition-shadow hover:shadow-[0_4px_20px_rgb(10_10_14/0.06)]">
-                  <span aria-hidden="true" className="mb-4 flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-                    <svg viewBox="0 0 16 16" className="h-4 w-4 text-accent" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m3 8 3.5 3.5L13 5" /></svg>
-                  </span>
-                  <h3 className="t-h4">{f.title}</h3>
-                  <p className="t-sm mt-3 text-muted">{f.text}</p>
+          <SectionHeader id="cs-features-heading" heading="Notable features." lead={<>What makes this build stand out — the capabilities that earned attention.</>} />
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {study.keyFeatures.slice(0, 3).map((f, i) => (
+              <Reveal key={i} delay={i * 80}>
+                <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-background p-7 transition-all duration-300 hover:border-foreground/20 hover:shadow-[0_8px_32px_rgb(10_10_14/0.08)]">
+                  {/* Animated infographic icon */}
+                  <div className="mb-6 h-14 w-14">
+                    <FeatureIcon index={i} className="h-full w-full" />
+                  </div>
+                  {/* Accent line */}
+                  <span aria-hidden="true" className="absolute right-6 top-6 h-px w-8 bg-accent/30 transition-all duration-500 group-hover:w-12 group-hover:bg-accent/60" />
+                  <h3 className="t-h4 leading-snug">{f.title}</h3>
+                  <p className="t-sm mt-3 leading-relaxed text-muted">{f.text}</p>
                 </div>
               </Reveal>
             ))}
@@ -236,21 +240,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       {/* ═══ 05 · RESULTS (paper) ═══ */}
       {shownResults.length > 0 ? (
         <Section index="Results" labelledBy="cs-results-heading" className="!py-14 sm:!py-18 lg:!py-22">
-          <div className="grid gap-10 lg:grid-cols-12 lg:gap-10">
-            {headlineResult ? (
-              <div className="lg:col-span-5">
-                <Reveal>
-                  <div className="flex h-full flex-col justify-center rounded-2xl border border-border bg-surface-2/40 p-8 sm:p-10">
-                    <p className="t-label mb-4 text-accent-strong">{isDemo ? "Design-preview result" : "Headline result"}</p>
-                    <p className="font-[family-name:var(--font-serif)] text-[clamp(3.5rem,7vw,6rem)] font-semibold leading-none tracking-[-0.03em] text-foreground">
-                      {headlineResult.value}
-                    </p>
-                    <p className="t-body-lg mt-4 text-muted">{headlineResult.label}</p>
-                  </div>
-                </Reveal>
-              </div>
-            ) : null}
-            <div className={headlineResult ? "lg:col-span-7" : "lg:col-span-10 lg:col-start-2"}>
+          <div>
               <Reveal delay={100}>
                 <dl className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                   {shownResults.map((r, i) => (
@@ -262,7 +252,6 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                 </dl>
                 {isDemo ? <p className="t-caption mt-4 text-muted/70">Design-preview figures — verified, client-approved results replace them at publication.</p> : null}
               </Reveal>
-            </div>
           </div>
         </Section>
       ) : null}

@@ -117,7 +117,7 @@ export const caseStudySchema = z.object({
         alt: z.string().max(200).default(""),
       }),
     )
-    .max(8)
+    .max(3)
     .optional()
     .default([]),
   /** Constants-side content status - records marked demo never render in production. */

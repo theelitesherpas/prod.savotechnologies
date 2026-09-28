@@ -541,18 +541,28 @@ export function CaseStudyForm({
         />
       </div>
 
-      {/* ═══ 9. KEY FEATURES ═══ */}
+      {/* ═══ 9. KEY FEATURES (max 3) ═══ */}
       <div className={sectionCard}>
         <div className="flex items-center justify-between">
-          <p className={sectionTitle}>8 · Key Features</p>
+          <p className={sectionTitle}>8 · Key Features <span className="text-error">*</span></p>
           <button type="button"
-            onClick={() => keyFeatures.length < 8 && setKeyFeatures([...keyFeatures, { title: "", text: "" }])}
-            className={cn(secondaryBtn, "h-9 px-3 text-[0.8125rem]")}>
-            + Add feature
+            onClick={() => keyFeatures.length < 3 && setKeyFeatures([...keyFeatures, { title: "", text: "" }])}
+            disabled={keyFeatures.length >= 3}
+            className={cn(secondaryBtn, "h-9 px-3 text-[0.8125rem]")}
+            title={keyFeatures.length >= 3 ? "Maximum 3 features" : "Add a feature card"}>
+            + Add feature ({keyFeatures.length}/3)
           </button>
         </div>
+        <div className="rounded-lg border border-border bg-surface-2/40 px-4 py-3">
+          <p className="t-sm text-muted">
+            <strong>What is this?</strong> These are the 3 most notable capabilities you delivered —
+            like "Real-time order tracking" or "AI-powered recommendations". Each gets an animated
+            infographic icon, a bold title, and a one-line description on the public detail page.
+            Think of them as the highlights a potential client would ask about first.
+          </p>
+        </div>
         <p className={errors.keyFeatures ? errorText : "t-caption text-muted"}>
-          {errors.keyFeatures ?? "Notable features — shown as a card grid on the detail page."}
+          {errors.keyFeatures ?? `Add 1–3 features. Each shows as an animated card on the detail page (${keyFeatures.length}/3 added).`}
         </p>
         <div className={cn("space-y-2 rounded-lg border p-3", errors.keyFeatures && "border-error/40")}>
           {keyFeatures.length === 0 ? (
