@@ -169,8 +169,9 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
       },
       });
     });
-    const pendingRest = d.entries.filter((e) => !e.featured);
-    return { ...d, entries: [...mapped, ...pendingRest] };
+    // When real case studies exist for this discipline, the pending
+    // placeholder slots are hidden — real work replaces the mock slots.
+    return { ...d, entries: mapped };
   });
 }
 

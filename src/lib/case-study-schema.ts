@@ -138,8 +138,8 @@ export function resolveCaseImages(study: {
   heroImage?: AttachedImageRecord | null;
 }): Record<SlotKey, AttachedImageRecord | null> {
   const slots = study.images ?? {};
-  const showcase = slots.showcase ?? study.heroImage ?? null;
-  const cardWide = slots.cardWide ?? showcase;
+  const showcase = slots.showcase ?? study.heroImage ?? slots.cardWide ?? null;
+  const cardWide = slots.cardWide ?? slots.showcase ?? study.heroImage ?? null;
   const card = slots.card ?? cardWide;
   return { showcase, cardWide, card };
 }
