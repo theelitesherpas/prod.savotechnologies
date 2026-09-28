@@ -288,13 +288,26 @@ export function CaseStudyForm({
     if (services.length === 0) errs.services = "Select at least 1 service capability.";
     if (technologies.length === 0) errs.technologies = "Select at least 1 technology.";
     if (filledFeatures.length === 0) errs.keyFeatures = "Add at least 1 key feature.";
-    if (filledResults.length === 0) errs.results = "Add at least 1 outcome metric.";
+    // Results section removed — metrics not required
     if (liveUrl.trim() && !/^https?:\/\/.+\..+/.test(liveUrl.trim())) errs.liveUrl = "Enter a valid URL (https://example.com) or leave empty.";
     if (hasTestimonial) {
       if (tQuote.trim().length < 10) errs.tQuote = "Quote is required (min 10 characters).";
       if (tName.trim().length < 2) errs.tName = "Client name is required.";
       if (tRole.trim().length < 2) errs.tRole = "Client role is required.";
     }
+
+    // Also check images (server-side zod will reject oversized data URLs)
+    if (images.showcase && images.showcase.dataUrl.length > 3_900_000) {
+      errs.showcase = "Showcase image is too large after compression — try a simpler photo.";
+    }
+    if (images.cardWide && images.cardWide.dataUrl.length > 3_900_000) {
+      errs.cardWide = "Featured card image is too large — try a simpler photo.";
+    }
+    gallery.forEach((g, i) => {
+      if (g.dataUrl.length > 3_900_000) {
+        errs[`gallery-${i}`] = `Gallery image ${i + 1} is too large.`;
+      }
+    });
 
     setErrors(errs);
 
@@ -583,50 +596,10 @@ export function CaseStudyForm({
         </div>
       </div>
 
-      {/* ═══ 10. OUTCOMES ═══ */}
-      <div className={sectionCard}>
-        <div className="flex items-center justify-between">
-          <p className={sectionTitle}>9 · Outcome Metrics</p>
-          <button type="button"
-            onClick={() => results.length < 6 && setResults([...results, { value: "", label: "", verified: false }])}
-            className={cn(secondaryBtn, "h-9 px-3 text-[0.8125rem]")}>
-            + Add metric
-          </button>
-        </div>
-        <p className={errors.results ? errorText : "t-caption text-muted"}>
-          {errors.results ?? "Verified metrics render in production. Unverified show on staging only."}
-        </p>
-        <div className={cn("space-y-2 rounded-lg border p-3", errors.results && "border-error/40")}>
-          {results.length === 0 ? (
-            <p className="t-caption text-center text-muted/60 py-3">No metrics — e.g. "+42% / Conversion Improvement".</p>
-          ) : null}
-          {results.map((res, i) => (
-            <div key={i} className="grid grid-cols-[7rem_1fr_auto_auto] items-center gap-2">
-              <input id={`cs-metric-${i}-value`} className={input} value={res.value}
-                onChange={(e) => setResults(results.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))}
-                placeholder="+42%" aria-label={`Metric ${i + 1} value`} maxLength={24} />
-              <input id={`cs-metric-${i}-label`} className={input} value={res.label}
-                onChange={(e) => setResults(results.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
-                placeholder="Conversion Improvement" aria-label={`Metric ${i + 1} label`} maxLength={80} />
-              <label className="flex items-center gap-1.5 text-[0.8125rem] text-muted"
-                title="Verified metrics render in production">
-                <input type="checkbox" checked={res.verified}
-                  onChange={(e) => setResults(results.map((x, j) => (j === i ? { ...x, verified: e.target.checked } : x)))}
-                  className="h-4 w-4 accent-[var(--accent)]" aria-label={`Metric ${i + 1} verified`} />
-                Verified
-              </label>
-              <button type="button" aria-label={`Remove metric ${i + 1}`}
-                onClick={() => setResults(results.filter((_, j) => j !== i))}
-                className="px-2 text-muted hover:text-error">×</button>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* ═══ 11. PALETTE ═══ */}
       <div className={sectionCard}>
         <div className="flex items-center justify-between">
-          <p className={sectionTitle}>10 · Project Palette <span className="text-muted font-normal">(optional)</span></p>
+          <p className={sectionTitle}>9 · Project Palette <span className="text-muted font-normal">(optional)</span></p>
           <button type="button"
             onClick={() => palette.length < 8 && setPalette([...palette, { name: "", hex: "#14161c" }])}
             className={cn(secondaryBtn, "h-9 px-3 text-[0.8125rem]")}>
@@ -657,7 +630,7 @@ export function CaseStudyForm({
 
       {/* ═══ 12. TESTIMONIAL ═══ */}
       <div className={sectionCard}>
-        <p className={sectionTitle}>11 · Client Testimonial <span className="text-muted font-normal">(optional)</span></p>
+        <p className={sectionTitle}>10 · Client Testimonial <span className="text-muted font-normal">(optional)</span></p>
         <label className="flex cursor-pointer items-center gap-2 text-[0.875rem] font-medium text-foreground">
           <input type="checkbox" checked={hasTestimonial}
             onChange={(e) => setHasTestimonial(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />

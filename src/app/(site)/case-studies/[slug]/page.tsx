@@ -238,23 +238,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       ) : null}
 
       {/* ═══ 05 · RESULTS (paper) ═══ */}
-      {shownResults.length > 0 ? (
-        <Section index="Results" labelledBy="cs-results-heading" className="!py-14 sm:!py-18 lg:!py-22">
-          <div>
-              <Reveal delay={100}>
-                <dl className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-                  {shownResults.map((r, i) => (
-                    <div key={i} className="rounded-xl border border-border bg-background p-6 sm:p-8">
-                      <dd className="font-[family-name:var(--font-serif)] text-3xl font-semibold text-foreground/85 sm:text-4xl">{r.value}</dd>
-                      <dt className="t-label mt-3 text-muted">{r.label}</dt>
-                    </div>
-                  ))}
-                </dl>
-                {isDemo ? <p className="t-caption mt-4 text-muted/70">Design-preview figures — verified, client-approved results replace them at publication.</p> : null}
-              </Reveal>
-          </div>
-        </Section>
-      ) : null}
+      
 
       {/* ═══ 06 · GALLERY CAROUSEL (sand) ═══ */}
       {study.gallery && study.gallery.length > 0 ? (

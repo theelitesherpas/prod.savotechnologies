@@ -57,7 +57,14 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
   if (!form.success) redirect("/admin/case-studies?e=invalid");
 
   const record = caseStudySchema.safeParse(JSON.parse(form.data.payload));
-  if (!record.success) redirect(`/admin/case-studies?e=invalid`);
+  if (!record.success) {
+    logger.warn("case_studies.schema_rejected", {
+      issues: record.error.issues.slice(0, 5).map(i => `${i.path.join(".")}: ${i.message}`),
+    });
+    redirect(`/admin/case-studies?e=${encodeURIComponent(
+      `Validation failed: ${record.error.issues[0]?.path.join(".") ?? "unknown"} — ${record.error.issues[0]?.message ?? "check all fields"}`,
+    )}`);
+  }
 
   const data = record.data;
   const slug = form.data.slug || slugifyCaseStudy(data.title);
