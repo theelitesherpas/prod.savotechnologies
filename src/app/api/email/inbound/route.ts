@@ -114,6 +114,16 @@ export async function POST(req: Request) {
       return new Response(null, { status: 200 }); // 200 so the service doesn't retry
     }
 
+    // Only store actual REPLIES (emails with an In-Reply-To header).
+    // Direct emails to the mailbox are forwarded here too but have no
+    // In-Reply-To — they arrive in the mailbox but never enter the admin
+    // panel. Reply emails always carry this header (set by every modern
+    // email client when the user hits Reply).
+    if (!inReplyTo) {
+      logger.info("email-inbound: direct email (no reply header), skipping admin import", { from: fromEmail });
+      return new Response(null, { status: 200 }); // 200 so SendGrid doesn't retry
+    }
+
     // Determine dept (default to hello if recipient isn't one of ours)
     const recipient = OUR_MAILBOXES.has(toEmail) ? toEmail : "hello@savotechnologies.com";
     const dept = detectDept(recipient);
