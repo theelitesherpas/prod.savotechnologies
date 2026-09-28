@@ -210,7 +210,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     keywords: ["hiring", "job", "jobs", "career", "careers", "vacancy", "openings", "positions", "apply", "role"],
     paragraphs: [
       "We hire engineers and designers who are curious, ship weekly and check their ego in, office-first in Indore with hybrid options, INR salaries.",
-      "Applications get an engineer-read review and a personal reply within two business days. Four steps to a written offer, including a paid pairing session.",
+      "Applications get an engineer-read review and a personal reply within two business days. Four steps to a written offer: application review, technical conversation, meet the team, written offer.",
     ],
     links: [
       { label: "Open roles", href: "/careers" },

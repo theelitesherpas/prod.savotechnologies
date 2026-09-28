@@ -316,7 +316,7 @@ export function applicationAck(name: string, role: string): MailTemplate {
       closing: "Kind regards,",
       reason: "You are receiving this because you applied to Savo Technologies.",
     }),
-    text: `${fn(name).toUpperCase()}, YOUR APPLICATION IS IN\n\nYou applied for ${role}. Our hiring team reads every application and replies personally within two business days.\n\n1. Application review - within two business days\n2. Technical conversation\n3. Paid pairing session\n4. Written offer\n\nHow we hire: ${site("/careers")}\n\nSpeak soon,\nThe Savo team`,
+    text: `${fn(name).toUpperCase()}, YOUR APPLICATION IS IN\n\nYou applied for ${role}. Our hiring team reads every application and replies personally within two business days.\n\n1. Application review - within two business days\n2. Technical conversation\n3. Meet the team\n4. Written offer\n\nHow we hire: ${site("/careers")}\n\nSpeak soon,\nThe Savo team`,
   };
 }
 

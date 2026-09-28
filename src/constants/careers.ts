@@ -197,17 +197,17 @@ export const HIRING_STEPS = [
   {
     step: "02",
     title: "Technical conversation",
-    text: "Sixty minutes on real problems from our products, not trick puzzles or whiteboard trivia.",
+    text: "A conversation with our team about your experience, your work, and the role. Real questions, no trick puzzles.",
   },
   {
     step: "03",
-    title: "Paid pairing session",
-    text: "Two hours on a small real task with the team you would join, compensated, because your time is work.",
+    title: "Meet the team",
+    text: "A wider conversation with the people you would work with - how you collaborate and what you would own.",
   },
   {
     step: "04",
     title: "Written offer",
-    text: "Within a week of the final round: role, band, start date and reviewer, in writing.",
+    text: "Role, compensation, and start date - the full offer in writing, with time for your questions.",
   },
 ] as const;
 

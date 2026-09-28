@@ -269,7 +269,7 @@ export function CodeResultLoop() {
                 </ul>
 
                 <ol className="mt-4 hidden space-y-2 border-t border-border pt-3.5 sm:block result-in" style={{ animationDelay: "320ms" }}>
-                  {["Technical conversation", "Paid pairing session", "Written offer"].map((step, i) => (
+                  {["Technical conversation", "Meet the team", "Written offer"].map((step, i) => (
                     <li key={step} className="flex items-center gap-3">
                       <span className={`h-1.5 w-1.5 shrink-0 ${i === 0 ? "bg-accent" : "bg-foreground/25"}`} />
                       <span className="t-sm font-medium text-foreground/85">{step}</span>

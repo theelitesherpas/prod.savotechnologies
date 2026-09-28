@@ -45,12 +45,12 @@ const NEXT_STEPS: SuccessStep[] = [
   {
     step: "02",
     title: "Technical conversation",
-    text: "Sixty minutes on real problems from our products, not puzzles.",
+    text: "A conversation with our team about your experience and the role.",
   },
   {
     step: "03",
-    title: "Paid pairing session",
-    text: "Two hours on a small real task with the team, compensated.",
+    title: "Meet the team",
+    text: "A wider conversation with the people you would work with.",
   },
 ];
 
