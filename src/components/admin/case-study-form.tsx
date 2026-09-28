@@ -73,6 +73,11 @@ export function CaseStudyForm({
   const [tRole, setTRole] = useState(r?.testimonial?.role ?? "");
   const [featured, setFeatured] = useState(r?.featured ?? false);
   const [liveUrl, setLiveUrl] = useState(r?.liveUrl ?? "");
+  const [clientLocation, setClientLocation] = useState(r?.clientLocation ?? "");
+  const [businessModel, setBusinessModel] = useState(r?.businessModel ?? "");
+  const [platforms, setPlatforms] = useState(r?.platforms ?? "");
+  const [keyFeatures, setKeyFeatures] = useState(r?.keyFeatures ?? []);
+  const [integrations, setIntegrations] = useState<string[]>(r?.integrations ?? []);
   const [gallery, setGallery] = useState<AttachedImage[]>(r?.gallery ?? []);
   const legacyHero = r?.heroImage ?? null;
   const [images, setImages] = useState<Record<SlotKey, AttachedImage | null>>({
@@ -134,6 +139,11 @@ export function CaseStudyForm({
     },
     featured,
     liveUrl: liveUrl.trim() || null,
+    clientLocation,
+    businessModel,
+    platforms,
+    keyFeatures: keyFeatures.filter(f => f.title.trim() !== ""),
+    integrations: integrations.filter(Boolean),
     gallery: gallery.map(g => ({ dataUrl: g.dataUrl, width: g.width, height: g.height, alt: g.alt })),
     status: contentStatus === "published" ? "verified" : "demo",
   });
@@ -296,10 +306,22 @@ export function CaseStudyForm({
             <label className={label} htmlFor="cs-team">Team size</label>
             <input id="cs-team" className={input} value={teamSize} onChange={(e) => setTeamSize(e.target.value)} placeholder="5 specialists" maxLength={60} />
           </div>
+          <div>
+            <label className={label} htmlFor="cs-location">Client location</label>
+            <input id="cs-location" className={input} value={clientLocation} onChange={(e) => setClientLocation(e.target.value)} placeholder="Dubai, UAE" maxLength={120} />
+          </div>
+          <div>
+            <label className={label} htmlFor="cs-bizmodel">Business model</label>
+            <input id="cs-bizmodel" className={input} value={businessModel} onChange={(e) => setBusinessModel(e.target.value)} placeholder="B2C / B2B / SaaS / Marketplace" maxLength={80} />
+          </div>
+          <div>
+            <label className={label} htmlFor="cs-platforms">Platforms</label>
+            <input id="cs-platforms" className={input} value={platforms} onChange={(e) => setPlatforms(e.target.value)} placeholder="Web + iOS + Android" maxLength={160} />
+          </div>
           <div className="sm:col-span-2">
             <label className={label} htmlFor="cs-live">Live project URL</label>
             <input id="cs-live" className={input} type="url" value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} placeholder="https://example.com" maxLength={500} />
-            <p className="t-caption mt-1 text-muted">Shown as a "View Live" button on the public detail page. Leave empty if the project isn't publicly accessible.</p>
+            <p className="t-caption mt-1 text-muted">Shown as a "View Live" button on the detail page. Leave empty if the project isn't publicly accessible.</p>
           </div>
         </div>
       </div>
@@ -349,6 +371,59 @@ export function CaseStudyForm({
           })}
         </div>
         <p className="t-caption text-muted">Chips for “{CASE_DISCIPLINES.find((d) => d.id === discipline)?.title}” first; other disciplines’ capabilities are selectable too.</p>
+      </div>
+
+      {/* Key features */}
+      <div className="adm-card space-y-3 p-5">
+        <div className="flex items-center justify-between">
+          <p className="adm-label">Key features delivered</p>
+          <button
+            type="button"
+            onClick={() => keyFeatures.length < 8 && setKeyFeatures([...keyFeatures, { title: "", text: "" }])}
+            className={cn(secondaryBtn, "h-9 px-3 text-[0.8125rem]")}
+          >
+            + Add feature
+          </button>
+        </div>
+        {keyFeatures.length === 0 ? <p className="t-caption text-muted">Notable features built — e.g. "Real-time order tracking" with a short description.</p> : null}
+        <div className="space-y-2">
+          {keyFeatures.map((f, i) => (
+            <div key={i} className="grid grid-cols-[1fr_2fr_auto] items-start gap-2">
+              <input
+                className={input}
+                value={f.title}
+                onChange={(e) => setKeyFeatures(keyFeatures.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))}
+                placeholder="Feature name"
+                maxLength={80}
+                aria-label={`Feature ${i + 1} name`}
+              />
+              <input
+                className={input}
+                value={f.text}
+                onChange={(e) => setKeyFeatures(keyFeatures.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))}
+                placeholder="What it does"
+                maxLength={300}
+                aria-label={`Feature ${i + 1} description`}
+              />
+              <button type="button" aria-label={`Remove feature ${i + 1}`} onClick={() => setKeyFeatures(keyFeatures.filter((_, j) => j !== i))} className="px-2 py-2 text-muted hover:text-error">×</button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Integrations */}
+      <div className="adm-card space-y-3 p-5">
+        <p className="adm-label">Integrations</p>
+        <div className="flex flex-wrap gap-2">
+          {integrations.map((int, i) => (
+            <span key={i} className="t-caption flex items-center gap-2 rounded-[2px] border border-border bg-surface px-3 py-1.5">
+              {int}
+              <button type="button" aria-label={`Remove ${int}`} onClick={() => setIntegrations(integrations.filter((_, j) => j !== i))} className="text-muted hover:text-error">×</button>
+            </span>
+          ))}
+        </div>
+        <IntegrationInput onAdd={(v) => !integrations.includes(v) && integrations.length < 12 && setIntegrations([...integrations, v])} />
+        <p className="t-caption text-muted">Third-party services — Stripe, SendGrid, Twilio, Firebase, etc.</p>
       </div>
 
       {/* Tech stack */}
@@ -562,6 +637,30 @@ function PreviewFrame({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function IntegrationInput({ onAdd }: { onAdd: (v: string) => void }) {
+  const [draft, setDraft] = useState("");
+  return (
+    <div className="flex gap-2">
+      <input
+        className="adm-input flex-1"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            const v = draft.trim();
+            if (v) { onAdd(v); setDraft(""); }
+          }
+        }}
+        placeholder="Add integration and press Enter"
+        aria-label="Add integration"
+        maxLength={80}
+      />
+      <button type="button" onClick={() => { const v = draft.trim(); if (v) { onAdd(v); setDraft(""); } }} className={secondaryBtn}>Add</button>
     </div>
   );
 }

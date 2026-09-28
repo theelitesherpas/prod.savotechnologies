@@ -92,6 +92,20 @@ export const caseStudySchema = z.object({
   featured: z.boolean().optional().default(false),
   /** Live project URL - shown as "View Live" on the detail page. */
   liveUrl: z.string().url().max(500).nullish(),
+  /** Client location - e.g. "Dubai, UAE" or "Indore, India". */
+  clientLocation: z.string().max(120).optional().default(""),
+  /** Business model - B2B / B2C / B2B2C / Marketplace / SaaS. */
+  businessModel: z.string().max(80).optional().default(""),
+  /** Target platforms - e.g. "Web + iOS + Android". */
+  platforms: z.string().max(160).optional().default(""),
+  /** Key features delivered — title + short description each. */
+  keyFeatures: z
+    .array(z.object({ title: z.string().min(2).max(80), text: z.string().max(300) }))
+    .max(8)
+    .optional()
+    .default([]),
+  /** Third-party integrations — e.g. "Stripe, SendGrid, Twilio". */
+  integrations: z.array(z.string().min(1).max(80)).max(12).optional().default([]),
   /** Gallery images - additional project visuals beyond the three slots
    *  (screenshots, detail views, process shots). Auto-compressed. */
   gallery: z
