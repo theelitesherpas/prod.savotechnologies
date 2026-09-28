@@ -90,6 +90,22 @@ export const caseStudySchema = z.object({
    * by resolveCaseImages below. */
   heroImage: attachedImageSchema.nullish(),
   featured: z.boolean().optional().default(false),
+  /** Live project URL - shown as "View Live" on the detail page. */
+  liveUrl: z.string().url().max(500).nullish(),
+  /** Gallery images - additional project visuals beyond the three slots
+   *  (screenshots, detail views, process shots). Auto-compressed. */
+  gallery: z
+    .array(
+      z.object({
+        dataUrl: z.string().startsWith("data:image/").max(4_000_000),
+        width: z.number().int().positive(),
+        height: z.number().int().positive(),
+        alt: z.string().max(200).default(""),
+      }),
+    )
+    .max(8)
+    .optional()
+    .default([]),
   /** Constants-side content status - records marked demo never render in production. */
   status: z.enum(["demo", "verified"]).optional().default("demo"),
 });

@@ -99,6 +99,19 @@ export default async function CaseStudyPage({
                 <span aria-hidden="true" className="text-accent">.</span>
               </h1>
               {study.industry ? <p className="t-label mt-4 text-accent-strong">{study.industry}</p> : null}
+              {study.liveUrl ? (
+                <a
+                  href={study.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/live mt-6 inline-flex h-11 items-center gap-2.5 rounded-[2px] bg-foreground px-6 text-[0.9375rem] font-semibold text-background transition-colors duration-300 hover:bg-accent hover:text-on-accent"
+                >
+                  View Live
+                  <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3 transition-transform duration-300 group-hover/live:translate-x-[3px] group-hover/live:-translate-y-[3px]" fill="none" stroke="currentColor" strokeWidth="1.6">
+                    <path d="M6 2h6v6M12 2 4 10M4 4H2v8h8v-2" />
+                  </svg>
+                </a>
+              ) : null}
             </div>
             <div className="lg:col-span-5">
               {study.summary ? <p className="t-body-lg text-muted">{study.summary}</p> : null}
@@ -196,6 +209,37 @@ export default async function CaseStudyPage({
                 </Reveal>
               ) : null}
             </div>
+          </div>
+        </Section>
+      ) : null}
+
+      {/* ═══════════ GALLERY ═══════════ */}
+      {study.gallery && study.gallery.length > 0 ? (
+        <Section index="Gallery" labelledBy="cs-gallery-heading" className="!py-14 sm:!py-16 lg:!py-20">
+          <SectionHeader
+            id="cs-gallery-heading"
+            heading="Inside the project."
+            lead={<>Screens, details and moments from the build.</>}
+          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {study.gallery.map((img, i) => (
+              <Reveal key={i} delay={i * 60}>
+                <figure className="group relative overflow-hidden border border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={img.dataUrl}
+                    alt={img.alt || `${displayName} — project image ${i + 1}`}
+                    className="aspect-[4/3] w-full object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]"
+                    loading="lazy"
+                  />
+                  {img.alt ? (
+                    <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgb(16_19_25/0.7)] to-transparent px-4 pb-3 pt-8">
+                      <p className="t-caption text-white/85">{img.alt}</p>
+                    </figcaption>
+                  ) : null}
+                </figure>
+              </Reveal>
+            ))}
           </div>
         </Section>
       ) : null}

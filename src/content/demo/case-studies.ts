@@ -63,6 +63,8 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
     featured: true,
     status: "demo",
     variant: "a",
+    gallery: [],
+    liveUrl: null,
   },
   {
     title: "NovaFlow",
@@ -101,6 +103,8 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
     featured: true,
     status: "demo",
     variant: "b",
+    gallery: [],
+    liveUrl: null,
   },
   {
     title: "Aster Health",
@@ -139,6 +143,8 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
     featured: true,
     status: "demo",
     variant: "c",
+    gallery: [],
+    liveUrl: null,
   },
   {
     title: "Northstar Logistics",
@@ -177,6 +183,8 @@ export const DEMO_CASE_STUDIES: DemoCaseStudy[] = [
     featured: true,
     status: "demo",
     variant: "a",
+    gallery: [],
+    liveUrl: null,
   },
 ];
 

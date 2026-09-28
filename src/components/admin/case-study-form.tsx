@@ -19,6 +19,7 @@ import { CASE_DISCIPLINES } from "@/constants/case-studies";
 import { SubmitButton } from "./form";
 import { ProjectMockup } from "@/components/shared/project-mockup";
 import { ImageCropField, type AttachedImage } from "./image-crop-field";
+import { GalleryUploader } from "./gallery-uploader";
 import { CASE_IMAGE_SLOTS, resolveCaseImages, type SlotKey } from "@/lib/case-study-schema";
 
 const secondaryBtn =
@@ -71,6 +72,8 @@ export function CaseStudyForm({
   const [tName, setTName] = useState(r?.testimonial?.name ?? "");
   const [tRole, setTRole] = useState(r?.testimonial?.role ?? "");
   const [featured, setFeatured] = useState(r?.featured ?? false);
+  const [liveUrl, setLiveUrl] = useState(r?.liveUrl ?? "");
+  const [gallery, setGallery] = useState<AttachedImage[]>(r?.gallery ?? []);
   const legacyHero = r?.heroImage ?? null;
   const [images, setImages] = useState<Record<SlotKey, AttachedImage | null>>({
     showcase: r?.images?.showcase ?? legacyHero ?? null,
@@ -130,6 +133,8 @@ export function CaseStudyForm({
       card: images.card,
     },
     featured,
+    liveUrl: liveUrl.trim() || null,
+    gallery: gallery.map(g => ({ dataUrl: g.dataUrl, width: g.width, height: g.height, alt: g.alt })),
     status: contentStatus === "published" ? "verified" : "demo",
   });
 
@@ -242,6 +247,15 @@ export function CaseStudyForm({
         ))}
       </div>
 
+      {/* Gallery */}
+      <div className="adm-card space-y-5 p-5">
+        <div>
+          <p className="adm-label">Project gallery</p>
+          <p className="t-caption text-muted">Additional screenshots, detail views, process shots. Up to 8 images, auto-compressed to fit. Displayed as a scrollable gallery on the detail page.</p>
+        </div>
+        <GalleryUploader images={gallery} onChange={setGallery} />
+      </div>
+
       {/* Identity */}
       <div className="adm-card space-y-5 p-5">
         <p className="adm-label">Identity</p>
@@ -281,6 +295,11 @@ export function CaseStudyForm({
           <div>
             <label className={label} htmlFor="cs-team">Team size</label>
             <input id="cs-team" className={input} value={teamSize} onChange={(e) => setTeamSize(e.target.value)} placeholder="5 specialists" maxLength={60} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={label} htmlFor="cs-live">Live project URL</label>
+            <input id="cs-live" className={input} type="url" value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} placeholder="https://example.com" maxLength={500} />
+            <p className="t-caption mt-1 text-muted">Shown as a "View Live" button on the public detail page. Leave empty if the project isn't publicly accessible.</p>
           </div>
         </div>
       </div>
