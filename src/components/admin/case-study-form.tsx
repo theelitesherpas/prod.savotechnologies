@@ -427,6 +427,12 @@ export function CaseStudyForm({
             <input id="cs-live" className={cn(input, errors.liveUrl && "border-error/50")} type="url" value={liveUrl}
               onChange={(e) => setLiveUrl(e.target.value)} placeholder="https://example.com" maxLength={500} />
           </Field>
+          <div className="sm:col-span-2">
+            <label className={label} htmlFor="cs-author">Case study author</label>
+            <input id="cs-author" className={input} value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)} placeholder="Arun Nigam" maxLength={120} />
+            <p className="t-caption mt-1 text-muted">Shown as "Case study by [name]" on the detail page. Leave empty to hide.</p>
+          </div>
         </div>
       </div>
 
