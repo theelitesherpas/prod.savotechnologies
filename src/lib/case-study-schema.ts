@@ -162,8 +162,8 @@ export function resolveCaseImages(study: {
 }): { showcase: AttachedImageRecord | null; cardWide: AttachedImageRecord | null; card: AttachedImageRecord | null } {
   const slots = study.images ?? {};
   const galleryFirst = (study as { gallery?: { dataUrl: string; width: number; height: number; alt: string }[] }).gallery?.[0] ?? null;
-  const showcase = slots.showcase ?? study.heroImage ?? slots.cardWide ?? galleryFirst ?? null;
-  const cardWide = slots.cardWide ?? slots.showcase ?? study.heroImage ?? galleryFirst ?? null;
+  const showcase = slots.showcase ?? study.heroImage ?? slots.cardWide ?? slots.card ?? galleryFirst ?? null;
+  const cardWide = slots.cardWide ?? slots.showcase ?? study.heroImage ?? slots.card ?? galleryFirst ?? null;
   const card = cardWide ?? slots.card ?? galleryFirst ?? null;
   return { showcase, cardWide, card };
 }
