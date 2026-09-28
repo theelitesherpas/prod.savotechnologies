@@ -97,8 +97,46 @@ export async function POST(req: Request) {
     const fromEmail = (emailMatch ? emailMatch[1] : rawFrom).trim().toLowerCase();
     const toEmail = (fields.to ?? fields.recipient ?? "").trim().toLowerCase();
     const subject = (fields.subject ?? "(no subject)").slice(0, 500);
-    const bodyText = (fields.text ?? fields["body-plain"] ?? "").slice(0, 50000);
-    const bodyHtml = (fields.html ?? fields["body-html"] ?? "").slice(0, 50000) || null;
+    let bodyText = (fields.text ?? fields["body-plain"] ?? "").slice(0, 50000);
+    let bodyHtml = (fields.html ?? fields["body-html"] ?? "").slice(0, 50000) || null;
+
+    // When "POST the raw, full MIME message" is enabled in SendGrid,
+    // the text/html fields may be empty and content only exists in the
+    // raw MIME (fields.email). Extract the body from it.
+    if (!bodyText && !bodyHtml && fields.email) {
+      const raw = fields.email;
+      const ptMatch = raw.match(
+        /Content-Type:\s*text\/plain[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--|\r?\n\.|$)/i,
+      );
+      if (ptMatch) bodyText = ptMatch[1].trim();
+      if (!bodyText) {
+        const htmlMatch = raw.match(
+          /Content-Type:\s*text\/html[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--|\r?\n\.|$)/i,
+        );
+        if (htmlMatch) {
+          bodyHtml = htmlMatch[1].trim();
+          bodyText = bodyHtml
+            .replace(/<style[\s\S]*?<\/style>/gi, "")
+            .replace(/<script[\s\S]*?<\/script>/gi, "")
+            .replace(/<br\s*\/?>/gi, "\n")
+            .replace(/<\/p>/gi, "\n\n")
+            .replace(/<[^>]+>/g, "")
+            .replace(/&nbsp;/g, " ")
+            .replace(/&amp;/g, "&")
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .trim();
+        }
+      }
+      if (!bodyText && !bodyHtml && raw.length < 50000) {
+        bodyText = raw
+          .replace(/^[\s\S]*?\r?\n\r?\n/, "")
+          .replace(/--[\w]+\r?\n/g, "")
+          .replace(/Content-[Tt]ype:[^\r\n]+\r?\n/g, "")
+          .replace(/Content-[Tt]ransfer-[Ee]ncoding:[^\r\n]+\r?\n/g, "")
+          .trim();
+      }
+    }
     const messageId = (fields["Message-Id"] ?? fields.messageId ?? "").slice(0, 500) || null;
     const inReplyTo = (fields["In-Reply-To"] ?? fields.inReplyTo ?? "").slice(0, 500) || null;
     const spamScore = fields.spam_score ? parseFloat(fields.spam_score) : null;

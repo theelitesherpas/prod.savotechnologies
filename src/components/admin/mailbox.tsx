@@ -12,6 +12,7 @@
  */
 
 import { useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ConfirmButton } from "@/components/admin/form";
@@ -202,11 +203,31 @@ export function Mailbox({
 
       {(notice || error) && (
         <div
+          role="status"
           className={cn(
-            "mb-4 rounded-lg border px-4 py-2.5 text-[0.875rem] font-medium",
-            error ? "border-error/30 bg-error/[0.06] text-error" : "border-success/30 bg-success/[0.06] text-success",
+            "mb-4 flex items-center gap-3 rounded-lg border px-5 py-3.5 text-[0.9375rem] font-semibold shadow-sm",
+            error
+              ? "border-error/40 bg-error/[0.08] text-error"
+              : "border-success/40 bg-success/[0.08] text-success",
           )}
         >
+          <span
+            aria-hidden="true"
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+              error ? "bg-error/15" : "bg-success/15",
+            )}
+          >
+            {error ? (
+              <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M10 5v6M10 14.5v.01" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m4 10.5 4 4 8-9" />
+              </svg>
+            )}
+          </span>
           {error ?? notice}
         </div>
       )}
@@ -635,19 +656,41 @@ function ComposePanel({
       </div>
 
       <div className="flex items-center gap-3 pt-1">
-        <button
-          type="submit"
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-5 text-[0.875rem] font-semibold text-on-accent shadow-sm transition-colors hover:bg-accent-hover"
-        >
-          Send email
-          <svg viewBox="0 0 14 14" aria-hidden="true" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.7">
-            <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
-          </svg>
-        </button>
+        <SendButton />
         <Link href="/admin/email-templates" className="t-caption font-semibold text-muted transition-colors hover:text-foreground">
           Manage templates →
         </Link>
       </div>
     </FormGuard>
+  );
+}
+
+/** Submit button with sending state — shows spinner + "Sending…" while the
+ *  server action runs, then the page redirects with the success notice. */
+function SendButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className={cn(
+        "inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-5 text-[0.875rem] font-semibold text-on-accent shadow-sm transition-colors hover:bg-accent-hover disabled:pointer-events-none disabled:opacity-70",
+        pending && "bg-accent/80",
+      )}
+    >
+      {pending ? (
+        <>
+          <span aria-hidden="true" className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          Sending…
+        </>
+      ) : (
+        <>
+          Send email
+          <svg viewBox="0 0 14 14" aria-hidden="true" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.7">
+            <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
+          </svg>
+        </>
+      )}
+    </button>
   );
 }
