@@ -299,6 +299,16 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-10">
             <div className="lg:col-span-4">
               <SectionHeader id="cs-palette-heading" heading="Project palette." lead={<>The color system behind the interface.</>} />
+              {study.authorName ? (
+                <p className="t-caption mt-6 flex items-center gap-2 text-muted" aria-label="Case study author">
+                  <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                    <path d="M2.5 14a5.5 5.5 0 0 1 11 0" />
+                  </svg>
+                  <span>Case study by</span>
+                  <span className="font-semibold text-foreground/80">{study.authorName}</span>
+                </p>
+              ) : null}
             </div>
             <div className="lg:col-span-8">
               <Reveal>
@@ -317,22 +327,6 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
             </div>
           </div>
         </Section>
-      ) : null}
-
-      {/* ═══ AUTHOR CREDIT ═══ */}
-      {study.authorName ? (
-        <div className="border-t border-border py-6" aria-label="Case study author">
-          <div className="shell">
-            <p className="t-sm flex flex-wrap items-center justify-center gap-3 text-muted">
-              <svg viewBox="0 0 16 16" className="h-4 w-4 text-accent" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                <path d="M2.5 14a5.5 5.5 0 0 1 11 0" />
-              </svg>
-              <span>Case study by</span>
-              <span className="font-semibold text-foreground">{study.authorName}</span>
-            </p>
-          </div>
-        </div>
       ) : null}
 
       {/* ═══ 09 · MORE WORK (sand) ═══ */}
