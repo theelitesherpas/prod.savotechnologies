@@ -224,6 +224,7 @@ export function CaseStudyForm({
     showcase: r?.images?.showcase ?? legacyHero ?? null,
     cardWide: r?.images?.cardWide ?? null,
     card: r?.images?.card ?? null,
+    dossierCard: r?.images?.dossierCard ?? null,
   });
   const [gallery, setGallery] = useState<AttachedImage[]>(r?.gallery ?? []);
 
@@ -268,7 +269,7 @@ export function CaseStudyForm({
     palette: filledPalette.map((p) => ({ name: p.name.trim(), hex: p.hex })),
     year, duration, teamSize,
     testimonial: hasTestimonial && tQuote && tName && tRole ? { quote: tQuote, name: tName, role: tRole } : null,
-    images: { showcase: images.showcase, cardWide: images.cardWide, card: images.card },
+    images: { showcase: images.showcase, cardWide: images.cardWide, card: images.card, dossierCard: images.dossierCard },
     gallery: gallery.map((g) => ({ dataUrl: g.dataUrl, width: g.width, height: g.height, alt: g.alt })),
     featured,
     liveUrl: liveUrl.trim() || null,

@@ -84,6 +84,7 @@ export const caseStudySchema = z.object({
       showcase: attachedImageSchema.nullish(),
       cardWide: attachedImageSchema.nullish(),
       card: attachedImageSchema.nullish(),
+      dossierCard: attachedImageSchema.nullish(),
     })
     .optional(),
   /** Legacy single image (pre multi-slot) - treated as the showcase slot
@@ -156,6 +157,13 @@ export const CASE_IMAGE_SLOTS = {
     where: "Homepage cards 2-3 + index half-size cards",
     hint: "16:10",
   },
+  dossierCard: {
+    width: 1280,
+    height: 800,
+    label: "Dossier card",
+    where: "Detail page - 'More from the dossier' related cards",
+    hint: "16:10",
+  },
 } as const;
 
 export type SlotKey = keyof typeof CASE_IMAGE_SLOTS;
@@ -166,15 +174,16 @@ export type SlotKey = keyof typeof CASE_IMAGE_SLOTS;
  * server and inside the admin form's live preview.
  */
 export function resolveCaseImages(study: {
-  images?: { showcase?: AttachedImageRecord | null; cardWide?: AttachedImageRecord | null; card?: AttachedImageRecord | null } | null;
+  images?: { showcase?: AttachedImageRecord | null; cardWide?: AttachedImageRecord | null; card?: AttachedImageRecord | null; dossierCard?: AttachedImageRecord | null } | null;
   heroImage?: AttachedImageRecord | null;
-}): { showcase: AttachedImageRecord | null; cardWide: AttachedImageRecord | null; card: AttachedImageRecord | null } {
+}): { showcase: AttachedImageRecord | null; cardWide: AttachedImageRecord | null; card: AttachedImageRecord | null; dossierCard: AttachedImageRecord | null } {
   const slots = study.images ?? {};
   const galleryFirst = (study as { gallery?: { dataUrl: string; width: number; height: number; alt: string }[] }).gallery?.[0] ?? null;
   const showcase = slots.showcase ?? study.heroImage ?? slots.cardWide ?? slots.card ?? galleryFirst ?? null;
   const cardWide = slots.cardWide ?? slots.showcase ?? study.heroImage ?? slots.card ?? galleryFirst ?? null;
   const card = slots.card ?? cardWide ?? galleryFirst ?? null;
-  return { showcase, cardWide, card };
+  const dossierCard = slots.dossierCard ?? card ?? null;
+  return { showcase, cardWide, card, dossierCard };
 }
 
 export const slugifyCaseStudy = (title: string) =>
