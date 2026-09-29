@@ -117,12 +117,12 @@ function IconProduct() {
 
 const SERVICE_ICON_MAP: Record<ServiceDetail["slug"], () => React.JSX.Element> = {
   "web-development": IconWeb,
-  "mobile-apps": IconMobile,
-  "ui-ux": IconDesign,
+  "mobile-app-development": IconMobile,
+  "ui-ux-design": IconDesign,
   "cloud-devops": IconCloud,
   "data-analytics": IconData,
   "ai-agent-development": IconAI,
-  "custom-software": IconSoftware,
+  "custom-software-development": IconSoftware,
   "digital-marketing": IconGrowth,
   "qa-testing": IconQA,
   "product-engineering": IconProduct,
