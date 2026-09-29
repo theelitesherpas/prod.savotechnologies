@@ -67,6 +67,28 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
   }
 
   const data = record.data;
+
+  /* Write-time completeness gate — every public surface must have its
+     data. (The zod schema stays lenient so OLD records still parse on
+     read; new/edited records must be complete. Exceptions per owner:
+     author credit and live URL stay optional.) */
+  const missing: string[] = [];
+  if (!data.clientName?.trim()) missing.push("Client name");
+  if (!data.displayClientName?.trim()) missing.push("Display name");
+  if (!data.clientLocation?.trim()) missing.push("Client location");
+  if (!data.businessModel?.trim()) missing.push("Business model");
+  if (!data.platforms?.trim()) missing.push("Platforms");
+  if (!data.images?.showcase) missing.push("Showcase image");
+  if (!data.images?.cardWide) missing.push("Featured card image");
+  if (!data.images?.card) missing.push("Standard card image");
+  if (!data.images?.dossierCard) missing.push("Dossier card image");
+  if (!data.gallery || data.gallery.length === 0) missing.push("Gallery (1 image min)");
+  if (!data.integrations || data.integrations.length === 0) missing.push("Integrations (1 min)");
+  if (!data.palette || data.palette.length === 0) missing.push("Palette (1 color min)");
+  if (!data.testimonial) missing.push("Client testimonial");
+  if (missing.length > 0) {
+    redirect(`/admin/case-studies?e=${encodeURIComponent(`Missing required: ${missing.join(", ")}`)}`);
+  }
   const slug = form.data.slug || slugifyCaseStudy(data.title);
   if (!/^[a-z0-9-]{2,80}$/.test(slug)) redirect("/admin/case-studies?e=invalid");
 

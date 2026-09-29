@@ -282,7 +282,12 @@ export function CaseStudyForm({
     const errs: Record<string, string> = {};
 
     if (title.trim().length < 2) errs.title = "Project title is required (min 2 characters).";
+    if (clientName.trim().length < 2) errs.client = "Client name is required.";
+    if (displayClientName.trim().length < 2) errs.display = "Display name is required — shown publicly on cards and the detail page.";
     if (industry.trim().length < 2) errs.industry = "Industry / engagement line is required.";
+    if (clientLocation.trim().length < 2) errs.location = "Client location is required (e.g. Indore, India).";
+    if (!businessModel) errs.bizmodel = "Select a business model.";
+    if (!platforms) errs.platforms = "Select the target platforms.";
     if (year.trim().length < 2) errs.year = "Year is required.";
     if (duration.trim().length < 1) errs.duration = "Duration is required.";
     if (teamSize.trim().length < 1) errs.teamSize = "Team size is required.";
@@ -291,7 +296,18 @@ export function CaseStudyForm({
     if (solution.trim().length < 20) errs.solution = "Solution is required (min 20 characters).";
     if (services.length === 0) errs.services = "Select at least 1 service capability.";
     if (technologies.length === 0) errs.technologies = "Select at least 1 technology.";
+    if (integrations.length === 0) errs.integrations = "Add at least 1 integration — payments, email, maps… or a custom one.";
     if (filledFeatures.length === 0) errs.keyFeatures = "Add at least 1 key feature.";
+    // Images: every rendering surface needs its slot filled
+    (Object.keys(CASE_IMAGE_SLOTS) as SlotKey[]).forEach((slot) => {
+      if (!images[slot])
+        errs[`img-${slot}`] = `${CASE_IMAGE_SLOTS[slot].label} image is required — ${CASE_IMAGE_SLOTS[slot].width} × ${CASE_IMAGE_SLOTS[slot].height}px.`;
+    });
+    if (gallery.length === 0) errs.gallery = "Add at least 1 gallery image (recommended 1600 × 1200, up to 8).";
+    if (palette.length === 0) errs.palette = "Add at least 1 palette color.";
+    else if (palette.some((p) => !p.name.trim() || !/^#[0-9a-fA-F]{6}$/.test(p.hex)))
+      errs.palette = "Every palette color needs a name and a valid #RRGGBB hex.";
+    if (!hasTestimonial) errs.testimonial = "Include the client testimonial — toggle it on and fill all three fields.";
     // Results section removed — metrics not required
     if (liveUrl.trim() && !/^https?:\/\/.+\..+/.test(liveUrl.trim())) errs.liveUrl = "Enter a valid URL (https://example.com) or leave empty.";
     if (hasTestimonial) {
@@ -384,30 +400,30 @@ export function CaseStudyForm({
               {CASE_DISCIPLINES.map((d) => (<option key={d.id} value={d.id}>{d.title}</option>))}
             </select>
           </Field>
-          <Field id="cs-client" label="Client name (internal)" hint="Not shown publicly — for your reference">
-            <input id="cs-client" className={input} value={clientName} onChange={(e) => setClientName(e.target.value)}
-              placeholder="Acme Trading Pvt Ltd" maxLength={120} />
+          <Field id="cs-client" label="Client name (internal)" required error={errors.client} hint="Not shown publicly — for your reference">
+            <input id="cs-client" className={cn(input, errors.client && "border-error/50")} value={clientName} onChange={(e) => setClientName(e.target.value)}
+              placeholder="Acme Trading Pvt Ltd" required maxLength={120} />
           </Field>
-          <Field id="cs-display" label="Display name (public)" hint="Shown on the page — leave empty to use the title">
-            <input id="cs-display" className={input} value={displayClientName} onChange={(e) => setDisplayClientName(e.target.value)}
-              placeholder="Acme (or leave empty)" maxLength={120} />
+          <Field id="cs-display" label="Display name (public)" required error={errors.display} hint="Shown publicly on cards and the detail page">
+            <input id="cs-display" className={cn(input, errors.display && "border-error/50")} value={displayClientName} onChange={(e) => setDisplayClientName(e.target.value)}
+              placeholder="Acme" required maxLength={120} />
           </Field>
           <Field id="cs-industry" label="Industry / engagement line" required error={errors.industry}>
             <input id="cs-industry" className={cn(input, errors.industry && "border-error/50")} value={industry}
               onChange={(e) => setIndustry(e.target.value)} placeholder="Ecommerce · Web Platform · Product Engineering" required maxLength={160} />
           </Field>
-          <Field id="cs-location" label="Client location" hint="e.g. Indore, India or Dubai, UAE">
-            <input id="cs-location" className={input} value={clientLocation} onChange={(e) => setClientLocation(e.target.value)}
-              placeholder="Indore, India" maxLength={120} />
+          <Field id="cs-location" label="Client location" required error={errors.location} hint="e.g. Indore, India or Dubai, UAE">
+            <input id="cs-location" className={cn(input, errors.location && "border-error/50")} value={clientLocation} onChange={(e) => setClientLocation(e.target.value)}
+              placeholder="Indore, India" required maxLength={120} />
           </Field>
-          <Field id="cs-bizmodel" label="Business model">
-            <select id="cs-bizmodel" className="adm-select w-full" value={businessModel} onChange={(e) => setBusinessModel(e.target.value)}>
+          <Field id="cs-bizmodel" label="Business model" required error={errors.bizmodel}>
+            <select id="cs-bizmodel" className={cn("adm-select w-full", errors.bizmodel && "border-error/50")} value={businessModel} onChange={(e) => setBusinessModel(e.target.value)} required>
               <option value="">— Select —</option>
               {BUSINESS_MODELS.map((m) => (<option key={m} value={m}>{m}</option>))}
             </select>
           </Field>
-          <Field id="cs-platforms" label="Platforms">
-            <select id="cs-platforms" className="adm-select w-full" value={platforms} onChange={(e) => setPlatforms(e.target.value)}>
+          <Field id="cs-platforms" label="Platforms" required error={errors.platforms}>
+            <select id="cs-platforms" className={cn("adm-select w-full", errors.platforms && "border-error/50")} value={platforms} onChange={(e) => setPlatforms(e.target.value)} required>
               <option value="">— Select —</option>
               {PLATFORM_OPTIONS.map((p) => (<option key={p} value={p}>{p}</option>))}
             </select>
@@ -446,7 +462,7 @@ export function CaseStudyForm({
         </p>
         <div className="space-y-6">
           {(Object.keys(CASE_IMAGE_SLOTS) as SlotKey[]).map((slot) => (
-            <div key={slot}>
+            <div key={slot} id={`cs-img-${slot}`}>
               <div className="mb-2 flex items-baseline justify-between gap-3">
                 <p className="adm-label">
                   {CASE_IMAGE_SLOTS[slot].label}
@@ -464,18 +480,19 @@ export function CaseStudyForm({
                 value={images[slot]}
                 onChange={(next) => setImages((prev) => ({ ...prev, [slot]: next }))}
               />
+              {errors[`img-${slot}`] ? (
+                <p className="t-caption mt-1.5 text-error">{errors[`img-${slot}`]}</p>
+              ) : null}
             </div>
           ))}
         </div>
       </div>
 
       {/* ═══ 4. GALLERY ═══ */}
-      <div className={sectionCard}>
-        <p className={sectionTitle}>3 · Project Gallery</p>
-        <p className="t-caption text-muted">
-          Additional screenshots and detail views (optional). Up to 8 images.
-          Recommended: 1600 × 1200 px (4:3) JPEG — other ratios are center-cropped.
-          Displayed as a swipeable carousel.
+      <div className={sectionCard} id="cs-gallery">
+        <p className={sectionTitle}>3 · Project Gallery <span className="text-error">*</span></p>
+        <p className={cn("t-caption", errors.gallery ? "text-error" : "text-muted")}>
+          {errors.gallery ?? "At least 1 image, up to 8. Recommended: 1600 × 1200 px (4:3) JPEG — other ratios are center-cropped. Displayed as a swipeable carousel."}
         </p>
         <GalleryUploader images={gallery} onChange={setGallery} />
       </div>
@@ -553,13 +570,16 @@ export function CaseStudyForm({
       </div>
 
       {/* ═══ 8. INTEGRATIONS ═══ */}
-      <div className={sectionCard}>
-        <p className={sectionTitle}>7 · Integrations <span className="text-muted font-normal">(optional)</span></p>
-        <p className="t-caption text-muted">Third-party services — payments, email, maps, analytics, etc.</p>
+      <div className={sectionCard} id="cs-integrations">
+        <p className={sectionTitle}>7 · Integrations <span className="text-error">*</span></p>
+        <p className={errors.integrations ? errorText : "t-caption text-muted"}>
+          {errors.integrations ?? "Third-party services — payments, email, maps, analytics, etc."}
+        </p>
         <ChipSelector
           options={INTEGRATION_OPTIONS}
           selected={integrations}
           onToggle={(v) => toggle(integrations, setIntegrations, v)}
+          error={errors.integrations}
           placeholder="Add integration + Enter"
         />
       </div>
@@ -608,16 +628,18 @@ export function CaseStudyForm({
       </div>
 
       {/* ═══ 11. PALETTE ═══ */}
-      <div className={sectionCard}>
+      <div className={sectionCard} id="cs-palette">
         <div className="flex items-center justify-between">
-          <p className={sectionTitle}>9 · Project Palette <span className="text-muted font-normal">(optional)</span></p>
+          <p className={sectionTitle}>9 · Project Palette <span className="text-error">*</span></p>
           <button type="button"
             onClick={() => palette.length < 8 && setPalette([...palette, { name: "", hex: "#14161c" }])}
             className={cn(secondaryBtn, "h-9 px-3 text-[0.8125rem]")}>
             + Add color
           </button>
         </div>
-        <p className="t-caption text-muted">The color system shown as swatches on the detail page.</p>
+        <p className={cn("t-caption", errors.palette ? "text-error" : "text-muted")}>
+          {errors.palette ?? "The color system shown as swatches on the detail page — at least 1 color."}
+        </p>
         <div className="space-y-2">
           {palette.length === 0 ? <p className="t-caption text-center text-muted/60 py-3">No colors added.</p> : null}
           {palette.map((sw, i) => (
@@ -640,12 +662,15 @@ export function CaseStudyForm({
       </div>
 
       {/* ═══ 12. TESTIMONIAL ═══ */}
-      <div className={sectionCard}>
-        <p className={sectionTitle}>10 · Client Testimonial <span className="text-muted font-normal">(optional)</span></p>
+      <div className={sectionCard} id="cs-testimonial">
+        <p className={sectionTitle}>10 · Client Testimonial <span className="text-error">*</span></p>
+        {errors.testimonial && !hasTestimonial ? (
+          <p className={errorText}>{errors.testimonial}</p>
+        ) : null}
         <label className="flex cursor-pointer items-center gap-2 text-[0.875rem] font-medium text-foreground">
           <input type="checkbox" checked={hasTestimonial}
             onChange={(e) => setHasTestimonial(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
-          Include a testimonial
+          Include a testimonial <span className="text-error">*</span>
         </label>
         {hasTestimonial ? (
           <div className="space-y-4">
