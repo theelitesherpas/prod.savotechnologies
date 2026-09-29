@@ -103,32 +103,33 @@ export default async function AdminCaseStudiesPage({
           rows={parsed.map((row) => ({
             id: row.id,
             node: (
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <div className="min-w-0">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-x-4">
+                <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link href={`/admin/case-studies/${row.id}`} className="truncate text-[0.9375rem] font-semibold text-foreground hover:text-accent">
+                    <Link href={`/admin/case-studies/${row.id}`} className="min-w-0 truncate text-[0.9375rem] font-semibold text-foreground hover:text-accent">
                       {row.title}
                     </Link>
                     <Chip tone={STATUS_TONE[row.contentStatus] ?? "muted"}>{row.contentStatus}</Chip>
                     {!row.valid ? <Chip tone="warning">invalid data</Chip> : null}
                   </div>
-                  <p className="t-caption mt-1 text-muted">
+                  <p className="t-caption mt-1 truncate text-muted">
                     {row.discipline} · /case-studies/{row.slug} · updated{" "}
                     {new Date(row.updatedAt).toISOString().slice(0, 16).replace("T", " ")}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                {/* Actions: one line always, never wrapped, never shrunk */}
+                <div className="flex shrink-0 flex-nowrap items-center gap-2">
                   {row.published ? (
                     <Link
                       href={`/case-studies/${row.slug}`}
-                      className="t-caption rounded-lg border border-border px-3 py-1.5 text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
+                      className="t-caption whitespace-nowrap rounded-lg border border-border px-3 py-1.5 text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
                     >
                       View live
                     </Link>
                   ) : null}
                   <Link
                     href={`/admin/case-studies/${row.id}`}
-                    className="t-caption rounded-lg border border-border px-3 py-1.5 text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
+                    className="t-caption whitespace-nowrap rounded-lg border border-border px-3 py-1.5 text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
                   >
                     Edit
                   </Link>
