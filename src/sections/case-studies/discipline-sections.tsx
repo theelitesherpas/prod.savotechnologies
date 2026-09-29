@@ -10,8 +10,12 @@ import { CaseStudyCard } from "./case-study-card";
  * the rest in a two-up editorial grid.
  */
 export function DisciplineSection({ discipline }: { discipline: CaseDiscipline }) {
-  const featured = discipline.entries.filter((e) => e.featured);
-  const rest = discipline.entries.filter((e) => !e.featured);
+  // Defensive: at most one wide card per chapter, even if a future content
+  // edit flags two entries featured - the extra flagged card renders as a
+  // normal grid card instead of a second wide card (never dropped).
+  const firstFeatured = discipline.entries.find((e) => e.featured) ?? discipline.entries[0];
+  const featured = firstFeatured ? [firstFeatured] : [];
+  const rest = discipline.entries.filter((e) => e !== firstFeatured);
   const headingId = `cs-${discipline.id}-heading`;
 
   return (

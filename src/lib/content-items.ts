@@ -148,13 +148,18 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
   return CASE_DISCIPLINES_BASE.map((d) => {
     const mine = studies.filter((s) => s.discipline === d.id);
     if (mine.length === 0) return d;
+    /* Exactly ONE featured (wide) card per discipline - the layout is one
+       big card + a two-up grid. If the admin flags several records
+       featured, the first flagged one wins; with none flagged, the first
+       record does. Never two big cards in one chapter. */
+    const featuredIdx = Math.max(0, mine.findIndex((s) => s.featured));
     const mapped = mine.map((s, i) => {
       const resolved = resolveCaseImages(s);
       // Unverified figures are production-suppressed on cards exactly like
       // the detail page (policy §27); demo records show all + the marker.
       const shown = s.status === "demo" ? (s.results ?? []) : (s.results ?? []).filter((r) => r.verified);
       return ({
-      featured: s.featured || i === 0,
+      featured: i === featuredIdx,
       name: s.displayClientName || s.title,
       sector: s.industry ?? "",
       services: (s.services ?? []).slice(0, 2).join(" · ") || (s.industry ?? ""),
