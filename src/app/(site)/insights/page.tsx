@@ -6,6 +6,9 @@ import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { DetailCta } from "@/components/shared/detail-cta";
 import { getManagedArticles } from "@/lib/content-items";
+import type { Article } from "@/constants/insights";
+
+type Insight = Article;
 import { withBasePath } from "@/lib/utils";
 import { openGraphFor } from "@/lib/seo";
 
@@ -23,10 +26,137 @@ export const metadata: Metadata = {
   openGraph: openGraphFor({ title: "Insights | Savo Technologies", description: DESCRIPTION, url: "/insights" }),
 };
 
-const CATS = ["AI", "Engineering", "Design", "Delivery"] as const;
+/* ────────────────────────────────────────────────────────────────── */
+/* Editorial card family: featured, side and standard cells of the   */
+/* hairline library grid. Composition and type carry the design;     */
+/* motion stays restrained (image 1.025, arrow 5px, title to accent). */
+/* ────────────────────────────────────────────────────────────────── */
+
+const Arrow = ({ className = "h-3 w-3" }: { className?: string }) => (
+  <svg aria-hidden="true" viewBox="0 0 14 14" className={className} fill="none" stroke="currentColor" strokeWidth="1.6">
+    <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
+  </svg>
+);
+
+function FeaturedCard({ article }: { article: Insight }) {
+  return (
+    <Link
+      href={`/insights/${article.slug}`}
+      className="group flex h-full flex-col bg-background transition-colors duration-300 focus-visible:bg-surface-2/40"
+    >
+      <div className="relative aspect-[16/10] overflow-hidden">
+        <Image
+          src={withBasePath(article.image)}
+          alt={`${article.title}: editorial illustration`}
+          fill
+          priority
+          sizes="(max-width: 1024px) 100vw, 58vw"
+          className="photo object-cover transition-transform duration-[600ms] ease-[var(--ease-out-expo)] group-hover:scale-[1.025]"
+        />
+      </div>
+      <div className="flex flex-1 flex-col p-7 sm:p-9">
+        <p className="t-label flex items-center gap-2.5 text-muted">
+          <span aria-hidden="true" className="h-1.5 w-1.5 bg-accent" />
+          Featured
+          <span aria-hidden="true" className="text-muted/50">·</span>
+          <span className="text-accent-strong">{article.cat}</span>
+        </p>
+        <h2 className="t-h2 mt-4 max-w-[24ch] leading-tight transition-colors duration-300 group-hover:text-accent">
+          {article.title}
+        </h2>
+        <p className="t-body mt-4 line-clamp-3 max-w-[52ch] flex-1 text-muted">{article.excerpt}</p>
+        <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
+          <p className="t-caption text-muted">
+            {article.date}
+            <span className="mx-2 text-muted/50">·</span>
+            {article.time}
+          </p>
+          <span className="t-label inline-flex items-center gap-2 text-muted transition-colors duration-300 group-hover:text-accent">
+            Read
+            <Arrow className="h-3.5 w-3.5 transition-transform duration-[400ms] ease-[var(--ease-out-expo)] group-hover:translate-x-[5px]" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function SideCard({ article, delay }: { article: Insight; delay: number }) {
+  return (
+    <Reveal delay={delay} className="h-full">
+      <Link
+        href={`/insights/${article.slug}`}
+        className="group flex h-full min-w-0 flex-col gap-0 bg-background transition-colors duration-300 focus-visible:bg-surface-2/40 sm:flex-row sm:items-stretch sm:gap-6 sm:p-6"
+      >
+        <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden sm:aspect-[4/3] sm:w-[38%]">
+          <Image
+            src={withBasePath(article.image)}
+            alt={`${article.title}: editorial illustration`}
+            fill
+            sizes="(max-width: 640px) 42vw, 20vw"
+            className="photo object-cover transition-transform duration-[600ms] ease-[var(--ease-out-expo)] group-hover:scale-[1.025]"
+          />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col p-5 sm:py-0.5 sm:pl-0">
+          <p className="t-label text-muted">
+            <span className="text-accent-strong">{article.cat}</span>
+            <span className="mx-2 text-muted/50">·</span>
+            {article.time}
+          </p>
+          <h3 className="t-h4 mt-2.5 leading-snug transition-colors duration-300 group-hover:text-accent">
+            {article.title}
+          </h3>
+          <p className="t-caption mt-2 line-clamp-2 flex-1 text-muted">{article.excerpt}</p>
+          <p className="t-caption mt-3 inline-flex items-center gap-2 text-muted">
+            {article.date}
+            <Arrow className="h-3 w-3 text-accent transition-transform duration-[400ms] ease-[var(--ease-out-expo)] group-hover:translate-x-[5px]" />
+          </p>
+        </div>
+      </Link>
+    </Reveal>
+  );
+}
+
+function InsightCard({ article, wide = false }: { article: Insight; wide?: boolean }) {
+  return (
+    <Link
+      href={`/insights/${article.slug}`}
+      className="group flex h-full flex-col bg-background transition-colors duration-300 focus-visible:bg-surface-2/40"
+    >
+      <div className="relative aspect-[16/10] overflow-hidden">
+        <Image
+          src={withBasePath(article.image)}
+          alt={`${article.title}: editorial illustration`}
+          fill
+          sizes={wide ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"}
+          className="photo object-cover transition-transform duration-[600ms] ease-[var(--ease-out-expo)] group-hover:scale-[1.025]"
+        />
+      </div>
+      <div className="flex flex-1 flex-col p-6 sm:p-7">
+        <p className="t-label text-muted">
+          <span className="text-accent-strong">{article.cat}</span>
+          <span className="mx-2 text-muted/50">·</span>
+          {article.time}
+        </p>
+        <h3 className="t-h4 mt-3 leading-snug transition-colors duration-300 group-hover:text-accent">
+          {article.title}
+        </h3>
+        <p className="t-sm mt-2.5 line-clamp-2 flex-1 text-muted">{article.excerpt}</p>
+        <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+          <p className="t-caption text-muted">{article.date}</p>
+          <Arrow className="h-3.5 w-3.5 text-muted transition-all duration-[400ms] ease-[var(--ease-out-expo)] group-hover:translate-x-[5px] group-hover:text-accent" />
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 export default async function InsightsPage() {
   const ARTICLES = await getManagedArticles();
+  const [first, second, third, ...others] = ARTICLES;
+  const featured = first;
+  const side = [second, third].filter(Boolean);
+  const rest = others;
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -88,41 +218,21 @@ export default async function InsightsPage() {
             </div>
             <div className="lg:col-span-5">
               <Reveal delay={200}>
-                <div className="border border-border bg-surface p-7 sm:p-8">
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="t-label text-muted">Latest note</p>
-                    <span className="t-label rounded-[2px] border border-accent/40 px-2 py-0.5 text-accent-strong">
-                      {ARTICLES[0]?.cat ?? "Note"}
-                    </span>
-                  </div>
-                  <Link
-                    href={`/insights/${ARTICLES[0]?.slug ?? ""}`}
-                    className="group mt-4 block"
-                  >
-                    <h2 className="t-h4 leading-snug text-foreground transition-colors group-hover:text-accent">
-                      {ARTICLES[0]?.title ?? "Field notes"}
-                    </h2>
-                    <p className="t-sm mt-3 text-muted">
-                      {ARTICLES[0]?.excerpt ?? ""}
-                    </p>
-                    <span className="t-label mt-4 inline-flex items-center gap-2 text-accent">
-                      Read the note
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 14 14"
-                        className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-[3px]"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                      >
-                        <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
-                      </svg>
-                    </span>
-                  </Link>
-                  <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-                    <p className="t-caption text-muted">{ARTICLES[0]?.time ?? "5 min read"}</p>
-                    <p className="t-caption text-muted">{ARTICLES.length} notes in the library</p>
-                  </div>
+                <div className="lg:pl-6">
+                  <p className="t-label text-muted">The index</p>
+                  <ul className="mt-4 divide-y divide-border border-y border-border">
+                    {(["AI", "Engineering", "Design", "Delivery"] as const).map((cat) => (
+                      <li key={cat} className="flex items-center justify-between py-3">
+                        <span className="t-sm font-semibold text-foreground/85">{cat}</span>
+                        <span className="t-label tnum text-muted">
+                          {String(ARTICLES.filter((a) => a.cat === cat).length).padStart(2, "0")} notes
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="t-caption mt-4 text-muted">
+                    {ARTICLES.length} notes in the library, newest first.
+                  </p>
                 </div>
               </Reveal>
             </div>
@@ -130,56 +240,30 @@ export default async function InsightsPage() {
         </div>
       </section>
 
-      {/* Article grid */}
+      {/* The library: featured lead, editorial side column, refined grid */}
       <Section index="The Library" labelledBy="library-heading">
-        <div className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-          {ARTICLES.map((article, i) => (
-            <Reveal key={article.slug} delay={i * 60} className="h-full">
-              <Link
-                href={`/insights/${article.slug}`}
-                className="group flex h-full flex-col bg-background transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-foreground focus-visible:bg-foreground"
-              >
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  <Image
-                    src={withBasePath(article.image)}
-                    alt={`${article.title}: editorial illustration`}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="photo object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]"
-                  />
-                  <span className="t-label absolute left-4 top-4 bg-background px-2.5 py-1.5 text-foreground">
-                    {article.cat}
-                  </span>
-                </div>
-                <div className="flex flex-1 flex-col p-6 sm:p-7">
-                  <p className="t-label text-muted transition-colors duration-300 group-hover:text-background/70">
-                    {article.date}
-                    <span className="mx-2 text-muted/60 group-hover:text-background/50">·</span>
-                    {article.time}
-                  </p>
-                  <h2 className="t-h4 mt-3 leading-snug transition-colors duration-300 group-hover:text-background">
-                    {article.title}
-                  </h2>
-                  <p className="t-sm mt-3 flex-1 text-muted transition-colors duration-300 group-hover:text-background/75">
-                    {article.excerpt}
-                  </p>
-                  <span className="t-label mt-5 inline-flex items-center gap-2 text-accent">
-                    Read the note
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 14 14"
-                      className="h-3.5 w-3.5 transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:translate-x-[4px]"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                    >
-                      <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
-            </Reveal>
+        <div className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-12">
+          {/* Featured: newest note, the anchor of the page */}
+          <Reveal className="lg:col-span-7 lg:row-span-2">
+            <FeaturedCard article={featured} />
+          </Reveal>
+          {/* Two editorial side cards */}
+          {side.map((article) => (
+            <SideCard key={article.slug} article={article} delay={120} />
           ))}
+          {/* The rest of the library */}
+          {rest.map((article, i) => {
+            const wide = rest.length % 3 === 2 && i === rest.length - 1;
+            return (
+              <Reveal
+                key={article.slug}
+                delay={(i % 3) * 60}
+                className={wide ? "sm:col-span-2 lg:col-span-8" : ""}
+              >
+                <InsightCard article={article} wide={wide} />
+              </Reveal>
+            );
+          })}
         </div>
       </Section>
 
