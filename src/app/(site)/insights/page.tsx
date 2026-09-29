@@ -81,10 +81,9 @@ function FeaturedCard({ article }: { article: Insight }) {
   );
 }
 
-function SideCard({ article, delay }: { article: Insight; delay: number }) {
+function SideCard({ article }: { article: Insight }) {
   return (
-    <Reveal delay={delay} className="h-full">
-      <Link
+    <Link
         href={`/insights/${article.slug}`}
         className="group flex h-full min-w-0 flex-col gap-0 bg-background transition-colors duration-300 focus-visible:bg-surface-2/40 sm:flex-row sm:items-stretch sm:gap-6 sm:p-6"
       >
@@ -113,7 +112,6 @@ function SideCard({ article, delay }: { article: Insight; delay: number }) {
           </p>
         </div>
       </Link>
-    </Reveal>
   );
 }
 
@@ -243,13 +241,15 @@ export default async function InsightsPage() {
       {/* The library: featured lead, editorial side column, refined grid */}
       <Section index="The Library" labelledBy="library-heading">
         <div className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-12">
-          {/* Featured: newest note, the anchor of the page */}
-          <Reveal className="lg:col-span-7 lg:row-span-2">
+          {/* Featured: newest note, the anchor of the page (spans two rows) */}
+          <Reveal className="sm:col-span-2 lg:col-span-7 lg:row-span-2">
             <FeaturedCard article={featured} />
           </Reveal>
-          {/* Two editorial side cards */}
-          {side.map((article) => (
-            <SideCard key={article.slug} article={article} delay={120} />
+          {/* Two editorial side cards fill the right column */}
+          {side.map((article, i) => (
+            <Reveal key={article.slug} delay={120 + i * 60} className="lg:col-span-5">
+              <SideCard article={article} />
+            </Reveal>
           ))}
           {/* The rest of the library */}
           {rest.map((article, i) => {
@@ -258,7 +258,7 @@ export default async function InsightsPage() {
               <Reveal
                 key={article.slug}
                 delay={(i % 3) * 60}
-                className={wide ? "sm:col-span-2 lg:col-span-8" : ""}
+                className={wide ? "sm:col-span-2 lg:col-span-8" : "lg:col-span-4"}
               >
                 <InsightCard article={article} wide={wide} />
               </Reveal>
