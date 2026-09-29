@@ -7,6 +7,7 @@ import type { Article } from "@/constants/insights";
 import type { Role } from "@/constants/careers";
 import { CASE_DISCIPLINES, CASE_DISCIPLINES_BASE, type CaseDiscipline } from "@/constants/case-studies";
 import { getCaseStudies } from "@/lib/case-studies";
+import { caseImageSrc } from "@/lib/case-img";
 import { resolveCaseImages } from "@/lib/case-study-schema";
 import type { HireRole } from "@/constants/hire";
 import type { AiService } from "@/constants/ai-services";
@@ -170,8 +171,8 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
       slug: s.slug,
       status: s.status,
       images: {
-        cardWide: resolved.cardWide ? { dataUrl: resolved.cardWide.dataUrl, alt: resolved.cardWide.alt } : null,
-        card: resolved.card ? { dataUrl: resolved.card.dataUrl, alt: resolved.card.alt } : null,
+        cardWide: resolved.cardWide ? { src: caseImageSrc(s.slug, "cardWide", resolved.cardWide.dataUrl), alt: resolved.cardWide.alt } : null,
+        card: resolved.card ? { src: caseImageSrc(s.slug, "card", resolved.card.dataUrl), alt: resolved.card.alt } : null,
       },
       });
     });

@@ -41,8 +41,9 @@ export type CaseEntry = {
       verified engagements render unlabelled (the work speaks). */
   status?: "demo" | "verified";
   /** Resolved card visuals (admin crop studio) - featured cards use
-   * cardWide, standard cards use card; detail pages use showcase. */
-  images?: { cardWide?: { dataUrl: string; alt?: string } | null; card?: { dataUrl: string; alt?: string } | null };
+   * cardWide, standard cards use card; detail pages use showcase.
+   *  Served as cacheable URLs (/api/cs-img), not inline data URLs. */
+  images?: { cardWide?: { src: string; alt?: string } | null; card?: { src: string; alt?: string } | null };
 };
 
 export type CaseDiscipline = {

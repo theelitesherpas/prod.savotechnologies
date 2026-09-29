@@ -12,6 +12,7 @@ import { DisciplineDoodle } from "@/components/shared/discipline-doodle";
 import { FeatureIcon } from "@/components/shared/feature-icon";
 import { getCaseStudies, getCaseStudy } from "@/lib/case-studies";
 import { resolveCaseImages } from "@/lib/case-study-schema";
+import { caseImageSrc } from "@/lib/case-img";
 import { CASE_DISCIPLINES } from "@/constants/case-studies";
 
 export async function generateStaticParams() {
@@ -47,7 +48,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
   const shownResults = isDemo ? study.results : study.results.filter((r) => r.verified);
   const displayName = study.displayClientName || study.title;
   const images = resolveCaseImages(study);
-  const showcaseImage = images.showcase;
+  const showcaseSrc = images.showcase ? caseImageSrc(study.slug, "showcase", images.showcase.dataUrl) : null;
   const headlineResult = shownResults[0];
 
   const metaFacts = [
@@ -115,17 +116,17 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       </section>
 
       {/* ═══ 02 · SHOWCASE (framed, glass caption) ═══ */}
-      {showcaseImage ? (
+      {showcaseSrc ? (
         <section aria-label="Project showcase" className="border-b border-border bg-surface-2/40 py-10 sm:py-14">
           <div className="shell">
             <Reveal>
               <figure className="relative overflow-hidden rounded-xl border border-border bg-background shadow-[0_8px_32px_rgb(10_10_14/0.08)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={showcaseImage.dataUrl} alt={showcaseImage.alt || `${displayName} — project showcase`}
+                <img src={showcaseSrc} alt={images.showcase?.alt || `${displayName} — project showcase`}
                   className="w-full object-cover" style={{ aspectRatio: "16/7" }} />
-                {showcaseImage.alt || displayName ? (
+                {images.showcase?.alt || displayName ? (
                   <figcaption className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-4 rounded-lg border border-white/20 bg-white/70 px-4 py-3 backdrop-blur-md">
-                    <p className="t-caption font-medium text-foreground/80">{showcaseImage.alt || `${displayName} — project showcase`}</p>
+                    <p className="t-caption font-medium text-foreground/80">{images.showcase?.alt || `${displayName} — project showcase`}</p>
                     <span className="t-label hidden shrink-0 text-muted/60 sm:block">{discipline?.title}</span>
                   </figcaption>
                 ) : null}
@@ -246,7 +247,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           <SectionHeader id="cs-gallery-heading" heading="Inside the project." lead={<>Screens and detail views — swipe or use the arrows.</>} />
           <Reveal>
             <GalleryCarousel
-              images={study.gallery.map(g => ({ dataUrl: g.dataUrl, alt: g.alt, width: g.width, height: g.height }))}
+              images={study.gallery.map((g, i) => ({ src: caseImageSrc(study.slug, `gallery-${i}`, g.dataUrl), alt: g.alt, width: g.width, height: g.height }))}
               title={displayName}
             />
           </Reveal>
@@ -343,7 +344,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                     <div className="relative aspect-[16/10] overflow-hidden">
                       {art ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={art.dataUrl} alt={art.alt || `${other.displayClientName || other.title} — project`}
+                        <img src={caseImageSrc(other.slug, "dossierCard", art.dataUrl)} alt={art.alt || `${other.displayClientName || other.title} — project`}
                           className="h-full w-full object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]" />
                       ) : (
                         <div className="flex h-full items-center justify-center bg-surface-2/60 text-muted/40">

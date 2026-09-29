@@ -198,7 +198,7 @@ export function CaseStudyCard({
   const hasDetail = typeof entry.slug === "string" && entry.slug.length > 0;
   const isDemo = entry.status !== "verified"; // linked cards: demo concept until verified
   const art = (entry.featured ? entry.images?.cardWide : entry.images?.card) ?? entry.images?.cardWide ?? entry.images?.card;
-  const hero = art?.dataUrl;
+  const hero = art?.src;
 
   const card = (
     <>

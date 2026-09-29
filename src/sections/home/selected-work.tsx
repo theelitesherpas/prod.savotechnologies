@@ -6,6 +6,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { WORK_PLACEHOLDERS } from "@/constants/content";
 import { DEMO_TESTIMONIAL } from "@/content/demo";
 import { getCaseStudies } from "@/lib/case-studies";
+import { caseImageSrc } from "@/lib/case-img";
 import { resolveCaseImages, type CaseStudy } from "@/lib/case-study-schema";
 import { IS_DEMO } from "@/lib/content-mode";
 
@@ -26,8 +27,9 @@ type WorkItem = {
   variant: "a" | "b" | "c";
   /** Detail-page link when the item has one (demo/verified). */
   slug?: string;
-  /** Attached visual slot-matched to this card (featured vs standard). */
-  image?: { dataUrl: string; alt?: string } | null;
+  /** Attached visual slot-matched to this card (featured vs standard),
+      served as a cacheable /api/cs-img URL. */
+  image?: { src: string; alt?: string } | null;
   /** Corner badge - "Design concept" (demo), none (published), "In preparation" (pending). */
   badge?: string | null;
 };
@@ -67,7 +69,7 @@ async function workItems(): Promise<{ items: WorkItem[]; live: boolean; anyDemo:
             (c.status === "demo" && shown.length > 0 ? " - demo figures" : ""),
           variant: VARIANT_BY_INDEX[i % 3],
           slug: c.slug,
-          image: slot ? { dataUrl: slot.dataUrl, alt: slot.alt } : null,
+          image: slot ? { src: caseImageSrc(c.slug, i === 0 ? "cardWide" : "card", slot.dataUrl), alt: slot.alt } : null,
           badge: c.status === "demo" ? "Design concept" : null,
         };
       }),
@@ -169,12 +171,12 @@ function WorkCard({
   const card = (
     <>
       <div className={`relative overflow-hidden ${aspect}`}>
-        {item.image?.dataUrl ? (
+        {item.image?.src ? (
           // Attached visual - slot-matched to this card class (featured vs
           // standard), cropped to its exact aspect in the admin studio.
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={item.image.dataUrl}
+            src={item.image.src}
             alt={item.image.alt || `${item.name} - project visual`}
             className="h-full w-full object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
           />

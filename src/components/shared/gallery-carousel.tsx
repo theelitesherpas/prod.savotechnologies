@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
  * Smooth scroll-snap, dots indicator, keyboard arrows, lazy loading.
  */
 
-export type GalleryImage = { dataUrl: string; alt: string; width: number; height: number };
+export type GalleryImage = { src: string; alt: string; width: number; height: number };
 
 export function GalleryCarousel({ images, title }: { images: GalleryImage[]; title: string }) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -71,7 +71,7 @@ export function GalleryCarousel({ images, title }: { images: GalleryImage[]; tit
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={img.dataUrl}
+              src={img.src}
               alt={img.alt || `${title} — screen ${i + 1}`}
               className="aspect-[4/3] w-full object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
               loading={i < 2 ? "eager" : "lazy"}

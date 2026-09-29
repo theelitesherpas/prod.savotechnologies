@@ -55,10 +55,10 @@ async function reencode(dataUrl, { w, h, cover } = {}) {
   } else if (w || h) {
     // longest-side cap, aspect preserved
     const landscape = meta2.width >= meta2.height;
-    img = img.resize(
-      landscape ? { width: w } : { height: w },
-      { withoutEnlargement: true },
-    );
+    img = img.resize({
+      ...(landscape ? { width: w } : { height: w }),
+      withoutEnlargement: true,
+    });
   }
 
   try {
