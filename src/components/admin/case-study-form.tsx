@@ -278,36 +278,41 @@ export function CaseStudyForm({
   });
 
   // ─── Validation ───
+  /* Completeness is a PUBLISH requirement: drafts save at any stage so
+     in-progress work is never lost. * fields = required to publish. */
+  const publishing = contentStatus === "published";
   const validateForm = (): GuardProblem[] => {
     const errs: Record<string, string> = {};
 
     if (title.trim().length < 2) errs.title = "Project title is required (min 2 characters).";
-    if (clientName.trim().length < 2) errs.client = "Client name is required.";
-    if (displayClientName.trim().length < 2) errs.display = "Display name is required — shown publicly on cards and the detail page.";
-    if (industry.trim().length < 2) errs.industry = "Industry / engagement line is required.";
-    if (clientLocation.trim().length < 2) errs.location = "Client location is required (e.g. Indore, India).";
-    if (!businessModel) errs.bizmodel = "Select a business model.";
-    if (!platforms) errs.platforms = "Select the target platforms.";
-    if (year.trim().length < 2) errs.year = "Year is required.";
-    if (duration.trim().length < 1) errs.duration = "Duration is required.";
-    if (teamSize.trim().length < 1) errs.teamSize = "Team size is required.";
-    if (summary.trim().length < 10) errs.summary = "Summary is required (min 10 characters).";
-    if (challenge.trim().length < 20) errs.challenge = "Challenge is required (min 20 characters).";
-    if (solution.trim().length < 20) errs.solution = "Solution is required (min 20 characters).";
-    if (services.length === 0) errs.services = "Select at least 1 service capability.";
-    if (technologies.length === 0) errs.technologies = "Select at least 1 technology.";
-    if (integrations.length === 0) errs.integrations = "Add at least 1 integration — payments, email, maps… or a custom one.";
-    if (filledFeatures.length === 0) errs.keyFeatures = "Add at least 1 key feature.";
-    // Images: every rendering surface needs its slot filled
-    (Object.keys(CASE_IMAGE_SLOTS) as SlotKey[]).forEach((slot) => {
-      if (!images[slot])
-        errs[`img-${slot}`] = `${CASE_IMAGE_SLOTS[slot].label} image is required — ${CASE_IMAGE_SLOTS[slot].width} × ${CASE_IMAGE_SLOTS[slot].height}px.`;
-    });
-    if (gallery.length === 0) errs.gallery = "Add at least 1 gallery image (recommended 1600 × 1200, up to 8).";
-    if (palette.length === 0) errs.palette = "Add at least 1 palette color.";
-    else if (palette.some((p) => !p.name.trim() || !/^#[0-9a-fA-F]{6}$/.test(p.hex)))
-      errs.palette = "Every palette color needs a name and a valid #RRGGBB hex.";
-    if (!hasTestimonial) errs.testimonial = "Include the client testimonial — toggle it on and fill all three fields.";
+    if (publishing && clientName.trim().length < 2) errs.client = "Client name is required.";
+    if (publishing) {
+      if (displayClientName.trim().length < 2) errs.display = "Display name is required — shown publicly on cards and the detail page.";
+      if (industry.trim().length < 2) errs.industry = "Industry / engagement line is required.";
+      if (clientLocation.trim().length < 2) errs.location = "Client location is required (e.g. Indore, India).";
+      if (!businessModel) errs.bizmodel = "Select a business model.";
+      if (!platforms) errs.platforms = "Select the target platforms.";
+      if (year.trim().length < 2) errs.year = "Year is required.";
+      if (duration.trim().length < 1) errs.duration = "Duration is required.";
+      if (teamSize.trim().length < 1) errs.teamSize = "Team size is required.";
+      if (summary.trim().length < 10) errs.summary = "Summary is required (min 10 characters).";
+      if (challenge.trim().length < 20) errs.challenge = "Challenge is required (min 20 characters).";
+      if (solution.trim().length < 20) errs.solution = "Solution is required (min 20 characters).";
+      if (services.length === 0) errs.services = "Select at least 1 service capability.";
+      if (technologies.length === 0) errs.technologies = "Select at least 1 technology.";
+      if (integrations.length === 0) errs.integrations = "Add at least 1 integration — payments, email, maps… or a custom one.";
+      if (filledFeatures.length === 0) errs.keyFeatures = "Add at least 1 key feature.";
+      // Images: every rendering surface needs its slot filled
+      (Object.keys(CASE_IMAGE_SLOTS) as SlotKey[]).forEach((slot) => {
+        if (!images[slot])
+          errs[`img-${slot}`] = `${CASE_IMAGE_SLOTS[slot].label} image is required — ${CASE_IMAGE_SLOTS[slot].width} × ${CASE_IMAGE_SLOTS[slot].height}px.`;
+      });
+      if (gallery.length === 0) errs.gallery = "Add at least 1 gallery image (recommended 1600 × 1200, up to 8).";
+      if (palette.length === 0) errs.palette = "Add at least 1 palette color.";
+      else if (palette.some((p) => !p.name.trim() || !/^#[0-9a-fA-F]{6}$/.test(p.hex)))
+        errs.palette = "Every palette color needs a name and a valid #RRGGBB hex.";
+      if (!hasTestimonial) errs.testimonial = "Include the client testimonial — toggle it on and fill all three fields.";
+    }
     // Results section removed — metrics not required
     if (liveUrl.trim() && !/^https?:\/\/.+\..+/.test(liveUrl.trim())) errs.liveUrl = "Enter a valid URL (https://example.com) or leave empty.";
     if (hasTestimonial) {
@@ -383,7 +388,7 @@ export function CaseStudyForm({
           <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
           Featured on homepage
         </label>
-        <p className="t-caption ml-auto text-muted">Only <strong>Published</strong> records render publicly.</p>
+        <p className="t-caption ml-auto max-w-xs text-right text-muted">Only <strong>Published</strong> records render publicly. Drafts save at any completeness — starred fields are required to publish.</p>
       </div>
 
       {/* ═══ 2. IDENTITY ═══ */}
@@ -400,45 +405,45 @@ export function CaseStudyForm({
               {CASE_DISCIPLINES.map((d) => (<option key={d.id} value={d.id}>{d.title}</option>))}
             </select>
           </Field>
-          <Field id="cs-client" label="Client name (internal)" required error={errors.client} hint="Not shown publicly — for your reference">
+          <Field id="cs-client" label="Client name (internal)" required={publishing} error={errors.client} hint="Not shown publicly — for your reference">
             <input id="cs-client" className={cn(input, errors.client && "border-error/50")} value={clientName} onChange={(e) => setClientName(e.target.value)}
-              placeholder="Acme Trading Pvt Ltd" required maxLength={120} />
+              placeholder="Acme Trading Pvt Ltd" required={publishing} maxLength={120} />
           </Field>
-          <Field id="cs-display" label="Display name (public)" required error={errors.display} hint="Shown publicly on cards and the detail page">
+          <Field id="cs-display" label="Display name (public)" required={publishing} error={errors.display} hint="Shown publicly on cards and the detail page">
             <input id="cs-display" className={cn(input, errors.display && "border-error/50")} value={displayClientName} onChange={(e) => setDisplayClientName(e.target.value)}
-              placeholder="Acme" required maxLength={120} />
+              placeholder="Acme" required={publishing} maxLength={120} />
           </Field>
           <Field id="cs-industry" label="Industry / engagement line" required error={errors.industry}>
             <input id="cs-industry" className={cn(input, errors.industry && "border-error/50")} value={industry}
-              onChange={(e) => setIndustry(e.target.value)} placeholder="Ecommerce · Web Platform · Product Engineering" required maxLength={160} />
+              onChange={(e) => setIndustry(e.target.value)} placeholder="Ecommerce · Web Platform · Product Engineering" required={publishing} maxLength={160} />
           </Field>
-          <Field id="cs-location" label="Client location" required error={errors.location} hint="e.g. Indore, India or Dubai, UAE">
+          <Field id="cs-location" label="Client location" required={publishing} error={errors.location} hint="e.g. Indore, India or Dubai, UAE">
             <input id="cs-location" className={cn(input, errors.location && "border-error/50")} value={clientLocation} onChange={(e) => setClientLocation(e.target.value)}
-              placeholder="Indore, India" required maxLength={120} />
+              placeholder="Indore, India" required={publishing} maxLength={120} />
           </Field>
-          <Field id="cs-bizmodel" label="Business model" required error={errors.bizmodel}>
-            <select id="cs-bizmodel" className={cn("adm-select w-full", errors.bizmodel && "border-error/50")} value={businessModel} onChange={(e) => setBusinessModel(e.target.value)} required>
+          <Field id="cs-bizmodel" label="Business model" required={publishing} error={errors.bizmodel}>
+            <select id="cs-bizmodel" className={cn("adm-select w-full", errors.bizmodel && "border-error/50")} value={businessModel} onChange={(e) => setBusinessModel(e.target.value)} required={publishing}>
               <option value="">— Select —</option>
               {BUSINESS_MODELS.map((m) => (<option key={m} value={m}>{m}</option>))}
             </select>
           </Field>
-          <Field id="cs-platforms" label="Platforms" required error={errors.platforms}>
-            <select id="cs-platforms" className={cn("adm-select w-full", errors.platforms && "border-error/50")} value={platforms} onChange={(e) => setPlatforms(e.target.value)} required>
+          <Field id="cs-platforms" label="Platforms" required={publishing} error={errors.platforms}>
+            <select id="cs-platforms" className={cn("adm-select w-full", errors.platforms && "border-error/50")} value={platforms} onChange={(e) => setPlatforms(e.target.value)} required={publishing}>
               <option value="">— Select —</option>
               {PLATFORM_OPTIONS.map((p) => (<option key={p} value={p}>{p}</option>))}
             </select>
           </Field>
           <Field id="cs-year" label="Year" required error={errors.year}>
             <input id="cs-year" className={cn(input, errors.year && "border-error/50")} value={year}
-              onChange={(e) => setYear(e.target.value)} placeholder="2025" required maxLength={20} />
+              onChange={(e) => setYear(e.target.value)} placeholder="2025" required={publishing} maxLength={20} />
           </Field>
           <Field id="cs-duration" label="Duration" required error={errors.duration}>
             <input id="cs-duration" className={cn(input, errors.duration && "border-error/50")} value={duration}
-              onChange={(e) => setDuration(e.target.value)} placeholder="16 weeks" required maxLength={60} />
+              onChange={(e) => setDuration(e.target.value)} placeholder="16 weeks" required={publishing} maxLength={60} />
           </Field>
           <Field id="cs-team" label="Team size" required error={errors.teamSize}>
             <input id="cs-team" className={cn(input, errors.teamSize && "border-error/50")} value={teamSize}
-              onChange={(e) => setTeamSize(e.target.value)} placeholder="5 specialists" required maxLength={60} />
+              onChange={(e) => setTeamSize(e.target.value)} placeholder="5 specialists" required={publishing} maxLength={60} />
           </Field>
           <Field id="cs-live" label="Live project URL" hint="Optional — shows as 'View Live' button. Leave empty if not public." error={errors.liveUrl}>
             <input id="cs-live" className={cn(input, errors.liveUrl && "border-error/50")} type="url" value={liveUrl}
@@ -500,22 +505,22 @@ export function CaseStudyForm({
       {/* ═══ 5. CONTENT ═══ */}
       <div className={sectionCard}>
         <p className={sectionTitle}>4 · The Story</p>
-        <Field id="cs-summary" label="Summary" required error={errors.summary}
+        <Field id="cs-summary" label="Summary" required={publishing} error={errors.summary}
           hint="One-paragraph overview shown on the hero and cards (max 600 chars)">
           <textarea id="cs-summary" className={cn(input, "min-h-20 resize-y", errors.summary && "border-error/50")}
-            value={summary} onChange={(e) => setSummary(e.target.value)} required maxLength={600}
+            value={summary} onChange={(e) => setSummary(e.target.value)} required={publishing} maxLength={600}
             placeholder="A modern commerce platform designed around faster product discovery…" />
         </Field>
-        <Field id="cs-challenge" label="The challenge" required error={errors.challenge}
+        <Field id="cs-challenge" label="The challenge" required={publishing} error={errors.challenge}
           hint="What problem was the client facing? (max 4000 chars)">
           <textarea id="cs-challenge" className={cn(input, "min-h-28 resize-y", errors.challenge && "border-error/50")}
-            value={challenge} onChange={(e) => setChallenge(e.target.value)} required maxLength={4000}
+            value={challenge} onChange={(e) => setChallenge(e.target.value)} required={publishing} maxLength={4000}
             placeholder="The business problem, in plain words." />
         </Field>
-        <Field id="cs-solution" label="The solution — what we built" required error={errors.solution}
+        <Field id="cs-solution" label="The solution — what we built" required={publishing} error={errors.solution}
           hint="Approach, architecture, how it shipped (max 4000 chars)">
           <textarea id="cs-solution" className={cn(input, "min-h-28 resize-y", errors.solution && "border-error/50")}
-            value={solution} onChange={(e) => setSolution(e.target.value)} required maxLength={4000}
+            value={solution} onChange={(e) => setSolution(e.target.value)} required={publishing} maxLength={4000}
             placeholder="Approach, architecture and how it was delivered." />
         </Field>
       </div>

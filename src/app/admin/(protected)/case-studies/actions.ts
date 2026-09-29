@@ -68,10 +68,11 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
 
   const data = record.data;
 
-  /* Write-time completeness gate — every public surface must have its
-     data. (The zod schema stays lenient so OLD records still parse on
-     read; new/edited records must be complete. Exceptions per owner:
-     author credit and live URL stay optional.) */
+  /* Completeness is a PUBLISH requirement, not a save requirement — an
+     in-progress record may always be saved as draft/review. A publish
+     attempt with missing fields is downgraded to draft, SAVED, and the
+     editor is redirected back with the list of gaps — work is never
+     lost. (Exceptions per owner: author credit and live URL.) */
   const missing: string[] = [];
   if (!data.clientName?.trim()) missing.push("Client name");
   if (!data.displayClientName?.trim()) missing.push("Display name");
@@ -86,9 +87,8 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
   if (!data.integrations || data.integrations.length === 0) missing.push("Integrations (1 min)");
   if (!data.palette || data.palette.length === 0) missing.push("Palette (1 color min)");
   if (!data.testimonial) missing.push("Client testimonial");
-  if (missing.length > 0) {
-    redirect(`/admin/case-studies?e=${encodeURIComponent(`Missing required: ${missing.join(", ")}`)}`);
-  }
+  const downgradedToDraft = missing.length > 0 && form.data.contentStatus === "published";
+  const effectiveStatus = downgradedToDraft ? "draft" : form.data.contentStatus;
   const slug = form.data.slug || slugifyCaseStudy(data.title);
   if (!/^[a-z0-9-]{2,80}$/.test(slug)) redirect("/admin/case-studies?e=invalid");
 
@@ -98,16 +98,18 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
     title: data.title,
     order: form.data.order ?? 0,
     active: true,
-    contentStatus: form.data.contentStatus,
-    ...(form.data.contentStatus === "published" ? { publishedAt: new Date() } : {}),
+    contentStatus: effectiveStatus,
+    ...(effectiveStatus === "published" ? { publishedAt: new Date() } : {}),
     data: data as unknown as import("@prisma/client").Prisma.InputJsonValue,
   };
 
+  let savedId = form.data.id;
   try {
     if (form.data.id) {
       await prisma.contentItem.update({ where: { id: form.data.id }, data: values });
     } else {
-      await prisma.contentItem.create({ data: values });
+      const created = await prisma.contentItem.create({ data: values });
+      savedId = created.id;
     }
   } catch (err) {
     const code = err && typeof err === "object" && "code" in err ? String(err.code) : "";
@@ -124,6 +126,14 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
   await audit(user.id, form.data.id ? "caseStudy.update" : "caseStudy.create", "ContentItem", `case-studies:${slug}`);
 
   revalidateCaseStudies(slug);
+
+  /* The publish attempt was downgraded — the work is safe as a draft;
+     send the editor back to the form with the exact gaps listed. */
+  if (downgradedToDraft && savedId) {
+    redirect(`/admin/case-studies/${savedId}?e=${encodeURIComponent(
+      `Saved as draft — complete before publishing: ${missing.join(", ")}`,
+    )}`);
+  }
   redirect(`/admin/case-studies?saved=${form.data.id ? "updated" : "created"}`);
 }
 
