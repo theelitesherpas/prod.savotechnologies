@@ -83,21 +83,12 @@ function DrawerLink({ link, delay, onNavigate }: { link: NavLink; delay: number;
       <Link
         href={link.href}
         onClick={onNavigate}
-        className="group/drawer-link flex items-center gap-4 py-1.5"
+        className="group/drawer-link flex items-center gap-4 py-2"
       >
-        <span className="min-w-0 flex-1 transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover/drawer-link:translate-x-1">
-          <span className="flex flex-wrap items-center gap-2">
-            <span className="text-[0.9375rem] font-semibold leading-snug text-foreground/85 transition-colors duration-300 group-hover/drawer-link:text-foreground">
-              {link.label}
-            </span>
-            {link.pro ? (
-              <span className="t-label rounded-[2px] border border-accent/40 px-1.5 py-0.5 text-accent-strong">PRO</span>
-            ) : null}
-          </span>
-          {link.desc ? (
-            <span className="t-caption mt-px block leading-snug text-muted/80 transition-colors duration-300 group-hover/drawer-link:text-muted">
-              {link.desc}
-            </span>
+        <span className="min-w-0 flex-1 truncate text-[0.9375rem] font-semibold leading-snug text-foreground/85 transition-[color,transform] duration-300 ease-[var(--ease-out-expo)] group-hover/drawer-link:translate-x-1 group-hover/drawer-link:text-foreground">
+          {link.label}
+          {link.pro ? (
+            <span className="t-label ml-2 rounded-[2px] border border-accent/40 px-1.5 py-0.5 align-middle text-accent-strong">PRO</span>
           ) : null}
         </span>
         <ArrowIcon className="-translate-x-1 text-accent opacity-0 transition-all duration-300 ease-[var(--ease-out-expo)] group-hover/drawer-link:translate-x-0 group-hover/drawer-link:opacity-100" />
@@ -110,7 +101,7 @@ function DrawerLink({ link, delay, onNavigate }: { link: NavLink; delay: number;
 function DrawerFeature({ feature, variant, delay, onNavigate }: { feature: NavFeature; variant: number; delay: number; onNavigate?: () => void }) {
   return (
     <div
-      className="mega-row flex h-full flex-col border-l border-border bg-surface-2/40 p-6 xl:p-7"
+      className="mega-row flex h-full flex-col border-l border-border bg-surface-2/40 p-7"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-start justify-between gap-5">
@@ -176,7 +167,7 @@ export function MegaDrawer({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       className={cn(
-        "chapter-ink absolute inset-x-0 top-full hidden border-y border-border bg-background shadow-[0_24px_60px_rgb(10_10_14/0.28)]",
+        "chapter-ink absolute left-1/2 top-full hidden w-[min(calc(100%-2.5rem),78rem)] -translate-x-1/2 border border-border bg-background shadow-[0_24px_60px_rgb(10_10_14/0.28)]",
         active ? "drawer-in lg:block" : "lg:hidden",
       )}
     >
@@ -193,7 +184,7 @@ export function MegaDrawer({
             role="region"
             aria-label={activeItem.label}
           >
-            <div className="shell grid gap-8 py-6 lg:grid-cols-12">
+            <div className="shell grid gap-8 py-7 lg:grid-cols-12">
               {/* Links */}
               <div className="lg:col-span-8">
                 <p className="t-label mb-4 flex items-center gap-3 uppercase tracking-[0.14em] text-muted">
@@ -202,7 +193,7 @@ export function MegaDrawer({
                 </p>
                 <ul
                   className={cn(
-                    activeItem.children.length > 4 && "grid grid-cols-2 gap-x-10",
+                    activeItem.children.length > 3 && "grid grid-cols-2 gap-x-8",
                     "[&>li:last-child]:border-b-0",
                   )}
                 >
@@ -214,7 +205,7 @@ export function MegaDrawer({
                   <Link
                     href={activeItem.href}
                     onClick={onNavigate}
-                    className="group/all t-label mega-row mt-3 inline-flex items-center gap-2 border-t border-border pt-3.5 uppercase tracking-[0.12em] text-muted transition-colors hover:text-accent"
+                    className="group/all t-label mega-row mt-2 inline-flex items-center gap-2 border-t border-border pt-3 uppercase tracking-[0.12em] text-muted transition-colors hover:text-accent"
                     style={{ animationDelay: `${48 + activeItem.children.length * 24}ms` }}
                   >
                     All {activeItem.label}
