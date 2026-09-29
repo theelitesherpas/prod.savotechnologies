@@ -187,6 +187,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
       try {
         const evt = JSON.parse(raw.data) as { conversationId: string; message: Msg };
         const open = detailRef.current?.id === evt.conversationId;
+        if (evt.message?.type === "visitor") setVisitorTyping(false);
         if (open) {
           setDetail((d) => {
             if (!d || d.messages.some((m) => m.id === evt.message.id)) return d;
@@ -267,31 +268,6 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
     [flash, loadDetail, scheduleBootstrap],
   );
 
-  const send = useCallback(
-    async (body: string, note: boolean) => {
-      const id = detail?.id;
-      const clean = body.trim();
-      if (!id || !clean) return;
-      setDraft("");
-      try {
-        const res = await fetch(`/api/admin/live-chat/conversations/${id}/message`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(note ? { note: true, body: clean } : { body: clean }),
-        });
-        const json = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: Msg; error?: string };
-        if (!res.ok || !json.ok) flash(json.error ?? "Could not send.");
-        else if (json.message) {
-          setDetail((d) => (d && !d.messages.some((m) => m.id === json.message!.id) ? { ...d, messages: [...d.messages, json.message!] } : d));
-          scheduleBootstrap();
-        }
-      } catch {
-        flash("Network problem — try again.");
-      }
-    },
-    [detail?.id, flash, scheduleBootstrap],
-  );
-
   const signalTyping = useCallback(
     (typing: boolean) => {
       const id = detail?.id;
@@ -303,6 +279,40 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
       }).catch(() => undefined);
     },
     [detail?.id],
+  );
+
+  // Typing signal stops 2.5s after the last keystroke — never sticks on.
+  useEffect(() => {
+    if (!draft) return;
+    const t = setTimeout(() => signalTyping(false), 2500);
+    return () => clearTimeout(t);
+  }, [draft, signalTyping]);
+
+  const send = useCallback(
+    async (body: string, note: boolean) => {
+      const id = detail?.id;
+      const clean = body.trim();
+      if (!id || !clean) return;
+      setDraft("");
+      signalTyping(false);
+      try {
+        const res = await fetch(`/api/admin/live-chat/conversations/${id}/message`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(note ? { note: true, body: clean } : { body: clean }),
+        });
+        const json = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: Msg; error?: string };
+        if (!res.ok || !json.ok) flash(json.error ?? "Could not send.");
+        else if (json.message) {
+          setVisitorTyping(false);
+          setDetail((d) => (d && !d.messages.some((m) => m.id === json.message!.id) ? { ...d, messages: [...d.messages, json.message!] } : d));
+          scheduleBootstrap();
+        }
+      } catch {
+        flash("Network problem — try again.");
+      }
+    },
+    [detail?.id, flash, scheduleBootstrap, signalTyping],
   );
 
   const setPresenceStatus = useCallback(
@@ -511,7 +521,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
               </header>
 
               {/* Thread */}
-              <div ref={threadRef} className="min-h-0 flex-1 space-y-2.5 overflow-y-auto bg-surface-2/40 px-4 py-4">
+              <div ref={threadRef} className="min-h-0 flex-1 space-y-2.5 overflow-y-auto overscroll-contain [touch-action:pan-y] bg-surface-2/40 px-4 py-4">
                 {detail.messages.map((m) => (
                   <ThreadMessage key={m.id} msg={m} />
                 ))}
@@ -684,9 +694,9 @@ function ThreadMessage({ msg }: { msg: Msg }) {
     );
   }
   return (
-    <div className="flex flex-col items-end">
+    <div className="flex flex-col items-start">
       <div className="t-sm max-w-[85%] whitespace-pre-wrap rounded-[6px] bg-foreground px-3 py-2 text-background">{msg.body}</div>
-      <p className="t-caption mt-0.5 mr-1 text-muted">{clock(msg.createdAt)}</p>
+      <p className="t-caption mt-0.5 ml-1 text-muted">{clock(msg.createdAt)}</p>
     </div>
   );
 }

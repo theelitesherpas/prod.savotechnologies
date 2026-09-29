@@ -35,7 +35,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     id: "build",
     category: "Services",
     question: "What does Savo build?",
-    keywords: ["build", "do you do", "what do you", "what does savo", "services", "capabilities", "offer"],
+    keywords: ["build", "do you do", "what do you", "what does savo", "what savo", "services", "capabilities", "offer", "savo", "savo do", "savo does", "savo build", "your company", "what all", "everything", "work on", "what kind"],
     paragraphs: [
       "Six disciplines, one connected team: web experiences, mobile products, AI & intelligent systems, software & SaaS, product & experience design, and growth.",
       "Websites and web apps on Next.js and React; iOS and Android apps in Flutter or React Native; AI agents, RAG systems and copilots in production, plus the design and growth work that keeps them improving after launch.",
@@ -154,7 +154,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     id: "who",
     category: "Company",
     question: "Who is Savo Technologies?",
-    keywords: ["who is savo", "about", "savo", "agency", "background", "history", "experience", "old"],
+    keywords: ["who is savo", "who are you", "about", "about savo", "what is savo", "tell me about savo", "tell me about your company", "agency", "background", "history", "experience", "old"],
     paragraphs: [
       "An independent digital product and technology company, web platforms, mobile apps and AI systems, engineered by one accountable team since 2015.",
       "Ten years of global delivery from India, for clients across India, Switzerland, the Gulf, the UK, the USA and Australia.",
@@ -220,12 +220,44 @@ export const KNOWLEDGE: AssistantEntry[] = [
 ];
 
 /* Initial chip set - one strong question per category, plus the human path */
-export const INITIAL_SUGGESTIONS = ["build", "cost", "ai", "start", "where", "careers"] as const;
+export const INITIAL_SUGGESTIONS = ["greeting", "build", "cost", "ai", "start", "where", "careers"] as const;
 
 export const HUMAN_CHIP = "talk-human" as const;
 
+/* ── Conversational small-talk entries (greetings, thanks) — they keep the
+   chat human instead of falling through to the honest-miss fallback. ── */
+export const CONVERSATION_ENTRIES: AssistantEntry[] = [
+  {
+    id: "greeting",
+    category: "Company",
+    question: "Say hello",
+    keywords: ["hi", "hello", "hey", "hii", "hiii", "yo", "namaste", "good morning", "good afternoon", "good evening", "greetings", "how are you", "how r u", "anyone there", "anybody there"],
+    paragraphs: [
+      "Hello — welcome to Savo. I'm the Savo Assistant: instant answers about our services, process, pricing, technology and offices, straight from this site.",
+      "Ask me anything, or pick a question below — and if you'd rather talk to a person, the team is one tap away.",
+    ],
+    links: [
+      { label: "What Savo builds", href: "/#services" },
+      { label: "Start a project", href: "/#start" },
+    ],
+  },
+  {
+    id: "thanks",
+    category: "Company",
+    question: "Thanks!",
+    keywords: ["thanks", "thank", "thank you", "thx", "ty", "great", "awesome", "perfect", "nice", "appreciate", "bye", "goodbye", "see you"],
+    paragraphs: [
+      "Happy to help! If anything else comes up — services, pricing, timelines, technology — just ask.",
+      "And whenever you'd like a human on the other side, the Savo team is one tap away.",
+    ],
+  },
+];
+
+/* Retrieval runs over site-truth entries AND conversational entries. */
+const RETRIEVAL_SET: AssistantEntry[] = [...KNOWLEDGE, ...CONVERSATION_ENTRIES];
+
 export function entryById(id: string): AssistantEntry | undefined {
-  return KNOWLEDGE.find((e) => e.id === id);
+  return RETRIEVAL_SET.find((e) => e.id === id);
 }
 
 /* Money words carry the strongest commercial intent - they outrank topic nouns. */
@@ -244,7 +276,7 @@ export function answerQuestion(input: string): AssistantEntry | null {
 
   let best: { entry: AssistantEntry; score: number } | null = null;
 
-  for (const entry of KNOWLEDGE) {
+  for (const entry of RETRIEVAL_SET) {
     let score = 0;
     for (const kw of entry.keywords) {
       const k = kw.toLowerCase();
@@ -264,7 +296,7 @@ export function answerQuestion(input: string): AssistantEntry | null {
 
 /** Follow-ups: same category first, then one from each other category. */
 export function followUps(entry: AssistantEntry, max = 3): AssistantEntry[] {
-  const same = KNOWLEDGE.filter((e) => e.category === entry.category && e.id !== entry.id);
-  const others = KNOWLEDGE.filter((e) => e.category !== entry.category);
+  const same = RETRIEVAL_SET.filter((e) => e.category === entry.category && e.id !== entry.id);
+  const others = RETRIEVAL_SET.filter((e) => e.category !== entry.category);
   return [...same, ...others].slice(0, max);
 }

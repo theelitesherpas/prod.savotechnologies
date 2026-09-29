@@ -239,6 +239,7 @@ export function AskSavoBar() {
           }
         }
         seenIdsRef.current.add(msg.id);
+        if (msg.type === "agent") setAgentTyping(false);
         setMessages((m) => [
           ...m,
           { id: msg.id, side: "server", kind: msg.type as "visitor" | "ai" | "agent" | "system", body: msg.body, senderName: msg.senderName, at: Date.now() },
@@ -440,15 +441,15 @@ export function AskSavoBar() {
         if (json.ok && json.result?.kind === "miss") {
           say(
             <div>
-              <p>I don&apos;t have a verified answer for that one yet — I won&apos;t guess.</p>
+              <p>That one&apos;s beyond my verified notes — and I won&apos;t guess.</p>
               <p className="mt-2 text-muted">
-                Send it to the team and a senior consultant replies within one business day — or talk to the team now.
+                Ask me about Savo&apos;s services, process, pricing, technology, offices or careers — or talk to the team directly.
               </p>
               <button
                 onClick={startHuman}
                 className="t-caption mt-3 rounded-[4px] border border-accent/40 px-2.5 py-1.5 text-accent transition-colors hover:border-accent"
               >
-                Talk to a human
+                Talk to a Human
               </button>
             </div>,
           );
@@ -549,13 +550,7 @@ export function AskSavoBar() {
       if (json.conversationToken) setConvToken(json.conversationToken);
       setLiveStatus(json.status ?? "waiting_for_agent");
       setPhase("live");
-      sayServer({
-        kind: "system",
-        body:
-          json.status === "waiting_follow_up"
-            ? "Our team isn't available for live chat at the moment, but your request has been received. Someone from Savo will get back to you as soon as possible. You can continue chatting with Savo AI in the meantime."
-            : "Connecting you with the Savo team…",
-      });
+      sayServer({ kind: "system", body: "Connecting you with the Savo team…" });
     } catch {
       setError("Network problem — please try again.");
     }
@@ -712,7 +707,7 @@ export function AskSavoBar() {
               </div>
 
               {/* Thread */}
-              <div ref={threadRef} aria-live="polite" className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+              <div ref={threadRef} aria-live="polite" className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain [touch-action:pan-y] px-4 py-4">
                 {/* Welcome hero (spec §1) */}
                 {phase === "welcome" ? (
                   <div className="pt-2">

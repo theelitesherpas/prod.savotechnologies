@@ -15,7 +15,7 @@ import { publish, publishConversationEvent } from "./pubsub";
 import { wantsHuman } from "./handoff";
 import { buildAiSummary } from "./summary";
 import { getLiveChatSettings } from "./settings";
-import { liveChatOpen, visitorConnection } from "./availability";
+import { visitorConnection } from "./availability";
 import {
   maskPhone,
   type ConversationStatus,
@@ -277,7 +277,7 @@ const HANDOFF_PROMPT =
   "Of course. I can connect you with the Savo team. I'll collect a few details first so the right person has some context before joining the conversation.";
 
 const MISS_TEXT =
-  "I don't have a verified answer for that one yet — I won't guess. You can send it to the team and a senior consultant replies within one business day, or start a live chat with the team now.";
+  "That one's beyond my verified notes — and I won't guess. Ask me about Savo's services, process, pricing, technology, offices or careers — or talk to the team directly and a senior consultant replies within one business day.";
 
 export async function visitorAsk(conversationId: string, text: string): Promise<AskResult | null> {
   if (!prisma) return null;
@@ -390,6 +390,7 @@ export async function startHumanRequest(input: {
   });
 
   const mergedContext = { ...((conv.context as object) ?? {}), ...(input.pageContext ?? {}) };
+  const phoneDisplay = input.contact.phone?.trim() || null;
   const summary = buildAiSummary({
     service: q.service ?? conv.service,
     stage: q.stage ?? conv.stage,
@@ -429,46 +430,70 @@ export async function startHumanRequest(input: {
     },
   }).catch(() => undefined);
 
+  /* Record everything the visitor gave us directly in the thread — the
+     conversation is the lead record (spec §8, §31). */
+  const detailLines = [
+    `Lead captured — ${input.contact.name}`,
+    q.service ?? conv.service ? `Discuss: ${q.service ?? conv.service}` : null,
+    q.stage ?? conv.stage ? `Stage: ${q.stage ?? conv.stage}` : null,
+    q.requirement ?? conv.requirement ? `Requirement: ${(q.requirement ?? conv.requirement)!.slice(0, 400)}` : null,
+    q.timeline ?? conv.timeline ? `Timeline: ${q.timeline ?? conv.timeline}` : null,
+    q.budget ?? conv.budget ? `Budget: ${q.budget ?? conv.budget}` : null,
+    `Contact: ${[phoneDisplay, input.contact.email?.trim()].filter(Boolean).join(" · ") || "—"}`,
+    mergedContext.currentPage ? `Page: ${String(mergedContext.currentPage).slice(0, 120)}` : null,
+  ].filter((l): l is string => l !== null);
+  await appendMessage(conv.id, { type: "system", body: detailLines.join("\n") });
+
   await appendMessage(conv.id, {
     type: "system",
     body: "Visitor requested human assistance — requirement and contact details captured.",
   });
   await recordEvent(conv.id, "human_requested", { name: input.contact.name }, { service: q.service ?? null, stage: q.stage ?? null });
 
+  // Always give the team the full response window (owner decision): the
+  // request waits for an agent even outside business hours, and the sweep
+  // moves it to follow-up with the honest message if nobody joins in time.
   const settings = await getLiveChatSettings();
-  const open = input.offline === true ? false : await liveChatOpen(settings.businessHours);
-
-  if (open) {
-    await setStatus(conv.id, "waiting_for_agent", { note: "Waiting for an available Savo agent" });
-    await appendMessage(conv.id, { type: "ai", body: "We've shared your requirement with our team. A Savo specialist should join shortly." });
-  } else {
-    await setStatus(conv.id, "waiting_follow_up", { note: "Team offline / outside business hours — request queued for follow-up" });
-    await appendMessage(conv.id, {
-      type: "ai",
-      body: "Our team isn't available for live chat at the moment, but your request has been received. Someone from Savo will get back to you as soon as possible. You can continue chatting with Savo AI in the meantime.",
-    });
-  }
+  const offline = input.offline === true;
+  await setStatus(conv.id, "waiting_for_agent", { note: offline ? "Requested outside live hours — waiting window started" : "Waiting for an available Savo agent" });
+  await appendMessage(conv.id, { type: "ai", body: "We've shared your requirement with our team. A Savo specialist should join shortly." });
 
   await recordEvent(conv.id, "agent_notified");
   notifyAgents(conv.id, {
     name: input.contact.name,
     service: q.service ?? conv.service ?? "—",
+    stage: q.stage ?? conv.stage ?? null,
     requirement: q.requirement ?? conv.requirement ?? "",
-    phone: input.contact.phone ?? null,
-    email: input.contact.email ?? null,
-    offline: !open,
+    timeline: q.timeline ?? conv.timeline ?? null,
+    budget: q.budget ?? conv.budget ?? null,
+    phone: phoneDisplay,
+    email: input.contact.email?.trim() || null,
+    page: mergedContext.currentPage ? String(mergedContext.currentPage) : null,
+    offline,
   });
 
   publish("admin", { type: "conversation.new", conversationId: conv.id });
   const fresh = await loadConversation(conv.id);
   if (!fresh) return { error: "Conversation could not be created." };
-  return { conversation: fresh, offline: !open };
+  return { conversation: fresh, offline: false };
 }
 
-/* One notification email per human request (deduped by event log). */
+/* One notification email per human request (deduped by event log) — carries
+   the complete captured record so the team can act without opening the panel. */
 async function notifyAgents(
   conversationId: string,
-  lead: { name: string; service: string; requirement: string; phone: string | null; email: string | null; offline: boolean },
+  lead: {
+    name: string;
+    service: string;
+    stage?: string | null;
+    requirement: string;
+    timeline?: string | null;
+    budget?: string | null;
+    phone: string | null;
+    email: string | null;
+    page?: string | null;
+    offline: boolean;
+  },
 ): Promise<void> {
   if (!prisma) return;
   try {
@@ -482,23 +507,26 @@ async function notifyAgents(
     ? `Live-chat follow-up: ${lead.name} — ${lead.service}`
     : `Live-chat request: ${lead.name} — ${lead.service}`;
   const contact = [lead.phone, lead.email].filter(Boolean).join(" · ") || "no contact details";
+  const rows = [
+    ["Name", lead.name],
+    ["Service", lead.service],
+    ["Stage", lead.stage ?? null],
+    ["Timeline", lead.timeline ?? null],
+    ["Budget", lead.budget ?? null],
+    ["Contact", contact],
+    ["Requirement", lead.requirement || null],
+    ["Page", lead.page ?? null],
+  ].filter(([, v]) => v) as [string, string][];
   const text = [
     lead.offline ? "A visitor left a live-chat request while the team was offline." : "A visitor is waiting for a live chat right now.",
     "",
-    `Name: ${lead.name}`,
-    `Service: ${lead.service}`,
-    `Contact: ${contact}`,
-    lead.requirement ? `Requirement: ${lead.requirement}` : "",
+    ...rows.map(([k, v]) => `${k}: ${v}`),
     "",
     "Open the Live Chat inbox in the admin panel to respond.",
-  ]
-    .filter((l) => l !== "")
-    .join("\n");
+  ].join("\n");
   const html = `<div style="font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.6"><h2 style="margin:0 0 8px">${subject}</h2><p>${
     lead.offline ? "A visitor left a live-chat request while the team was offline." : "A visitor is <strong>waiting for a live chat right now</strong>."
-  }</p><p><strong>Name:</strong> ${lead.name}<br/><strong>Service:</strong> ${lead.service}<br/><strong>Contact:</strong> ${contact}</p>${
-    lead.requirement ? `<p><strong>Requirement:</strong> ${lead.requirement}</p>` : ""
-  }<p>Open the <strong>Live Chat</strong> inbox in the admin panel to respond.</p></div>`;
+  }</p><p>${rows.map(([k, v]) => `<strong>${k}:</strong> ${v}`).join("<br/>")}</p><p>Open the <strong>Live Chat</strong> inbox in the admin panel to respond.</p></div>`;
   sendMailNow(teamEmail(), { subject, text, html });
 }
 

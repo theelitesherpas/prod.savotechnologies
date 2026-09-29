@@ -48,4 +48,24 @@ describe("Savo Assistant knowledge engine", () => {
       for (const l of e.links ?? []) expect(l.href.startsWith("/")).toBe(true);
     }
   });
+
+  it("answers greetings and small-talk warmly", () => {
+    expect(answerQuestion("Hi")?.id).toBe("greeting");
+    expect(answerQuestion("hello")?.id).toBe("greeting");
+    expect(answerQuestion("hii")?.id).toBe("greeting");
+    expect(answerQuestion("good morning")?.id).toBe("greeting");
+    expect(answerQuestion("thanks")?.id).toBe("thanks");
+    expect(answerQuestion("thank you")?.id).toBe("thanks");
+  });
+
+  it("matches loose phrasings about Savo itself", () => {
+    expect(answerQuestion("what savo do")?.id).toBe("build");
+    expect(answerQuestion("what does savo do")?.id).toBe("build");
+    expect(answerQuestion("who are you")?.id).toBe("who");
+    expect(answerQuestion("what do you offer")?.id).toBe("build");
+  });
+
+  it("greeting never collides with careers", () => {
+    expect(answerQuestion("hi")?.id).not.toBe("careers");
+  });
 });
