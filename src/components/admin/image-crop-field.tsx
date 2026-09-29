@@ -27,7 +27,12 @@ export type AttachedImage = {
 
 const MAX_SOURCE_BYTES = 25 * 1024 * 1024; // 25 MB source file guard
 const TARGET_BYTES_MAX = 4_000_000; // schema guard (data URL length)
-const EXPORT_QUALITIES = [0.85, 0.75, 0.65, 0.55]; // fallback ladder for heavy files
+/** Web weight budget — ≈4.5 bytes per pixel keeps photography crisp
+ *  while capping what ships inline in page HTML (1600×700 → ≤250KB,
+ *  1280×800 → ≤230KB). Industry-standard hero-image weight. */
+const budgetChars = (w: number, h: number) =>
+  Math.round((Math.max(90_000, (w * h) / 4.5)) * 1.375) + 200; // bytes → base64 chars
+const EXPORT_QUALITIES = [0.82, 0.74, 0.66, 0.58]; // ladder down to fit the budget
 
 export function ImageCropField({
   label,
@@ -175,13 +180,15 @@ export function ImageCropField({
     const sh = frameSize.h / scale;
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetWidth, targetHeight);
 
-    // Quality ladder: keep heavy photos under the storage guard.
+    // Quality ladder: fit the per-slot web budget (visually lossless),
+    // with the schema's 4MB as the absolute ceiling.
+    const budget = Math.min(TARGET_BYTES_MAX, budgetChars(targetWidth, targetHeight));
     let dataUrl = "";
     for (const q of EXPORT_QUALITIES) {
       dataUrl = canvas.toDataURL("image/jpeg", q);
-      if (dataUrl.length <= TARGET_BYTES_MAX) break;
+      if (dataUrl.length <= budget) break;
     }
-    if (dataUrl.length > TARGET_BYTES_MAX) {
+    if (dataUrl.length > budget) {
       setError("The cropped image is still too heavy - try a simpler photo or lower zoom.");
       return;
     }

@@ -12,7 +12,10 @@ import type { AttachedImage } from "./image-crop-field";
  */
 
 const MAX_DIM = 1600;
-const QUALITY = 0.80;
+const QUALITY_LADDER = [0.78, 0.7, 0.62]; // walk down only if over budget
+/** ≈4.5 bytes/px — a 1600×1200 gallery shot lands ≈430KB, crisp. */
+const budgetChars = (w: number, h: number) =>
+  Math.round((Math.max(90_000, (w * h) / 4.5)) * 1.375) + 200;
 const MAX_BYTES = 4_000_000;
 
 export function GalleryUploader({
@@ -49,9 +52,13 @@ export function GalleryUploader({
     ctx.drawImage(bitmap, 0, 0, w, h);
     bitmap.close();
 
-    let dataUrl = canvas.toDataURL("image/jpeg", QUALITY);
-    if (dataUrl.length > MAX_BYTES) {
-      dataUrl = canvas.toDataURL("image/jpeg", 0.60);
+    let dataUrl = canvas.toDataURL("image/jpeg", QUALITY_LADDER[0]);
+    const budget = Math.min(MAX_BYTES, budgetChars(w, h));
+    if (dataUrl.length > budget) {
+      for (const q of QUALITY_LADDER.slice(1)) {
+        dataUrl = canvas.toDataURL("image/jpeg", q);
+        if (dataUrl.length <= budget) break;
+      }
     }
     if (dataUrl.length > MAX_BYTES) {
       setError(`${file.name}: image too large even after compression. Try a smaller image.`);
