@@ -398,6 +398,25 @@ body {
   }
 }
 
+/* Route veil — soft entrance (fade + 1% scale settle), motion-gated.
+   Exit uses the opacity transition on .route-veil. */
+@media (prefers-reduced-motion: no-preference) {
+  .route-veil {
+    animation: veil-in 260ms var(--ease-out-expo) both;
+  }
+}
+
+@keyframes veil-in {
+  from {
+    opacity: 0;
+    transform: scale(1.012);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes panel-in {
   from {
     opacity: 0;

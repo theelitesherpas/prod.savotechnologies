@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
  *  - fully static under prefers-reduced-motion
  */
 
-const SHOW_DELAY_MS = 230; // navigation must take at least this long to show
+const SHOW_DELAY_MS = 320; // navigation must take at least this long to show
 const SWEEP_MS = 2600; // fill 0 → 86% while loading (eased)
 const FILL_WHILE_LOADING = 0.86;
 const COMPLETE_MS = 320; // 86% → 100% on arrival
@@ -165,10 +165,9 @@ export function RouteLoader() {
     <div
       aria-hidden="true"
       className={cn(
-        "fixed inset-0 z-[95] flex items-center justify-center bg-background/75 backdrop-blur-[6px] transition-opacity duration-[380ms] ease-[var(--ease-out-expo)]",
+        "route-veil fixed inset-0 z-[95] flex items-center justify-center bg-background/75 backdrop-blur-[6px] transition-opacity duration-[380ms] ease-[var(--ease-out-expo)]",
         closing ? "pointer-events-none opacity-0" : "opacity-100",
       )}
-      style={{ opacity: closing ? 0 : 1 }}
     >
       <svg
         viewBox={SAVO_COMPACT_VIEWBOX}
