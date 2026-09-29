@@ -432,14 +432,6 @@ body {
   .sd-crawl {
     animation: sd-crawl 3.2s var(--ease-out-expo) both;
   }
-  .sd-ride {
-    animation: sd-ride 2.8s cubic-bezier(0.45, 0.05, 0.25, 1) both;
-  }
-  .sd-wheel {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: sd-spin 0.55s linear infinite;
-  }
 }
 @keyframes sd-draw {
   from { stroke-dashoffset: 1; }
@@ -456,13 +448,6 @@ body {
 }
 @keyframes sd-flow {
   to { stroke-dashoffset: -16; }
-}
-@keyframes sd-ride {
-  from { transform: translateX(-90px); }
-  to { transform: translateX(210px); }
-}
-@keyframes sd-spin {
-  to { transform: rotate(360deg); }
 }
 @keyframes sd-crawl {
   from { opacity: 0; transform: translate(18px, -14px); }
