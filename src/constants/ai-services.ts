@@ -125,16 +125,16 @@ export const AI_SERVICES: AiService[] = [
   },
   {
     slug: "automation",
-    title: "AI Automation",
+    title: "Business Automation",
     short: "Automation",
     tagline: "Automate the work between the work",
     heroLead:
-      "We design AI-powered workflows that understand information, make bounded decisions, connect your systems and route exceptions to humans. Work that used to wait for a click, a copy-paste or an approval now runs itself, with guardrails.",
+      "Workflow automation, no-code and low-code platforms, and AI-powered processes: we connect the applications, data, APIs and AI systems your business already runs into workflows that execute repetitive operational work automatically. Use no-code where it is sufficient, custom engineering where it is necessary, and both when that makes the best system.",
     metaDescription:
-      "AI automation by Savo Technologies: intelligent workflows that connect your CRM, ERP, documents and approvals into processes that execute real work. Built on your existing systems, with human oversight where it matters.",
+      "Business automation by Savo Technologies: no-code and low-code automation, workflow automation, business process automation and AI-powered workflows on n8n, Make, Zapier and Power Automate, connected to your CRM, ERP, documents and approvals with human oversight where it matters.",
     overview: [
-      "Between every pair of systems in your company sits work nobody was hired to do: re-keying invoices, chasing approvals, updating the CRM after the call, assembling the report from four tabs. AI automation is the engineering discipline that removes that work. It connects intelligence, business rules, data, applications and human approvals into workflows that actually execute, not chatbots that talk about executing.",
-      "We connect AI to the systems you already run. Your CRM, ERP, email, documents, spreadsheets and internal tools stay exactly where they are; the automation layer reads and writes through their APIs, makes the decisions you have bounded it to make, and hands the exceptions to a human with full context. Sales, marketing, support, finance, operations, HR, onboarding, reporting: the processes cross departments, so the automation does too.",
+      "Between every pair of systems in your company sits work nobody was hired to do: re-keying invoices, chasing approvals, updating the CRM after the call, assembling the report from four tabs. Business automation is the engineering discipline that removes that work. It connects rules, data, applications, AI and human approvals into workflows that actually execute, not chatbots that talk about executing.",
+      "Not every automation needs custom software, and not every automation needs AI. Rule-based workflows connect the tools you already run; AI-powered workflows add understanding, extraction, classification and decision support where judgment is required. We are an automation engineering partner, not an n8n agency: no-code where it is sufficient, custom APIs, integrations, databases and AI components where they are necessary, combined when that creates the best system.",
     ],
     engagements: [
       { title: "Document processing", text: "Invoices, contracts, KYC and claims read, validated and posted into your systems, exceptions routed for review." },
@@ -150,10 +150,14 @@ export const AI_SERVICES: AiService[] = [
       { name: "Connect", text: "The workflow wired into your existing systems through their APIs. Nothing gets replaced, everything gets connected." },
       { name: "Run", text: "Live with full audit trails, monitoring on every step, and a tuning cadence that widens automation as trust earns." },
     ],
-    stack: ["Workflow engines", "LLMs", "Document AI", "RAG", "CRM & ERP connectors", "Human-in-the-loop", "Audit trails"],
+    stack: ["n8n", "Make", "Zapier", "Power Automate", "Webhooks & REST APIs", "PostgreSQL", "Supabase", "OpenAI", "Anthropic", "Gemini", "Google Workspace", "Microsoft 365", "Slack", "CRM & ERP connectors"],
     faqs: [
       { q: "Do we have to replace our current systems?", a: "No. The automation layer connects through the APIs of the tools you already run, your CRM, ERP, mail, documents and internal apps. We integrate what works instead of demanding a migration." },
+      { q: "Do we need AI for automation to be worth it?", a: "No. Plenty of valuable automation is pure workflow: rule-based connections between the apps you already use, moving data, triggering actions and keeping records in sync. AI earns its place only where a step needs understanding or judgment, and we will say so honestly when it does not." },
+      { q: "What is the difference between workflow automation and AI-powered automation?", a: "Workflow automation is rule-based: when this happens, do that, across your existing applications. AI-powered automation adds intelligent steps: classifying an email, extracting invoice fields, drafting a reply, deciding whether an exception needs a human. Most systems we ship combine both, with AI only where rules run out." },
+      { q: "Do you only work with n8n?", a: "No. n8n is one important tool in our stack, alongside Make, Zapier, Microsoft Power Automate and custom code. We are technology-agnostic: the platform is chosen for your systems, team and governance needs, not our preferences." },
       { q: "What happens when the AI is unsure?", a: "It stops and asks. Every decision has explicit bounds and confidence thresholds; anything outside them routes to a human with the full context attached. The machine handles the routine, people handle judgment." },
+      { q: "What if we outgrow no-code?", a: "That is exactly why an engineering company runs this practice. When a workflow hits the limits of a no-code platform, we extend it with custom APIs, integrations, databases or AI components, so the system grows instead of getting rebuilt." },
       { q: "Which processes should we automate first?", a: "High volume, rule-shaped and currently eating someone's week: document intake, follow-ups, reconciliation, onboarding. We map your workflows and sequence by value delivered against effort, quick wins fund the deeper builds." },
       { q: "Is it auditable and secure?", a: "Every step is logged: what was read, what was decided, on what basis, who approved what. Access follows your existing permissions, data stays in your infrastructure, and the trail answers any auditor's question." },
     ],

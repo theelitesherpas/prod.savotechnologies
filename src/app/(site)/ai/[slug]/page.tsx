@@ -5,6 +5,7 @@ import { absoluteUrl } from "@/lib/env";
 import { AI_SERVICES } from "@/constants/ai-services";
 import { getManagedAiServices } from "@/lib/content-items";
 import { Section } from "@/components/ui/section";
+import { AutomationPractice } from "@/sections/ai/automation-practice";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Reveal } from "@/components/ui/reveal";
 import { ServiceSchematic } from "@/sections/services/service-schematics";
@@ -143,6 +144,12 @@ export default async function AiServicePage({ params }: { params: Promise<{ slug
         </div>
       </section>
 
+      {/* Business Automation gets the expanded practice layout; the other
+          AI services keep the classic template. */}
+      {svc.slug === "automation" ? (
+        <AutomationPractice svc={svc} />
+      ) : (
+      <>
       {/* The practice */}
       <Section index="The Practice" labelledBy="practice-heading">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
@@ -237,6 +244,8 @@ export default async function AiServicePage({ params }: { params: Promise<{ slug
         secondaryLabel="Meet the Fleet"
         secondaryHref="/ai-agents"
       />
+      </>
+      )}
     </>
   );
 }

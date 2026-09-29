@@ -111,6 +111,8 @@ export const AI_USE_CASES = [
   "Research Agent",
   "Operations Agent",
   "Document Processing Agent",
+  "Business Process Automation",
+  "No-Code & Low-Code Workflows",
 ] as const;
 
 export const AI_TRUST_POINTS = [

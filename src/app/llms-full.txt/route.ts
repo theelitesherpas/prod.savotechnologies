@@ -69,6 +69,13 @@ AI at Savo is production engineering, not demos: agents with guardrails, human
 oversight, observability, permissions, evaluation and fallback behavior,
 deployed against real business workflows with enterprise security.
 
+## Business automation
+- Page: ${absoluteUrl("/ai/automation")} - Business Automation: no-code and low-code automation, workflow automation, business process automation and AI-powered workflows
+- Positioning: automation engineering, not tool setup. No-code where sufficient, custom engineering (APIs, integrations, databases, AI components) where necessary, combined when that builds the best system. Not every automation needs AI: rule-based workflow automation and AI-powered automation are distinct and both offered.
+- Platforms (technology-agnostic): n8n, Make, Zapier, Microsoft Power Automate, webhooks, REST/GraphQL APIs, PostgreSQL, Supabase, Google Workspace, Microsoft 365, Slack, CRM/ERP/e-commerce/payment connectors, OpenAI, Anthropic, Gemini
+- Use-case flows: sales (lead capture → enrichment → CRM → qualification → assignment → follow-up), marketing, customer support, finance (invoice → extraction → validation → approval → accounting), HR, operations, e-commerce
+- Method: Discover → Map → Design → Connect → Automate → Govern → Monitor → Optimize, with security & governance, human approval gates, exception handling, monitoring and audit trails
+
 ## Contact
 - Contact page: ${absoluteUrl("/contact")}
 - Response promise: first reply within one business day; every message reaches a human
