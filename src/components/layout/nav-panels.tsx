@@ -49,7 +49,7 @@ function FeatureArt({ variant }: { variant: number }) {
     </g>,
   ];
   return (
-    <svg viewBox="0 0 60 60" aria-hidden="true" className="h-12 w-12 shrink-0 text-foreground/60">
+    <svg viewBox="0 0 60 60" aria-hidden="true" className="h-10 w-10 shrink-0 text-foreground/60">
       {art[variant % art.length]}
     </svg>
   );
@@ -83,7 +83,7 @@ function DrawerLink({ link, delay, onNavigate }: { link: NavLink; delay: number;
       <Link
         href={link.href}
         onClick={onNavigate}
-        className="group/drawer-link flex items-center gap-4 py-3.5"
+        className="group/drawer-link flex items-center gap-4 py-1.5"
       >
         <span className="min-w-0 flex-1 transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover/drawer-link:translate-x-1">
           <span className="flex flex-wrap items-center gap-2">
@@ -95,7 +95,7 @@ function DrawerLink({ link, delay, onNavigate }: { link: NavLink; delay: number;
             ) : null}
           </span>
           {link.desc ? (
-            <span className="t-caption mt-0.5 block text-muted/80 transition-colors duration-300 group-hover/drawer-link:text-muted">
+            <span className="t-caption mt-px block leading-snug text-muted/80 transition-colors duration-300 group-hover/drawer-link:text-muted">
               {link.desc}
             </span>
           ) : null}
@@ -110,7 +110,7 @@ function DrawerLink({ link, delay, onNavigate }: { link: NavLink; delay: number;
 function DrawerFeature({ feature, variant, delay, onNavigate }: { feature: NavFeature; variant: number; delay: number; onNavigate?: () => void }) {
   return (
     <div
-      className="mega-row flex h-full flex-col border-l border-border bg-surface-2/40 p-8 xl:p-10"
+      className="mega-row flex h-full flex-col border-l border-border bg-surface-2/40 p-6 xl:p-7"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-start justify-between gap-5">
@@ -119,12 +119,12 @@ function DrawerFeature({ feature, variant, delay, onNavigate }: { feature: NavFe
         </p>
         <FeatureArt variant={variant} />
       </div>
-      <p className="t-h4 mt-7 max-w-[24ch] leading-snug text-foreground">{feature.title}</p>
-      <p className="t-sm mt-4 max-w-[36ch] leading-relaxed text-muted">{feature.copy}</p>
+      <p className="t-h4 mt-4 max-w-[24ch] leading-snug text-foreground">{feature.title}</p>
+      <p className="t-sm mt-3 max-w-[36ch] leading-relaxed text-muted">{feature.copy}</p>
       <Link
         href={feature.href}
         onClick={onNavigate}
-        className="group/btn t-sm mt-auto inline-flex items-center gap-2 pt-8 font-semibold text-accent transition-colors hover:text-accent-hover"
+        className="group/btn t-sm mt-auto inline-flex items-center gap-2 pt-5 font-semibold text-accent transition-colors hover:text-accent-hover"
       >
         {feature.cta}
         <ArrowIcon className="transition-transform duration-300 group-hover/btn:translate-x-[3px]" />
@@ -193,16 +193,16 @@ export function MegaDrawer({
             role="region"
             aria-label={activeItem.label}
           >
-            <div className="shell grid gap-10 py-10 lg:grid-cols-12">
+            <div className="shell grid gap-8 py-6 lg:grid-cols-12">
               {/* Links */}
               <div className="lg:col-span-8">
-                <p className="t-label mb-6 flex items-center gap-3 uppercase tracking-[0.14em] text-muted">
+                <p className="t-label mb-4 flex items-center gap-3 uppercase tracking-[0.14em] text-muted">
                   <span aria-hidden="true" className="h-1.5 w-1.5 bg-accent" />
                   {EYEBROWS[activeItem.label] ?? activeItem.label}
                 </p>
                 <ul
                   className={cn(
-                    activeItem.children.length > 6 && "grid grid-cols-2 gap-x-10",
+                    activeItem.children.length > 4 && "grid grid-cols-2 gap-x-10",
                     "[&>li:last-child]:border-b-0",
                   )}
                 >
@@ -214,7 +214,7 @@ export function MegaDrawer({
                   <Link
                     href={activeItem.href}
                     onClick={onNavigate}
-                    className="group/all t-label mega-row mt-6 inline-flex items-center gap-2 border-t border-border pt-5 uppercase tracking-[0.12em] text-muted transition-colors hover:text-accent"
+                    className="group/all t-label mega-row mt-3 inline-flex items-center gap-2 border-t border-border pt-3.5 uppercase tracking-[0.12em] text-muted transition-colors hover:text-accent"
                     style={{ animationDelay: `${48 + activeItem.children.length * 24}ms` }}
                   >
                     All {activeItem.label}
