@@ -2,14 +2,14 @@ import { getCaseStudy } from "@/lib/case-studies";
 import { resolveCaseImages } from "@/lib/case-study-schema";
 
 /**
- * Case-study image endpoint — serves stored visuals as real, cacheable
+ * Case-study image endpoint: serves stored visuals as real, cacheable
  * JPEG responses instead of megabytes of inline data URLs in the HTML.
  *
  * GET /api/cs-img?s=<slug>&k=<slot>&v=<stamp>
  *   k: showcase | cardWide | card | dossierCard | gallery-<i>
  *   v: cache-buster derived from the image bytes (any re-upload changes it)
  *
- * Responses are immutable for a year — the version stamp in the URL is the
+ * Responses are immutable for a year: the version stamp in the URL is the
  * invalidation: editing an image in the admin produces a new stamp, hence
  * a new URL, hence a fresh download. Unedited images stay in the browser
  * cache across every visit.

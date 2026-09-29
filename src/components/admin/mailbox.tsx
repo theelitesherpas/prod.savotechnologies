@@ -665,7 +665,7 @@ function ComposePanel({
   );
 }
 
-/** Submit button with sending state — shows spinner + "Sending…" while the
+/** Submit button with sending state: shows spinner + "Sending…" while the
  *  server action runs, then the page redirects with the success notice. */
 function SendButton() {
   const { pending } = useFormStatus();

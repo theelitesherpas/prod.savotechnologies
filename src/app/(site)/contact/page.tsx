@@ -139,7 +139,7 @@ export default async function ContactPage() {
         <div className="mt-12 grid gap-10 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <p className="t-body max-w-xs text-muted">
-              Everything above is how it actually works — no exceptions for company size or project scale.
+              Everything above is how it actually works, with no exceptions for company size or project scale.
             </p>
           </div>
           <div className="lg:col-span-8">

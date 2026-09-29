@@ -135,7 +135,7 @@ export default function RootLayout({
         ) : null}
 
         {children}
-        {/* Branded page-transition veil — arms on internal navigation,
+        {/* Branded page-transition veil: arms on internal navigation,
             only appears when the route genuinely takes time. */}
         <RouteLoader />
       </body>

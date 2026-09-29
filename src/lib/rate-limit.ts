@@ -6,7 +6,7 @@
 
 type Bucket = { hits: number[] };
 
-// Global singleton — survives Turbopack module isolation between
+// Global singleton: survives Turbopack module isolation between
 // server actions and API routes (same pattern as the Prisma client).
 const globalForRate = globalThis as unknown as { __rateBuckets?: Map<string, Bucket> };
 const buckets = globalForRate.__rateBuckets ?? new Map<string, Bucket>();

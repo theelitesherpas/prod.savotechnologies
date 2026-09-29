@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const study = await getCaseStudy(slug);
   if (!study) return {};
   const discipline = CASE_DISCIPLINES.find((d) => d.id === study.discipline);
-  const title = `${study.displayClientName || study.title} — ${discipline?.title ?? "Case Study"}`;
+  const title = `${study.displayClientName || study.title} · ${discipline?.title ?? "Case Study"}`;
   return {
     title,
     description: study.summary || `${study.title} case study by Savo Technologies.`,
@@ -122,11 +122,11 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
             <Reveal>
               <figure className="relative overflow-hidden rounded-xl border border-border bg-background shadow-[0_8px_32px_rgb(10_10_14/0.08)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={showcaseSrc} alt={images.showcase?.alt || `${displayName} — project showcase`}
+                <img src={showcaseSrc} alt={images.showcase?.alt || `${displayName} · project showcase`}
                   className="w-full object-cover" style={{ aspectRatio: "16/7" }} />
                 {images.showcase?.alt || displayName ? (
                   <figcaption className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-4 rounded-lg border border-white/20 bg-white/70 px-4 py-3 backdrop-blur-md">
-                    <p className="t-caption font-medium text-foreground/80">{images.showcase?.alt || `${displayName} — project showcase`}</p>
+                    <p className="t-caption font-medium text-foreground/80">{images.showcase?.alt || `${displayName} · project showcase`}</p>
                     <span className="t-label hidden shrink-0 text-muted/60 sm:block">{discipline?.title}</span>
                   </figcaption>
                 ) : null}
@@ -218,7 +218,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       {/* ═══ 04 · KEY FEATURES (sand) ═══ */}
       {study.keyFeatures && study.keyFeatures.length > 0 ? (
         <Section index="Key Features" labelledBy="cs-features-heading" className="bg-surface-2/60 !py-14 sm:!py-18 lg:!py-22">
-          <SectionHeader id="cs-features-heading" heading="Notable features." lead={<>What makes this build stand out — the capabilities that earned attention.</>} />
+          <SectionHeader id="cs-features-heading" heading="Notable features." lead={<>What makes this build stand out: the capabilities that earned attention.</>} />
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {study.keyFeatures.slice(0, 3).map((f, i) => (
               <Reveal key={i} delay={i * 80}>
@@ -244,7 +244,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       {/* ═══ 06 · GALLERY CAROUSEL (sand) ═══ */}
       {study.gallery && study.gallery.length > 0 ? (
         <Section index="Gallery" labelledBy="cs-gallery-heading" className="bg-surface-2/60 !py-14 sm:!py-18 lg:!py-22">
-          <SectionHeader id="cs-gallery-heading" heading="Inside the project." lead={<>Screens and detail views — swipe or use the arrows.</>} />
+          <SectionHeader id="cs-gallery-heading" heading="Inside the project." lead={<>Screens and detail views, swipe or use the arrows.</>} />
           <Reveal>
             <GalleryCarousel
               images={study.gallery.map((g, i) => ({ src: caseImageSrc(study.slug, `gallery-${i}`, g.dataUrl), alt: g.alt, width: g.width, height: g.height }))}
@@ -344,7 +344,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                     <div className="relative aspect-[16/10] overflow-hidden">
                       {art ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={caseImageSrc(other.slug, "dossierCard", art.dataUrl)} alt={art.alt || `${other.displayClientName || other.title} — project`}
+                        <img src={caseImageSrc(other.slug, "dossierCard", art.dataUrl)} alt={art.alt || `${other.displayClientName || other.title} · project`}
                           className="h-full w-full object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]" />
                       ) : (
                         <div className="flex h-full items-center justify-center bg-surface-2/60 text-muted/40">
@@ -386,7 +386,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       <DetailCta
         headingId="cs-cta-heading"
         heading="Start your project."
-        lead="Every case study here started as a plain-language brief. Send the problem and its constraints — a senior consultant replies within one business day."
+        lead="Every case study here started as a plain-language brief. Send the problem and its constraints, and a senior consultant replies within one business day."
         location="case-study-close"
         secondaryLabel="Browse Services"
         secondaryHref="/services"

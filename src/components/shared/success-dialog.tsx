@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 /**
- * SuccessDialog — the confirmation moment for high-stakes form submissions
+ * SuccessDialog: the confirmation moment for high-stakes form submissions
  * (applications, enquiries). A centred paper panel over the dimmed page:
  * a drawn check, the house serif headline, expectation-setting copy and
  * the condensed next steps, with the full dialog idiom the enquiry drawer
@@ -29,7 +29,7 @@ function lockScroll(lock: boolean) {
   }
 }
 
-/** The drawn check — circle first, then the tick, expo-eased. Static
+/** The drawn check: circle first, then the tick, expo-eased. Static
  *  under prefers-reduced-motion (see globals.css). */
 function SuccessCheck({ size = 72 }: { size?: number }) {
   return (

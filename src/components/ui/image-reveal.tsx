@@ -66,7 +66,7 @@ export function ImageReveal({
     // Also check on mount (element may already be in viewport)
     const rect = el.getBoundingClientRect();
     if (rect.top < window.innerHeight * 0.85) {
-      // already visible on load — brief delay so the wipe reads as motion
+      // already visible on load: brief delay so the wipe reads as motion
       const t = setTimeout(reveal, 200);
       return () => {
         clearTimeout(t);

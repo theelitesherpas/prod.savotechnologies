@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * DisciplineDoodle — animated inline SVG showing what was built.
+ * DisciplineDoodle: animated inline SVG showing what was built.
  * Each discipline has its own scene with CSS animations:
  *   web: browser window with typing cursor and scrolling lines
  *   mobile: phone with sliding screens and notification badge
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
  *   design: color palette being mixed
  *   growth: ascending trend arrow with expanding reach
  *
- * Pure CSS animations — no JS runtime cost, accessible (aria-hidden).
+ * Pure CSS animations: no JS runtime cost, accessible (aria-hidden).
  */
 
 export function DisciplineDoodle({

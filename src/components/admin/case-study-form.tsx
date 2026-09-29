@@ -1,21 +1,21 @@
 "use client";
 
 /**
- * Case-study editor — the complete dossier form for /admin/case-studies.
+ * Case-study editor: the complete dossier form for /admin/case-studies.
  *
  * Sections (in order, matching the public detail page):
- *   1. Publishing   — lifecycle, order, featured
- *   2. Identity      — title, discipline, client, industry, meta
- *   3. Project Images — showcase/cardWide/card with crop studio
- *   4. Gallery       — multi-image upload with auto-compression
- *   5. Content       — summary, challenge, solution
- *   6. Capabilities  — services multi-select
- *   7. Tech Stack    — curated selectable chips + custom add
- *   8. Integrations  — curated selectable chips + custom add
- *   9. Key Features  — title + description repeater
- *  10. Outcomes      — metrics repeater (value/label/verified)
- *  11. Palette       — color swatches
- *  12. Testimonial   — quote, name, role
+ *   1. Publishing  : lifecycle, order, featured
+ *   2. Identity     : title, discipline, client, industry, meta
+ *   3. Project Images: showcase/cardWide/card with crop studio
+ *   4. Gallery      : multi-image upload with auto-compression
+ *   5. Content      : summary, challenge, solution
+ *   6. Capabilities : services multi-select
+ *   7. Tech Stack   : curated selectable chips + custom add
+ *   8. Integrations : curated selectable chips + custom add
+ *   9. Key Features : title + description repeater
+ *  10. Outcomes     : metrics repeater (value/label/verified)
+ *  11. Palette      : color swatches
+ *  12. Testimonial  : quote, name, role
  *
  * All fields are mandatory except liveUrl, gallery, palette and
  * testimonial. Validation errors display on submit with inline
@@ -287,7 +287,7 @@ export function CaseStudyForm({
     if (title.trim().length < 2) errs.title = "Project title is required (min 2 characters).";
     if (publishing && clientName.trim().length < 2) errs.client = "Client name is required.";
     if (publishing) {
-      if (displayClientName.trim().length < 2) errs.display = "Display name is required — shown publicly on cards and the detail page.";
+      if (displayClientName.trim().length < 2) errs.display = "Display name is required (shown publicly on cards and the detail page).";
       if (industry.trim().length < 2) errs.industry = "Industry / engagement line is required.";
       if (clientLocation.trim().length < 2) errs.location = "Client location is required (e.g. Indore, India).";
       if (!businessModel) errs.bizmodel = "Select a business model.";
@@ -300,20 +300,20 @@ export function CaseStudyForm({
       if (solution.trim().length < 20) errs.solution = "Solution is required (min 20 characters).";
       if (services.length === 0) errs.services = "Select at least 1 service capability.";
       if (technologies.length === 0) errs.technologies = "Select at least 1 technology.";
-      if (integrations.length === 0) errs.integrations = "Add at least 1 integration — payments, email, maps… or a custom one.";
+      if (integrations.length === 0) errs.integrations = "Add at least 1 integration: payments, email, maps… or a custom one.";
       if (filledFeatures.length === 0) errs.keyFeatures = "Add at least 1 key feature.";
       // Images: every rendering surface needs its slot filled
       (Object.keys(CASE_IMAGE_SLOTS) as SlotKey[]).forEach((slot) => {
         if (!images[slot])
-          errs[`img-${slot}`] = `${CASE_IMAGE_SLOTS[slot].label} image is required — ${CASE_IMAGE_SLOTS[slot].width} × ${CASE_IMAGE_SLOTS[slot].height}px.`;
+          errs[`img-${slot}`] = `${CASE_IMAGE_SLOTS[slot].label} image is required (${CASE_IMAGE_SLOTS[slot].width} × ${CASE_IMAGE_SLOTS[slot].height}px).`;
       });
       if (gallery.length === 0) errs.gallery = "Add at least 1 gallery image (recommended 1600 × 1200, up to 8).";
       if (palette.length === 0) errs.palette = "Add at least 1 palette color.";
       else if (palette.some((p) => !p.name.trim() || !/^#[0-9a-fA-F]{6}$/.test(p.hex)))
         errs.palette = "Every palette color needs a name and a valid #RRGGBB hex.";
-      if (!hasTestimonial) errs.testimonial = "Include the client testimonial — toggle it on and fill all three fields.";
+      if (!hasTestimonial) errs.testimonial = "Include the client testimonial: toggle it on and fill all three fields.";
     }
-    // Results section removed — metrics not required
+    // Results section removed: metrics not required
     if (liveUrl.trim() && !/^https?:\/\/.+\..+/.test(liveUrl.trim())) errs.liveUrl = "Enter a valid URL (https://example.com) or leave empty.";
     if (hasTestimonial) {
       if (tQuote.trim().length < 10) errs.tQuote = "Quote is required (min 10 characters).";
@@ -323,10 +323,10 @@ export function CaseStudyForm({
 
     // Also check images (server-side zod will reject oversized data URLs)
     if (images.showcase && images.showcase.dataUrl.length > 3_900_000) {
-      errs.showcase = "Showcase image is too large after compression — try a simpler photo.";
+      errs.showcase = "Showcase image is too large after compression, try a simpler photo.";
     }
     if (images.cardWide && images.cardWide.dataUrl.length > 3_900_000) {
-      errs.cardWide = "Featured card image is too large — try a simpler photo.";
+      errs.cardWide = "Featured card image is too large, try a simpler photo.";
     }
     gallery.forEach((g, i) => {
       if (g.dataUrl.length > 3_900_000) {
@@ -382,13 +382,13 @@ export function CaseStudyForm({
           <label className="adm-label" htmlFor="cs-order">Order</label>
           <input id="cs-order" className="adm-input h-9 w-20 py-1 tnum" type="number" min={0} max={9999} step={1}
             value={order} onChange={(e) => setOrder(e.target.value)}
-            title="Homepage + discipline ordering — lower numbers first" />
+            title="Homepage + discipline ordering, lower numbers first" />
         </div>
         <label className="flex cursor-pointer items-center gap-2 text-[0.875rem] font-medium text-foreground">
           <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
           Featured on homepage
         </label>
-        <p className="t-caption ml-auto max-w-xs text-right text-muted">Only <strong>Published</strong> records render publicly. Drafts save at any completeness — starred fields are required to publish.</p>
+        <p className="t-caption ml-auto max-w-xs text-right text-muted">Only <strong>Published</strong> records render publicly. Drafts save at any completeness; starred fields are required to publish.</p>
       </div>
 
       {/* ═══ 2. IDENTITY ═══ */}
@@ -405,7 +405,7 @@ export function CaseStudyForm({
               {CASE_DISCIPLINES.map((d) => (<option key={d.id} value={d.id}>{d.title}</option>))}
             </select>
           </Field>
-          <Field id="cs-client" label="Client name (internal)" required={publishing} error={errors.client} hint="Not shown publicly — for your reference">
+          <Field id="cs-client" label="Client name (internal)" required={publishing} error={errors.client} hint="Not shown publicly, for your reference">
             <input id="cs-client" className={cn(input, errors.client && "border-error/50")} value={clientName} onChange={(e) => setClientName(e.target.value)}
               placeholder="Acme Trading Pvt Ltd" required={publishing} maxLength={120} />
           </Field>
@@ -423,13 +423,13 @@ export function CaseStudyForm({
           </Field>
           <Field id="cs-bizmodel" label="Business model" required={publishing} error={errors.bizmodel}>
             <select id="cs-bizmodel" className={cn("adm-select w-full", errors.bizmodel && "border-error/50")} value={businessModel} onChange={(e) => setBusinessModel(e.target.value)} required={publishing}>
-              <option value="">— Select —</option>
+              <option value="">Select an option…</option>
               {BUSINESS_MODELS.map((m) => (<option key={m} value={m}>{m}</option>))}
             </select>
           </Field>
           <Field id="cs-platforms" label="Platforms" required={publishing} error={errors.platforms}>
             <select id="cs-platforms" className={cn("adm-select w-full", errors.platforms && "border-error/50")} value={platforms} onChange={(e) => setPlatforms(e.target.value)} required={publishing}>
-              <option value="">— Select —</option>
+              <option value="">Select an option…</option>
               {PLATFORM_OPTIONS.map((p) => (<option key={p} value={p}>{p}</option>))}
             </select>
           </Field>
@@ -445,7 +445,7 @@ export function CaseStudyForm({
             <input id="cs-team" className={cn(input, errors.teamSize && "border-error/50")} value={teamSize}
               onChange={(e) => setTeamSize(e.target.value)} placeholder="5 specialists" required={publishing} maxLength={60} />
           </Field>
-          <Field id="cs-live" label="Live project URL" hint="Optional — shows as 'View Live' button. Leave empty if not public." error={errors.liveUrl}>
+          <Field id="cs-live" label="Live project URL" hint="Optional: shows as 'View Live' button. Leave empty if not public." error={errors.liveUrl}>
             <input id="cs-live" className={cn(input, errors.liveUrl && "border-error/50")} type="url" value={liveUrl}
               onChange={(e) => setLiveUrl(e.target.value)} placeholder="https://example.com" maxLength={500} />
           </Field>
@@ -462,7 +462,7 @@ export function CaseStudyForm({
       <div className={sectionCard}>
         <p className={sectionTitle}>2 · Project Images</p>
         <p className="t-caption text-muted">
-          Each image is cropped to exact dimensions and auto-compressed. Upload once —
+          Each image is cropped to exact dimensions and auto-compressed. Upload once:
           the crop tool ensures consistency across all surfaces.
         </p>
         <div className="space-y-6">
@@ -497,7 +497,7 @@ export function CaseStudyForm({
       <div className={sectionCard} id="cs-gallery">
         <p className={sectionTitle}>3 · Project Gallery <span className="text-error">*</span></p>
         <p className={cn("t-caption", errors.gallery ? "text-error" : "text-muted")}>
-          {errors.gallery ?? "At least 1 image, up to 8. Recommended: 1600 × 1200 px (4:3) JPEG — other ratios are center-cropped. Displayed as a swipeable carousel."}
+          {errors.gallery ?? "At least 1 image, up to 8. Recommended: 1600 × 1200 px (4:3) JPEG; other ratios are center-cropped. Displayed as a swipeable carousel."}
         </p>
         <GalleryUploader images={gallery} onChange={setGallery} />
       </div>
@@ -517,7 +517,7 @@ export function CaseStudyForm({
             value={challenge} onChange={(e) => setChallenge(e.target.value)} required={publishing} maxLength={4000}
             placeholder="The business problem, in plain words." />
         </Field>
-        <Field id="cs-solution" label="The solution — what we built" required={publishing} error={errors.solution}
+        <Field id="cs-solution" label="The solution: what we built" required={publishing} error={errors.solution}
           hint="Approach, architecture, how it shipped (max 4000 chars)">
           <textarea id="cs-solution" className={cn(input, "min-h-28 resize-y", errors.solution && "border-error/50")}
             value={solution} onChange={(e) => setSolution(e.target.value)} required={publishing} maxLength={4000}
@@ -529,7 +529,7 @@ export function CaseStudyForm({
       <div className={sectionCard}>
         <p className={sectionTitle}>5 · Service Capabilities</p>
         <p className={errors.services ? errorText : "t-caption text-muted"}>
-          {errors.services ?? "Select at least 1 — chips for this discipline first, all disciplines available."}
+          {errors.services ?? "Select at least 1: chips for this discipline first, all disciplines available."}
         </p>
         <div className={cn("flex flex-wrap gap-2 rounded-lg border p-3", errors.services ? "border-error/40" : "border-border")}>
           {disciplineCaps.map((cap) => (
@@ -562,7 +562,7 @@ export function CaseStudyForm({
       <div className={sectionCard}>
         <p className={sectionTitle}>6 · Technology Stack</p>
         <p className={errors.technologies ? errorText : "t-caption text-muted"}>
-          {errors.technologies ?? "Select from popular options — or add a custom technology."}
+          {errors.technologies ?? "Select from popular options, or add a custom technology."}
         </p>
         <ChipSelector
           options={TECH_STACK_OPTIONS.flatMap((g) => g.items).sort()}
@@ -578,7 +578,7 @@ export function CaseStudyForm({
       <div className={sectionCard} id="cs-integrations">
         <p className={sectionTitle}>7 · Integrations <span className="text-error">*</span></p>
         <p className={errors.integrations ? errorText : "t-caption text-muted"}>
-          {errors.integrations ?? "Third-party services — payments, email, maps, analytics, etc."}
+          {errors.integrations ?? "Third-party services: payments, email, maps, analytics, etc."}
         </p>
         <ChipSelector
           options={INTEGRATION_OPTIONS}
@@ -603,7 +603,7 @@ export function CaseStudyForm({
         </div>
         <div className="rounded-lg border border-border bg-surface-2/40 px-4 py-3">
           <p className="t-sm text-muted">
-            <strong>What is this?</strong> These are the 3 most notable capabilities you delivered —
+            <strong>What is this?</strong> These are the 3 most notable capabilities you delivered,
             like &ldquo;Real-time order tracking&rdquo; or &ldquo;AI-powered recommendations&rdquo;. Each gets an animated
             infographic icon, a bold title, and a one-line description on the public detail page.
             Think of them as the highlights a potential client would ask about first.
@@ -614,7 +614,7 @@ export function CaseStudyForm({
         </p>
         <div className={cn("space-y-2 rounded-lg border p-3", errors.keyFeatures && "border-error/40")}>
           {keyFeatures.length === 0 ? (
-            <p className="t-caption text-center text-muted/60 py-3">No features yet — e.g. &ldquo;Real-time tracking: Live GPS map of deliveries.&rdquo;</p>
+            <p className="t-caption text-center text-muted/60 py-3">No features yet, e.g. &ldquo;Real-time tracking: Live GPS map of deliveries.&rdquo;</p>
           ) : null}
           {keyFeatures.map((f, i) => (
             <div key={i} className="grid grid-cols-[1fr_2fr_auto] items-start gap-2">
@@ -643,7 +643,7 @@ export function CaseStudyForm({
           </button>
         </div>
         <p className={cn("t-caption", errors.palette ? "text-error" : "text-muted")}>
-          {errors.palette ?? "The color system shown as swatches on the detail page — at least 1 color."}
+          {errors.palette ?? "The color system shown as swatches on the detail page; at least 1 color."}
         </p>
         <div className="space-y-2">
           {palette.length === 0 ? <p className="t-caption text-center text-muted/60 py-3">No colors added.</p> : null}
@@ -682,7 +682,7 @@ export function CaseStudyForm({
             <Field id="cs-tq" label="Quote" required error={errors.tQuote}>
               <textarea id="cs-tq" className={cn(input, "min-h-24 resize-y", errors.tQuote && "border-error/50")}
                 value={tQuote} onChange={(e) => setTQuote(e.target.value)} maxLength={1200}
-                placeholder="Approved client quote — never an invented endorsement." />
+                placeholder="Approved client quote, never an invented endorsement." />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field id="cs-tn" label="Name" required error={errors.tName}>

@@ -4,7 +4,7 @@ import { useEnquiry } from "@/components/shared/enquiry-dialog";
 import { track } from "@/lib/analytics";
 
 /**
- * StartProjectButton — inline CTA that opens the site's enquiry drawer
+ * StartProjectButton: inline CTA that opens the site's enquiry drawer
  * (side panel) instead of navigating away. Used on case-study detail
  * pages and other content pages where the user shouldn't lose context.
  */

@@ -6,7 +6,7 @@ import { HOME_FAQS } from "@/constants/faqs";
 import { absoluteUrl } from "@/lib/env";
 
 /**
- * Homepage FAQ — the company-level AEO/GEO surface. The questions buyers
+ * Homepage FAQ: the company-level AEO/GEO surface. The questions buyers
  * and search engines ask first, answered plainly, structured as FAQPage
  * JSON-LD at page level. Mirrors the service-page question chapter:
  * sticky statement left, accordion right.
@@ -29,13 +29,13 @@ export function HomeFaq() {
       <SectionHeader
         id={headingId}
         heading="Questions clients ask first."
-        lead="The questions we hear in every first conversation — answered the same way we answer them in person."
+        lead="The questions we hear in every first conversation, answered the same way we answer them in person."
       />
       <div className="mt-12 grid gap-10 lg:grid-cols-12">
         <div className="lg:col-span-4">
           <div className="lg:sticky lg:top-28">
             <p className="t-body max-w-xs text-muted">
-              Straight answers, kept current with how we actually work —
+              Straight answers, kept current with how we actually work,
               from Indore and Switzerland to wherever you are.
             </p>
             <Link

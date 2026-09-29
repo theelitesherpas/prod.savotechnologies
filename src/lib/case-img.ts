@@ -1,6 +1,6 @@
 /**
  * Cache-busting URL builder for case-study images served by /api/cs-img.
- * The stamp is the data URL's base64 tail — any re-encode or re-upload
+ * The stamp is the data URL's base64 tail: any re-encode or re-upload
  * changes it, which produces a new URL and busts the browser cache.
  * Identical images keep their URL and stay cached forever.
  */

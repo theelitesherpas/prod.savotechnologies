@@ -177,7 +177,7 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
       });
     });
     // When real case studies exist for this discipline, the pending
-    // placeholder slots are hidden — real work replaces the mock slots.
+    // placeholder slots are hidden: real work replaces the mock slots.
     return { ...d, entries: mapped };
   });
 }

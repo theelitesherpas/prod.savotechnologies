@@ -4,7 +4,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * GalleryCarousel — premium two-up image slider.
+ * GalleryCarousel: premium two-up image slider.
  * Desktop: two large images side by side with arrow navigation.
  * Mobile: single image with swipe/drag.
  * Smooth scroll-snap, dots indicator, keyboard arrows, lazy loading.
@@ -72,7 +72,7 @@ export function GalleryCarousel({ images, title }: { images: GalleryImage[]; tit
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={img.src}
-              alt={img.alt || `${title} — screen ${i + 1}`}
+              alt={img.alt || `${title} · screen ${i + 1}`}
               className="aspect-[4/3] w-full object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
               loading={i < 2 ? "eager" : "lazy"}
               draggable={false}

@@ -23,7 +23,7 @@ import { FinalCTA } from "@/sections/home/final-cta";
  *
  * Metrics render as pending placeholders until verified figures arrive.
  */
-export const revalidate = 0; // always fresh — managed content
+export const revalidate = 0; // always fresh: managed content
 
 export default function HomePage() {
   return (

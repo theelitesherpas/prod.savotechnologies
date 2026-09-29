@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
 /**
- * FeatureIcon — animated infographic icons for the Key Features section.
- * Three rotating variants (index 0, 1, 2) — each is a pure CSS animated SVG
+ * FeatureIcon: animated infographic icons for the Key Features section.
+ * Three rotating variants (index 0, 1, 2): each is a pure CSS animated SVG
  * that adds motion and personality to the feature cards without any JS cost.
  *
  *   variant 0: drawing checkmark (capability confirmed)

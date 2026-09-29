@@ -10,7 +10,7 @@ export const dynamic = "force-static";
 export async function GET() {
   const base = canonicalOrigin;
   const body = {
-    name: "Savo Technologies — public web services",
+    name: "Savo Technologies: public web services",
     description:
       "Agent-facing endpoints of savotechnologies.com: content manifests, structured data and content negotiation. All are public and unauthenticated; no keys or registration are required.",
     docs: absoluteUrl("/llms.txt"),
@@ -27,7 +27,7 @@ export async function GET() {
         name: "llms-full.txt",
         url: absoluteUrl("/llms-full.txt"),
         format: "text/markdown",
-        description: "The full site context for AI agents — complete page content in Markdown.",
+        description: "The full site context for AI agents: complete page content in Markdown.",
       },
       {
         name: "Markdown negotiation",

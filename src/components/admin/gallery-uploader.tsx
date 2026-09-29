@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { AttachedImage } from "./image-crop-field";
 
 /**
- * Gallery uploader — lightweight multi-image upload for case-study
+ * Gallery uploader: lightweight multi-image upload for case-study
  * galleries. Auto-resizes to max 1600px wide, compresses to JPEG q=0.80,
  * and keeps each under 4MB (schema limit). Shows a live thumbnail grid
  * with alt-text inputs and remove buttons.
@@ -13,7 +13,7 @@ import type { AttachedImage } from "./image-crop-field";
 
 const MAX_DIM = 1600;
 const QUALITY_LADDER = [0.78, 0.7, 0.62]; // walk down only if over budget
-/** ≈4.5 bytes/px — a 1600×1200 gallery shot lands ≈430KB, crisp. */
+/** ≈4.5 bytes/px: a 1600×1200 gallery shot lands ≈430KB, crisp. */
 const budgetChars = (w: number, h: number) =>
   Math.round((Math.max(90_000, (w * h) / 4.5)) * 1.375) + 200;
 const MAX_BYTES = 4_000_000;

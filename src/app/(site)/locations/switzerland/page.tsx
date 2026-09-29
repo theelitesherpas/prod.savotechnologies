@@ -10,7 +10,7 @@ import { SWITZERLAND_FAQS } from "@/constants/faqs";
 import { openGraphFor } from "@/lib/seo";
 
 /**
- * Switzerland location page — Savo Technologies' head office is in
+ * Switzerland location page: Savo Technologies' head office is in
  * Granges-Marnand. Like the Indore page, this exists because the company
  * genuinely operates there; it explains what that means for Swiss and
  * European clients. Verified facts only (address and phone from the
@@ -33,12 +33,12 @@ export const metadata: Metadata = {
 };
 
 const SERVICES = [
-  { title: "Web development", body: "Corporate websites, web applications and platforms on Next.js and React — fast, accessible and engineered for European buyers and search engines.", href: "/services/web-development" },
+  { title: "Web development", body: "Corporate websites, web applications and platforms on Next.js and React: fast, accessible and engineered for European buyers and search engines.", href: "/services/web-development" },
   { title: "Mobile app development", body: "iOS and Android apps with Flutter and React Native, from first release to store-scale operation.", href: "/services/mobile-app-development" },
-  { title: "AI agents & agentic systems", body: "Agents with tool use, retrieval, evaluation and guardrails — automation that holds up in production, not slideware.", href: "/ai-agents" },
+  { title: "AI agents & agentic systems", body: "Agents with tool use, retrieval, evaluation and guardrails: automation that holds up in production, not slideware.", href: "/ai-agents" },
   { title: "Custom software & SaaS", body: "Operational software, portals and SaaS platforms on PostgreSQL-grade architecture, built for the long run.", href: "/services/custom-software-development" },
-  { title: "UI/UX design", body: "Product design that European users find obvious and beautiful — research, prototypes, design systems.", href: "/services/ui-ux-design" },
-  { title: "SEO, AEO & GEO", body: "Classic search plus answer engines and generative engines — being found however your clients ask.", href: "/services" },
+  { title: "UI/UX design", body: "Product design that European users find obvious and beautiful: research, prototypes, design systems.", href: "/services/ui-ux-design" },
+  { title: "SEO, AEO & GEO", body: "Classic search plus answer engines and generative engines: being found however your clients ask.", href: "/services" },
 ];
 
 export default function SwitzerlandPage() {
@@ -111,7 +111,7 @@ export default function SwitzerlandPage() {
         <SectionHeader
           id="services-heading"
           heading="What we deliver in Switzerland."
-          lead="The same senior team, process and quality bar serves Swiss clients as clients anywhere — with European hours covered from the head office."
+          lead="The same senior team, process and quality bar serves Swiss clients as clients anywhere, with European hours covered from the head office."
         />
         <div className="mt-12 grid gap-px border border-border bg-border sm:grid-cols-2">
           {SERVICES.map((s) => (
@@ -133,14 +133,14 @@ export default function SwitzerlandPage() {
         <SectionHeader
           id="working-heading"
           heading="Working with a Swiss-anchored team."
-          lead="Two offices, one team — and we are specific about what each contributes."
+          lead="Two offices, one team, and we are specific about what each contributes."
         />
         <Reveal className="mt-12 grid gap-px border border-border bg-border sm:grid-cols-2">
           <div className="bg-background p-7">
             <h3 className="t-h3">Senior presence, European hours</h3>
             <p className="t-body mt-3 text-muted">
               The Granges-Marnand office works Central European Time, aligned with your
-              business day — for conversations, decisions and accountability close to you,
+              business day, for conversations, decisions and accountability close to you,
               not half a world away.
             </p>
           </div>
@@ -172,7 +172,7 @@ export default function SwitzerlandPage() {
         <SectionHeader
           id="start-heading"
           heading="Start a conversation."
-          lead="From Granges-Marnand, Indore or wherever you are — the first step is the same: tell us what you are building."
+          lead="From Granges-Marnand, Indore or wherever you are, the first step is the same: tell us what you are building."
         />
         <Reveal className="mt-8 flex flex-wrap gap-4">
           <Link

@@ -6,7 +6,7 @@ import { SAVO_LETTER_PATHS, SAVO_COMPACT_VIEWBOX } from "@/components/shared/sav
 import { cn } from "@/lib/utils";
 
 /**
- * RouteLoader — the branded page-transition veil.
+ * RouteLoader: the branded page-transition veil.
  *
  * Arms on internal link clicks and history navigation, but only becomes
  * VISIBLE once the navigation has actually taken time (≥ 230ms), so
@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils";
  *
  * Not annoying, by construction:
  *  - invisible for fast navigations (the delay gate)
- *  - eased sweep (fast start, gentle settle) — never a spinner's loop
- *  - completes to full before fading — the mark always finishes its word
+ *  - eased sweep (fast start, gentle settle): never a spinner's loop
+ *  - completes to full before fading: the mark always finishes its word
  *  - fully static under prefers-reduced-motion
  */
 
@@ -68,7 +68,7 @@ export function RouteLoader() {
     finishing.current = true;
     cancelTimers();
     if (!shownAt.current) {
-      // never became visible — reset silently
+      // never became visible: reset silently
       setVisible(false);
       setClosing(false);
       setFill(0);
@@ -98,7 +98,7 @@ export function RouteLoader() {
     sweepRaf.current = requestAnimationFrame(tick);
   }, [cancelTimers, fill]);
 
-  /* Arm on internal link clicks (capture — before any stopPropagation) */
+  /* Arm on internal link clicks (capture: before any stopPropagation) */
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -116,7 +116,7 @@ export function RouteLoader() {
       if (url.origin !== window.location.origin) return;
       if (url.pathname === window.location.pathname && !url.hash && !window.location.hash) return;
 
-      // Navigation armed — show the veil only if it takes time
+      // Navigation armed: show the veil only if it takes time
       cancelTimers();
       finishing.current = false;
       startedAt.current = performance.now();
@@ -149,7 +149,7 @@ export function RouteLoader() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  /* Hard ceiling — never trap the visitor */
+  /* Hard ceiling: never trap the visitor */
   useEffect(() => {
     if (!visible) return;
     const left = MAX_WAIT_MS - (performance.now() - startedAt.current);
@@ -176,7 +176,7 @@ export function RouteLoader() {
         aria-label="Loading"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Ghost letters — the word, waiting */}
+        {/* Ghost letters: the word, waiting */}
         {SAVO_LETTER_PATHS.map((d, i) => (
           <path key={`g-${i}`} fillRule="evenodd" clipRule="evenodd" d={d} fill="rgb(23 23 26 / 0.13)" />
         ))}

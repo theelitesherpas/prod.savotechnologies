@@ -62,16 +62,16 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
       issues: record.error.issues.slice(0, 5).map(i => `${i.path.join(".")}: ${i.message}`),
     });
     redirect(`/admin/case-studies?e=${encodeURIComponent(
-      `Validation failed: ${record.error.issues[0]?.path.join(".") ?? "unknown"} — ${record.error.issues[0]?.message ?? "check all fields"}`,
+      `Validation failed: ${record.error.issues[0]?.path.join(".") ?? "unknown"}: ${record.error.issues[0]?.message ?? "check all fields"}`,
     )}`);
   }
 
   const data = record.data;
 
-  /* Completeness is a PUBLISH requirement, not a save requirement — an
+  /* Completeness is a PUBLISH requirement, not a save requirement: an
      in-progress record may always be saved as draft/review. A publish
      attempt with missing fields is downgraded to draft, SAVED, and the
-     editor is redirected back with the list of gaps — work is never
+     editor is redirected back with the list of gaps: work is never
      lost. (Exceptions per owner: author credit and live URL.) */
   const missing: string[] = [];
   if (!data.clientName?.trim()) missing.push("Client name");
@@ -127,11 +127,11 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
 
   revalidateCaseStudies(slug);
 
-  /* The publish attempt was downgraded — the work is safe as a draft;
+  /* The publish attempt was downgraded: the work is safe as a draft;
      send the editor back to the form with the exact gaps listed. */
   if (downgradedToDraft && savedId) {
     redirect(`/admin/case-studies/${savedId}?e=${encodeURIComponent(
-      `Saved as draft — complete before publishing: ${missing.join(", ")}`,
+      `Saved as draft: complete before publishing: ${missing.join(", ")}`,
     )}`);
   }
   redirect(`/admin/case-studies?saved=${form.data.id ? "updated" : "created"}`);

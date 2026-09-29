@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { report404 } from "@/lib/report";
 
 /**
- * Designed 404 fallback — clean, professional, no auto-redirect.
+ * Designed 404 fallback: clean, professional, no auto-redirect.
  *
  * Industry standard (Google, Stripe, Apple, Vercel): a 404 page should
  * help the visitor self-recover, never force them somewhere. The page

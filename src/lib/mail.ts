@@ -106,7 +106,7 @@ export async function sendMail(
       from,
       // Reply-To routes replies through SendGrid Inbound Parse
       // (reply.savotechnologies.com) into the admin panel. Only replies
-      // to our templates go to this subdomain — direct emails to the
+      // to our templates go to this subdomain: direct emails to the
       // real mailboxes never enter the admin panel.
       replyTo: dept === "hr" ? "hr@reply.savotechnologies.com" : "hello@reply.savotechnologies.com",
       to,

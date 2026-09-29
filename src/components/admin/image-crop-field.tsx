@@ -27,7 +27,7 @@ export type AttachedImage = {
 
 const MAX_SOURCE_BYTES = 25 * 1024 * 1024; // 25 MB source file guard
 const TARGET_BYTES_MAX = 4_000_000; // schema guard (data URL length)
-/** Web weight budget — ≈4.5 bytes per pixel keeps photography crisp
+/** Web weight budget: ≈4.5 bytes per pixel keeps photography crisp
  *  while capping what ships inline in page HTML (1600×700 → ≤250KB,
  *  1280×800 → ≤230KB). Industry-standard hero-image weight. */
 const budgetChars = (w: number, h: number) =>
