@@ -4,6 +4,7 @@ import { SITE } from "@/constants/site";
 import { openGraphFor } from "@/lib/seo";
 import { canonicalOrigin, INDEXABLE, env } from "@/lib/env";
 import { IS_DEMO } from "@/lib/content-mode";
+import { RouteLoader } from "@/components/ui/route-loader";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -134,6 +135,9 @@ export default function RootLayout({
         ) : null}
 
         {children}
+        {/* Branded page-transition veil — arms on internal navigation,
+            only appears when the route genuinely takes time. */}
+        <RouteLoader />
       </body>
     </html>
   );
