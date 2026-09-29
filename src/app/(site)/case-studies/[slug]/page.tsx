@@ -357,7 +357,15 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                     <div className="p-5">
                       <h3 className="t-h4 transition-colors group-hover:text-accent">{other.displayClientName || other.title}</h3>
                       {other.industry ? <p className="t-caption mt-2 text-muted">{other.industry}</p> : null}
-                      {other.results?.[0] ? <p className="t-caption mt-3 font-medium text-foreground/70">{other.results[0].value} {other.results[0].label}</p> : null}
+                      {/* Same verified-figures policy as every other card
+                          surface (policy §27): demo shows all, published
+                          records show verified outcomes only. */}
+                      {(() => {
+                        const shown = other.status === "demo" ? other.results : (other.results ?? []).filter((r) => r.verified);
+                        return shown?.[0] ? (
+                          <p className="t-caption mt-3 font-medium text-foreground/70">{shown[0].value} {shown[0].label}</p>
+                        ) : null;
+                      })()}
                     </div>
                   </Link>
                 </Reveal>

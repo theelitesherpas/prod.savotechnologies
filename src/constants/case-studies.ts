@@ -37,6 +37,9 @@ export type CaseEntry = {
   outcome: string;
   /** Present when the entry has a public detail page (demo/verified). */
   slug?: string;
+  /** Editorial status - demo records are labelled design concepts,
+      verified engagements render unlabelled (the work speaks). */
+  status?: "demo" | "verified";
   /** Resolved card visuals (admin crop studio) - featured cards use
    * cardWide, standard cards use card; detail pages use showcase. */
   images?: { cardWide?: { dataUrl: string; alt?: string } | null; card?: { dataUrl: string; alt?: string } | null };

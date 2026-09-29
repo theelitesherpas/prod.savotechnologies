@@ -168,6 +168,7 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
         shown.map((r) => `${r.value} ${r.label}`).join(" · ") +
         (s.status === "demo" && shown.length > 0 ? " - demo figures" : ""),
       slug: s.slug,
+      status: s.status,
       images: {
         cardWide: resolved.cardWide ? { dataUrl: resolved.cardWide.dataUrl, alt: resolved.cardWide.alt } : null,
         card: resolved.card ? { dataUrl: resolved.card.dataUrl, alt: resolved.card.alt } : null,

@@ -196,6 +196,7 @@ export function CaseStudyCard({
   sizes: string;
 }) {
   const hasDetail = typeof entry.slug === "string" && entry.slug.length > 0;
+  const isDemo = entry.status !== "verified"; // linked cards: demo concept until verified
   const art = (entry.featured ? entry.images?.cardWide : entry.images?.card) ?? entry.images?.cardWide ?? entry.images?.card;
   const hero = art?.dataUrl;
 
@@ -216,9 +217,11 @@ export function CaseStudyCard({
             <Image
               src={CASE_PHOTO[variant]}
               alt={
-                hasDetail
+                isDemo
                   ? `Design concept: ${entry.name} - fictional demo project`
-                  : `Representative studio imagery: ${variant} case study in preparation`
+                  : hasDetail
+                    ? `${entry.name} - project visual`
+                    : `Representative studio imagery: ${variant} case study in preparation`
               }
               fill
               sizes={sizes}
@@ -231,9 +234,15 @@ export function CaseStudyCard({
           aria-hidden="true"
           className="absolute inset-0 bg-[rgb(16_19_25/0.28)] transition-colors duration-700 group-hover:bg-[rgb(16_19_25/0.14)]"
         />
-        <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.45)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
-          {hasDetail ? "Design concept" : "In preparation"}
-        </span>
+        {hasDetail && isDemo ? (
+          <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.45)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
+            Design concept
+          </span>
+        ) : !hasDetail ? (
+          <span className="t-label absolute left-4 top-4 border border-white/25 bg-[rgb(16_19_25/0.45)] px-2.5 py-1.5 text-white/85 backdrop-blur-[2px]">
+            In preparation
+          </span>
+        ) : null}
         <span className="t-label absolute bottom-4 right-4 tnum text-white/75">{entry.sector}</span>
       </div>
       <div className="flex flex-wrap items-start justify-between gap-4 border-t border-border p-6 sm:p-8">
