@@ -64,7 +64,16 @@ git push https://github.com/theelitesherpas/prod.savotechnologies.git main
 
 * Verify the release: `git ls-remote origin main test main prod main` —
   the three `main` heads should show the intended promotion state.
-* Production deploys automatically from `prod.savotechnologies`.
+* Production is served by the VPS (`root@50.6.44.47`, `/var/www/savotechnologies`,
+  PM2 `savo` on port 4300 behind Cloudflare). Publish the promoted main
+  with one command:
+
+  ```bash
+  ssh root@50.6.44.47 'bash /var/www/savotechnologies/scripts/server-update.sh'
+  ```
+
+  The script pulls `main` from the public prod repo (no token needed),
+  runs `npm ci`, `prisma db push`, the production build and restarts PM2.
 
 ## Rules (industry standard)
 
