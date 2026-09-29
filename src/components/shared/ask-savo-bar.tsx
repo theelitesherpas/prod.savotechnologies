@@ -547,7 +547,7 @@ export function AskSavoBar() {
   const waiting = liveStatus === "waiting_for_agent";
   const timedOut = liveStatus === "waiting_follow_up" || liveStatus === "visitor_left";
   const activeChat = liveStatus === "active";
-  const fresh = phase === "welcome" || (phase === "ai" && messages.length === 0 && !typing);
+  const fresh = phase === "boot" || phase === "welcome" || (phase === "ai" && messages.length === 0 && !typing);
 
   const placeholder = useMemo(() => {
     if (phase === "prechat" && qStep === 2) return "Tell us briefly about your project or requirement…";
@@ -815,16 +815,19 @@ export function AskSavoBar() {
                   </li>
                 </ul>
               ) : null}
+            </div>
+          </div>
+        </div>
 
-              {/* The bar/composer */}
-              <form
-                onSubmit={submit}
-                aria-label="Ask Savo"
-                className={cn(
-                  "flex h-14 items-center gap-3 rounded-[8px] border border-foreground/20 bg-white pl-4 pr-2 transition-[border-color,border-radius] duration-500 ease-[var(--ease-out-expo)] focus-within:border-foreground/40",
-                  open && "rounded-t-none border-t-0",
-                )}
-              >
+        {/* The bar/composer — always visible, attached below the window */}
+        <form
+          onSubmit={submit}
+          aria-label="Ask Savo"
+          className={cn(
+            "flex h-14 items-center gap-3 rounded-[8px] border border-foreground/20 bg-white pl-4 pr-2 transition-[border-color,border-radius] duration-500 ease-[var(--ease-out-expo)] focus-within:border-foreground/40",
+            open && "rounded-t-none border-t-0",
+          )}
+        >
                 <span aria-hidden="true" className="flex h-4 w-4 shrink-0 items-center justify-center border border-accent/70">
                   <span className={cn("h-1.5 w-1.5 bg-accent", (waiting || typing) && "animate-pulse")} />
                 </span>
@@ -865,9 +868,6 @@ export function AskSavoBar() {
                   {error}
                 </p>
               ) : null}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
