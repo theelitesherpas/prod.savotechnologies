@@ -400,7 +400,7 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
                               <Link
                                 href={item.href}
                                 onClick={() => setMobileOpen(false)}
-                                className="t-label py-2 text-accent-strong"
+                                className="t-label py-2.5 text-accent-strong"
                               >
                                 All {item.label} →
                               </Link>

@@ -77,7 +77,7 @@ const EYEBROWS: Record<string, string> = {
 };
 
 /** One indexed editorial link row: number, name, descriptor, arrow on hover. */
-function DrawerLink({ link, index, delay, onNavigate }: { link: NavLink; index: number; delay: number; onNavigate?: () => void }) {
+function DrawerLink({ link, delay, onNavigate }: { link: NavLink; delay: number; onNavigate?: () => void }) {
   return (
     <li className="mega-row border-b border-border/60" style={{ animationDelay: `${delay}ms` }}>
       <Link
@@ -85,9 +85,6 @@ function DrawerLink({ link, index, delay, onNavigate }: { link: NavLink; index: 
         onClick={onNavigate}
         className="group/drawer-link flex items-center gap-4 py-3.5"
       >
-        <span aria-hidden="true" className="t-label tnum w-6 shrink-0 pt-0.5 text-muted/70 transition-colors duration-300 group-hover/drawer-link:text-accent">
-          {String(index + 1).padStart(2, "0")}
-        </span>
         <span className="min-w-0 flex-1 transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover/drawer-link:translate-x-1">
           <span className="flex flex-wrap items-center gap-2">
             <span className="text-[0.9375rem] font-semibold leading-snug text-foreground/85 transition-colors duration-300 group-hover/drawer-link:text-foreground">
@@ -210,7 +207,7 @@ export function MegaDrawer({
                   )}
                 >
                   {activeItem.children.map((link, i) => (
-                    <DrawerLink key={link.href} link={link} index={i} delay={48 + i * 24} onNavigate={onNavigate} />
+                    <DrawerLink key={link.href} link={link} delay={48 + i * 24} onNavigate={onNavigate} />
                   ))}
                 </ul>
                 {activeItem.href && activeItem.label !== "AI" ? (
