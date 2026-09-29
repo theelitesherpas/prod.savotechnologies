@@ -165,7 +165,7 @@ export function RouteLoader() {
     <div
       aria-hidden="true"
       className={cn(
-        "route-veil chapter-ink fixed inset-0 z-[95] flex items-center justify-center bg-background/60 backdrop-blur-[8px] transition-opacity duration-[380ms] ease-[var(--ease-out-expo)]",
+        "route-veil fixed inset-0 z-[95] flex items-center justify-center bg-background/75 backdrop-blur-[6px] transition-opacity duration-[380ms] ease-[var(--ease-out-expo)]",
         closing ? "pointer-events-none opacity-0" : "opacity-100",
       )}
     >
@@ -176,11 +176,11 @@ export function RouteLoader() {
         aria-label="Loading"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Ghost letters — the word, waiting (ink-foreground ghost on the dark veil) */}
+        {/* Ghost letters — the word, waiting */}
         {SAVO_LETTER_PATHS.map((d, i) => (
-          <path key={`g-${i}`} fillRule="evenodd" clipRule="evenodd" d={d} fill="rgb(238 240 244 / 0.16)" />
+          <path key={`g-${i}`} fillRule="evenodd" clipRule="evenodd" d={d} fill="rgb(23 23 26 / 0.13)" />
         ))}
-        {/* Vermilion fill (ink-chapter accent), revealed left to right */}
+        {/* Vermilion fill, revealed left to right */}
         <g style={{ clipPath: `inset(0 ${((1 - fill) * 100).toFixed(2)}% 0 0)` }}>
           {SAVO_LETTER_PATHS.map((d, i) => (
             <path key={`f-${i}`} fillRule="evenodd" clipRule="evenodd" d={d} fill="var(--accent)" />
