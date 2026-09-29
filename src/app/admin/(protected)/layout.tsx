@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 };
 
 const CRUMB_LABELS: Record<string, string> = {
+  "live-chat": "Live chat",
   enquiries: "Enquiries",
   employees: "Employee portal",
   "my-profile": "My profile",
@@ -52,9 +53,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!user) redirect("/admin/login");
 
   // Live counts for the spine (null-safe: a missing DB keeps the panel usable).
-  const [newEnquiries, contentCounts, servicesCount, industriesCount, clientCount, projectCount, invoiceCount] = prisma
+  const [newEnquiries, liveChatWaiting, contentCounts, servicesCount, industriesCount, clientCount, projectCount, invoiceCount] = prisma
     ? await Promise.all([
         prisma.projectEnquiry.count({ where: { status: "new" } }).catch(() => 0),
+        prisma.chatConversation.count({ where: { status: "waiting_for_agent" } }).catch(() => 0),
         prisma.contentItem
           .groupBy({ by: ["collection"], _count: { _all: true } })
           .then((rows) => Object.fromEntries(rows.map((r) => [r.collection, r._count._all])))
@@ -65,7 +67,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         prisma.clientProject.count().catch(() => 0),
         prisma.invoice.count().catch(() => 0),
       ])
-    : [0, {} as Record<string, number>, 0, 0, 0, 0, 0];
+    : [0, 0, {} as Record<string, number>, 0, 0, 0, 0, 0];
 
   const contentItems = COLLECTION_KEYS.filter((key) => key !== "case-studies").map((key) => ({
     href: `/admin/content/${key}`,
@@ -77,6 +79,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const allow = (k: SectionKey) => canAccess(user, k);
   const nav = ([
     { key: "overview", label: "Dashboard", icon: "gauge", href: "/admin" },
+    ...(allow("live-chat")
+      ? [{ key: "live-chat", label: "Live Chat", icon: "chat" as const, href: "/admin/live-chat", badge: liveChatWaiting }]
+      : []),
     { key: "emails", label: "Emails", icon: "inbox", href: "/admin/emails" },
     ...(allow("enquiries")
       ? [

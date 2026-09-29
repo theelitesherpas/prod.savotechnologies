@@ -36,7 +36,11 @@ export type AnalyticsEvent =
   | "ask_savo_close"
   | "ask_savo_reset"
   | "ask_savo_book_call"
-  | "ask_savo_whatsapp";
+  | "ask_savo_whatsapp"
+  | "ask_savo_mode_ai"
+  | "ask_savo_mode_human"
+  | "ask_savo_live_request"
+  | "ask_savo_live_accepted";
 
 type DataLayer = Record<string, unknown>[];
 

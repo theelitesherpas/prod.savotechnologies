@@ -17,6 +17,7 @@ import { getAdminUser } from "@/lib/auth";
  */
 
 export type SectionKey =
+  | "live-chat"
   | "enquiries"
   | "analytics"
   | "employees"
@@ -30,6 +31,7 @@ export type SectionKey =
   | "emails";
 
 export const SECTIONS: { key: SectionKey; label: string; hint: string }[] = [
+  { key: "live-chat", label: "Live Chat", hint: "Real-time visitor chat inbox" },
   { key: "enquiries", label: "Enquiries", hint: "Lead inbox + detail" },
   { key: "analytics", label: "Analytics", hint: "Traffic, funnels, GA note" },
   { key: "employees", label: "Employee portal", hint: "Records, leaves, HR email (hr@)" },
@@ -62,6 +64,7 @@ export function canAccess(user: PermittedUser, section: string): boolean {
 export function pathToSection(path: string): SectionKey | "dashboard" | "users" | "compose" | null {
   const p = path.replace(/\/+$/, "");
   if (p === "/admin" || p === "/admin/login") return "dashboard";
+  if (p.startsWith("/admin/live-chat")) return "live-chat";
   if (p.startsWith("/admin/enquiries")) return "enquiries";
   if (p.startsWith("/admin/analytics")) return "analytics";
   if (p.startsWith("/admin/employees")) return "employees";

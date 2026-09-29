@@ -37,7 +37,8 @@ export type AdminIconName =
   | "sun"
   | "moon"
   | "user"
-  | "trend";
+  | "trend"
+  | "chat";
 
 const PATHS: Record<AdminIconName, React.ReactNode> = {
   gauge: (
@@ -199,6 +200,12 @@ const PATHS: Record<AdminIconName, React.ReactNode> = {
     <>
       <path d="m3.5 17 5.5-6 4 3.5 7.5-8.5" />
       <path d="M15 6h5v5" />
+    </>
+  ),
+  chat: (
+    <>
+      <path d="M4 5.5h16v11H9l-5 4v-4H4v-11Z" />
+      <path d="M8 10h8M8 13h5" />
     </>
   ),
 };

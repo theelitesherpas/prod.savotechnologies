@@ -77,6 +77,7 @@ model AdminUser {
   updatedAt    DateTime       @updatedAt @map("updated_at")
   sessions     AdminSession[]
   auditLogs    AuditLog[]
+  assignedChats ChatConversation[] @relation("ChatAssignedAgent")
 
   @@map("admin_users")
 }
@@ -507,4 +508,182 @@ model EmailReply {
   @@index([enquiryId])
   @@index([createdAt])
   @@map("email_replies")
+}
+
+// ─────────────────────── Live chat (Savo Assistant + human) ───────────────────────
+
+/// Anonymous website visitors, identified by an httpOnly cookie token
+/// (hash-only storage, same pattern as admin sessions). One visitor can
+/// own many conversations over time; returning visitors can resume.
+model ChatVisitor {
+  id          String    @id @default(cuid())
+  /// SHA-256 of the cookie token — the raw token never touches the DB.
+  tokenHash   String    @unique @map("token_hash")
+  name        String?
+  email       String?
+  phone       String?
+  countryCode String?   @map("country_code")
+  /// Salted IP hash — rate limiting and spam review (data minimisation).
+  ipHash      String?   @map("ip_hash")
+  userAgent   String?   @map("user_agent")
+  landingPage String?   @map("landing_page")
+  blocked     Boolean   @default(false)
+  blockedAt   DateTime? @map("blocked_at")
+  firstSeenAt DateTime  @default(now()) @map("first_seen_at")
+  /// Heartbeat/SSE-stream freshness — drives the online/idle indicator.
+  lastSeenAt  DateTime  @default(now()) @map("last_seen_at")
+
+  conversations ChatConversation[]
+
+  @@index([lastSeenAt])
+  @@map("chat_visitors")
+}
+
+/// One continuous thread: AI conversation + qualification + human chat.
+/// AI→human handoff never creates a second conversation.
+model ChatConversation {
+  id        String  @id @default(cuid())
+  /// Public, URL-safe token used by the visitor API (never expose the cuid).
+  publicToken String @unique @map("public_token")
+  visitorId String  @map("visitor_id")
+  visitor   ChatVisitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  /// ai_only | pre_chat | waiting_for_agent | active | waiting_follow_up |
+  /// visitor_left | closed | spam  (server-side transitions only)
+  status    String  @default("ai_only")
+  /// ai | human — when human, Savo AI stays silent unless handed back.
+  mode      String  @default("ai")
+  channel   String  @default("website")
+  source    String  @default("savo_assistant")
+
+  // ── Qualification (pre-chat flow) ──
+  service    String?   // e.g. "Mobile application"
+  stage      String?   // e.g. "Planning requirements"
+  requirement String?  @db.Text // free text
+  timeline   String?   // e.g. "Within 1–3 months"
+  budget     String?   // e.g. "$10k–25k" | "Prefer to discuss"
+
+  // ── Lead snapshot at capture time ──
+  leadName       String?
+  leadEmail      String?
+  leadPhone      String?
+  leadCountry    String?      @map("lead_country")
+  /// new | qualified | contacted | meeting | proposal | negotiation | won | lost | n/a
+  leadStatus     String @default("new") @map("lead_status")
+  /// low | normal | high
+  priority       String @default("normal")
+  /// Internal AI-generated requirement digest (never shown to visitors).
+  aiSummary      String? @db.Text @map("ai_summary")
+
+  /// Page context: { landingPage, currentPage, referrer, utm } — JSON.
+  context    Json?
+
+  assignedId String? @map("assigned_id")
+  assigned   AdminUser? @relation("ChatAssignedAgent", fields: [assignedId], references: [id], onDelete: SetNull)
+
+  humanRequestedAt DateTime? @map("human_requested_at")
+  acceptedAt       DateTime? @map("accepted_at")
+  firstResponseAt  DateTime? @map("first_response_at")
+  followUpAt       DateTime? @map("follow_up_at")
+  closedAt         DateTime? @map("closed_at")
+
+  /// Unread counters: messages waiting for the other side to read.
+  unreadForAgent  Int @default(0) @map("unread_for_agent")
+  unreadForVisitor Int @default(0) @map("unread_for_visitor")
+
+  lastMessageAt DateTime @default(now()) @map("last_message_at")
+  /// Flattened preview of the newest message for the inbox list.
+  lastMessagePreview String? @map("last_message_preview")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  messages ChatMessage[]
+  events   ConversationEvent[]
+  tags     ConversationTag[]
+
+  @@index([status])
+  @@index([assignedId])
+  @@index([visitorId])
+  @@index([lastMessageAt])
+  @@index([leadStatus])
+  @@map("chat_conversations")
+}
+
+/// Every line in a conversation thread, typed by anyone or anything.
+model ChatMessage {
+  id             String @id @default(cuid())
+  conversationId String @map("conversation_id")
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  /// visitor | ai | agent | system | internal_note
+  type           String
+  /// Sender agent (admin user) for agent/internal messages.
+  agentId        String? @map("agent_id")
+  /// Display-name snapshot, e.g. "Priya — Savo" (survives agent deletion).
+  senderName     String? @map("sender_name")
+  body           String @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([conversationId, createdAt])
+  @@map("chat_messages")
+}
+
+/// Append-only audit/status trail: handoff, accept, transfer, timeouts…
+model ConversationEvent {
+  id             String @id @default(cuid())
+  conversationId String @map("conversation_id")
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  /// e.g. human_requested | agent_notified | agent_accepted | assigned |
+  /// transferred | timeout | visitor_left | closed | reopened | returned_to_ai
+  type           String
+  actorId        String? @map("actor_id")
+  actorName      String? @map("actor_name")
+  meta           Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([conversationId, createdAt])
+  @@map("chat_conversation_events")
+}
+
+/// Configurable conversation tags (Website, Mobile App, High Priority…).
+model ChatTag {
+  id        String @id @default(cuid())
+  label     String @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  conversations ConversationTag[]
+  @@map("chat_tags")
+}
+
+model ConversationTag {
+  conversationId String @map("conversation_id")
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  tagId          String @map("tag_id")
+  tag            ChatTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, tagId])
+  @@index([tagId])
+  @@map("chat_conversation_tags")
+}
+
+/// Per-admin live-chat presence. One row per agent, heartbeated.
+model AgentPresence {
+  /// AdminUser id.
+  userId     String @id
+  /// online | busy | away | offline (manual override or heartbeat expiry)
+  status     String @default("offline")
+  /// Manual (true) until the agent switches back or disconnects.
+  manual     Boolean @default(false)
+  lastSeenAt DateTime @default(now()) @map("last_seen_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("agent_presence")
+}
+
+/// Live-chat runtime configuration (business hours, budgets, quick replies).
+model ChatSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("chat_settings")
 }
