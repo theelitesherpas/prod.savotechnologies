@@ -48,6 +48,9 @@ export function ServiceDetailHero({ detail }: { detail: ServiceDetail }) {
                   slug={detail.slug}
                   className="h-10 w-10 text-foreground/70 [&_svg]:h-full [&_svg]:w-full"
                 />
+                <p className="t-caption max-w-[24ch] text-muted">
+                  Strategy, design and engineering, one practice, delivered in slices.
+                </p>
               </div>
             </Reveal>
           </div>
