@@ -79,19 +79,24 @@ const EYEBROWS: Record<string, string> = {
 /** One indexed editorial link row: number, name, descriptor, arrow on hover. */
 function DrawerLink({ link, delay, onNavigate }: { link: NavLink; delay: number; onNavigate?: () => void }) {
   return (
-    <li className="mega-row border-b border-border/60" style={{ animationDelay: `${delay}ms` }}>
+    <li className="mega-row" style={{ animationDelay: `${delay}ms` }}>
       <Link
         href={link.href}
         onClick={onNavigate}
-        className="group/drawer-link flex items-center gap-4 py-2"
+        className="group/drawer-link relative flex items-center gap-4 px-3 py-2.5"
       >
-        <span className="min-w-0 flex-1 truncate text-[0.9375rem] font-semibold leading-snug text-foreground/85 transition-[color,transform] duration-300 ease-[var(--ease-out-expo)] group-hover/drawer-link:translate-x-1 group-hover/drawer-link:text-foreground">
+        {/* the sweep: a soft surface fill that washes in from the left */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 origin-left scale-x-0 bg-surface-2/80 transition-transform duration-[280ms] ease-[var(--ease-out-expo)] group-hover/drawer-link:scale-x-100"
+        />
+        <span className="relative min-w-0 flex-1 truncate text-[0.9375rem] font-semibold leading-snug text-foreground/75 transition-colors duration-200 group-hover/drawer-link:text-foreground">
           {link.label}
           {link.pro ? (
             <span className="t-label ml-2 rounded-[2px] border border-accent/40 px-1.5 py-0.5 align-middle text-accent-strong">PRO</span>
           ) : null}
         </span>
-        <ArrowIcon className="-translate-x-1 text-accent opacity-0 transition-all duration-300 ease-[var(--ease-out-expo)] group-hover/drawer-link:translate-x-0 group-hover/drawer-link:opacity-100" />
+        <ArrowIcon className="relative -translate-x-1.5 text-accent opacity-0 transition-all duration-[280ms] ease-[var(--ease-out-expo)] group-hover/drawer-link:translate-x-0 group-hover/drawer-link:opacity-100" />
       </Link>
     </li>
   );
@@ -194,7 +199,6 @@ export function MegaDrawer({
                 <ul
                   className={cn(
                     activeItem.children.length > 3 && "grid grid-cols-2 gap-x-8",
-                    "[&>li:last-child]:border-b-0",
                   )}
                 >
                   {activeItem.children.map((link, i) => (
