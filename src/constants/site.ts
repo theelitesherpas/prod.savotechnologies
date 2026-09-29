@@ -63,6 +63,7 @@ export const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/savotechnologies/" },
   { label: "Facebook", href: "https://www.facebook.com/savotechnologies" },
   { label: "YouTube", href: "https://www.youtube.com/@savotechnologies" },
+  { label: "X", href: "https://x.com/savotechnology" },
 ] as const;
 
 /**
