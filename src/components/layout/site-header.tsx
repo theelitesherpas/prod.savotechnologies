@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { HEADER_NAV, type NavItem, type NavLink } from "@/constants/navigation";
 import { SavoLogo } from "@/components/shared/savo-logo";
 import { useEnquiry } from "@/components/shared/enquiry-dialog";
-import { MegaBar } from "./nav-panels";
+import { MegaDrawer } from "./nav-panels";
 import { track } from "@/lib/analytics";
 import { cn, withBasePath } from "@/lib/utils";
 
@@ -302,33 +302,18 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
           </button>
         </div>
 
-        {/* Desktop mega bars */}
-        {withChildren.map((item, i) => (
-          <div
-            key={item.label}
-            onMouseEnter={keepOpen}
-            onMouseLeave={() => closeSoon(item.label)}
-            className={cn(
-              "absolute inset-x-0 top-full hidden",
-              openPanel === item.label ? "lg:block" : "lg:hidden",
-            )}
-          >
-            <MegaBar
-              onNavigate={() => {
-                keepOpen();
-                setOpenPanel(null);
-              }}
-              id={panelId(item.label)}
-              label={item.label === "AI" ? "AI Services" : item.label}
-              links={item.children}
-              allLabel={item.href && item.label !== "AI" ? `All ${item.label}` : undefined}
-              allHref={item.href && item.label !== "AI" ? item.href : undefined}
-              feature={item.feature}
-              featureVariant={i}
-              twoCols={item.children.length > 6}
-            />
-          </div>
-        ))}
+        {/* Desktop mega-drawer: one persistent shell, category content swaps inside */}
+        <MegaDrawer
+          items={withChildren}
+          active={openPanel}
+          panelIdOf={panelId}
+          onNavigate={() => {
+            keepOpen();
+            setOpenPanel(null);
+          }}
+          onMouseEnter={keepOpen}
+          onMouseLeave={() => openPanel && closeSoon(openPanel)}
+        />
       </div>
 
       {/* Mobile full-screen navigation */}

@@ -72,12 +72,25 @@ async function readCollection(
 }
 
 function toFallback(links: NavLink[]): ManagedLink[] {
-  return links.map((l) => ({ label: l.label, href: l.href, summary: null }));
+  return links.map((l) => ({ label: l.label, href: l.href, summary: l.desc ?? null }));
 }
 
-/** Managed links as nav children (drops summaries for panel rendering). */
+/** Coded descriptors by label: the guaranteed fallback line under each
+ *  drawer link (labels are stable; managed slugs may differ from the
+ *  coded hrefs). Admin-managed summaries override them once filled. */
+const DESC_BY_LABEL = new Map<string, string>();
+for (const l of [...SERVICE_LINKS, ...INDUSTRY_LINKS]) {
+  if (l.desc) DESC_BY_LABEL.set(l.label, l.desc);
+}
+
+/** Managed links as nav children; the managed summary (or the coded
+ *  descriptor, as fallback) becomes the drawer's contextual line. */
 export function toNavChildren(links: ManagedLink[]): NavLink[] {
-  return links.map(({ label, href }) => ({ label, href }));
+  return links.map(({ label, href, summary }) => ({
+    label,
+    href,
+    desc: summary?.trim() ? summary : (DESC_BY_LABEL.get(label) ?? undefined),
+  }));
 }
 
 /** Invalidate every public page that renders managed content. */

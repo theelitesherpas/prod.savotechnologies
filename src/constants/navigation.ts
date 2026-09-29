@@ -6,9 +6,12 @@
  * page until those pages are built in v6.
  */
 
-export type NavLink = { label: string; href: string; pro?: boolean };
+export type NavLink = { label: string; href: string; pro?: boolean; /** One-line contextual descriptor shown in the mega-drawer. */
+  desc?: string };
 
 export type NavFeature = {
+  /** Small mono eyebrow above the feature title (e.g. "AI AGENTS"). */
+  eyebrow?: string;
   title: string;
   copy: string;
   cta: string;
@@ -30,46 +33,46 @@ export type NavItem = {
 /* ---------------- Link lists (version-1 canonical order) ------------- */
 
 export const AI_LINKS: NavLink[] = [
-  { label: "AI Agents", href: "/ai-agents", pro: true },
-  { label: "Business Automation", href: "/ai/automation/" },
-  { label: "Generative AI & LLM Integration", href: "/ai/generative-ai/" },
-  { label: "AI Consulting & Strategy", href: "/ai/consulting/" },
-  { label: "Machine Learning & Analytics", href: "/ai/machine-learning/" },
+  { label: "AI Agents", href: "/ai-agents", pro: true, desc: "Production personas, trained on your data" },
+  { label: "Business Automation", href: "/ai/automation/", desc: "No-code, low-code and AI-powered workflows" },
+  { label: "Generative AI & LLM Integration", href: "/ai/generative-ai/", desc: "LLMs wired into real products" },
+  { label: "AI Consulting & Strategy", href: "/ai/consulting/", desc: "Roadmaps, audits and honest feasibility" },
+  { label: "Machine Learning & Analytics", href: "/ai/machine-learning/", desc: "Models and insight from your data" },
 ];
 
 export const SERVICE_LINKS: NavLink[] = [
-  { label: "Web Development", href: "/services/web-development/" },
-  { label: "Mobile App Development", href: "/services/mobile-apps/" },
-  { label: "UI/UX Design", href: "/services/ui-ux/" },
-  { label: "Cloud & DevOps", href: "/services/cloud-devops/" },
-  { label: "Data & Analytics", href: "/services/data-analytics/" },
-  { label: "AI Agent Development", href: "/services/ai-agent-development/" },
-  { label: "Custom Software", href: "/services/custom-software/" },
-  { label: "Digital Marketing & SEO", href: "/services/digital-marketing/" },
-  { label: "QA & Testing", href: "/services/qa-testing/" },
-  { label: "Product Engineering", href: "/services/product-engineering/" },
+  { label: "Web Development", href: "/services/web-development/", desc: "Fast, search-strong websites and platforms" },
+  { label: "Mobile App Development", href: "/services/mobile-apps/", desc: "iOS and Android, Flutter and React Native" },
+  { label: "UI/UX Design", href: "/services/ui-ux/", desc: "Research, prototypes, design systems" },
+  { label: "Cloud & DevOps", href: "/services/cloud-devops/", desc: "Infrastructure that scales quietly" },
+  { label: "Data & Analytics", href: "/services/data-analytics/", desc: "Pipelines, dashboards, decisions" },
+  { label: "AI Agent Development", href: "/services/ai-agent-development/", desc: "Agents with guardrails, in production" },
+  { label: "Custom Software", href: "/services/custom-software/", desc: "Operational systems built to last" },
+  { label: "Digital Marketing & SEO", href: "/services/digital-marketing/", desc: "Growth across search and social" },
+  { label: "QA & Testing", href: "/services/qa-testing/", desc: "Quality engineered in, not bolted on" },
+  { label: "Product Engineering", href: "/services/product-engineering/", desc: "From first prototype to scale" },
 ];
 
 export const HIRE_LINKS: NavLink[] = [
-  { label: "AI & ML Engineers", href: "/hire/ai-ml-engineers/" },
-  { label: "Frontend Developers", href: "/hire/frontend-developers/" },
-  { label: "Backend Developers", href: "/hire/backend-developers/" },
-  { label: "Full Stack Developers", href: "/hire/full-stack-developers/" },
-  { label: "Mobile Developers", href: "/hire/mobile-developers/" },
-  { label: "DevOps & QA Engineers", href: "/hire/devops-qa-engineers/" },
+  { label: "AI & ML Engineers", href: "/hire/ai-ml-engineers/", desc: "Models, pipelines, LLM systems" },
+  { label: "Frontend Developers", href: "/hire/frontend-developers/", desc: "React and Next.js interfaces" },
+  { label: "Backend Developers", href: "/hire/backend-developers/", desc: "APIs, services, data layers" },
+  { label: "Full Stack Developers", href: "/hire/full-stack-developers/", desc: "End to end product engineers" },
+  { label: "Mobile Developers", href: "/hire/mobile-developers/", desc: "Flutter and React Native" },
+  { label: "DevOps & QA Engineers", href: "/hire/devops-qa-engineers/", desc: "Reliability and quality gates" },
 ];
 
 export const INDUSTRY_LINKS: NavLink[] = [
-  { label: "Healthcare", href: "/industries/healthcare/" },
-  { label: "FinTech & Banking", href: "/industries/fintech/" },
-  { label: "Ecommerce & Retail", href: "/industries/ecommerce/" },
-  { label: "Logistics & Supply Chain", href: "/industries/logistics/" },
-  { label: "Real Estate", href: "/industries/real-estate/" },
-  { label: "Education & EdTech", href: "/industries/education/" },
-  { label: "Travel & Hospitality", href: "/industries/travel/" },
-  { label: "Manufacturing & 4.0", href: "/industries/manufacturing/" },
-  { label: "Government", href: "/industries/government/" },
-  { label: "Energy & Utilities", href: "/industries/energy/" },
+  { label: "Healthcare", href: "/industries/healthcare/", desc: "Patient and clinical systems" },
+  { label: "FinTech & Banking", href: "/industries/fintech/", desc: "Payments, ledgers, compliance" },
+  { label: "Ecommerce & Retail", href: "/industries/ecommerce/", desc: "Storefronts and operations" },
+  { label: "Logistics & Supply Chain", href: "/industries/logistics/", desc: "Fleet, tracking, fulfilment" },
+  { label: "Real Estate", href: "/industries/real-estate/", desc: "Listings, portals, transactions" },
+  { label: "Education & EdTech", href: "/industries/education/", desc: "Learning platforms and classrooms" },
+  { label: "Travel & Hospitality", href: "/industries/travel/", desc: "Booking and guest experience" },
+  { label: "Manufacturing & 4.0", href: "/industries/manufacturing/", desc: "IoT and shop-floor systems" },
+  { label: "Government", href: "/industries/government/", desc: "Public-sector grade platforms" },
+  { label: "Energy & Utilities", href: "/industries/energy/", desc: "Grid, billing, field operations" },
 ];
 
 /* ----------------------------- Header nav ----------------------------- */
@@ -81,6 +84,7 @@ export const HEADER_NAV: NavItem[] = [
     mega: true,
     children: AI_LINKS,
     feature: {
+      eyebrow: "AI Agents",
       title: "Deploy your first AI agent in 2 to 4 weeks",
       copy: "Six production ready personas, trained on your data, guarded by enterprise security.",
       cta: "Explore the fleet",
@@ -92,6 +96,7 @@ export const HEADER_NAV: NavItem[] = [
     href: "/services",
     children: SERVICE_LINKS,
     feature: {
+      eyebrow: "Project Estimator",
       title: "Scope it in minutes",
       copy: "The instant estimator prices your project with no contact details needed.",
       cta: "Open the estimator",
@@ -103,6 +108,7 @@ export const HEADER_NAV: NavItem[] = [
     href: "/hire",
     children: HIRE_LINKS,
     feature: {
+      eyebrow: "Build Your Team",
       title: "A senior dev in your standup within 2 weeks",
       copy: "Vetted engineers, transparent monthly rates and a two week trial on every engagement.",
       cta: "See roles and rates",
@@ -114,6 +120,7 @@ export const HEADER_NAV: NavItem[] = [
     href: "/industries",
     children: INDUSTRY_LINKS,
     feature: {
+      eyebrow: "Industry Experience",
       title: "Ten sectors, one playbook",
       copy: "Regulation fluent teams in healthcare, fintech and the Gulf energy economy.",
       cta: "Explore industries",

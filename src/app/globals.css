@@ -398,6 +398,37 @@ body {
   }
 }
 
+/* Mega-drawer: one shell-open motion, panel rows stagger in, height eases
+   between categories. Gated on no-preference (global kill-switch also applies). */
+@media (prefers-reduced-motion: no-preference) {
+  .drawer-in {
+    animation: drawer-in 260ms var(--ease-out-expo) both;
+  }
+  .mega-row {
+    animation: mega-row-in 320ms var(--ease-out-expo) both;
+  }
+}
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes mega-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Automation specimen workflow: nodes highlight in sequence, a pulse
    travels the connectors. One 7.2s cycle, gated on no-preference. */
 .wf {
