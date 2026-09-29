@@ -12,6 +12,8 @@ import {
 import { track } from "@/lib/analytics";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { PhoneField } from "@/components/shared/phone-field";
+import { SuccessDialog, type SuccessStep } from "@/components/shared/success-dialog";
+import { SITE } from "@/constants/site";
 import { cn, withBasePath } from "@/lib/utils";
 
 /**
@@ -46,9 +48,21 @@ const EMPTY: Draft = {
   website: "",
 };
 
-export function StartBrief() {
+/** Next steps shown in the confirmation dialog, faithful to the page's
+ *  published WhatHappensNext timeline. */
+const BRIEF_STEPS: SuccessStep[] = [
+  { step: "01", title: "Within 24 hours", text: "A senior engineer, not a sales rep, reads your brief and replies with first questions." },
+  { step: "02", title: "Day two to three", text: "A free 30 minute scoping call: goals, constraints, success metrics and a rough range." },
+  { step: "03", title: "Day three to five", text: "A written proposal with fixed milestones, transparent pricing and a start date." },
+];
+
+export function StartBrief({ initialType }: { initialType?: string }) {
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState<Draft>(EMPTY);
+  const [draft, setDraft] = useState<Draft>(() => ({
+    ...EMPTY,
+    projectType: initialType && (PROJECT_TYPES as readonly string[]).includes(initialType) ? initialType : "",
+  }));
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [errors, setErrors] = useState<EnquiryFieldErrors>({});
   const captcha = useCaptcha();
   const [captchaErr, setCaptchaErr] = useState<string | null>(null);
@@ -131,6 +145,7 @@ export function StartBrief() {
       };
       if (res.ok && json.ok) {
         setStatus("success");
+        setDialogOpen(true);
         captcha.refresh();
         track("enquiry_form_success", { form: "start-page" });
         return;
@@ -153,23 +168,38 @@ export function StartBrief() {
 
   /* ---------------- success ---------------- */
   if (status === "success") {
+    const firstName = draft.name.trim().split(/\s+/)[0] || "there";
     return (
-      <div role="status" className="border border-border bg-surface p-10 sm:p-14">
-        <span aria-hidden="true" className="mb-7 block h-3 w-3 bg-accent" />
-        <p className="t-h2">Brief received.</p>
-        <p className="t-body-lg mt-4 max-w-lg text-muted">
-          A senior engineer, not a sales rep, reads it today and replies
-          within one business day. If it is urgent, the phone line answers
-          faster.
-        </p>
-        <div className="mt-9 border-t border-border pt-6">
-          <p className="t-label text-muted">While you wait</p>
-          <p className="t-sm mt-2 text-muted">
-            Explore <Link href="/case-studies" className="link-underline text-foreground">how work gets filed</Link>, or
-            browse <Link href="/services" className="link-underline text-foreground">the services</Link> your brief will land in.
+      <>
+        <SuccessDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          eyebrow={`Project brief · ${draft.projectType || "New project"}`}
+          title="Brief received."
+          email={draft.email}
+          steps={BRIEF_STEPS}
+          contactEmail={SITE.email}
+        >
+          Thank you{firstName !== "there" ? ", " + firstName : ""}. A senior engineer reads every brief personally
+          and replies within one business day with scope, timeline and pricing, before any commitment.
+        </SuccessDialog>
+        <div role="status" className="border border-border bg-surface p-10 sm:p-14">
+          <span aria-hidden="true" className="mb-7 block h-3 w-3 bg-accent" />
+          <p className="t-h2">Brief received.</p>
+          <p className="t-body-lg mt-4 max-w-lg text-muted">
+            A senior engineer, not a sales rep, reads it today and replies
+            within one business day. A confirmation is on its way to{" "}
+            <span className="font-mono text-foreground">{draft.email}</span>.
           </p>
+          <div className="mt-9 border-t border-border pt-6">
+            <p className="t-label text-muted">While you wait</p>
+            <p className="t-sm mt-2 text-muted">
+              Explore <Link href="/case-studies" className="link-underline text-foreground">how work gets filed</Link>, or
+              browse <Link href="/services" className="link-underline text-foreground">the services</Link> your brief will land in.
+            </p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

@@ -53,7 +53,7 @@ export function StartHero() {
   );
 }
 
-export function StartBriefSection() {
+export function StartBriefSection({ initialType }: { initialType?: string }) {
   const headingId = "brief-heading";
   return (
     <Section index="The Brief" labelledBy={headingId}>
@@ -67,7 +67,7 @@ export function StartBriefSection() {
           </>
         }
       />
-      <StartBrief />
+      <StartBrief initialType={initialType} />
     </Section>
   );
 }

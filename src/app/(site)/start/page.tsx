@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/env";
+import { PROJECT_TYPES } from "@/schemas/enquiry";
 import { StartHero, StartBriefSection, WhatHappensNext } from "@/sections/start/start-hero";
 import { openGraphFor } from "@/lib/seo";
 
@@ -19,7 +20,15 @@ export const metadata: Metadata = {
   openGraph: openGraphFor({ title: "Start a Project | Savo Technologies", description: DESCRIPTION, url: "/start" }),
 };
 
-export default function StartPage() {
+export default async function StartPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string }>;
+}) {
+  // ?type= pre-selects the project type when it matches a known option
+  // (e.g. /start?type=AI%20Automation), so targeted CTAs land pre-filled.
+  const { type } = await searchParams;
+  const initialType = type && (PROJECT_TYPES as readonly string[]).includes(type) ? type : undefined;
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -49,7 +58,7 @@ export default function StartPage() {
       />
 
       <StartHero />
-      <StartBriefSection />
+      <StartBriefSection initialType={initialType} />
       <WhatHappensNext />
     </>
   );
