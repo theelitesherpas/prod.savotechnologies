@@ -171,7 +171,7 @@ export function RouteLoader() {
     >
       <svg
         viewBox={SAVO_COMPACT_VIEWBOX}
-        className="h-auto w-[clamp(10rem,20vw,13.5rem)]"
+        className="h-auto w-[clamp(7.5rem,13vw,9.5rem)]"
         role="img"
         aria-label="Loading"
         xmlns="http://www.w3.org/2000/svg"
