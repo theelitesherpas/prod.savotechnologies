@@ -248,10 +248,7 @@ export function CaseStudyCard({
       <div className="flex flex-wrap items-start justify-between gap-4 border-t border-border p-6 sm:p-8">
         <div>
           <h3 className="t-h3">{entry.name}</h3>
-          <p className="t-label mt-2.5 text-muted">
-            {entry.sector} · {entry.services}
-          </p>
-          <p className="t-label mt-1.5 text-muted">{entry.stack}</p>
+          <p className="t-label mt-2.5 text-muted">{entry.sector}</p>
           <p className="t-caption mt-3 text-muted">{entry.outcome}</p>
         </div>
         {hasDetail ? (

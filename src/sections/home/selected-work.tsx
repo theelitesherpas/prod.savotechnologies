@@ -21,8 +21,6 @@ import { IS_DEMO } from "@/lib/content-mode";
 type WorkItem = {
   name: string;
   industry: string;
-  services: string;
-  stack: string;
   outcome: string;
   variant: "a" | "b" | "c";
   /** Detail-page link when the item has one (demo/verified). */
@@ -62,8 +60,6 @@ async function workItems(): Promise<{ items: WorkItem[]; live: boolean; anyDemo:
         return {
           name: c.displayClientName || c.title,
           industry: c.industry ?? "",
-          services: (c.services ?? []).slice(0, 2).join(" · ") || (c.industry ?? ""),
-          stack: (c.technologies ?? []).join(" · "),
           outcome:
             shown.map((r) => `${r.value} ${r.label}`).join(" · ") +
             (c.status === "demo" && shown.length > 0 ? " - demo figures" : ""),
@@ -79,7 +75,13 @@ async function workItems(): Promise<{ items: WorkItem[]; live: boolean; anyDemo:
   return {
     live: false,
     anyDemo: IS_DEMO,
-    items: WORK_PLACEHOLDERS.map((w) => ({ ...w, badge: "In preparation" })),
+    items: WORK_PLACEHOLDERS.map(({ name, industry, outcome, variant }) => ({
+      name,
+      industry,
+      outcome,
+      variant,
+      badge: "In preparation",
+    })),
   };
 }
 
@@ -211,9 +213,7 @@ function WorkCard({
       <div className="flex flex-wrap items-start justify-between gap-4 border-t border-border p-6 sm:p-8">
         <div>
           <h3 className="t-h3">{item.name}</h3>
-          <p className="t-label mt-2.5 text-muted">
-            {item.industry} · {item.services} · {item.stack}
-          </p>
+          <p className="t-label mt-2.5 text-muted">{item.industry}</p>
           <p className="t-caption mt-3 text-muted">{item.outcome}</p>
         </div>
         {item.slug ? (
