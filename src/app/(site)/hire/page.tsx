@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/env";
+import { Section } from "@/components/ui/section";
+import { SectionHeader } from "@/components/ui/section-header";
+import { Faq } from "@/components/shared/faq";
+import { HIRE_FAQS } from "@/constants/faqs";
 import { getManagedHireRoles } from "@/lib/content-items";
 import { HireHero, HireDirectory, HireModels, HireSteps, CrewBand } from "@/sections/hire/hire-index";
 import { DetailCta } from "@/components/shared/detail-cta";
@@ -66,6 +70,40 @@ export default async function HirePage() {
       <HireModels />
       <HireSteps roles={HIRE_ROLES} />
       <CrewBand variant="index" />
+
+      {/* FAQ (AEO) */}
+      <Section id="faq" index="Questions" labelledBy="hire-faq-heading" className="bg-surface-2/60">
+        <SectionHeader
+          id="hire-faq-heading"
+          heading="Questions before you hire."
+          lead="How dedicated specialists from Savo actually join your work."
+        />
+        <div className="mt-12 grid gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <p className="t-body max-w-xs text-muted">
+              One specialist or a full team, from our Indore headquarters with senior presence in Switzerland.
+            </p>
+          </div>
+          <div className="lg:col-span-8">
+            <Faq items={HIRE_FAQS} label="Hiring from Savo Technologies, frequently asked questions" />
+          </div>
+        </div>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "@id": absoluteUrl("/hire/#faq-schema"),
+              mainEntity: HIRE_FAQS.map((f) => ({
+                "@type": "Question",
+                name: f.q,
+                acceptedAnswer: { "@type": "Answer", text: f.a },
+              })),
+            }),
+          }}
+        />
+      </Section>
 
       <DetailCta
         headingId="hire-cta-heading"

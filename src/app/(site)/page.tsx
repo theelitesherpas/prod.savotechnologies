@@ -10,6 +10,7 @@ import { WhySavo } from "@/sections/home/why-savo";
 import { Metrics } from "@/sections/home/metrics";
 import { Industries } from "@/sections/home/industries";
 import { Growth } from "@/sections/home/growth";
+import { HomeFaq } from "@/sections/home/home-faq";
 import { BrandStatement } from "@/sections/home/brand-statement";
 import { FinalCTA } from "@/sections/home/final-cta";
 
@@ -51,9 +52,11 @@ export default function HomePage() {
       <Industries />
       {/* 14: Discoverability after launch */}
       <Growth />
-      {/* 15: Brand moment (ink chapter) */}
+      {/* 15: The answers buyers and engines look for (AEO/GEO) */}
+      <HomeFaq />
+      {/* 16: Brand moment (ink chapter) */}
       <BrandStatement />
-      {/* 16: Conversion (vermilion chapter) */}
+      {/* 17: Conversion (vermilion chapter) */}
       <FinalCTA />
     </>
   );

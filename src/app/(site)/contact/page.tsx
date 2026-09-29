@@ -7,6 +7,8 @@ import { absoluteUrl } from "@/lib/env";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { SectionHeader } from "@/components/ui/section-header";
+import { Faq } from "@/components/shared/faq";
+import { CONTACT_FAQS } from "@/constants/faqs";
 import { DialogLink } from "@/components/layout/dialog-link";
 import { ContactHero } from "@/sections/contact/contact-hero";
 import { ContactForm } from "@/sections/contact/contact-form";
@@ -125,6 +127,40 @@ export default async function ContactPage() {
             </Reveal>
           </aside>
         </div>
+      </Section>
+
+      {/* FAQ (AEO) - practical pre-message questions */}
+      <Section id="faq" index="Questions" labelledBy="contact-faq-heading" className="bg-surface-2/60">
+        <SectionHeader
+          id="contact-faq-heading"
+          heading="Before you write."
+          lead="The practical questions people check before sending a first message."
+        />
+        <div className="mt-12 grid gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <p className="t-body max-w-xs text-muted">
+              Everything above is how it actually works — no exceptions for company size or project scale.
+            </p>
+          </div>
+          <div className="lg:col-span-8">
+            <Faq items={CONTACT_FAQS} label="Contacting Savo Technologies, frequently asked questions" />
+          </div>
+        </div>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "@id": absoluteUrl("/contact/#faq-schema"),
+              mainEntity: CONTACT_FAQS.map((f) => ({
+                "@type": "Question",
+                name: f.q,
+                acceptedAnswer: { "@type": "Answer", text: f.a },
+              })),
+            }),
+          }}
+        />
       </Section>
 
       {/* Ink band, after-send expectations */}

@@ -75,6 +75,8 @@ deployed against real business workflows with enterprise security.
 - Channels: contact form, email (${SITE.email}), phone (${SITE.phone}), WhatsApp chat from the contact page
 - Offices: India headquarters - 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010 (+91 75029 01234, HR +91 78988 52345). Switzerland head office - Rue de la Fruiterie 13, 1523 Granges-Marnand (+41 76 408 28 72). Every other region (Saudi Arabia & GCC, Australia, United Kingdom, United States) is a market/service presence, not a claimed physical office; confirmed office addresses publish only as each region supplies a verified line.
 - After you write: senior consultant replies → discovery call → fixed-scope proposal (NDA on request)
+- Location pages: ${absoluteUrl("/locations/indore")} (India engineering HQ) · ${absoluteUrl("/locations/switzerland")} (Swiss head office for European clients)
+- Common questions (FAQ, machine-readable on the homepage): what Savo does, India+Switzerland presence, AI agents and agentic systems, how engagements start, fixed-scope pricing, technology stack, SEO/AEO/GEO services, working with existing teams
 
 ## Careers
 - Careers page: ${absoluteUrl("/careers")} · Apply: ${absoluteUrl("/careers/apply")}

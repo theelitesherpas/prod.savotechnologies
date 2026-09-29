@@ -142,6 +142,7 @@ export const FOOTER_NAV = {
     { label: "Case Studies", href: "/case-studies" },
     { label: "Insights", href: "/insights" },
     { label: "Indore Office", href: "/locations/indore" },
+    { label: "Switzerland Office", href: "/locations/switzerland" },
     { label: "Careers", href: "/careers" },
     { label: "Contact", href: "/contact" },
   ],

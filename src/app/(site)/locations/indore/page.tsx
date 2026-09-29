@@ -222,6 +222,15 @@ export default function IndorePage() {
             Contact the team
           </Link>
         </Reveal>
+        <Reveal className="mt-10">
+          <p className="t-caption text-muted">
+            Also in Europe:{" "}
+            <Link href="/locations/switzerland" className="link-underline text-foreground">
+              our Switzerland head office
+            </Link>
+            .
+          </p>
+        </Reveal>
       </Section>
     </>
   );
