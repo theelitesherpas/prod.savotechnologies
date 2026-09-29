@@ -6,7 +6,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { ImageReveal } from "@/components/ui/image-reveal";
 import { ServiceIcon } from "@/components/shared/service-icon";
 import { Faq } from "@/components/shared/faq";
-import { ServiceSchematic } from "./service-schematics";
+import { ServiceDoodle } from "./service-doodles";
 import type { ServiceDetail } from "@/constants/services-detail";
 import type { CrossLink } from "@/sections/industries/industry-detail";
 
@@ -59,14 +59,14 @@ export function ServiceDetailHero({ detail }: { detail: ServiceDetail }) {
           <div className="lg:col-span-5">
             <Reveal delay={160}>
               <figure
-                aria-label={`${detail.title}, schematic`}
+                aria-label={`${detail.title}, doodle: the service performed as a drawing`}
                 className="blueprint relative aspect-[4/3] border border-border bg-surface"
               >
                 <div className="absolute inset-0 bottom-[3.25rem] p-8 text-foreground/80 sm:p-10">
-                  <ServiceSchematic slug={detail.slug} />
+                  <ServiceDoodle slug={detail.slug} />
                 </div>
                 <figcaption className="absolute inset-x-0 bottom-0 flex h-[3.25rem] items-center justify-between border-t border-border px-5">
-                  <span className="t-label text-muted">Specimen: {detail.short}</span>
+                  <span className="t-label text-muted">Doodle: {detail.short}</span>
                   <span aria-hidden="true" className="flex gap-1.5">
                     <span className="h-1.5 w-1.5 bg-accent" />
                     <span className="h-1.5 w-1.5 bg-border" />

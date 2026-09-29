@@ -398,6 +398,63 @@ body {
   }
 }
 
+/* Service doodles: staged self-building specimen plates. Draw (path
+   normalized), pop (scale-in, fill-box origin), grow (rise from bottom),
+   flow (marching dashes), crawl (the QA bug). Gated on no-preference;
+   reduced motion shows the finished drawing. */
+.sd-draw {
+  stroke-dasharray: 1;
+}
+.sd-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.sd-grow {
+  transform-box: fill-box;
+  transform-origin: bottom;
+}
+.sd-flow {
+  stroke-dasharray: 4 4;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sd-draw {
+    animation: sd-draw 700ms var(--ease-out-expo) both;
+  }
+  .sd-pop {
+    animation: sd-pop 480ms var(--ease-out-expo) both;
+  }
+  .sd-grow {
+    animation: sd-grow 620ms var(--ease-out-expo) both;
+  }
+  .sd-flow {
+    animation: sd-flow 1.6s linear infinite;
+  }
+  .sd-crawl {
+    animation: sd-crawl 3.2s var(--ease-out-expo) both;
+  }
+}
+@keyframes sd-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes sd-pop {
+  from { opacity: 0; transform: scale(0); }
+  70% { opacity: 1; transform: scale(1.12); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes sd-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes sd-flow {
+  to { stroke-dashoffset: -16; }
+}
+@keyframes sd-crawl {
+  from { opacity: 0; transform: translate(18px, -14px); }
+  30% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+
 /* Mega-drawer: one shell-open motion, panel rows stagger in, height eases
    between categories. Gated on no-preference (global kill-switch also applies). */
 @media (prefers-reduced-motion: no-preference) {
