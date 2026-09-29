@@ -124,6 +124,7 @@ export function AskSavoBar() {
   const [convToken, setConvToken] = useState<string | null>(null);
   const [liveStatus, setLiveStatus] = useState<string | null>(null); // waiting_for_agent | active | waiting_follow_up | closed…
   const [agentTyping, setAgentTyping] = useState(false);
+  const [lateAccept, setLateAccept] = useState(false); // agent joins while the visitor is in AI mode (spec §33)
 
   /* Pre-chat qualification */
   const [qService, setQService] = useState<string | null>(null);
@@ -147,6 +148,12 @@ export function AskSavoBar() {
   const seenIdsRef = useRef<Set<string>>(new Set());
   const esRef = useRef<EventSource | null>(null);
   const typingStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const messagesRef = useRef<ChatMsg[]>([]);
+  const phaseRef = useRef<Phase>(phase);
+  useEffect(() => {
+    messagesRef.current = messages;
+    phaseRef.current = phase;
+  }, [messages, phase]);
 
   const later = (fn: () => void, ms: number) => timersRef.current.push(setTimeout(fn, ms));
   const say = useCallback((node: ReactNode) => {
@@ -163,9 +170,10 @@ export function AskSavoBar() {
     try {
       const res = await fetch(withBasePath("/api/live-chat/session"), { cache: "no-store" });
       if (!res.ok) return;
-      const data = (await res.json()) as Session & { ok: boolean };
+      const data = (await res.json()) as Session & { ok: boolean; conversation: ({ publicToken?: string } & Session["conversation"]) | null };
       setSession(data);
       if (data.conversation) {
+        if (data.conversation.publicToken) setConvToken(data.conversation.publicToken);
         // Restore: render the stored thread plainly and land in the right phase.
         seenIdsRef.current = new Set(data.messages.map((m) => m.id));
         setMessages(
@@ -198,21 +206,38 @@ export function AskSavoBar() {
     }
   }, [sayServer]);
 
-  /* ── SSE subscription for the live thread ── */
+  /* ── SSE subscription — connected whenever a live thread exists, so the
+     visitor hears agent replies, accept/timeout transitions and late
+     accepts even while continuing with Savo AI (spec §33). ── */
   useEffect(() => {
-    if (phase !== "live") {
+    if (phase !== "live" && phase !== "ai") {
       esRef.current?.close();
       esRef.current = null;
       return;
     }
-    const url = convToken ? `${withBasePath("/api/live-chat/stream")}?token=${encodeURIComponent(convToken)}` : withBasePath("/api/live-chat/stream");
+    const url = convToken
+      ? `${withBasePath("/api/live-chat/stream")}?token=${encodeURIComponent(convToken)}`
+      : withBasePath("/api/live-chat/stream");
     const es = new EventSource(url);
     esRef.current = es;
 
     const onMessage = (raw: MessageEvent) => {
       try {
-        const msg = JSON.parse(raw.data) as { id: string; type: string; body: string; senderName?: string | null };
-        if (seenIdsRef.current.has(msg.id)) return;
+        const evt = JSON.parse(raw.data) as { message?: { id: string; type: string; body: string; senderName?: string | null } };
+        const msg = evt.message;
+        if (!msg || seenIdsRef.current.has(msg.id)) return;
+        // Skip the echo of our own just-sent visitor message (optimistic copy).
+        if (msg.type === "visitor") {
+          const dup = messagesRef.current.some(
+            (m) =>
+              Math.abs(Date.now() - m.at) < 8000 &&
+              ((m.side === "user" && m.text === msg.body) || (m.side === "server" && m.kind === "visitor" && m.body === msg.body)),
+          );
+          if (dup) {
+            seenIdsRef.current.add(msg.id);
+            return;
+          }
+        }
         seenIdsRef.current.add(msg.id);
         setMessages((m) => [
           ...m,
@@ -226,9 +251,13 @@ export function AskSavoBar() {
       try {
         const evt = JSON.parse(raw.data) as { status: string; agentName?: string | null; lateAccept?: boolean };
         setLiveStatus(evt.status);
-        if (evt.status === "active" && evt.agentName) {
-          setAgentTyping(false);
+        setAgentTyping(false);
+        if (evt.status === "active") {
           track("ask_savo_live_accepted");
+          // Visitor was elsewhere (AI mode after timeout) — offer the switch,
+          // never yank the conversation away (spec §33).
+          if (phaseRef.current !== "live") setLateAccept(true);
+          else setLateAccept(false);
         }
         if (evt.status === "ai_only") setPhase("ai");
       } catch {
@@ -542,7 +571,7 @@ export function AskSavoBar() {
   /* ── Derived UI state ── */
   const shown = (visible || open) && !dismissed;
   const liveOpen = session?.availability.liveChatOpen ?? false;
-  const humanLabel = liveOpen ? "Talk to a Human" : "Leave a Message for Our Team";
+  const HUMAN_LABEL = "Talk to a Human"; // always available — offline handled inside the flow
   const isLiveThread = phase === "live" && (liveStatus === "waiting_for_agent" || liveStatus === "active");
   const waiting = liveStatus === "waiting_for_agent";
   const timedOut = liveStatus === "waiting_follow_up" || liveStatus === "visitor_left";
@@ -570,6 +599,17 @@ export function AskSavoBar() {
       }
       return;
     }
+    // Typing at the welcome screen just starts the AI conversation —
+    // nobody has to pick a mode first.
+    if (phase === "welcome" || phase === "boot") {
+      if (input.trim()) {
+        setPhase("ai");
+        void ask(input);
+      } else {
+        setPhase("ai");
+      }
+      return;
+    }
     if (phase === "live" && convToken) void sendLive();
     else if (phase === "prechat" && qStep === 2) {
       if (input.trim()) {
@@ -578,7 +618,9 @@ export function AskSavoBar() {
         setInput("");
         setQStep(3);
       }
-    } else if (phase !== "welcome" && phase !== "boot") void ask(input);
+    } else {
+      void ask(input);
+    }
   }
 
   useEffect(() => {
@@ -686,7 +728,7 @@ export function AskSavoBar() {
                         onClick={startHuman}
                         className="inline-flex h-10 items-center rounded-[6px] border border-foreground/20 bg-white px-4 t-sm font-semibold text-foreground/80 transition-colors hover:border-accent hover:text-accent"
                       >
-                        {humanLabel}
+                        {HUMAN_LABEL}
                       </button>
                     </div>
                     <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Quick actions">
@@ -713,7 +755,9 @@ export function AskSavoBar() {
                       </li>
                     </ul>
                     <p className="t-caption mt-5 text-muted">
-                      {liveOpen ? "Our team is around — live chat connects you in seconds." : "The team is away right now; leave a message and Savo AI answers instantly, 24/7."}
+                      {liveOpen
+                        ? "Our team is around — type anything for Savo AI, or talk to a human for a live conversation."
+                        : "Savo AI answers instantly, 24/7. The team is away right now — the human chat option takes a message and we get back to you."}
                     </p>
                   </div>
                 ) : null}
@@ -756,6 +800,31 @@ export function AskSavoBar() {
                       <a href="mailto:hello@savotechnologies.com" className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground">
                         Leave a Message
                       </a>
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Late accept while the visitor continued with AI (spec §33) */}
+                {lateAccept && phase === "ai" && liveStatus === "active" ? (
+                  <div className="rounded-[6px] border border-accent/40 bg-accent/[0.05] px-3.5 py-3">
+                    <p className="t-sm text-foreground/90">A member of the Savo team is now available. Would you like to switch to live chat?</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => {
+                          setLateAccept(false);
+                          setPhase("live");
+                          track("ask_savo_live_accepted");
+                        }}
+                        className="t-caption rounded-[4px] border border-accent/50 bg-accent/[0.06] px-2.5 py-1.5 font-semibold text-accent transition-colors hover:border-accent"
+                      >
+                        Connect Now
+                      </button>
+                      <button
+                        onClick={() => setLateAccept(false)}
+                        className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/40 hover:text-foreground"
+                      >
+                        Continue with Savo AI
+                      </button>
                     </div>
                   </div>
                 ) : null}
@@ -810,7 +879,7 @@ export function AskSavoBar() {
                       onClick={startHuman}
                       className="t-caption rounded-[4px] border border-accent/40 px-2.5 py-1.5 text-accent transition-colors hover:border-accent"
                     >
-                      {humanLabel}
+                      {HUMAN_LABEL}
                     </button>
                   </li>
                 </ul>

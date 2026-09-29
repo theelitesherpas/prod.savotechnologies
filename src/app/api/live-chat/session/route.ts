@@ -22,12 +22,12 @@ export async function GET(req: Request) {
   const settings = await getLiveChatSettings();
   const [open, agents] = await Promise.all([liveChatOpen(settings.businessHours), getAgentsOnline()]);
 
-  let conversation: ReturnType<typeof toSummaryDTO> | null = null;
+  let conversation: (ReturnType<typeof toSummaryDTO> & { publicToken?: string }) | null = null;
   let messages: ReturnType<typeof toMessageDTO>[] = [];
   if (prisma) {
     const conv = await getResumableConversation(visitor.visitorId);
     if (conv) {
-      conversation = toSummaryDTO(conv);
+      conversation = { ...toSummaryDTO(conv), publicToken: conv.publicToken };
       const rows = await prisma.chatMessage.findMany({ where: { conversationId: conv.id }, orderBy: { createdAt: "asc" }, take: 200 });
       messages = rows.map(toMessageDTO);
     }
