@@ -181,19 +181,82 @@ export async function createMeeting(input: CreateMeetingInput): Promise<{ meetin
   });
 
   await logActivity(meeting.id, "created", input.createdByName);
+
+  // Auto-send invitation email if the client has an email — the client
+  // receives the scheduling link immediately without admin manually sharing it.
+  if (meeting.clientEmail) {
+    const link = `https://savotechnologies.com/meeting/${reference}`;
+    const typeLabel = MEETING_TYPES.find((t) => t.value === meeting.meetingType)?.label ?? meeting.meetingType;
+    sendMailNow(meeting.clientEmail, {
+      subject: `Meeting Invitation: ${input.title} — Savo Technologies`,
+      text: `Hello ${input.clientName},\n\nYou have been invited to a meeting with Savo Technologies.\n\nMeeting: ${input.title}\nType: ${typeLabel}\nDuration: ${meeting.durationMin} minutes\n\nPlease click the link below to select a date and time:\n${link}\n\nBest regards,\nSavo Technologies\nhello@savotechnologies.com`,
+      html: `<div style="font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.6;max-width:600px">
+        <h2 style="margin:0 0 16px;color:#17171a">Meeting Invitation</h2>
+        <p>Hello ${input.clientName},</p>
+        <p>You have been invited to a meeting with <strong>Savo Technologies</strong>.</p>
+        <table style="border-collapse:collapse;width:100%;margin:16px 0">
+          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666;width:140px">Meeting</td><td style="padding:8px 12px">${input.title}</td></tr>
+          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666">Type</td><td style="padding:8px 12px">${typeLabel}</td></tr>
+          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666">Duration</td><td style="padding:8px 12px">${meeting.durationMin} minutes</td></tr>
+        </table>
+        <p>Please click the button below to select a date and time that works for you:</p>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${link}" style="display:inline-block;background:#d9480f;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:16px">Schedule Your Meeting</a>
+        </div>
+        <p style="color:#888;font-size:13px">Or copy this link: ${link}</p>
+        <p>Best regards,<br><strong>Savo Technologies</strong><br>hello@savotechnologies.com</p>
+      </div>`,
+    });
+    await logActivity(meeting.id, "invitation_email_sent", input.createdByName, { to: meeting.clientEmail, auto: true });
+    // Move to awaiting_client since the email was sent automatically
+    await prisma.meeting.update({ where: { id: meeting.id }, data: { status: "awaiting_client" } }).catch(() => undefined);
+    await logActivity(meeting.id, "invitation_sent", input.createdByName, { auto: true });
+  }
+
   return { meeting: { id: meeting.id, reference, token } };
 }
 
 /* ───────────────────────── send invitation ───────────────────────── */
 
-export async function sendInvitation(meetingId: string, actorName: string): Promise<{ ok: boolean; error?: string }> {
+export async function sendInvitation(meetingId: string, actorName: string): Promise<{ ok: boolean; error?: string; emailSent?: boolean }> {
   if (!prisma) return { ok: false, error: "Database unavailable." };
   const m = await prisma.meeting.findUnique({ where: { id: meetingId } });
   if (!m) return { ok: false, error: "Meeting not found." };
 
   await prisma.meeting.update({ where: { id: meetingId }, data: { status: "awaiting_client" } });
   await logActivity(meetingId, "invitation_sent", actorName);
-  return { ok: true };
+
+  // Send the scheduling link to the client by email
+  let emailSent = false;
+  if (m.clientEmail) {
+    const link = `https://savotechnologies.com/meeting/${m.reference}`;
+    const meetingTypeLabel = MEETING_TYPES.find((t) => t.value === m.meetingType)?.label ?? m.meetingType;
+    sendMailNow(m.clientEmail, {
+      subject: `Meeting Invitation: ${m.title} — Savo Technologies`,
+      text: `Hello ${m.clientName},\n\nYou have been invited to a meeting with Savo Technologies.\n\nMeeting: ${m.title}\nType: ${meetingTypeLabel}\nDuration: ${m.durationMin} minutes\n${m.agenda ? `Agenda: ${m.agenda}\n` : ""}\nPlease click the link below to select a date and time that works for you:\n\n${link}\n\nBest regards,\nSavo Technologies\nhello@savotechnologies.com`,
+      html: `<div style="font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.6;max-width:600px">
+        <h2 style="margin:0 0 16px;color:#17171a">Meeting Invitation</h2>
+        <p>Hello ${m.clientName},</p>
+        <p>You have been invited to a meeting with <strong>Savo Technologies</strong>.</p>
+        <table style="border-collapse:collapse;width:100%;margin:16px 0">
+          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666;width:140px">Meeting</td><td style="padding:8px 12px">${m.title}</td></tr>
+          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666">Type</td><td style="padding:8px 12px">${meetingTypeLabel}</td></tr>
+          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666">Duration</td><td style="padding:8px 12px">${m.durationMin} minutes</td></tr>
+          ${m.agenda ? `<tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666">Agenda</td><td style="padding:8px 12px">${m.agenda}</td></tr>` : ""}
+        </table>
+        <p>Please click the button below to select a date and time that works for you:</p>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${link}" style="display:inline-block;background:#d9480f;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:16px">Schedule Your Meeting</a>
+        </div>
+        <p style="color:#888;font-size:13px">Or copy this link: ${link}</p>
+        <p>Best regards,<br><strong>Savo Technologies</strong><br>hello@savotechnologies.com</p>
+      </div>`,
+    });
+    emailSent = true;
+    await logActivity(meetingId, "invitation_email_sent", actorName, { to: m.clientEmail });
+  }
+
+  return { ok: true, emailSent };
 }
 
 /* ───────────────────────── public: get by token ───────────────────────── */
