@@ -42,7 +42,7 @@ export type MailTemplate = {
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-const site = (path = "/") => `https://savotechnologies.com${path}`;
+export const site = (path = "/") => `https://savotechnologies.com${path}`;
 
 function origin(): string {
   return (

@@ -11,6 +11,12 @@ import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { sendMailNow } from "@/lib/mail";
+import {
+  meetingInvitation,
+  meetingAvailabilityReceived,
+  meetingConfirmed,
+  meetingAdminNotification,
+} from "@/lib/mail/meeting-templates";
 import { publish } from "@/lib/livechat/pubsub";
 
 /* ───────────────────────── tokens & references ───────────────────────── */
@@ -182,33 +188,21 @@ export async function createMeeting(input: CreateMeetingInput): Promise<{ meetin
 
   await logActivity(meeting.id, "created", input.createdByName);
 
-  // Auto-send invitation email if the client has an email — the client
-  // receives the scheduling link immediately without admin manually sharing it.
+  // Auto-send branded invitation email if the client has an email.
   if (meeting.clientEmail) {
     const link = `https://savotechnologies.com/meeting/${reference}`;
-    const typeLabel = MEETING_TYPES.find((t) => t.value === meeting.meetingType)?.label ?? meeting.meetingType;
-    sendMailNow(meeting.clientEmail, {
-      subject: `Meeting Invitation: ${input.title} — Savo Technologies`,
-      text: `Hello ${input.clientName},\n\nYou have been invited to a meeting with Savo Technologies.\n\nMeeting: ${input.title}\nType: ${typeLabel}\nDuration: ${meeting.durationMin} minutes\n\nPlease click the link below to select a date and time:\n${link}\n\nBest regards,\nSavo Technologies\nhello@savotechnologies.com`,
-      html: `<div style="font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.6;max-width:600px">
-        <h2 style="margin:0 0 16px;color:#17171a">Meeting Invitation</h2>
-        <p>Hello ${input.clientName},</p>
-        <p>You have been invited to a meeting with <strong>Savo Technologies</strong>.</p>
-        <table style="border-collapse:collapse;width:100%;margin:16px 0">
-          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666;width:140px">Meeting</td><td style="padding:8px 12px">${input.title}</td></tr>
-          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666">Type</td><td style="padding:8px 12px">${typeLabel}</td></tr>
-          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666">Duration</td><td style="padding:8px 12px">${meeting.durationMin} minutes</td></tr>
-        </table>
-        <p>Please click the button below to select a date and time that works for you:</p>
-        <div style="text-align:center;margin:24px 0">
-          <a href="${link}" style="display:inline-block;background:#d9480f;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:16px">Schedule Your Meeting</a>
-        </div>
-        <p style="color:#888;font-size:13px">Or copy this link: ${link}</p>
-        <p>Best regards,<br><strong>Savo Technologies</strong><br>hello@savotechnologies.com</p>
-      </div>`,
+    const tpl = meetingInvitation({
+      clientName: meeting.clientName,
+      meetingTitle: input.title,
+      meetingType: meeting.meetingType,
+      durationMin: meeting.durationMin,
+      agenda: meeting.agenda || null,
+      reference,
+      schedulingLink: link,
+      to: meeting.clientEmail,
     });
+    sendMailNow(meeting.clientEmail, tpl);
     await logActivity(meeting.id, "invitation_email_sent", input.createdByName, { to: meeting.clientEmail, auto: true });
-    // Move to awaiting_client since the email was sent automatically
     await prisma.meeting.update({ where: { id: meeting.id }, data: { status: "awaiting_client" } }).catch(() => undefined);
     await logActivity(meeting.id, "invitation_sent", input.createdByName, { auto: true });
   }
@@ -226,32 +220,21 @@ export async function sendInvitation(meetingId: string, actorName: string): Prom
   await prisma.meeting.update({ where: { id: meetingId }, data: { status: "awaiting_client" } });
   await logActivity(meetingId, "invitation_sent", actorName);
 
-  // Send the scheduling link to the client by email
+  // Send branded invitation email
   let emailSent = false;
   if (m.clientEmail) {
     const link = `https://savotechnologies.com/meeting/${m.reference}`;
-    const meetingTypeLabel = MEETING_TYPES.find((t) => t.value === m.meetingType)?.label ?? m.meetingType;
-    sendMailNow(m.clientEmail, {
-      subject: `Meeting Invitation: ${m.title} — Savo Technologies`,
-      text: `Hello ${m.clientName},\n\nYou have been invited to a meeting with Savo Technologies.\n\nMeeting: ${m.title}\nType: ${meetingTypeLabel}\nDuration: ${m.durationMin} minutes\n${m.agenda ? `Agenda: ${m.agenda}\n` : ""}\nPlease click the link below to select a date and time that works for you:\n\n${link}\n\nBest regards,\nSavo Technologies\nhello@savotechnologies.com`,
-      html: `<div style="font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.6;max-width:600px">
-        <h2 style="margin:0 0 16px;color:#17171a">Meeting Invitation</h2>
-        <p>Hello ${m.clientName},</p>
-        <p>You have been invited to a meeting with <strong>Savo Technologies</strong>.</p>
-        <table style="border-collapse:collapse;width:100%;margin:16px 0">
-          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666;width:140px">Meeting</td><td style="padding:8px 12px">${m.title}</td></tr>
-          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666">Type</td><td style="padding:8px 12px">${meetingTypeLabel}</td></tr>
-          <tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666">Duration</td><td style="padding:8px 12px">${m.durationMin} minutes</td></tr>
-          ${m.agenda ? `<tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666">Agenda</td><td style="padding:8px 12px">${m.agenda}</td></tr>` : ""}
-        </table>
-        <p>Please click the button below to select a date and time that works for you:</p>
-        <div style="text-align:center;margin:24px 0">
-          <a href="${link}" style="display:inline-block;background:#d9480f;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:16px">Schedule Your Meeting</a>
-        </div>
-        <p style="color:#888;font-size:13px">Or copy this link: ${link}</p>
-        <p>Best regards,<br><strong>Savo Technologies</strong><br>hello@savotechnologies.com</p>
-      </div>`,
+    const tpl = meetingInvitation({
+      clientName: m.clientName,
+      meetingTitle: m.title,
+      meetingType: m.meetingType,
+      durationMin: m.durationMin,
+      agenda: m.agenda || null,
+      reference: m.reference,
+      schedulingLink: link,
+      to: m.clientEmail,
     });
+    sendMailNow(m.clientEmail, tpl);
     emailSent = true;
     await logActivity(meetingId, "invitation_email_sent", actorName, { to: m.clientEmail });
   }
@@ -579,40 +562,48 @@ async function sendClientConfirmation(meetingId: string, isFinal = false): Promi
 
   const dateStr = m.confirmedDate ?? m.preferredDate ?? "TBD";
   const timeStr = m.confirmedTime ?? m.preferredTime ?? "TBD";
-  const subject = isFinal
-    ? `Meeting Confirmed with Savo Technologies — ${dateStr}`
-    : `Meeting Availability Received — ${m.reference}`;
+  const loc = m.meetingUrl ?? m.locationAddress ?? m.locationType.replace(/_/g, " ");
 
-  const rows = [
-    ["Reference", m.reference],
-    ["Date", dateStr],
-    ["Time", `${timeStr} IST`],
-    ["Duration", durationLabel(m.durationMin)],
-    ["Meeting Type", meetingTypeLabel(m.meetingType)],
-    ["Location", m.locationAddress ?? locationTypeLabel(m.locationType)],
-  ];
-
-  sendMailNow(m.clientEmail, {
-    subject,
-    text: `Hello ${m.clientName},\n\n${isFinal ? "Your meeting has been confirmed." : "Your availability has been received."}\n\n${rows.map(([k, v]) => `${k}: ${v}`).join("\n")}\n\nBest regards,\nSavo Technologies\nhello@savotechnologies.com`,
-    html: `<div style="font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.6;max-width:600px">
-<h2 style="margin:0 0 8px;color:#17171a">${subject}</h2>
-<p>Hello ${m.clientName},</p>
-<p>${isFinal ? "Your meeting has been <strong>confirmed</strong>." : "Your availability has been received. Our team will confirm shortly."}</p>
-<table style="border-collapse:collapse;width:100%;margin:16px 0">${rows.map(([k, v]) => `<tr style="border-bottom:1px solid #e5e5e5"><td style="padding:8px 12px;font-weight:600;color:#666;width:140px">${k}</td><td style="padding:8px 12px">${v}</td></tr>`).join("")}</table>
-<p>Best regards,<br><strong>Savo Technologies</strong><br>hello@savotechnologies.com</p></div>`,
-  });
+  if (isFinal) {
+    const tpl = meetingConfirmed({
+      clientName: m.clientName,
+      meetingTitle: m.title,
+      date: dateStr,
+      time: timeStr,
+      durationMin: m.durationMin,
+      meetingType: m.meetingType,
+      location: loc,
+      reference: m.reference,
+      to: m.clientEmail,
+    });
+    sendMailNow(m.clientEmail, tpl);
+  } else {
+    const tpl = meetingAvailabilityReceived({
+      clientName: m.clientName,
+      meetingTitle: m.title,
+      date: dateStr,
+      time: timeStr,
+      durationMin: m.durationMin,
+      reference: m.reference,
+      to: m.clientEmail,
+    });
+    sendMailNow(m.clientEmail, tpl);
+  }
 }
 
 async function sendAdminNotification(meetingId: string): Promise<void> {
   if (!prisma) return;
   const m = await prisma.meeting.findUnique({ where: { id: meetingId } });
   if (!m) return;
-  sendMailNow("hello@savotechnologies.com", {
-    subject: `Meeting Response: ${m.clientName} — ${m.preferredDate} ${m.preferredTime}`,
-    text: `${m.clientName}${m.clientCompany ? ` (${m.clientCompany})` : ""} selected ${m.preferredDate} at ${m.preferredTime} for "${m.title}".\n\nReference: ${m.reference}\nOpen the admin panel to confirm.`,
-    html: `<div style="font-family:ui-sans-serif,system-ui;line-height:1.6"><p><strong>${m.clientName}</strong>${m.clientCompany ? ` (${m.clientCompany})` : ""} selected <strong>${m.preferredDate} at ${m.preferredTime}</strong> for "${m.title}".</p><p>Reference: ${m.reference}<br>Open the admin panel → Client Portal → Meetings to confirm.</p></div>`,
+  const tpl = meetingAdminNotification({
+    clientName: m.clientName,
+    clientCompany: m.clientCompany,
+    meetingTitle: m.title,
+    date: m.preferredDate ?? "TBD",
+    time: m.preferredTime ?? "TBD",
+    reference: m.reference,
   });
+  sendMailNow("hello@savotechnologies.com", tpl);
 }
 
 /* ───────────────────────── ICS calendar file ───────────────────────── */

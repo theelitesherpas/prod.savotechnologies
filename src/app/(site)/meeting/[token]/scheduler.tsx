@@ -37,9 +37,10 @@ function fmtTime(t: string): string {
 function genSlots(from: string, to: string, date: string): string[] {
   const [fh, fm] = from.split(":").map(Number);
   const [th, tm] = to.split(":").map(Number);
-  const now = new Date();
-  const isToday = date === now.toISOString().slice(0, 10);
-  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const slotNow = new Date();
+  const todayLocal = `${slotNow.getFullYear()}-${String(slotNow.getMonth() + 1).padStart(2, "0")}-${String(slotNow.getDate()).padStart(2, "0")}`;
+  const isToday = date === todayLocal;
+  const nowMin = slotNow.getHours() * 60 + slotNow.getMinutes();
   const out: string[] = [];
   for (let t = fh*60+fm; t < th*60+tm; t += 30) {
     if (isToday && t <= nowMin + 30) continue; // skip past and too-soon slots today
@@ -82,7 +83,9 @@ export function MeetingScheduler({ data, token }: { data: PublicMeetingData; tok
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Local-time "today" (not UTC) so past dates are correctly blocked in IST.
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const isSuggested = selectedDate && !data.availableDates.includes(selectedDate);
   const needsEmail = !data.clientEmail;
   const needsAddress = ["client_office","savo_office","in_person","office_visit","custom"].includes(data.locationType) && !data.locationAddress;
@@ -254,16 +257,31 @@ export function MeetingScheduler({ data, token }: { data: PublicMeetingData; tok
             );
           })}
           {data.allowSuggest ? (
-            <div className="flex items-center rounded-xl border-2 border-dashed border-border px-4 py-3">
-              <label className="cursor-pointer text-[0.8125rem] text-muted">
-                Suggest a date
-                <input
-                  type="date" min={today}
-                  value={isSuggested ? selectedDate : ""}
-                  onChange={(e) => { if (e.target.value && e.target.value > today) { setSelectedDate(e.target.value); setSelectedTime(""); } }}
-                  className="ml-2 bg-transparent text-[0.8125rem] text-foreground outline-none"
-                />
+            <div className="flex flex-col gap-1.5 rounded-xl border-2 border-dashed border-border px-4 py-3">
+              <label htmlFor="suggest-date" className="cursor-pointer text-[0.8125rem] font-semibold text-muted">
+                Suggest a different date
               </label>
+              <input
+                id="suggest-date"
+                type="date"
+                min={today}
+                value={isSuggested ? selectedDate : ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (!v) return;
+                  if (v <= today) {
+                    e.target.value = "";
+                    setError("Please pick a future date (tomorrow or later).");
+                    setTimeout(() => setError(null), 3000);
+                    return;
+                  }
+                  setSelectedDate(v);
+                  setSelectedTime("");
+                  setError(null);
+                }}
+                className="rounded-lg border border-border bg-surface-2/30 px-3 py-2 text-[0.875rem] text-foreground outline-none focus:border-accent"
+              />
+              <p className="text-[0.6875rem] text-muted">Pick any future date, we will confirm it with you.</p>
             </div>
           ) : null}
         </div>
