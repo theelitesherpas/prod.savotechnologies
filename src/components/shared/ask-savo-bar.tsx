@@ -856,15 +856,13 @@ export function AskSavoBar() {
                   </div>
                 ) : null}
 
-                {/* Timeout → follow-up (spec §11) — the team owns this thread
-                    until it ends; no AI offers mid-human-chat (owner rule). */}
+                {/* Timeout → follow-up actions (the situation itself arrives as a
+                    message from the server — no duplicated headline). The team
+                    owns the thread until it ends; no AI offers mid-human-chat. */}
                 {timedOut && phase === "live" ? (
                   <div className="rounded-[6px] border border-foreground/10 bg-surface-2 px-3.5 py-3">
-                    <p className="t-sm text-muted">
-                      Our team isn&apos;t available for live chat at the moment, but your request has been received. Someone from Savo will get back to you as soon as possible.
-                    </p>
-                    <p className="t-caption mt-1.5 text-muted">You can leave further messages here — the team reads everything when they reply.</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <p className="t-caption text-muted">You can leave further messages here — the team reads everything when they reply.</p>
+                    <div className="mt-2.5 flex flex-wrap gap-2">
                       <button
                         onClick={() => {
                           track("ask_savo_chat_ended");
@@ -1243,7 +1241,7 @@ function QualifyPanel(p: QualifyProps) {
               {p.error}
             </p>
           ) : null}
-          {p.contact.phone && !p.phoneCheck ? (
+          {p.contact.phone && !p.phoneCheck && !p.error ? (
             <p className="t-caption text-error" role="alert">
               {p.phoneHint}
             </p>

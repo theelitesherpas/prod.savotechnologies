@@ -457,7 +457,6 @@ export async function startHumanRequest(input: {
   // Always give the team the full response window (owner decision): the
   // request waits for an agent even outside business hours, and the sweep
   // moves it to follow-up with the honest message if nobody joins in time.
-  const settings = await getLiveChatSettings();
   const offline = input.offline === true;
   await setStatus(conv.id, "waiting_for_agent", { note: offline ? "Requested outside live hours — waiting window started" : "Waiting for an available Savo agent" });
   await appendMessage(conv.id, { type: "ai", body: "We've shared your requirement with our team. A Savo specialist should join shortly." });
@@ -578,7 +577,13 @@ export async function agentMessage(conversationId: string, agent: AgentInfo, bod
   const msg = await appendMessage(conversationId, { type: "agent", body, agentId: agent.id, senderName: `${agent.name} — Savo` });
   const patch: Record<string, unknown> = {};
   if (!conv.firstResponseAt) patch.firstResponseAt = new Date();
-  if (conv.status === "waiting_follow_up" || conv.status === "visitor_left") patch.status = "active";
+  // Any agent reply engages the thread — waiting, timed-out or left: the
+  // visitor is being served, the window timer must never fire after this.
+  if (conv.status === "waiting_for_agent" || conv.status === "waiting_follow_up" || conv.status === "visitor_left") {
+    patch.status = "active";
+    if (!conv.acceptedAt) patch.acceptedAt = new Date();
+    if (!conv.assignedId) patch.assignedId = agent.id;
+  }
   patch.mode = "human";
   if (Object.keys(patch).length > 0) {
     await prisma.chatConversation.update({ where: { id: conversationId }, data: patch });
@@ -628,12 +633,32 @@ export async function reopenConversation(conversationId: string, agent: AgentInf
 
 export async function assignConversation(conversationId: string, agentId: string | null, agentName: string | null, actor: AgentInfo): Promise<void> {
   if (!prisma) return;
-  await prisma.chatConversation.update({ where: { id: conversationId }, data: { assignedId: agentId } });
+  const conv = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
+  if (!conv) return;
+  // Assigning a waiting conversation ENGAGES it — the assigned agent owns
+  // the thread, the response-window timer must stop, and the visitor must
+  // be told they're connected (owner report: assignment left the chat
+  // "waiting" until the sweep timed it out).
+  const engaging = !!agentId && (conv.status === "waiting_for_agent" || conv.status === "waiting_follow_up");
+  const data: Record<string, unknown> = { assignedId: agentId };
+  if (engaging) {
+    data.status = "active";
+    data.mode = "human";
+    if (!conv.acceptedAt) data.acceptedAt = new Date();
+    if (!conv.firstResponseAt) data.firstResponseAt = new Date();
+  }
+  await prisma.chatConversation.update({ where: { id: conversationId }, data });
   await recordEvent(conversationId, "transferred", actor, { toAgent: agentName ?? "unassigned" });
-  await appendMessage(conversationId, {
-    type: "system",
-    body: agentId ? `Assigned to ${agentName}` : `Unassigned by ${actor.name}`,
-  });
+  if (engaging) {
+    await recordEvent(conversationId, "agent_accepted", { id: agentId, name: agentName }, { via: "assignment" });
+    await appendMessage(conversationId, { type: "system", body: `You're now connected with ${agentName} from Savo.` });
+    publishConversationEvent(conversationId, { type: "status.changed", conversationId, status: "active", agentName: agentName ?? actor.name });
+  } else {
+    await appendMessage(conversationId, {
+      type: "system",
+      body: agentId ? `Assigned to ${agentName}` : `Unassigned by ${actor.name}`,
+    });
+  }
   publishConversationEvent(conversationId, { type: "summary.updated", conversationId });
   publish("admin", { type: "counts.changed" });
 }
@@ -745,7 +770,7 @@ export async function sweepOnce(): Promise<void> {
     await recordEvent(conv.id, "timeout", undefined, { windowSec: settings.responseWindowSec });
     await appendMessage(conv.id, {
       type: "ai",
-      body: "Our team isn't available for live chat at the moment, but your request has been received. Someone from Savo will get back to you as soon as possible. You can continue chatting with Savo AI in the meantime.",
+      body: "Our team isn't available for live chat at the moment, but your request has been received. Someone from Savo will get back to you as soon as possible.",
     });
     // Visitor may continue with AI immediately (spec §12).
     await prisma.chatConversation.update({ where: { id: conv.id }, data: { mode: "ai" } }).catch(() => undefined);
