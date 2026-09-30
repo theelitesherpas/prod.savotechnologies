@@ -30,13 +30,29 @@ export function Section({
   children,
   labelledBy,
 }: SectionProps) {
+  /* When a className carries !py-* overrides, they must land on the
+     shell (the element that owns vertical rhythm), not stack on top of
+     the shell's own padding on the section element. Extract all py-*
+     classes (including responsive variants) into the shell; everything
+     else stays on the section. */
+  const pyClasses = className?.match(/(?:!|sm:!|lg:!|md:!)py-[^\s]+/g) ?? [];
+  const shellOverride = pyClasses.join(" ");
+  const sectionClass = className
+    ? pyClasses.reduce((acc, cls) => acc.replace(cls, "").replace(/\s{2,}/g, " ").trim(), className)
+    : undefined;
+
   return (
     <section
       id={id}
       aria-labelledby={labelledBy}
-      className={cn("relative bg-background text-foreground", chapterClass[chapter], className)}
+      className={cn("relative bg-background text-foreground", chapterClass[chapter], sectionClass)}
     >
-      <div className="shell py-20 sm:py-28 lg:py-36">
+      <div
+        className={cn(
+          "shell py-20 sm:py-28 lg:py-36",
+          shellOverride || undefined,
+        )}
+      >
         {index ? (
           <div
             aria-hidden="true"
