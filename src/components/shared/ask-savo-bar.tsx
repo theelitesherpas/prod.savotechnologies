@@ -705,6 +705,24 @@ export function AskSavoBar() {
     setSending(false);
   }
 
+  /* Phone sanitizer: digits only, and never more than the selected
+     country's national maximum (dial prefix allowed, not counted). */
+  function setPhoneSafe(raw: string) {
+    const rule = COUNTRY_PHONE_RULES[cCountry];
+    let v = raw.replace(/[^\d+ ]/g, "").replace(/ {2,}/g, " ");
+    if (rule) {
+      const dialDigits = rule.dial.replace("+", "");
+      const hadPrefix = v.trimStart().startsWith("+");
+      let national = v.replace(/\D/g, "");
+      if (hadPrefix && national.startsWith(dialDigits)) national = national.slice(dialDigits.length);
+      if (national.startsWith("0")) national = national.replace(/^0+/, "");
+      if (national.length > rule.max) national = national.slice(0, rule.max);
+      v = hadPrefix ? `${rule.dial} ${national}`.trim() : national;
+    }
+    setCPhone(v);
+    if (error) setError(null);
+  }
+
   /* ── Derived UI state ── */
   const shown = (visible || open) && !dismissed;
   const liveOpen = session?.availability.liveChatOpen ?? false;
@@ -868,65 +886,15 @@ export function AskSavoBar() {
               {/* data-lenis-prevent: the site's smooth-scroll library hijacks
                   wheel events page-wide, without this the thread can't scroll. */}
               <div ref={threadRef} aria-live="polite" data-lenis-prevent className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain [touch-action:pan-y] px-4 py-4">
-                {/* Welcome hero (spec §1) */}
+                {/* Welcome hero (headline + context). All choices live in the
+                    option strip right above the composer for easy picking. */}
                 {phase === "welcome" ? (
                   <div className="pt-2">
                     <p className="t-h4">Ask anything about Savo, or talk to our team now.</p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <button
-                        onClick={startAi}
-                        className="inline-flex h-10 items-center rounded-[6px] border border-accent/50 bg-accent/[0.06] px-4 t-sm font-semibold text-accent transition-colors hover:border-accent"
-                      >
-                        Ask Savo AI
-                      </button>
-                      <button
-                        onClick={startHuman}
-                        className="inline-flex h-10 items-center rounded-[6px] border border-foreground/20 bg-white px-4 t-sm font-semibold text-foreground/80 transition-colors hover:border-accent hover:text-accent"
-                      >
-                        {HUMAN_LABEL}
-                      </button>
-                    </div>
-                    <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Quick actions">
-                      <li>
-                        <Link href="/services" onClick={() => setOpen(false)} className="t-caption inline-block rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground">
-                          Explore Services
-                        </Link>
-                      </li>
-                      <li>
-                        <button onClick={startHuman} className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground">
-                          Discuss a Project
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() => {
-                            setPhase("ai");
-                            void ask("How much does a project cost?");
-                          }}
-                          className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
-                        >
-                          Estimate a Project
-                        </button>
-                      </li>
-                      <li>
-                        <a
-                          href={WHATSAPP_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => track("ask_savo_whatsapp")}
-                          className={WHATSAPP_CHIP}
-                        >
-                          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor">
-                            <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Zm4.6 12.2c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1a10 10 0 0 1-3.4-2.1 9 9 0 0 1-1.9-2.8c-.2-.6-.2-1.2 0-1.7.2-.4.6-.8 1-1 .2-.1.5-.1.7.1l.9 1.5c.1.2.1.4 0 .6l-.4.5c.4.8 1 1.4 1.7 1.8l.5-.4c.2-.1.4-.2.6-.1l1.5.8c.2.1.3.4.2.6Z"/>
-                          </svg>
-                          WhatsApp us
-                        </a>
-                      </li>
-                    </ul>
-                    <p className="t-caption mt-5 text-muted">
+                    <p className="t-caption mt-3 text-muted">
                       {liveOpen
-                        ? "Our team is around, type anything for Savo AI, or talk to a human for a live conversation."
-                        : "Savo AI answers instantly, 24/7. The team is away right now, the human chat option takes a message and we get back to you."}
+                        ? "Savo AI answers instantly, and our team is around for a live chat right now."
+                        : "Savo AI answers instantly, 24/7. The team will take your message and get back to you."}
                     </p>
                   </div>
                 ) : null}
@@ -1040,6 +1008,18 @@ export function AskSavoBar() {
                       >
                         Talk to a Human
                       </button>
+                      <a
+                        href={WHATSAPP_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => track("ask_savo_whatsapp")}
+                        className={WHATSAPP_CHIP}
+                      >
+                        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor">
+                          <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Zm4.6 12.2c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1a10 10 0 0 1-3.4-2.1 9 9 0 0 1-1.9-2.8c-.2-.6-.2-1.2 0-1.7.2-.4.6-.8 1-1 .2-.1.5-.1.7.1l.9 1.5c.1.2.1.4 0 .6l-.4.5c.4.8 1 1.4 1.7 1.8l.5-.4c.2-.1.4-.2.6-.1l1.5.8c.2.1.3.4.2.6Z" />
+                        </svg>
+                        WhatsApp us
+                      </a>
                     </div>
                   </div>
                 ) : null}
@@ -1069,7 +1049,7 @@ export function AskSavoBar() {
                   onContact={{
                     setName: (v) => { setCName(v); if (error) setError(null); },
                     setCountry: (v) => { setCCountry(v); if (error) setError(null); },
-                    setPhone: (v) => { setCPhone(v); if (error) setError(null); },
+                    setPhone: setPhoneSafe,
                     setEmail: (v) => { setCEmail(v); if (error) setError(null); },
                     setConsent: (v) => { setConsent(v); if (error) setError(null); },
                   }}
@@ -1077,31 +1057,68 @@ export function AskSavoBar() {
                 /> : null}
               </div>
 
-              {/* Suggestion chips (AI mode, fresh) */}
-              {phase === "ai" && fresh ? (
-                <ul className="flex flex-wrap gap-1.5 border-t border-foreground/10 px-4 py-3" aria-label="Suggested questions">
-                  {INITIAL_SUGGESTIONS.map((id) => {
-                    const e = entryById(id);
-                    if (!e) return null;
-                    return (
-                      <li key={id}>
+              {/* Option strip, right above the composer. On the welcome screen
+                  it carries every starting choice (owner rule); in fresh AI
+                  mode it carries suggested questions plus the human/WhatsApp
+                  paths. Links navigate but never close the chat. */}
+              {phase === "welcome" || (phase === "ai" && fresh) ? (
+                <ul className="flex flex-wrap gap-1.5 border-t border-foreground/10 px-4 py-3" aria-label="Chat options">
+                  {phase === "welcome" ? (
+                    <>
+                      <li>
                         <button
-                          onClick={() => ask(e.question)}
-                          className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+                          onClick={startAi}
+                          className="t-caption rounded-[4px] border border-accent/50 bg-accent/[0.06] px-2.5 py-1.5 font-semibold text-accent transition-colors hover:border-accent"
                         >
-                          {e.question}
+                          Ask Savo AI
                         </button>
                       </li>
-                    );
-                  })}
-                  <li>
-                    <button
-                      onClick={startHuman}
-                      className="t-caption rounded-[4px] border border-accent/40 px-2.5 py-1.5 text-accent transition-colors hover:border-accent"
-                    >
-                      {HUMAN_LABEL}
-                    </button>
-                  </li>
+                      <li>
+                        <button
+                          onClick={startHuman}
+                          className="t-caption rounded-[4px] border border-accent/40 px-2.5 py-1.5 text-accent transition-colors hover:border-accent"
+                        >
+                          {HUMAN_LABEL}
+                        </button>
+                      </li>
+                      <li>
+                        <Link href="/services" className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground">
+                          Explore Services
+                        </Link>
+                      </li>
+                      <li>
+                        <button onClick={startHuman} className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground">
+                          Discuss a Project
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => {
+                            setPhase("ai");
+                            void ask("How much does a project cost?");
+                          }}
+                          className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+                        >
+                          Estimate a Project
+                        </button>
+                      </li>
+                    </>
+                  ) : (
+                    INITIAL_SUGGESTIONS.map((id) => {
+                      const e = entryById(id);
+                      if (!e) return null;
+                      return (
+                        <li key={id}>
+                          <button
+                            onClick={() => ask(e.question)}
+                            className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+                          >
+                            {e.question}
+                          </button>
+                        </li>
+                      );
+                    })
+                  )}
                   <li>
                     <a
                       href={WHATSAPP_URL}
@@ -1110,6 +1127,9 @@ export function AskSavoBar() {
                       onClick={() => track("ask_savo_whatsapp")}
                       className={WHATSAPP_CHIP}
                     >
+                      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor">
+                        <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Zm4.6 12.2c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1a10 10 0 0 1-3.4-2.1 9 9 0 0 1-1.9-2.8c-.2-.6-.2-1.2 0-1.7.2-.4.6-.8 1-1 .2-.1.5-.1.7.1l.9 1.5c.1.2.1.4 0 .6l-.4.5c.4.8 1 1.4 1.7 1.8l.5-.4c.2-.1.4-.2.6-.1l1.5.8c.2.1.3.4.2.6Z" />
+                      </svg>
                       WhatsApp us
                     </a>
                   </li>

@@ -47,7 +47,7 @@ export const DEFAULT_SETTINGS: LiveChatSettings = {
       null, // Sat
     ],
   },
-  budgets: ["Under $5k", "$5k – $15k", "$15k – $40k", "$40k – $100k", "$100k+", "Not sure yet", "Prefer to discuss"],
+  budgets: ["Under $1.5k", "$1.5k – $4k", "$3k – $5k", "$5k – $15k", "$15k – $40k", "$40k+", "Not sure yet", "Prefer to discuss"],
   quickReplies: [
     { label: "Greeting", body: "Thanks for reaching out to Savo. Happy to help — what would you like to know?" },
     { label: "More detail", body: "Could you share a little more about your project so I can point you to the right team?" },
