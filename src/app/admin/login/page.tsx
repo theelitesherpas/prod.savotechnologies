@@ -67,6 +67,19 @@ export default async function AdminLoginPage({
             />
           </div>
 
+          <div className="mb-6 flex items-center gap-2">
+            <input
+              id="remember"
+              name="remember"
+              type="checkbox"
+              defaultChecked
+              className="h-4 w-4 accent-[#c2410c]"
+            />
+            <label htmlFor="remember" className="adm-label cursor-pointer select-none">
+              Keep me signed in for 30 days
+            </label>
+          </div>
+
           {e ? (
             <p
               role="alert"

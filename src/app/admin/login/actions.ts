@@ -39,10 +39,15 @@ export async function loginAction(formData: FormData): Promise<void> {
     redirect(`/admin/login?e=${encodeURIComponent(cap.error)}`);
   }
 
-  const result = await login(parsed.data.email, parsed.data.password, {
-    ip,
-    userAgent: hdrs.get("user-agent"),
-  });
+  const result = await login(
+    parsed.data.email,
+    parsed.data.password,
+    {
+      ip,
+      userAgent: hdrs.get("user-agent"),
+    },
+    formData.get("remember") === "on" || formData.get("remember") === "true",
+  );
 
   if (!result.ok) {
     recordLoginFailure("admin", ip);

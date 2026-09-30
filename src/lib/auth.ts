@@ -21,7 +21,14 @@ import { logger } from "@/lib/logger";
  */
 
 export const ADMIN_COOKIE = "savo_admin";
-const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12h workday session
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24h session
+/** Remembered sessions: 30 days, renewed on activity (never logged out
+ *  while the admin keeps using the panel). */
+const REMEMBER_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/** A remembered session is recognized by its ~30d initial lifetime. */
+const REMEMBER_MIN_LIFETIME_MS = 20 * 24 * 60 * 60 * 1000;
+/** Renew a remembered session once less than this remains. */
+const REMEMBER_RENEW_BELOW_MS = 15 * 24 * 60 * 60 * 1000;
 const LOGIN_LIMIT = 8; // attempts per IP per 15min
 const BCRYPT_ROUNDS = 12;
 
@@ -61,6 +68,7 @@ export async function login(
   email: string,
   password: string,
   meta: { ip: string; userAgent?: string | null },
+  remember = false,
 ): Promise<{ ok: true; user: AdminSessionUser } | { ok: false; reason: "rate_limited" | "invalid" }> {
   const normalized = email.trim().toLowerCase();
 
@@ -86,13 +94,13 @@ export async function login(
   }
 
   const token = randomBytes(32).toString("base64url");
-  const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
+  const expiresAt = new Date(Date.now() + (remember ? REMEMBER_TTL_MS : SESSION_TTL_MS));
 
   await prisma!.adminSession.create({
     data: { userId: user.id, tokenHash: hashToken(token), expiresAt },
   });
   await prisma!.auditLog.create({
-    data: { userId: user.id, action: "auth.login", meta: { userAgent: meta.userAgent ?? null } },
+    data: { userId: user.id, action: "auth.login", meta: { userAgent: meta.userAgent ?? null, remember } },
   });
 
   const store = await cookies();
@@ -140,6 +148,17 @@ export const getAdminUser = cache(async (): Promise<AdminSessionUser | null> => 
   if (session.expiresAt < new Date()) {
     await prisma.adminSession.delete({ where: { id: session.id } }).catch(() => undefined);
     return null;
+  }
+
+  // Sliding renewal for remembered sessions: while the admin keeps using
+  // the panel, the 30-day window moves forward and the session never
+  // expires under them. (The cookie itself already lives 30 days.)
+  const remaining = session.expiresAt.getTime() - Date.now();
+  const lifetime = session.expiresAt.getTime() - session.createdAt.getTime();
+  if (lifetime >= REMEMBER_MIN_LIFETIME_MS && remaining < REMEMBER_RENEW_BELOW_MS) {
+    await prisma.adminSession
+      .update({ where: { id: session.id }, data: { expiresAt: new Date(Date.now() + REMEMBER_TTL_MS) } })
+      .catch(() => undefined);
   }
 
   return {
