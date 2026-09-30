@@ -220,7 +220,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         <Section index="Key Features" labelledBy="cs-features-heading" className="bg-surface-2/60 !py-14 sm:!py-18 lg:!py-22">
           <SectionHeader id="cs-features-heading" heading="Notable features." lead={<>What makes this build stand out: the capabilities that earned attention.</>} />
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {study.keyFeatures.slice(0, 3).map((f, i) => (
+            {study.keyFeatures.map((f, i) => (
               <Reveal key={i} delay={i * 80}>
                 <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-background p-7 transition-all duration-300 hover:border-foreground/20 hover:shadow-[0_8px_32px_rgb(10_10_14/0.08)]">
                   {/* Animated infographic icon */}

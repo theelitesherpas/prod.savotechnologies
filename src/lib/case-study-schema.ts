@@ -104,7 +104,7 @@ export const caseStudySchema = z.object({
   /** Key features delivered: title + short description each. */
   keyFeatures: z
     .array(z.object({ title: z.string().min(2).max(80), text: z.string().max(300) }))
-    .max(3)
+    .max(6)
     .optional()
     .default([]),
   /** Third-party integrations: e.g. "Stripe, SendGrid, Twilio". */
