@@ -13,7 +13,7 @@ export function FinalCTA() {
       aria-labelledby="cta-heading"
       className="chapter-accent bg-background text-foreground"
     >
-      <div className="shell py-24 sm:py-32 lg:py-40">
+      <div className="shell py-14 sm:py-18 lg:py-22">
         <div className="grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-8">
             <Reveal>

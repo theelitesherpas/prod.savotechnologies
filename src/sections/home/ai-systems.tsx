@@ -5,7 +5,7 @@ import { AI_PIPELINE, AI_TRUST_POINTS, AI_USE_CASES } from "@/constants/content"
 
 export function AISystems() {
   return (
-    <Section id="ai" index="Intelligence" chapter="ink" labelledBy="ai-heading">
+    <Section id="ai" index="Intelligence" chapter="ink" labelledBy="ai-heading" className="!py-14 sm:!py-18 lg:!py-22">
       <TrackView event="ai_section_engagement">
         <div className="grid gap-16 lg:grid-cols-12 lg:gap-12">
           {/* Copy column */}

@@ -267,7 +267,7 @@ export async function SelectedWork() {
   const [featured, ...rest] = items;
 
   return (
-    <Section id="work" index="Selected Work" labelledBy="work-heading">
+    <Section id="work" index="Selected Work" labelledBy="work-heading" className="!py-14 sm:!py-18 lg:!py-22">
       <SectionHeader
         id="work-heading"
         heading="Selected work."

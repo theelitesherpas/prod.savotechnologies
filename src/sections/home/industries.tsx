@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export function Industries() {
   return (
-    <Section id="industries" index="Industries" labelledBy="industries-heading">
+    <Section id="industries" index="Industries" labelledBy="industries-heading" className="!py-14 sm:!py-18 lg:!py-22">
       <SectionHeader
         id="industries-heading"
         heading="Technology without industry boundaries."

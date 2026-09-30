@@ -5,7 +5,7 @@ import { SITE } from "@/constants/site";
 export function BrandStatement() {
   return (
     <section aria-labelledby="brand-heading" className="chapter-ink bg-background text-foreground">
-      <div className="shell py-28 sm:py-36 lg:py-44">
+      <div className="shell py-14 sm:py-18 lg:py-22">
         <Reveal>
           <p className="t-label mb-10 text-muted">Our belief</p>
           <h2 id="brand-heading" className="t-statement max-w-[13ch]">

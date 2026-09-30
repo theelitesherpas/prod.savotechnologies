@@ -38,7 +38,7 @@ export function Methodology() {
   }, []);
 
   return (
-    <Section id="process" index="Method" labelledBy="process-heading">
+    <Section id="process" index="Method" labelledBy="process-heading" className="!py-14 sm:!py-18 lg:!py-22">
       <div className="mb-14 sm:mb-20">
         <Reveal>
           <h2 id="process-heading" className="t-dl max-w-[16ch]">

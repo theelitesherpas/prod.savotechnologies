@@ -94,7 +94,7 @@ export function Services() {
   const { open } = useEnquiry();
 
   return (
-    <Section id="services" index="Services" labelledBy="services-heading">
+    <Section id="services" index="Services" labelledBy="services-heading" className="!py-14 sm:!py-18 lg:!py-22">
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-4">
           <div className="lg:sticky lg:top-28">

@@ -9,7 +9,7 @@ const CHAIN = ["Strategy", "Design", "Technology", "Intelligence", "Growth"] as 
 
 export function Introduction() {
   return (
-    <Section id="studio" index="The Studio" labelledBy="studio-heading">
+    <Section id="studio" index="The Studio" labelledBy="studio-heading" className="!py-14 sm:!py-18 lg:!py-22">
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-7">
           <Reveal>

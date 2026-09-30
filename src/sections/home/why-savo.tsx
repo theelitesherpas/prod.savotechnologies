@@ -8,7 +8,7 @@ import { withBasePath } from "@/lib/utils";
 
 export function WhySavo() {
   return (
-    <Section id="why" index="Why Savo" labelledBy="why-heading">
+    <Section id="why" index="Why Savo" labelledBy="why-heading" className="!py-14 sm:!py-18 lg:!py-22">
       <SectionHeader id="why-heading" heading="Why businesses choose Savo." />
 
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">

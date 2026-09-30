@@ -24,7 +24,7 @@ export function HomeFaq() {
     })),
   };
   return (
-    <Section id="faq" index="Questions" labelledBy={headingId} className="bg-surface-2/60">
+    <Section id="faq" index="Questions" labelledBy={headingId} className="bg-surface-2/60 !py-14 sm:!py-18 lg:!py-22">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <SectionHeader
         id={headingId}

@@ -4,7 +4,7 @@ import { TECHNOLOGY_STACK } from "@/constants/content";
 
 export function Technology() {
   return (
-    <Section id="technology" index="Technology" labelledBy="tech-heading" className="bg-surface-2/60">
+    <Section id="technology" index="Technology" labelledBy="tech-heading" className="bg-surface-2/60 !py-14 sm:!py-18 lg:!py-22">
       <div className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-5">
           <Reveal>
