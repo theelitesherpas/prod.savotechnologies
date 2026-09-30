@@ -545,18 +545,31 @@ export function AskSavoBar() {
           }
         }
         if (json.ok && json.result?.kind === "miss") {
+          const suggestions = ["build", "cost", "start", "ai", "industries", "careers"]
+            .map((id) => entryById(id))
+            .filter((e): e is AssistantEntry => !!e)
+            .slice(0, 4);
           say(
             <div>
               <p>That one&apos;s beyond my verified notes — and I won&apos;t guess.</p>
-              <p className="mt-2 text-muted">
-                Ask me about Savo&apos;s services, process, pricing, technology, offices or careers — or talk to the team directly.
-              </p>
-              <button
-                onClick={startHuman}
-                className="t-caption mt-3 rounded-[4px] border border-accent/40 px-2.5 py-1.5 text-accent transition-colors hover:border-accent"
-              >
-                Talk to a Human
-              </button>
+              <p className="mt-2 text-muted">Try one of these, or talk to the team directly:</p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {suggestions.map((e) => (
+                  <button
+                    key={e.id}
+                    onClick={() => ask(e.question)}
+                    className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+                  >
+                    {e.question}
+                  </button>
+                ))}
+                <button
+                  onClick={startHuman}
+                  className="t-caption rounded-[4px] border border-accent/40 px-2.5 py-1.5 text-accent transition-colors hover:border-accent"
+                >
+                  Talk to a Human
+                </button>
+              </div>
             </div>,
           );
           return;
