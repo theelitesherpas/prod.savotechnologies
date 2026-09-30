@@ -148,7 +148,7 @@ export default async function EditProjectPage({
             <label className="adm-label mb-1 block">Order</label>
             <input name="order" type="number" min={0} max={999} defaultValue={project.milestones.length + 1} className={input} />
           </div>
-          <SubmitButton label="Add" />
+          <SubmitButton label="Add milestone" />
         </FormGuard>
       </div>
 

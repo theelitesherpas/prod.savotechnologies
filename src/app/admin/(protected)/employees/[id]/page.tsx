@@ -89,7 +89,7 @@ export default async function EmployeeRecordPage({
                 <label htmlFor="lv-reason" className="adm-label mb-1 block">Reason</label>
                 <input id="lv-reason" name="reason" maxLength={500} className="adm-input" placeholder="Optional" />
               </div>
-              <SubmitButton label="Record" compact />
+              <SubmitButton label="Record leave" compact />
             </FormGuard>
 
             {/* Pending decisions */}

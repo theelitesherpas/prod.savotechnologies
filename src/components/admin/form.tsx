@@ -33,14 +33,12 @@ export function SubmitButton({
       <button
         type="submit"
         disabled={pending}
-        aria-label={pending ? pendingLabel : label}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-foreground/40 hover:text-foreground disabled:pointer-events-none disabled:opacity-60"
+        className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-border px-3 text-[0.8125rem] font-semibold text-foreground/75 transition-colors hover:border-accent/60 hover:text-accent disabled:pointer-events-none disabled:opacity-60"
       >
         {pending ? (
           <span aria-hidden="true" className="block h-3 w-3 animate-spin border border-current border-t-transparent" />
-        ) : (
-          <AdminIcon name="check" className="h-4 w-4" />
-        )}
+        ) : null}
+        {pending ? pendingLabel : label}
       </button>
     );
   }
