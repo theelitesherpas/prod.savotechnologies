@@ -200,6 +200,7 @@ export function LiveChatNotifier() {
       setPerm(result);
       if (result === "granted") {
         setShowBanner(false);
+        playRequestChime(); // audible confirmation, inside the click gesture
         showBrowserNotification({
           title: "Notifications enabled",
           body: "You will be alerted the moment a visitor requests to talk.",

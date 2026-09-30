@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { LEAD_STATUS_LABELS } from "@/lib/livechat/summary";
 import {
+  chimeReady,
   permissionState,
   requestNotificationPermission,
   setNotificationsWanted,
@@ -413,7 +414,10 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
               const next = !soundOn;
               setSoundOn(next);
               setSoundEnabled(next);
-              if (next) playRequestChime();
+              if (next) {
+                playRequestChime();
+                if (!chimeReady()) flash("Browsers unlock sound after a click on the page. Click anywhere once, then toggle again to hear the test chime.");
+              }
             }}
             title={soundOn ? "Sound alerts on" : "Sound alerts off"}
             aria-pressed={soundOn}
