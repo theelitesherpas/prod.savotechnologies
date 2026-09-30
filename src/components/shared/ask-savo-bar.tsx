@@ -54,7 +54,7 @@ type ChatMsg =
       at: number;
     };
 
-type Phase = "boot" | "welcome" | "ai" | "prechat" | "live";
+type Phase = "boot" | "welcome" | "ai" | "prechat" | "live" | "ended";
 
 type Availability = { liveChatOpen: boolean; agentsOnline: boolean; responseWindowSec: number };
 
@@ -125,6 +125,7 @@ export function AskSavoBar() {
   const [liveStatus, setLiveStatus] = useState<string | null>(null); // waiting_for_agent | active | waiting_follow_up | closed…
   const [agentTyping, setAgentTyping] = useState(false);
   const [lateAccept, setLateAccept] = useState(false); // agent joins while the visitor is in AI mode (spec §33)
+  const [endRequested, setEndRequested] = useState(false); // agent asked the visitor to confirm ending
 
   /* Pre-chat qualification */
   const [qService, setQService] = useState<string | null>(null);
@@ -270,9 +271,22 @@ export function AskSavoBar() {
           else setLateAccept(false);
         }
         if (evt.status === "ai_only") setPhase("ai");
-        // The team (or the system) closed the thread → fresh start with both
-        // options again (owner rule).
-        if (evt.status === "closed") resetToWelcome();
+        // The team (or the system) closed the thread → show the proper ended
+        // state: history stays visible, new conversations offered (never an
+        // abrupt wipe).
+        if (evt.status === "closed") {
+          setLiveStatus("closed");
+          setPhase("ended");
+          setEndRequested(false);
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    const onEndRequest = (raw: MessageEvent) => {
+      try {
+        JSON.parse(raw.data) as { conversationId: string; agentName?: string | null };
+        if (phaseRef.current === "live") setEndRequested(true);
       } catch {
         /* ignore */
       }
@@ -289,6 +303,7 @@ export function AskSavoBar() {
     es.addEventListener("message.new", onMessage as EventListener);
     es.addEventListener("status.changed", onStatus as EventListener);
     es.addEventListener("typing", onTyping as EventListener);
+    es.addEventListener("end.requested", onEndRequest as EventListener);
     es.onerror = () => {
       /* EventSource auto-reconnects; nothing else to do */
     };
@@ -397,6 +412,7 @@ export function AskSavoBar() {
     setConvToken(null);
     setLiveStatus(null);
     setLateAccept(false);
+    setEndRequested(false);
     setQService(null);
     setQStage(null);
     setQRequirement("");
@@ -408,6 +424,59 @@ export function AskSavoBar() {
     setCEmail("");
     setConsent(false);
     setPhase("welcome");
+  }
+
+  /* End the current thread and land in the proper ended state: history
+     stays visible, nothing wipes, and new conversations are offered. */
+  function endChatLocally() {
+    track("ask_savo_chat_ended");
+    endConversationQuietly();
+    setEndRequested(false);
+    setLiveStatus("closed");
+    setPhase("ended");
+  }
+
+  /* After an ended/reset conversation, Savo AI responds by default — a new
+   * thread begins on the first message (owner rule #4). */
+  function beginFreshAi(question?: string) {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    setTyping(false);
+    setError(null);
+    setInput("");
+    seenIdsRef.current = new Set();
+    setMessages([]);
+    setConvToken(null);
+    setLiveStatus(null);
+    setLateAccept(false);
+    setEndRequested(false);
+    setPhase("ai");
+    if (question) void ask(question);
+  }
+
+  function beginFreshHuman() {
+    beginFreshAi();
+    setPhase("prechat");
+    setQStep(0);
+    sayServer({ kind: "ai", body: HANDOFF_LINE });
+  }
+
+  /* Visitor's answer to the agent's end-request. */
+  async function answerEndRequest(accept: boolean) {
+    setEndRequested(false);
+    if (!convToken) return;
+    if (accept) {
+      endChatLocally();
+    }
+    try {
+      await fetch(withBasePath("/api/live-chat/end-request"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: convToken, accept }),
+      });
+    } catch {
+      /* best-effort */
+    }
   }
   async function openIt() {
     if (open) return;
@@ -633,11 +702,13 @@ export function AskSavoBar() {
   const fresh = phase === "boot" || phase === "welcome" || (phase === "ai" && messages.length === 0 && !typing);
 
   const placeholder = useMemo(() => {
+    if (phase === "ended") return "Start a new conversation — Savo AI is ready…";
     if (phase === "prechat" && qStep === 2) return "Tell us briefly about your project or requirement…";
     if (phase === "live" && activeChat) return "Write to the Savo team…";
     if (phase === "live" && waiting) return "You can write while we connect you…";
     return fresh ? "Ask anything about Savo" : "What else can I help with?";
   }, [phase, qStep, activeChat, waiting, fresh]);
+  void liveStatus;
 
   /* Bar submit */
   function submit(e: FormEvent<HTMLFormElement>) {
@@ -662,6 +733,11 @@ export function AskSavoBar() {
       } else {
         setPhase("ai");
       }
+      return;
+    }
+    // After an ended chat, typing starts a fresh AI conversation by default.
+    if (phase === "ended") {
+      beginFreshAi(input);
       return;
     }
     if (phase === "live" && convToken) void sendLive();
@@ -744,12 +820,8 @@ export function AskSavoBar() {
                 )}
                 {phase === "live" ? (
                   <button
-                    onClick={() => {
-                      track("ask_savo_chat_ended");
-                      endConversationQuietly();
-                      resetToWelcome();
-                    }}
-                    title="End this conversation and start fresh"
+                    onClick={endChatLocally}
+                    title="End this conversation"
                     className="t-caption mr-1 shrink-0 rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-error hover:text-error"
                   >
                     End
@@ -864,11 +936,7 @@ export function AskSavoBar() {
                     <p className="t-caption text-muted">You can leave further messages here — the team reads everything when they reply.</p>
                     <div className="mt-2.5 flex flex-wrap gap-2">
                       <button
-                        onClick={() => {
-                          track("ask_savo_chat_ended");
-                          endConversationQuietly();
-                          resetToWelcome();
-                        }}
+                        onClick={endChatLocally}
                         className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/40 hover:text-foreground"
                       >
                         End chat
@@ -900,6 +968,49 @@ export function AskSavoBar() {
                         className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/40 hover:text-foreground"
                       >
                         Continue with Savo AI
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Agent asked the visitor to confirm ending (consent flow) */}
+                {endRequested && phase === "live" ? (
+                  <div className="rounded-[6px] border border-accent/40 bg-accent/[0.05] px-3.5 py-3">
+                    <p className="t-sm text-foreground/90">The Savo team asked: is everything resolved? Would you like to end this chat?</p>
+                    <div className="mt-2.5 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => void answerEndRequest(true)}
+                        className="t-caption rounded-[4px] border border-accent/50 bg-accent/[0.06] px-2.5 py-1.5 font-semibold text-accent transition-colors hover:border-accent"
+                      >
+                        Yes, all resolved — end chat
+                      </button>
+                      <button
+                        onClick={() => void answerEndRequest(false)}
+                        className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/40 hover:text-foreground"
+                      >
+                        No, keep chatting
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Ended state — history preserved, new help offered */}
+                {phase === "ended" ? (
+                  <div className="rounded-[6px] border border-foreground/15 bg-surface-2 px-3.5 py-3.5">
+                    <p className="t-sm font-semibold text-foreground/90">This conversation has ended.</p>
+                    <p className="t-sm mt-1 text-muted">If you need further assistance, message us back — Savo AI is ready 24/7, and the team is one tap away.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => beginFreshAi()}
+                        className="t-caption rounded-[4px] border border-accent/50 bg-accent/[0.06] px-2.5 py-1.5 font-semibold text-accent transition-colors hover:border-accent"
+                      >
+                        Chat with Savo AI
+                      </button>
+                      <button
+                        onClick={beginFreshHuman}
+                        className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/40 hover:text-foreground"
+                      >
+                        Talk to a Human
                       </button>
                     </div>
                   </div>

@@ -31,6 +31,7 @@ export type BusEvent =
   | { type: "typing"; conversationId: string; who: "visitor" | "agent"; name?: string | null; typing: boolean }
   | { type: "summary.updated"; conversationId: string }
   | { type: "conversation.new"; conversationId: string }
+  | { type: "end.requested"; conversationId: string; agentName: string | null }
   | { type: "counts.changed" };
 
 type Listener = (event: BusEvent) => void;

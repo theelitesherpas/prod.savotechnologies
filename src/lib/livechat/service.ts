@@ -623,7 +623,30 @@ export async function endConversationByVisitor(conversationId: string): Promise<
   const conv = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
   if (!conv || conv.status === "closed" || conv.status === "spam") return;
   await setStatus(conversationId, "closed", { note: "Conversation ended by visitor" });
-  await appendMessage(conversationId, { type: "system", body: "Conversation ended by visitor." });
+  await appendMessage(conversationId, { type: "system", body: "Conversation ended. If you need further assistance, message us back — Savo AI is ready 24/7, and the team is one tap away." });
+}
+
+/** Agent asks the visitor to confirm ending the chat — the visitor decides
+ *  with a Yes/No card; nobody is dropped without consent. */
+export async function requestEndByAgent(conversationId: string, agent: AgentInfo): Promise<void> {
+  if (!prisma) return;
+  const conv = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
+  if (!conv || conv.status === "closed" || conv.status === "spam") return;
+  await recordEvent(conversationId, "end_requested", agent);
+  await appendMessage(conversationId, { type: "system", body: `${agent.name} asked the visitor to confirm ending the chat.` });
+  publishConversationEvent(conversationId, { type: "end.requested", conversationId, agentName: agent.name });
+}
+
+/** Visitor's answer to an end-request: accept closes the thread; declining
+ *  keeps it open and tells the team. */
+export async function respondToEndRequest(conversationId: string, accept: boolean): Promise<void> {
+  if (!prisma) return;
+  if (accept) {
+    await endConversationByVisitor(conversationId);
+    return;
+  }
+  await recordEvent(conversationId, "end_declined", { name: "visitor" });
+  await appendMessage(conversationId, { type: "system", body: "Visitor wants to continue the conversation." });
 }
 
 export async function reopenConversation(conversationId: string, agent: AgentInfo): Promise<void> {

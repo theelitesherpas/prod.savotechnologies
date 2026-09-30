@@ -8,6 +8,7 @@ import {
   closeConversation,
   markSpam,
   reopenConversation,
+  requestEndByAgent,
   returnToAi,
   setTags,
   updateConversationFields,
@@ -55,6 +56,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       await assignConversation(id, targetId, targetName, agent);
       return apiOk({});
     }
+    case "request-end":
+      await requestEndByAgent(id, agent);
+      return apiOk({});
     case "close":
       await closeConversation(id, agent);
       return apiOk({});

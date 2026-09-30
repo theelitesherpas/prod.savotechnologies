@@ -498,6 +498,18 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
                       Return to AI
                     </ActionBtn>
                   ) : null}
+                  {detail.status === "active" ? (
+                    <ActionBtn
+                      onClick={() =>
+                        void action(detail.id, { action: "request-end" }).then((r) => {
+                          if (r.ok) flash("Asked the visitor to confirm ending the chat.");
+                        })
+                      }
+                      title="Ask the visitor to confirm ending the chat"
+                    >
+                      Ask to end
+                    </ActionBtn>
+                  ) : null}
                   {detail.status !== "closed" && detail.status !== "spam" ? (
                     <ActionBtn onClick={() => void action(detail.id, { action: "close" })}>Close</ActionBtn>
                   ) : (
