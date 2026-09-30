@@ -32,6 +32,8 @@ export type BusEvent =
   | { type: "summary.updated"; conversationId: string }
   | { type: "conversation.new"; conversationId: string }
   | { type: "end.requested"; conversationId: string; agentName: string | null }
+  | { type: "enquiry.new"; enquiry: { name: string; projectType?: string; source?: string } }
+  | { type: "email.new"; email: { fromName: string | null; fromEmail: string; subject: string; dept: string } }
   | { type: "counts.changed" };
 
 type Listener = (event: BusEvent) => void;

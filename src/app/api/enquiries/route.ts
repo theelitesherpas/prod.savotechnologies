@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger";
 import { enquirySchema } from "@/schemas/enquiry";
 import { enforceCaptcha, recordSubmission } from "@/lib/captcha";
 import { sendTemplateNow, teamEmail } from "@/lib/mail";
+import { publish } from "@/lib/livechat/pubsub";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -110,6 +111,12 @@ export async function POST(req: Request) {
       },
     });
     logger.info("enquiry.stored", { source, type: data.projectType });
+
+    // Real-time admin alert: new enquiry in the inbox
+    publish("admin", {
+      type: "enquiry.new",
+      enquiry: { name: data.name, projectType: data.projectType, source },
+    });
     recordSubmission(ip);
 
     /* Transactional mail - never blocks the response, never fails the

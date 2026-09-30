@@ -8,6 +8,7 @@ import { validatePhone, COUNTRY_PHONE_RULES } from "@/lib/phone";
 import { logger } from "@/lib/logger";
 import { enforceCaptcha, recordSubmission } from "@/lib/captcha";
 import { sendTemplateNow, teamEmail } from "@/lib/mail";
+import { publish } from "@/lib/livechat/pubsub";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -96,6 +97,12 @@ export async function POST(req: Request) {
                 .slice(0, 32),
       },
     });
+    // Real-time admin alert: callback request
+    publish("admin", {
+      type: "enquiry.new",
+      enquiry: { name: data.name || "Callback request", projectType: "Phone callback", source: "footer-callback" },
+    });
+
     logger.info("callback.stored", { country: data.country });
     recordSubmission(ip);
     sendTemplateNow("teamCallback", teamEmail(), {

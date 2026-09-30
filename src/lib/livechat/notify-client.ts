@@ -98,6 +98,13 @@ export function playMessageDing(): void {
   tone(880, 0, 0.35, 0.14);
 }
 
+/** New inbound email: two descending notes, distinct from chat events. */
+export function playEmailChime(): void {
+  if (!soundEnabled()) return;
+  tone(1046.5, 0, 0.4, 0.18); // C6
+  tone(783.99, 0.18, 0.55, 0.18); // G5
+}
+
 /* ─────────────────────── Browser notifications ─────────────────────── */
 
 export type PermState = "default" | "granted" | "denied" | "unsupported";

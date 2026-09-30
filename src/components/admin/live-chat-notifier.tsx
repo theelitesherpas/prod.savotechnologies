@@ -6,6 +6,7 @@ import {
   bannerDismissed,
   dismissBanner,
   permissionState,
+  playEmailChime,
   playMessageDing,
   playRequestChime,
   requestNotificationPermission,
@@ -145,9 +146,46 @@ export function LiveChatNotifier() {
 
     const onCounts = () => scheduleRefresh();
 
+    const onEnquiry = (raw: MessageEvent) => {
+      try {
+        const evt = JSON.parse(raw.data) as { enquiry: { name: string; projectType?: string; source?: string } };
+        if (!evt.enquiry) return;
+        playRequestChime();
+        scheduleRefresh();
+        showBrowserNotification({
+          title: "New enquiry",
+          body: `${evt.enquiry.name}${evt.enquiry.projectType ? ` · ${evt.enquiry.projectType}` : ""} — review it in the Enquiries inbox.`,
+          tag: `enquiry-${Date.now()}`,
+          href: "/admin/enquiries",
+        });
+      } catch {
+        /* ignore */
+      }
+    };
+
+    const onEmail = (raw: MessageEvent) => {
+      try {
+        const evt = JSON.parse(raw.data) as { email: { fromName: string | null; fromEmail: string; subject: string; dept: string } };
+        if (!evt.email) return;
+        playEmailChime();
+        scheduleRefresh();
+        const who = evt.email.fromName || evt.email.fromEmail;
+        showBrowserNotification({
+          title: `New email (${evt.email.dept})`,
+          body: `${who}: ${evt.email.subject}`,
+          tag: `email-${evt.email.fromEmail}-${evt.email.subject.slice(0, 20)}`,
+          href: "/admin/emails",
+        });
+      } catch {
+        /* ignore */
+      }
+    };
+
     es.addEventListener("conversation.new", onNewConversation as EventListener);
     es.addEventListener("message.new", onMessage as EventListener);
     es.addEventListener("counts.changed", onCounts as EventListener);
+    es.addEventListener("enquiry.new", onEnquiry as EventListener);
+    es.addEventListener("email.new", onEmail as EventListener);
     return () => {
       es.close();
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
@@ -155,44 +193,81 @@ export function LiveChatNotifier() {
     };
   }, [scheduleRefresh, setTitleFlash]);
 
-  const enable = async () => {
-    const result = await requestNotificationPermission();
-    setPerm(result);
-    setShowBanner(false);
-    if (result === "granted") {
-      showBrowserNotification({
-        title: "Notifications enabled",
-        body: "You will be alerted the moment a visitor requests to talk.",
-        tag: "notify-enabled",
-      });
-    }
+  const enable = () => {
+    // Called synchronously inside the click gesture so the native browser
+    // popup appears properly. Never auto-dismissed by the page itself.
+    void requestNotificationPermission().then((result) => {
+      setPerm(result);
+      if (result === "granted") {
+        setShowBanner(false);
+        showBrowserNotification({
+          title: "Notifications enabled",
+          body: "You will be alerted the moment a visitor requests to talk.",
+          tag: "notify-enabled",
+        });
+      } else if (result === "denied") {
+        // Keep the banner up, switched to its unblock-instructions state.
+        setShowBanner(true);
+      }
+    });
   };
 
   return (
     <>
-      {showBanner ? (
-        <div className="fixed bottom-5 right-5 z-[70] w-[min(24rem,calc(100vw-2.5rem))] rounded-[8px] border border-accent/40 bg-white p-4 shadow-[0_18px_50px_rgb(10_10_14/0.22)]">
-          <p className="t-sm font-semibold text-foreground/90">Never miss a chat request</p>
-          <p className="t-caption mt-1 text-muted">
-            Enable browser notifications so new Talk-to-Human requests reach you even when this tab is in the background.
-          </p>
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={() => void enable()}
-              className="t-caption rounded-[4px] border border-accent/50 bg-accent/[0.06] px-3 py-1.5 font-semibold text-accent transition-colors hover:border-accent"
-            >
-              Enable notifications
-            </button>
-            <button
-              onClick={() => {
-                dismissBanner();
-                setShowBanner(false);
-              }}
-              className="t-caption rounded-[4px] border border-border px-3 py-1.5 text-muted transition-colors hover:text-foreground"
-            >
-              Not now
-            </button>
-          </div>
+      {showBanner && perm !== "granted" ? (
+        <div className="fixed bottom-5 right-5 z-[70] w-[min(26rem,calc(100vw-2.5rem))] rounded-[8px] border border-accent/40 bg-white p-4 shadow-[0_18px_50px_rgb(10_10_14/0.22)]">
+          {perm === "denied" ? (
+            <>
+              <p className="t-sm font-semibold text-foreground/90">Notifications are blocked for this site</p>
+              <p className="t-caption mt-1 text-muted">
+                The browser hid the permission popup because notifications were blocked earlier. To turn them on: click the{" "}
+                <strong>tune / lock icon</strong> at the left of the address bar, open <strong>Site settings</strong>, set{" "}
+                <strong>Notifications to Allow</strong>, then reload this page.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="t-caption rounded-[4px] border border-accent/50 bg-accent/[0.06] px-3 py-1.5 font-semibold text-accent transition-colors hover:border-accent"
+                >
+                  Reload after unblocking
+                </button>
+                <button
+                  onClick={() => {
+                    dismissBanner();
+                    setShowBanner(false);
+                  }}
+                  className="t-caption rounded-[4px] border border-border px-3 py-1.5 text-muted transition-colors hover:text-foreground"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="t-sm font-semibold text-foreground/90">Never miss a chat request</p>
+              <p className="t-caption mt-1 text-muted">
+                Enable browser notifications so new chat requests, enquiries and emails reach you even when this tab is in the
+                background.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={enable}
+                  className="t-caption rounded-[4px] border border-accent/50 bg-accent/[0.06] px-3 py-1.5 font-semibold text-accent transition-colors hover:border-accent"
+                >
+                  Enable notifications
+                </button>
+                <button
+                  onClick={() => {
+                    dismissBanner();
+                    setShowBanner(false);
+                  }}
+                  className="t-caption rounded-[4px] border border-border px-3 py-1.5 text-muted transition-colors hover:text-foreground"
+                >
+                  Not now
+                </button>
+              </div>
+            </>
+          )}
         </div>
       ) : null}
       <span className={cn("hidden")} aria-hidden="true" data-perm={perm} />

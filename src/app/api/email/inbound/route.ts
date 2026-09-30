@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/api";
+import { publish } from "@/lib/livechat/pubsub";
 import { logger } from "@/lib/logger";
 import { timingSafeEqual } from "node:crypto";
 
@@ -178,6 +179,12 @@ export async function POST(req: Request) {
         spamScore: isNaN(spamScore ?? NaN) ? null : spamScore,
         enquiryId: enquiry?.id ?? null,
       },
+    });
+
+    // Real-time admin alert: new inbound reply in the Emails inbox
+    publish("admin", {
+      type: "email.new",
+      email: { fromName, fromEmail, subject: subject || "(no subject)", dept },
     });
 
     logger.info("email-inbound: stored", {
