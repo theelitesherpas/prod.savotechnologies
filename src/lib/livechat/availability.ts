@@ -1,6 +1,6 @@
 /**
  * Live-chat availability: business hours (admin-configured) and real agent
- * presence. The visitor-facing "Talk to a Human" CTA is honest — it only
+ * presence. The visitor-facing "Talk to a Human" CTA is honest, it only
  * promises a human when one is plausibly there: within configured hours AND
  * at least one agent heartbeating recently. Outside that, the widget offers
  * "Leave a Message" and the request lands in waiting_follow_up.
@@ -35,7 +35,7 @@ export function withinBusinessHours(hours: BusinessHours, now: Date = new Date()
       hour12: false,
     }).formatToParts(now);
   } catch {
-    // Unknown time zone — fall back to server-local interpretation.
+    // Unknown time zone, fall back to server-local interpretation.
     parts = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", weekday: "short", hour12: false }).formatToParts(now);
   }
   const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";

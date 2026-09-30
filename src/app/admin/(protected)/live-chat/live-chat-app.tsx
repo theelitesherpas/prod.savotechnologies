@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Live Chat inbox — a real-time three-column console (conversation list ·
+ * Live Chat inbox, a real-time three-column console (conversation list ·
  * thread · lead context) over SSE, with views/counters, search, agent
  * presence, quick replies, Savo AI Assist, internal notes, tags, lead
  * status, follow-ups and admin settings. On small screens the columns
@@ -192,7 +192,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
   }, []);
 
   useEffect(() => {
-    // Data fetch on view/query change — setState happens in the promise,
+ // Data fetch on view/query change, setState happens in the promise,
     // not synchronously in the effect body.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadBootstrap();
@@ -284,7 +284,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
         }
         return json;
       } catch {
-        flash("Network problem — try again.");
+ flash("Network problem. Please try again.");
         return { ok: false };
       }
     },
@@ -304,7 +304,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
     [detail?.id],
   );
 
-  // Typing signal stops 2.5s after the last keystroke — never sticks on.
+ // Typing signal stops 2.5s after the last keystroke, never sticks on.
   useEffect(() => {
     if (!draft) return;
     const t = setTimeout(() => signalTyping(false), 2500);
@@ -332,7 +332,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
           scheduleBootstrap();
         }
       } catch {
-        flash("Network problem — try again.");
+ flash("Network problem. Please try again.");
       }
     },
     [detail?.id, flash, scheduleBootstrap, signalTyping],
@@ -580,7 +580,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
                   ) : (
                     <ActionBtn onClick={() => void action(detail.id, { action: "reopen" })}>Reopen</ActionBtn>
                   )}
-                  <ActionBtn onClick={() => void aiAssist("suggest")} title="Savo AI Assist — suggested replies">
+ <ActionBtn onClick={() => void aiAssist("suggest")} title="Savo AI Assist: suggested replies">
                     ✦ AI Assist
                   </ActionBtn>
                   <details className="relative">
@@ -669,7 +669,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
                         void send(draft, noteMode);
                       }
                     }}
-                    placeholder={noteMode ? "Internal note — the visitor never sees this…" : "Reply to the visitor…"}
+ placeholder={noteMode ? "Internal note (the visitor never sees this)…" : "Reply to the visitor…"}
                     className="t-sm max-h-32 min-h-[1.75rem] w-full flex-1 resize-none bg-transparent py-1 outline-none placeholder:text-muted"
                   />
                   <button type="submit" className="t-caption shrink-0 rounded-[4px] border border-accent/50 bg-accent/[0.06] px-3 py-1.5 font-semibold text-accent">
@@ -795,7 +795,7 @@ function LeadPanel({
   const [tags, setTags] = useState(detail.tags.join(", "));
   const [followUp, setFollowUp] = useState(detail.followUpAt ? detail.followUpAt.slice(0, 16) : "");
   // Re-sync local editing state when the server data changes (derived-state
-  // pattern — safe during render, no cascading effects).
+ // pattern, safe during render, no cascading effects).
   const [prevTags, setPrevTags] = useState(detail.tags);
   const [prevFollowUp, setPrevFollowUp] = useState(detail.followUpAt);
   if (detail.tags !== prevTags) {

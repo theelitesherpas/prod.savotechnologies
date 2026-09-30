@@ -5,7 +5,7 @@
  * attention-grade Web Audio chime (no audio files, works everywhere,
  * unlocked on the admin's first click), browser notifications via the
  * Notification API, and admin-controlled preferences in localStorage
- * (spec §24 — never spam, always controllable).
+ * (spec §24, never spam, always controllable).
  */
 
 const SOUND_KEY = "savo_livechat_sound";
@@ -39,7 +39,7 @@ export function dismissBanner(): void {
 /*
  * Loud-by-design chime. Lessons baked in:
  *  • The AudioContext stays SUSPENDED until a user gesture happens in the
- *    page — so we re-arm resume on EVERY pointerdown/keydown (cheap), and
+ * page, so we re-arm resume on EVERY pointerdown/keydown (cheap), and
  *    a chime only plays once the context is actually running (never a
  *    frozen-clock burst of notes).
  *  • Loudness: each note stacks a sine fundamental + triangle octave +

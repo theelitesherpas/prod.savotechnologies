@@ -1,5 +1,5 @@
 /**
- * Live-chat service layer — every conversation operation the visitor API
+ * Live-chat service layer, every conversation operation the visitor API
  * and the admin API need, in one module. All status transitions happen
  * here (never trusted from the client), every transition writes a
  * ConversationEvent row, and every change fans out on the pub/sub bus so
@@ -247,7 +247,7 @@ export async function appendMessage(
     },
   });
   const dto = toMessageDTO(msg);
-  // Internal notes NEVER reach the visitor channel (spec §27) — they fan
+ // Internal notes NEVER reach the visitor channel (spec §27), they fan
   // out to the admin inbox only. Everything else is visitor-visible.
   if (input.type !== "internal_note") {
     publishConversationEvent(conversationId, { type: "message.new", conversationId, message: dto });
@@ -290,7 +290,7 @@ export async function visitorAsk(conversationId: string, text: string): Promise<
 
   // While the thread belongs to a human (waiting, active, follow-up or
   // visitor-left), Savo AI stays silent (owner rule): the visitor's words go
-  // to the team, never to the AI — until the chat is ended and a fresh
+ // to the team, never to the AI, until the chat is ended and a fresh
   // conversation begins.
   if (conv.mode === "human") return { kind: "human_mode", handoff: false };
 
@@ -434,10 +434,10 @@ export async function startHumanRequest(input: {
     },
   }).catch(() => undefined);
 
-  /* Record everything the visitor gave us directly in the thread — the
+ /* Record everything the visitor gave us directly in the thread, the
      conversation is the lead record (spec §8, §31). */
   const detailLines = [
-    `Lead captured — ${input.contact.name}`,
+ `Lead captured: ${input.contact.name}`,
     q.service ?? conv.service ? `Discuss: ${q.service ?? conv.service}` : null,
     q.stage ?? conv.stage ? `Stage: ${q.stage ?? conv.stage}` : null,
     q.requirement ?? conv.requirement ? `Requirement: ${(q.requirement ?? conv.requirement)!.slice(0, 400)}` : null,
@@ -481,7 +481,7 @@ export async function startHumanRequest(input: {
   return { conversation: fresh, offline: false };
 }
 
-/* One notification email per human request (deduped by event log) — carries
+/* One notification email per human request (deduped by event log), carries
    the complete captured record so the team can act without opening the panel. */
 async function notifyAgents(
   conversationId: string,
@@ -507,8 +507,8 @@ async function notifyAgents(
     return;
   }
   const subject = lead.offline
-    ? `Live-chat follow-up: ${lead.name} — ${lead.service}`
-    : `Live-chat request: ${lead.name} — ${lead.service}`;
+ ? `Live-chat follow-up: ${lead.name} · ${lead.service}`
+ : `Live-chat request: ${lead.name} · ${lead.service}`;
   const contact = [lead.phone, lead.email].filter(Boolean).join(" · ") || "no contact details";
   const rows = [
     ["Name", lead.name],
@@ -537,7 +537,7 @@ async function notifyAgents(
 
 export type AgentInfo = { id: string; name: string };
 
-/** Atomic accept — the first agent wins, everyone else gets "taken". */
+/** Atomic accept, the first agent wins, everyone else gets "taken". */
 export async function acceptConversation(conversationId: string, agent: AgentInfo): Promise<{ ok: boolean; reason?: string }> {
   if (!prisma) return { ok: false, reason: "unavailable" };
   const conv = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
@@ -556,7 +556,7 @@ export async function acceptConversation(conversationId: string, agent: AgentInf
   await recordEvent(conversationId, "agent_accepted", agent, { lateAccept: late });
   await recordEvent(conversationId, "assigned", agent, { agentName: agent.name });
   const joinLine = late
-    ? `A member of the Savo team is now available — you're connected with ${agent.name} from Savo.`
+ ? `A member of the Savo team is now available. You're connected with ${agent.name} from Savo.`
     : `You're now connected with ${agent.name} from Savo.`;
   await appendMessage(conversationId, { type: "system", body: joinLine });
   publishConversationEvent(conversationId, {
@@ -577,7 +577,7 @@ export async function agentMessage(conversationId: string, agent: AgentInfo, bod
   const msg = await appendMessage(conversationId, { type: "agent", body, agentId: agent.id, senderName: `${agent.name} from Savo` });
   const patch: Record<string, unknown> = {};
   if (!conv.firstResponseAt) patch.firstResponseAt = new Date();
-  // Any agent reply engages the thread — waiting, timed-out or left: the
+ // Any agent reply engages the thread, waiting, timed-out or left: the
   // visitor is being served, the window timer must never fire after this.
   if (conv.status === "waiting_for_agent" || conv.status === "waiting_follow_up" || conv.status === "visitor_left") {
     patch.status = "active";
@@ -616,7 +616,7 @@ export async function closeConversation(conversationId: string, agent: AgentInfo
 }
 
 /** Visitor-side end: closes the thread so the widget returns to the fresh
- *  Ask Savo AI / Talk to a Human choice (owner rule — AI never returns to a
+ * Ask Savo AI / Talk to a Human choice (owner rule, AI never returns to a
  *  live human thread until the visitor or the team ends it). */
 export async function endConversationByVisitor(conversationId: string): Promise<void> {
   if (!prisma) return;
@@ -626,7 +626,7 @@ export async function endConversationByVisitor(conversationId: string): Promise<
   await appendMessage(conversationId, { type: "system", body: "Conversation ended. If you need further assistance, message us back, Savo AI is ready 24/7, and the team is one tap away." });
 }
 
-/** Agent asks the visitor to confirm ending the chat — the visitor decides
+/** Agent asks the visitor to confirm ending the chat, the visitor decides
  *  with a Yes/No card; nobody is dropped without consent. */
 export async function requestEndByAgent(conversationId: string, agent: AgentInfo): Promise<void> {
   if (!prisma) return;
@@ -658,7 +658,7 @@ export async function assignConversation(conversationId: string, agentId: string
   if (!prisma) return;
   const conv = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
   if (!conv) return;
-  // Assigning a waiting conversation ENGAGES it — the assigned agent owns
+ // Assigning a waiting conversation ENGAGES it, the assigned agent owns
   // the thread, the response-window timer must stop, and the visitor must
   // be told they're connected (owner report: assignment left the chat
   // "waiting" until the sweep timed it out).
@@ -773,7 +773,7 @@ export function typingSignal(conversationId: string, who: "visitor" | "agent", t
 /* ─────────────────────────── sweep (background) ─────────────────────────── */
 
 /**
- * Server-side maintenance pass — run every few seconds by the worker in
+ * Server-side maintenance pass, run every few seconds by the worker in
  * instrumentation.ts. Never depends on any browser being open:
  *   1. waiting_for_agent older than the response window → waiting_follow_up
  *   2. active/waiting conversations with a stale visitor → visitor_left

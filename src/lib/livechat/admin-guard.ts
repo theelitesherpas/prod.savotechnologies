@@ -1,5 +1,5 @@
 /**
- * Admin live-chat API guard — session check plus the live-chat section
+ * Admin live-chat API guard, session check plus the live-chat section
  * grant, in one helper every admin route shares.
  */
 

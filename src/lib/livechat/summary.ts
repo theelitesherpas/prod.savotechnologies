@@ -1,5 +1,5 @@
 /**
- * AI requirement summary — the internal digest agents see when a
+ * AI requirement summary, the internal digest agents see when a
  * conversation transfers from Savo AI to a human (spec §16).
  *
  * Deterministic and honest: built strictly from what the visitor actually

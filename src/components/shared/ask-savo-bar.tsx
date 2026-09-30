@@ -22,15 +22,15 @@ import { track } from "@/lib/analytics";
 import { cn, withBasePath } from "@/lib/utils";
 
 /**
- * Savo Assistant — one continuous conversation, two modes (spec: Savo
+ * Savo Assistant, one continuous conversation, two modes (spec: Savo
  * Assistant + real-time human live chat).
  *
- *   Ask anything about Savo — or talk to our team now.
+ * Ask anything about Savo, or talk to our team now.
  *   [ Ask Savo AI ]  [ Talk to a Human ]
  *
- * MODE A · Savo AI — deterministic site-truth answers, persisted
+ * MODE A · Savo AI, deterministic site-truth answers, persisted
  *   server-side on the visitor's thread.
- * MODE B · Human — a short conversational qualification (service, stage,
+ * MODE B · Human, a short conversational qualification (service, stage,
  *   requirement, timeline, budget, contact), a compact review, then a
  *   live-chat request with a 60s server-side acceptance window, SSE
  *   delivery of agent replies, graceful timeout → follow-up, and AI
@@ -76,7 +76,7 @@ const STAGES = [
   "Just exploring an idea", "Planning requirements", "Have designs ready", "Development already started",
   "Have an existing product", "Need redesign / improvement", "Need urgent technical support",
 ];
-const TIMELINES = ["As soon as possible", "Within a few weeks", "Within 1–3 months", "3+ months", "Just researching"];
+const TIMELINES = ["As soon as possible", "Within a few weeks", "Within 1 to 3 months", "3+ months", "Just researching"];
 
 const HANDOFF_LINE =
   "Of course. I'll collect a few details so the right person at Savo has some context before joining. What would you like to discuss?";
@@ -209,7 +209,7 @@ export function AskSavoBar() {
     }
   }, [sayServer]);
 
-  /* ── SSE subscription — connected whenever a live thread exists, so the
+ /* ── SSE subscription, connected whenever a live thread exists, so the
      visitor hears agent replies, accept/timeout transitions and late
      accepts even while continuing with Savo AI (spec §33). ── */
   useEffect(() => {
@@ -230,7 +230,7 @@ export function AskSavoBar() {
         const msg = evt.message;
         if (!msg || seenIdsRef.current.has(msg.id)) return;
         // In AI mode the client renders its own rich question/answer pair
-        // after /ask — the server's plain-text echoes of the same turn would
+ // after /ask, the server's plain-text echoes of the same turn would
         // double every message. Live SSE in AI mode only carries human-side
         // events (agent lines, system notes, late accepts). History on
         // restore still comes fully from /session.
@@ -267,7 +267,7 @@ export function AskSavoBar() {
         setAgentTyping(false);
         if (evt.status === "active") {
           track("ask_savo_live_accepted");
-          // Visitor was elsewhere (AI mode after timeout) — offer the switch,
+ // Visitor was elsewhere (AI mode after timeout), offer the switch,
           // never yank the conversation away (spec §33).
           if (phaseRef.current !== "live") setLateAccept(true);
           else setLateAccept(false);
@@ -392,7 +392,7 @@ export function AskSavoBar() {
   }
 
   /* End the current thread server-side (visitor-side close) without
-     waiting — the next message starts a fresh conversation. */
+ waiting, the next message starts a fresh conversation. */
   function endConversationQuietly() {
     if (!convToken) return;
     void fetch(withBasePath("/api/live-chat/end"), {
@@ -438,7 +438,7 @@ export function AskSavoBar() {
     setPhase("ended");
   }
 
-  /* After an ended/reset conversation, Savo AI responds by default — a new
+ /* After an ended/reset conversation, Savo AI responds by default, a new
    * thread begins on the first message (owner rule #4). */
   function beginFreshAi(question?: string) {
     timersRef.current.forEach(clearTimeout);
@@ -726,7 +726,7 @@ export function AskSavoBar() {
   /* ── Derived UI state ── */
   const shown = (visible || open) && !dismissed;
   const liveOpen = session?.availability.liveChatOpen ?? false;
-  const HUMAN_LABEL = "Talk to a Human"; // always available — offline handled inside the flow
+ const HUMAN_LABEL = "Talk to a Human"; // always available, offline handled inside the flow
   const isLiveThread = phase === "live" && (liveStatus === "waiting_for_agent" || liveStatus === "active");
   const waiting = liveStatus === "waiting_for_agent";
   const timedOut = liveStatus === "waiting_follow_up" || liveStatus === "visitor_left";
@@ -756,7 +756,7 @@ export function AskSavoBar() {
       }
       return;
     }
-    // Typing at the welcome screen just starts the AI conversation —
+ // Typing at the welcome screen just starts the AI conversation, 
     // nobody has to pick a mode first.
     if (phase === "welcome" || phase === "boot") {
       if (input.trim()) {
@@ -1024,7 +1024,7 @@ export function AskSavoBar() {
                   </div>
                 ) : null}
 
-                {/* Pre-chat qualification steps (spec §5–7) */}
+ {/* Pre-chat qualification steps (spec §5 to 7) */}
                 {phase === "prechat" ? <QualifyPanel
                   step={qStep}
                   service={qService}

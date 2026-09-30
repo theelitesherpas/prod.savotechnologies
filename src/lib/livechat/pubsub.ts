@@ -2,18 +2,18 @@
  * In-process publish/subscribe bus behind the SSE streams.
  *
  * Channel grammar:
- *   admin        — everything the admin inbox needs (new request, message,
+ *   admin       , everything the admin inbox needs (new request, message,
  *                  status change, presence, counts)
- *   conv:{id}    — one conversation, consumed by the visitor's stream
+ *   conv:{id}   , one conversation, consumed by the visitor's stream
  *                  (agent replies, status changes, typing indicators)
  *
- * Single-instance deployment (VPS + PM2, one `next start`) — an in-memory
+ * Single-instance deployment (VPS + PM2, one `next start`), an in-memory
  * bus is the whole transport. When the platform scales horizontally, swap
  * publish() for Redis pub/sub; the interface stays identical.
  *
  * The bus also carries a small replay buffer per conversation so a stream
  * that reconnects can catch events it missed during the gap (plus the
- * client refetches state on reconnect — the DB is the source of truth).
+ * client refetches state on reconnect, the DB is the source of truth).
  */
 
 import type { MessageDTO } from "./types";
@@ -51,7 +51,7 @@ const bus =
     const janitor = setInterval(() => {
       const cutoff = Date.now() - 5 * 60 * 1000;
       for (const [channel, events] of replay) {
-        // BusEvent has no timestamp for all variants — cap by length.
+        // BusEvent has no timestamp for all variants, cap by length.
         if (events.length > 100) replay.set(channel, events.slice(-50));
       }
       void cutoff;

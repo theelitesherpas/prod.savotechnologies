@@ -5,9 +5,9 @@
  *
  * Keys (ChatSetting rows, JSON values):
  *   business_hours  { enabled, timeZone, days: {1..5:{start,end}}, ... }
- *   budgets         string[] — pre-chat budget options
- *   quick_replies   { label, body }[] — agent canned replies
- *   phone_required  boolean — live-chat request needs a phone number
+ * budgets string[], pre-chat budget options
+ * quick_replies { label, body }[], agent canned replies
+ * phone_required boolean, live-chat request needs a phone number
  *   response_window seconds an agent has to accept before follow-up (60)
  */
 
@@ -33,7 +33,7 @@ export type LiveChatSettings = {
 };
 
 export const DEFAULT_SETTINGS: LiveChatSettings = {
-  // Mon–Fri 10:00–19:00 IST by default (spec §38); admins can change it.
+ // Mon, Fri 10:00 to 19:00 IST by default (spec §38); admins can change it.
   businessHours: {
     enabled: true,
     timeZone: "Asia/Kolkata",
@@ -47,12 +47,12 @@ export const DEFAULT_SETTINGS: LiveChatSettings = {
       null, // Sat
     ],
   },
-  budgets: ["Under $1.5k", "$1.5k – $4k", "$3k – $5k", "$5k – $15k", "$15k – $40k", "$40k+", "Not sure yet", "Prefer to discuss"],
+ budgets: ["Under $1.5k", "$1.5k to $4k", "$3k to $5k", "$5k to $15k", "$15k to $40k", "$40k+", "Not sure yet", "Prefer to discuss"],
   quickReplies: [
-    { label: "Greeting", body: "Thanks for reaching out to Savo. Happy to help — what would you like to know?" },
+ { label: "Greeting", body: "Thanks for reaching out to Savo. Happy to help! What would you like to know?" },
     { label: "More detail", body: "Could you share a little more about your project so I can point you to the right team?" },
     { label: "Discovery call", body: "Would you be available for a short discovery call this week? We can walk through your requirement together." },
-    { label: "Technical review", body: "We've received your requirement and will review it with our technical team — I'll come back to you shortly." },
+ { label: "Technical review", body: "We've received your requirement and will review it with our technical team. I'll come back to you shortly." },
   ],
   phoneRequired: true,
   responseWindowSec: 60,

@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * LiveChatNotifier — the admin's never-miss-a-chat layer, mounted once in
+ * LiveChatNotifier, the admin's never-miss-a-chat layer, mounted once in
  * the protected admin layout so it lives across every admin page:
  *
  *   • SSE subscription to the live-chat bus (one long-lived connection)
@@ -44,7 +44,7 @@ export function LiveChatNotifier() {
   useEffect(() => {
     unlockAudio();
     // Read browser-only APIs (Notification.permission, localStorage) on
-    // mount — they cannot be read during SSR render.
+ // mount, they cannot be read during SSR render.
      
     const state = permissionState();
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -59,7 +59,7 @@ export function LiveChatNotifier() {
   }, [router]);
 
   /* Title flash: alternate the tab title while requests wait and the tab
-     is hidden — the classic "something needs you" signal. */
+ is hidden, the classic "something needs you" signal. */
   const setTitleFlash = useCallback((on: boolean) => {
     if (on === flashing.current) return;
     flashing.current = on;
@@ -71,7 +71,7 @@ export function LiveChatNotifier() {
           return;
         }
         toggle = !toggle;
-        document.title = toggle ? "🔔 New live chat request — Savo Admin" : ORIGINAL_TITLE;
+ document.title = toggle ? "🔔 New live chat request · Savo Admin" : ORIGINAL_TITLE;
       }, 1200);
     } else {
       if (flashTimer.current) clearInterval(flashTimer.current);
@@ -154,7 +154,7 @@ export function LiveChatNotifier() {
         scheduleRefresh();
         showBrowserNotification({
           title: "New enquiry",
-          body: `${evt.enquiry.name}${evt.enquiry.projectType ? ` · ${evt.enquiry.projectType}` : ""} — review it in the Enquiries inbox.`,
+ body: `${evt.enquiry.name}${evt.enquiry.projectType ? ` · ${evt.enquiry.projectType}` : ""}, review it in the Enquiries inbox.`,
           tag: `enquiry-${Date.now()}`,
           href: "/admin/enquiries",
         });

@@ -426,7 +426,7 @@ export const INITIAL_SUGGESTIONS = ["build", "cost", "start", "ai", "industries"
 
 export const HUMAN_CHIP = "talk-human" as const;
 
-/* ── Conversational small-talk entries (greetings, thanks) — they keep the
+/* ── Conversational small-talk entries (greetings, thanks), they keep the
    chat human instead of falling through to the honest-miss fallback. ── */
 export const CONVERSATION_ENTRIES: AssistantEntry[] = [
   {
@@ -515,7 +515,7 @@ const INTENT_BOOST = new Set([
   "price", "pricing", "cost", "budget", "quote", "estimate", "charge", "fee", "money",
 ]);
 
-/* Synonym expansion — a keyword concept matches any of its everyday
+/* Synonym expansion, a keyword concept matches any of its everyday
    phrasings, so "how much do you charge" hits cost without listing every
    word on the entry itself. Applied at module init, not per question. */
 const SYNONYMS: Record<string, string[]> = {
@@ -540,7 +540,7 @@ function expandedKeywords(entry: AssistantEntry): string[] {
   return out;
 }
 
-/* Conversational short-circuit — "ok", "hmm", "yeah" as (nearly) the whole
+/* Conversational short-circuit, "ok", "hmm", "yeah" as (nearly) the whole
    message map straight to the small-talk entries instead of scoring. */
 const ACK_WORDS = new Set(["ok", "okay", "okey", "k", "kk", "okayy", "hmm", "hm", "hmmm", "hmmmm", "alright", "gotcha", "fine", "cool", "nice", "great", "good", "awesome", "perfect", "coolio", "understood"]);
 /* Specific product nouns beat generic service words on ties: "ecommerce
@@ -597,7 +597,7 @@ export function answerQuestion(input: string): AssistantEntry | null {
     for (const ph of phrases) {
       if (q.includes(` ${ph} `) || q.includes(` ${ph}`)) score += 3;
     }
-    // One credit per query token (best boost wins) — "website" matching both
+ // One credit per query token (best boost wins), "website" matching both
     // "web" and "website" counts once, keeping multi-keyword topics honest.
     for (const t of tokens) {
       let tokenBest = 0;

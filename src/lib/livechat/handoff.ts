@@ -1,5 +1,5 @@
 /**
- * Natural-language detection of "the visitor wants a human" — the trigger
+ * Natural-language detection of "the visitor wants a human", the trigger
  * behind the AI→human handoff (spec §4). Pure function, unit-tested.
  *
  * Matching is deliberately conservative: a question ABOUT talking to

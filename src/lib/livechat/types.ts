@@ -1,5 +1,5 @@
 /**
- * Live-chat shared types — the contract between the visitor widget, the
+ * Live-chat shared types, the contract between the visitor widget, the
  * admin inbox and the service layer. Statuses transition server-side only
  * (see service.ts); every status change writes a ConversationEvent row.
  */
@@ -78,7 +78,7 @@ export type ConversationSummaryDTO = {
 
 export type ConversationDetailDTO = ConversationSummaryDTO & {
   requirement: string | null;
-  leadPhone: string | null; // full number — admins with access only
+ leadPhone: string | null; // full number, admins with access only
   aiSummary: string | null;
   context: {
     landingPage?: string;

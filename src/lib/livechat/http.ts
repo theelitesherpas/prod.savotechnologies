@@ -10,7 +10,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { ensureVisitor, getVisitorIdByToken } from "./service";
 
 export const VISITOR_COOKIE = "savo_vc";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 180; // 180 days — returning visitors
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 180; // 180 days, returning visitors
 
 export function visitorCookieOptions() {
   return {
@@ -41,7 +41,7 @@ export async function resolveVisitor(
     const id = await getVisitorIdByToken(token);
     if (id) return { visitorId: id, token: null };
     if (id === null && match) {
-      // Known-bad or unknown token — fall through and issue a fresh one
+ // Known-bad or unknown token, fall through and issue a fresh one
       // unless the visitor is blocked (getVisitorIdByToken returns null
       // for blocked visitors too, so re-check below via ensureVisitor).
     }
