@@ -25,13 +25,13 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
       description,
       type: "website",
       siteName: "Savo Technologies",
-      images: [{ url: `/meeting/${token}/opengraph-image`, width: 1200, height: 630 }],
+      images: [{ url: "/images/meeting-og.png", width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | Savo Technologies`,
       description,
-      images: [`/meeting/${token}/opengraph-image`],
+      images: ["/images/meeting-og.png"],
     },
   };
 }
