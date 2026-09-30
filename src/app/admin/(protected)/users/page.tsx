@@ -7,7 +7,7 @@ import { AdminIcon } from "@/components/admin/icons";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
 import { SECTIONS } from "@/lib/permissions";
-import { createUserAction, updateUserAction, deleteUserAction } from "./actions";
+import { createUserAction, updateUserAction, deleteUserAction, updateUserEmailAction, resetUserPasswordAction } from "./actions";
 
 export const metadata: Metadata = { title: "Panel users" };
 
@@ -48,7 +48,13 @@ export default async function UsersPage({
       />
 
       {sp.saved === "created" ? <Notice>User created. They can sign in immediately.</Notice> : null}
-      {sp.saved === "updated" ? <Notice>User updated.</Notice> : null}
+      {sp.saved === "updated" ? <Notice>User updated. Name changes apply everywhere immediately, including live chat bylines.</Notice> : null}
+      {sp.saved === "email" ? <Notice>Sign-in email updated. Both addresses were notified by email.</Notice> : null}
+      {sp.saved === "password" ? <Notice>Password set. Other devices were signed out.</Notice> : null}
+      {sp.e === "wrong-password" ? <Notice kind="alert">The current password you entered is not correct.</Notice> : null}
+      {sp.e === "same-email" ? <Notice kind="alert">That is already this user&rsquo;s sign-in email.</Notice> : null}
+      {sp.e === "weak-password" ? <Notice kind="alert">New password must be at least 10 characters with a letter and a number.</Notice> : null}
+      {sp.e === "rate" ? <Notice kind="alert">Too many attempts. Please wait a few minutes.</Notice> : null}
       {sp.saved === "deleted" ? <Notice>User deleted. Their sessions were revoked.</Notice> : null}
       {sp.e === "dup" ? <Notice kind="alert">That email is already registered.</Notice> : null}
       {sp.e === "self" ? <Notice kind="alert">You cannot demote or delete your own account.</Notice> : null}
@@ -126,6 +132,63 @@ export default async function UsersPage({
                       </div>
                     </fieldset>
                   </FormGuard>
+                  {/* Sign-in settings per individual profile: email + password.
+                      Outside the user form, HTML forbids nested forms. */}
+                  <div className="mt-3 w-full border-t border-border pt-2.5">
+                      <p className="t-caption mb-2 font-semibold text-muted">
+                        Sign-in settings{u.id === user.id ? " (your account, confirm with your password)" : ""}
+                      </p>
+                      <FormGuard action={updateUserEmailAction} className="mb-2.5 flex flex-wrap items-center gap-2">
+                        <input type="hidden" name="id" value={u.id} />
+                        <input
+                          name="email"
+                          type="email"
+                          required
+                          defaultValue={u.email}
+                          aria-label={`Sign-in email for ${u.name}`}
+                          className="adm-input h-9 w-56"
+                        />
+                        {u.id === user.id ? (
+                          <input
+                            name="currentPassword"
+                            type="password"
+                            required
+                            placeholder="Current password"
+                            aria-label="Your current password"
+                            className="adm-input h-9 w-44"
+                          />
+                        ) : null}
+                        <SubmitButton label="Save email" pendingLabel="Saving…" compact />
+                      </FormGuard>
+                      <details>
+                        <summary className="t-caption cursor-pointer select-none font-semibold text-accent">
+                          Reset password…
+                        </summary>
+                        <FormGuard action={resetUserPasswordAction} className="mt-2 flex flex-wrap items-center gap-2">
+                          <input type="hidden" name="id" value={u.id} />
+                          {u.id === user.id ? (
+                            <input
+                              name="currentPassword"
+                              type="password"
+                              required
+                              placeholder="Current password"
+                              aria-label="Your current password"
+                              className="adm-input h-9 w-44"
+                            />
+                          ) : null}
+                          <input
+                            name="newPassword"
+                            type="password"
+                            required
+                            minLength={10}
+                            placeholder={u.id === user.id ? "New password (10+ chars)" : "New password (10+ chars, they sign in again)"}
+                            aria-label={`New password for ${u.name}`}
+                            className="adm-input h-9 w-64"
+                          />
+                          <SubmitButton label="Set password" pendingLabel="Setting…" compact />
+                        </FormGuard>
+                      </details>
+                  </div>
                 </td>
                 <td className="hidden px-4 py-3 sm:table-cell">
                   <span className="t-caption text-muted">
