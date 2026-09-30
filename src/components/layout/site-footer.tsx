@@ -92,25 +92,25 @@ export function SiteFooter({
               <>
                 <p className="t-caption mt-2 font-medium text-foreground/90">{PRESENCE_LABEL[office.kind]}</p>
                 <p className="t-caption mt-1.5 flex-1 leading-relaxed text-muted">{office.addressLine}</p>
-                {office.phones && office.phones.length > 0 ? (
-                  <div className="mt-3 space-y-1.5">
-                    {office.phones.map((phone) => (
-                      <a
-                        key={phone.e164}
-                        href={`tel:${phone.e164}`}
-                        className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
-                      >
-                        <PhoneGlyph />
-                        {phone.display}
-                        {phone.label ? <span className="t-caption text-muted">({phone.label})</span> : null}
-                      </a>
-                    ))}
-                  </div>
-                ) : null}
               </>
             ) : (
               <p className="t-caption mt-2 flex-1 leading-relaxed text-muted">{office.description}</p>
             )}
+            {office.phones && office.phones.length > 0 ? (
+              <div className="mt-3 space-y-1.5">
+                {office.phones.map((phone) => (
+                  <a
+                    key={phone.e164}
+                    href={`tel:${phone.e164}`}
+                    className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
+                  >
+                    <PhoneGlyph />
+                    {phone.display}
+                    {phone.label ? <span className="t-caption text-muted">({phone.label})</span> : null}
+                  </a>
+                ))}
+              </div>
+            ) : null}
           </div>
         ))}
         <div className="bg-background p-5 sm:col-span-2 lg:col-span-3 xl:col-span-6">

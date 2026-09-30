@@ -31,8 +31,8 @@ const ART: Record<string, ReactNode> = {
       <path pathLength={1} d="M14 42h10M42 42h10" />
     </>
   ),
-  /* Saudi Arabia - dhow sail over the gulf line */
-  "saudi-arabia": (
+  /* Dubai & GCC - dhow sail over the gulf line */
+  "dubai-gcc": (
     <>
       <path pathLength={1} d="M26 32C26 19.5 32.5 9.5 45.5 5.5 37 13.5 33.5 23 33.5 32" />
       <path pathLength={1} d="M20 32c2.5 3.5 21.5 3.5 24 0" />

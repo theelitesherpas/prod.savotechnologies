@@ -170,7 +170,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     paragraphs: IS_DEMO
       ? [
           "The engineering headquarters is in Indore, India - that is where the team works every day.",
-          "Beyond India, Savo supports engagements across Switzerland and Europe, Saudi Arabia and the GCC, Australia, the United Kingdom and the United States. These are market/service presences - confirmed office locations publish as each region supplies a verified address.",
+          "Beyond India, Savo supports engagements across Switzerland and Europe, Dubai and the GCC, Australia, the United Kingdom and the United States. These are market/service presences - confirmed office locations publish as each region supplies a verified address.",
         ]
       : [
           `The engineering headquarters is at 139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54, Indore 452010, India - that is where the team works every day. Main line +91 75029 01234, HR +91 78988 52345. The Switzerland head office is at Rue de la Fruiterie 13, 1523 Granges-Marnand (+41 76 408 28 72).`,

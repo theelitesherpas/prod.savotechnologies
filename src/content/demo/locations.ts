@@ -84,12 +84,13 @@ export const VERIFIED_OFFICES: MarketPresence[] = [HQ_PRESENCE, CH_OFFICE];
  */
 export const MARKET_PRESENCE: MarketPresence[] = [
   {
-    id: "saudi-arabia",
-    region: "Saudi Arabia & GCC",
+    id: "dubai-gcc",
+    region: "Dubai & GCC",
     kind: "market",
     cityLine: "Middle East Market",
     description:
-      "Supporting software, digital product and AI initiatives across Saudi Arabia and the wider GCC market.",
+      "Supporting software, digital product and AI initiatives across Dubai and the wider GCC market.",
+    phones: [{ display: "+971 50 974 1305", e164: "+971509741305" }],
     status: "verified",
   },
   {
