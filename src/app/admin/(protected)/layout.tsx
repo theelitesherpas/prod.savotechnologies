@@ -4,6 +4,7 @@ import { getAdminUser } from "@/lib/auth";
 import { canAccess, enforcePathAccess, currentAdminPath, type SectionKey } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { AdminShell, type AdminNavNode } from "@/components/admin/shell";
+import { LiveChatNotifier } from "@/components/admin/live-chat-notifier";
 import { COLLECTION_KEYS, CONTENT_COLLECTIONS } from "@/lib/content-registry";
 
 export const dynamic = "force-dynamic";
@@ -189,6 +190,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <AdminShell user={user} nav={nav} crumbLabels={CRUMB_LABELS}>
+      {/* Never-miss-a-chat layer: chime + browser notifications + live nav badge */}
+      <LiveChatNotifier />
       {children}
     </AdminShell>
   );

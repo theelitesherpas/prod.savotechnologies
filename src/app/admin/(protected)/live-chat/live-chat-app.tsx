@@ -11,6 +11,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { LEAD_STATUS_LABELS } from "@/lib/livechat/summary";
+import {
+  permissionState,
+  requestNotificationPermission,
+  setNotificationsWanted,
+  setSoundEnabled,
+  soundEnabled,
+  notificationsWanted,
+  playRequestChime,
+} from "@/lib/livechat/notify-client";
 
 /* ───────────────────────────── types ───────────────────────────── */
 
@@ -124,6 +133,19 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
   const [assistText, setAssistText] = useState<string | null>(null);
   const [mobilePane, setMobilePane] = useState<"list" | "thread">("list");
   const [toast, setToast] = useState<string | null>(null);
+  const [soundOn, setSoundOn] = useState(true);
+  const [notifyOn, setNotifyOn] = useState(true);
+  const [permState, setPermState] = useState<"default" | "granted" | "denied" | "unsupported">("unsupported");
+
+  useEffect(() => {
+    // Read browser-only preferences (localStorage) on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSoundOn(soundEnabled());
+     
+    setNotifyOn(notificationsWanted());
+     
+    setPermState(permissionState());
+  }, []);
 
   const threadRef = useRef<HTMLDivElement | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -386,6 +408,45 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
               Chat settings
             </button>
           ) : null}
+          <button
+            onClick={() => {
+              const next = !soundOn;
+              setSoundOn(next);
+              setSoundEnabled(next);
+              if (next) playRequestChime();
+            }}
+            title={soundOn ? "Sound alerts on" : "Sound alerts off"}
+            aria-pressed={soundOn}
+            className={cn(
+              "t-caption rounded-[4px] border px-2.5 py-1.5 transition-colors",
+              soundOn ? "border-accent/50 bg-accent/[0.06] text-accent" : "border-border text-muted hover:text-foreground",
+            )}
+          >
+            {soundOn ? "🔔 Sound on" : "🔕 Sound off"}
+          </button>
+          <button
+            onClick={() =>
+              void (async () => {
+                if (permState === "granted") {
+                  const next = !notifyOn;
+                  setNotifyOn(next);
+                  setNotificationsWanted(next);
+                } else {
+                  const result = await requestNotificationPermission();
+                  setPermState(result);
+                  if (result === "granted") setNotifyOn(true);
+                }
+              })()
+            }
+            title={permState === "granted" ? (notifyOn ? "Browser notifications on" : "Browser notifications off") : "Enable browser notifications"}
+            aria-pressed={notifyOn}
+            className={cn(
+              "t-caption rounded-[4px] border px-2.5 py-1.5 transition-colors",
+              permState === "granted" && notifyOn ? "border-accent/50 bg-accent/[0.06] text-accent" : "border-border text-muted hover:text-foreground",
+            )}
+          >
+            {permState === "granted" ? (notifyOn ? "🔔 Alerts on" : "🔔 Alerts off") : "🔔 Enable alerts"}
+          </button>
         </div>
       </div>
 
