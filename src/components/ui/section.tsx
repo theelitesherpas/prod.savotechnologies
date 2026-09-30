@@ -49,7 +49,7 @@ export function Section({
     >
       <div
         className={cn(
-          "shell py-20 sm:py-28 lg:py-36",
+          "shell py-14 sm:py-18 lg:py-22",
           shellOverride || undefined,
         )}
       >

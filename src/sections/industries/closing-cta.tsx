@@ -13,7 +13,7 @@ export function IndustriesCta() {
 
   return (
     <section aria-labelledby="ind-cta-heading" className="chapter-accent bg-background text-foreground">
-      <div className="shell py-20 sm:py-28">
+      <div className="shell py-14 sm:py-18 lg:py-22">
         <div className="grid items-end gap-10 lg:grid-cols-12">
           <div className="lg:col-span-8">
             <Reveal>
