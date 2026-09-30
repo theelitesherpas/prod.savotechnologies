@@ -271,6 +271,7 @@ async function recordEvent(conversationId: string, type: string, actor?: { id?: 
 export type AskResult =
   | { kind: "entry"; entryId: string; handoff: false }
   | { kind: "miss"; handoff: false }
+  | { kind: "human_mode"; handoff: false }
   | { kind: "handoff"; handoff: true };
 
 const HANDOFF_PROMPT =
@@ -287,8 +288,11 @@ export async function visitorAsk(conversationId: string, text: string): Promise<
   await appendMessage(conversationId, { type: "visitor", body: text });
   await touchVisitor(conv.visitorId);
 
-  // In human mode the AI stays silent — the human replies (spec §35).
-  if (conv.mode === "human" && (conv.status === "active" || conv.status === "waiting_for_agent")) return { kind: "miss", handoff: false };
+  // While the thread belongs to a human (waiting, active, follow-up or
+  // visitor-left), Savo AI stays silent (owner rule): the visitor's words go
+  // to the team, never to the AI — until the chat is ended and a fresh
+  // conversation begins.
+  if (conv.mode === "human") return { kind: "human_mode", handoff: false };
 
   if (wantsHuman(text)) {
     await appendMessage(conversationId, { type: "ai", body: HANDOFF_PROMPT });
@@ -604,6 +608,17 @@ export async function markRead(conversationId: string, by: "agent" | "visitor"):
 export async function closeConversation(conversationId: string, agent: AgentInfo): Promise<void> {
   await setStatus(conversationId, "closed", { actor: agent, note: `Conversation closed by ${agent.name}` });
   await appendMessage(conversationId, { type: "system", body: `Conversation closed by ${agent.name}` });
+}
+
+/** Visitor-side end: closes the thread so the widget returns to the fresh
+ *  Ask Savo AI / Talk to a Human choice (owner rule — AI never returns to a
+ *  live human thread until the visitor or the team ends it). */
+export async function endConversationByVisitor(conversationId: string): Promise<void> {
+  if (!prisma) return;
+  const conv = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
+  if (!conv || conv.status === "closed" || conv.status === "spam") return;
+  await setStatus(conversationId, "closed", { note: "Conversation ended by visitor" });
+  await appendMessage(conversationId, { type: "system", body: "Conversation ended by visitor." });
 }
 
 export async function reopenConversation(conversationId: string, agent: AgentInfo): Promise<void> {

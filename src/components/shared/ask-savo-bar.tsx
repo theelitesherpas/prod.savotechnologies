@@ -261,6 +261,9 @@ export function AskSavoBar() {
           else setLateAccept(false);
         }
         if (evt.status === "ai_only") setPhase("ai");
+        // The team (or the system) closed the thread → fresh start with both
+        // options again (owner rule).
+        if (evt.status === "closed") resetToWelcome();
       } catch {
         /* ignore */
       }
@@ -358,6 +361,23 @@ export function AskSavoBar() {
   }
   function newChat() {
     track("ask_savo_reset");
+    endConversationQuietly();
+    resetToWelcome();
+  }
+
+  /* End the current thread server-side (visitor-side close) without
+     waiting — the next message starts a fresh conversation. */
+  function endConversationQuietly() {
+    if (!convToken) return;
+    void fetch(withBasePath("/api/live-chat/end"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: convToken }),
+      keepalive: true,
+    }).catch(() => undefined);
+  }
+
+  function resetToWelcome() {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
     setTyping(false);
@@ -365,7 +385,9 @@ export function AskSavoBar() {
     setInput("");
     seenIdsRef.current = new Set();
     setMessages([]);
+    setConvToken(null);
     setLiveStatus(null);
+    setLateAccept(false);
     setQService(null);
     setQStage(null);
     setQRequirement("");
@@ -428,6 +450,12 @@ export function AskSavoBar() {
           setPhase("prechat");
           setQStep(0);
           sayServer({ kind: "ai", body: HANDOFF_LINE });
+          return;
+        }
+        // The thread belongs to a human — the message went to the team.
+        if (json.ok && json.result?.kind === "human_mode") {
+          setPhase("live");
+          sayServer({ kind: "system", body: "Your message was sent to the Savo team — they have this conversation." });
           return;
         }
         if (json.ok && json.result?.kind === "entry" && json.result.entryId) {
@@ -557,12 +585,6 @@ export function AskSavoBar() {
     setSending(false);
   }
 
-  /* Continue with AI after timeout / returned thread (spec §12) */
-  function continueAi() {
-    setPhase("ai");
-    sayServer({ kind: "system", body: "Savo AI, right where we left off. What else can I help with?" });
-  }
-
   /* ── Derived UI state ── */
   const shown = (visible || open) && !dismissed;
   const liveOpen = session?.availability.liveChatOpen ?? false;
@@ -683,6 +705,19 @@ export function AskSavoBar() {
                     {isLiveThread ? "Team" : "Human"}
                   </button>
                 )}
+                {phase === "live" ? (
+                  <button
+                    onClick={() => {
+                      track("ask_savo_chat_ended");
+                      endConversationQuietly();
+                      resetToWelcome();
+                    }}
+                    title="End this conversation and start fresh"
+                    className="t-caption mr-1 shrink-0 rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-error hover:text-error"
+                  >
+                    End
+                  </button>
+                ) : null}
                 <button
                   onClick={newChat}
                   aria-label="Start a new chat"
@@ -782,18 +817,27 @@ export function AskSavoBar() {
                   </div>
                 ) : null}
 
-                {/* Timeout → follow-up (spec §11–12) */}
+                {/* Timeout → follow-up (spec §11) — the team owns this thread
+                    until it ends; no AI offers mid-human-chat (owner rule). */}
                 {timedOut && phase === "live" ? (
                   <div className="rounded-[6px] border border-foreground/10 bg-surface-2 px-3.5 py-3">
                     <p className="t-sm text-muted">
                       Our team isn&apos;t available for live chat at the moment, but your request has been received. Someone from Savo will get back to you as soon as possible.
                     </p>
+                    <p className="t-caption mt-1.5 text-muted">You can leave further messages here — the team reads everything when they reply.</p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <button onClick={continueAi} className="t-caption rounded-[4px] border border-accent/40 px-2.5 py-1.5 text-accent transition-colors hover:border-accent">
-                        Continue with Savo AI
+                      <button
+                        onClick={() => {
+                          track("ask_savo_chat_ended");
+                          endConversationQuietly();
+                          resetToWelcome();
+                        }}
+                        className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/40 hover:text-foreground"
+                      >
+                        End chat
                       </button>
                       <a href="mailto:hello@savotechnologies.com" className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground">
-                        Leave a Message
+                        Email us instead
                       </a>
                     </div>
                   </div>

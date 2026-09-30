@@ -40,7 +40,8 @@ export type AnalyticsEvent =
   | "ask_savo_mode_ai"
   | "ask_savo_mode_human"
   | "ask_savo_live_request"
-  | "ask_savo_live_accepted";
+  | "ask_savo_live_accepted"
+  | "ask_savo_chat_ended";
 
 type DataLayer = Record<string, unknown>[];
 
