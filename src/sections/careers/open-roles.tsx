@@ -60,7 +60,10 @@ export function OpenRoles({ roles: ROLES }: { roles: PublicRole[] }) {
             const isOpen = openTitle === role.title;
             const panelId = `role-panel-${roleSlug(role.title)}`;
             return (
-              <li key={role.title} className="border-b border-border">
+              <li
+                key={role.title}
+                className="group relative border-b border-border transition-colors duration-500 ease-[var(--ease-out-expo)] hover:bg-accent/[0.04] before:absolute before:bottom-0 before:left-0 before:top-0 before:z-10 before:w-[3px] before:origin-top before:scale-y-0 before:bg-accent before:transition-transform before:duration-500 before:ease-[var(--ease-out-expo)] hover:before:scale-y-100"
+              >
                 <h3>
                   <button
                     type="button"
@@ -71,27 +74,27 @@ export function OpenRoles({ roles: ROLES }: { roles: PublicRole[] }) {
                       setOpenTitle(next);
                       if (next) track("role_open", { role: next });
                     }}
-                    className="group grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 gap-y-2 py-6 text-left sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:py-7"
+                    className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 gap-y-2 py-6 pl-3 text-left transition-[padding] duration-500 ease-[var(--ease-out-expo)] hover:pl-5 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:py-7"
                   >
                     <span className="min-w-0">
                       <span
                         className={cn(
-                          "t-h2 block break-words transition-colors duration-300",
+                          "t-h2 block break-words transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:[transform:translateX(4px)]",
                           isOpen ? "text-foreground" : "text-foreground/75 group-hover:text-foreground",
                         )}
                       >
                         {role.title}
                       </span>
-                      <span className="t-label mt-1.5 block text-muted">{role.track}</span>
+                      <span className="t-label mt-1.5 block text-muted transition-colors duration-300 group-hover:text-foreground/60">{role.track}</span>
                     </span>
-                    <span className="t-sm col-span-2 text-muted sm:col-span-1 sm:text-right">
+                    <span className="t-sm col-span-2 text-muted transition-colors duration-300 group-hover:text-foreground/70 sm:col-span-1 sm:text-right">
                       {role.exp} · Full time
                     </span>
                     <span
                       aria-hidden="true"
                       className={cn(
-                        "relative h-3.5 w-3.5 justify-self-end transition-transform duration-500 ease-[var(--ease-out-expo)]",
-                        isOpen ? "rotate-45" : "rotate-0 group-hover:rotate-90",
+                        "relative h-3.5 w-3.5 justify-self-end text-muted transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:text-accent",
+                        isOpen ? "[transform:rotate(45deg)] text-accent" : "group-hover:[transform:rotate(90deg)]",
                       )}
                     >
                       <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-current" />
@@ -146,7 +149,7 @@ export function OpenRoles({ roles: ROLES }: { roles: PublicRole[] }) {
                           <svg
                             aria-hidden="true"
                             viewBox="0 0 14 14"
-                            className="h-3 w-3 transition-transform duration-300 group-hover/btn:translate-x-[3px]"
+                            className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-[3px]"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth="1.6"
