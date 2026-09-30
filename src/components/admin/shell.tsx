@@ -38,6 +38,17 @@ export type AdminNavNode = {
 
 export type AdminUserChip = { name: string; email: string; role: "admin" | "editor" };
 
+/** The Savo "S" mark from the official wordmark, used as the account
+ *  avatar in place of initials (owner preference: brand mark, like the
+ *  public site's favicon). Fills with currentColor. */
+function SavoMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="160 326 130 200" aria-hidden="true" className={className} fill="currentColor">
+      <path d="M189.22 510.839C176.656 500.762 167.643 487.145 163.819 471.622L163 468.627L172.559 464.814C176.11 463.18 180.207 462.635 184.031 462.635C193.863 462.635 202.876 467.265 208.885 475.163C209.977 476.524 211.07 477.614 212.162 478.703C217.352 483.605 224.18 486.328 231.554 486.328C237.563 486.601 243.299 484.694 248.215 481.426C252.312 478.431 254.77 473.529 254.497 468.627C254.77 463.452 252.312 458.278 248.488 454.737C240.84 449.018 232.374 444.661 223.36 441.665L212.709 437.58C201.511 433.495 191.405 426.959 182.938 418.245C174.471 409.257 169.828 397.275 170.101 384.747C169.828 365.139 181.026 346.893 198.779 338.178C208.066 333.276 218.717 331.097 229.096 331.097C243.025 330.28 256.955 334.638 268.153 343.352C277.166 350.705 283.994 360.509 287.818 371.403L288.91 374.398L277.712 379.301C273.889 380.935 269.792 381.752 265.695 381.752C258.047 381.752 250.4 379.028 244.664 373.854C240.567 370.586 235.105 368.679 229.916 368.952C224.453 368.679 218.991 370.313 214.621 373.309C211.07 375.76 209.158 379.573 209.158 383.93C209.158 388.288 211.07 392.373 214.621 395.096C220.629 399.726 227.731 402.994 234.832 405.445L245.484 409.257C259.14 413.615 271.157 421.24 281.263 431.317C290.003 441.393 294.646 454.465 294.1 467.81C294.373 478.975 291.095 490.141 284.814 499.4C278.805 507.843 270.611 514.651 261.052 518.736C251.765 522.821 241.66 525 231.554 525C215.986 525 201.237 520.098 189.22 510.839Z" />
+    </svg>
+  );
+}
+
 function initials(name: string): string {
   return name
     .split(/\s+/)
@@ -350,9 +361,9 @@ function AccountCard({ user, collapsed }: { user: AdminUserChip; collapsed?: boo
       <div className="flex items-center gap-3 rounded-lg px-2 py-1.5">
         <span
           aria-hidden="true"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-[0.75rem] font-bold text-accent"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent"
         >
-          {initials(user.name)}
+          <SavoMark className="h-5 w-5" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[0.8125rem] font-semibold leading-tight text-foreground">
@@ -576,11 +587,11 @@ function ProfileMenu({ user }: { user: AdminUserChip }) {
         aria-expanded={open}
         aria-label="Account menu"
         className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-full text-[0.75rem] font-bold transition-colors",
+          "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
           open ? "bg-accent text-on-accent" : "bg-accent/10 text-accent hover:bg-accent/20",
         )}
       >
-        {initials(user.name)}
+        <SavoMark className="h-5 w-5" />
       </button>
       {open ? (
         <div className="absolute right-0 top-11 z-50 w-60 overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
