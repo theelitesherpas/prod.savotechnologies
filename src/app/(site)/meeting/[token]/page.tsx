@@ -3,12 +3,38 @@ import { notFound } from "next/navigation";
 import { getMeetingByToken } from "@/lib/meeting/service";
 import { MeetingScheduler } from "./scheduler";
 
-export const metadata: Metadata = {
-  title: "Schedule Your Meeting",
-  robots: { index: false, follow: false, nocache: true },
-};
-
 export const dynamic = "force-dynamic";
+
+/** Dynamic metadata: WhatsApp/social shows the meeting-specific preview. */
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const { token } = await params;
+  const result = await getMeetingByToken(token);
+
+  const title = "Schedule Your Meeting";
+  const description =
+    "error" in result
+      ? "Schedule a meeting with Savo Technologies"
+      : `Hi ${result.clientName.split(" ")[0]}, please pick a date and time for your meeting: ${result.title}`;
+
+  return {
+    title,
+    description,
+    robots: { index: false, follow: false, nocache: true },
+    openGraph: {
+      title: `${title} | Savo Technologies`,
+      description,
+      type: "website",
+      siteName: "Savo Technologies",
+      images: [{ url: `/meeting/${token}/opengraph-image`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | Savo Technologies`,
+      description,
+      images: [`/meeting/${token}/opengraph-image`],
+    },
+  };
+}
 
 /** Public meeting scheduling page — within the Savo site layout. */
 export default async function MeetingPage({ params }: { params: Promise<{ token: string }> }) {
