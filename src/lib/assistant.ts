@@ -231,7 +231,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "How do we stay in touch during the project?",
     keywords: ["communication", "communicate", "updates", "update", "progress", "report", "reporting", "standup", "meeting frequency", "stay in touch", "contact during", "visibility"],
     paragraphs: [
-      "You always know where things stand: one senior point of contact, working software you can see at every iteration, and a human reply to every message — never a ticket queue.",
+      "You always know where things stand: one senior point of contact, working software you can see at every iteration, and a human reply to every message, never a ticket queue.",
       "Hired engineers join your existing standup and tools; project work runs on agreed demo checkpoints.",
     ],
   },
@@ -241,7 +241,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Do you sign NDAs? Who owns the code?",
     keywords: ["nda", "confidential", "confidentiality", "secret", "privacy of idea", "ownership", "owns", "own the code", "idea", "ip", "intellectual property", "source code ownership", "safe to share"],
     paragraphs: [
-      "Yes — NDAs are signed before any project detail is shared, standard practice on every engagement.",
+      "Yes, NDAs are signed before any project detail is shared, standard practice on every engagement.",
       "What we build for you is yours: code, designs and documentation transfer to you on payment, and confidential material never leaves the agreed circle.",
     ],
   },
@@ -251,7 +251,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "How do you handle security and quality?",
     keywords: ["security", "secure", "data protection", "gdpr", "compliance", "quality", "testing", "qa", "bugs", "safe", "encryption", "vulnerability"],
     paragraphs: [
-      "Security-conscious engineering, privacy-aware development, secure delivery practices and production-focused QA are the baseline on every build — they're printed in our footer because they're policy, not marketing.",
+      "Security-conscious engineering, privacy-aware development, secure delivery practices and production-focused QA are the baseline on every build, they're printed in our footer because they're policy, not marketing.",
       "Quality is judged in production: tested builds, monitored releases and honest maintenance after launch.",
     ],
   },
@@ -261,7 +261,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Do you provide support after launch?",
     keywords: ["support", "maintenance", "maintain", "after launch", "post launch", "sla", "bug fixes", "updates after", "retainer", "ongoing"],
     paragraphs: [
-      "Yes — Maintenance & Development Support is one of our listed services, and Existing-project support for teams who need urgent help with systems they already run.",
+      "Yes, Maintenance & Development Support is one of our listed services, and Existing-project support for teams who need urgent help with systems they already run.",
       "Launch is a milestone here, not an exit: measure, improve and scale is literally the fifth step of our process.",
     ],
     links: [{ label: "Our services", href: "/services" }],
@@ -272,7 +272,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Can you redesign or improve an existing product?",
     keywords: ["redesign", "re design", "revamp", "improve existing", "existing website", "existing app", "modernize", "modernise", "old website", "rebuild", "migration", "migrate"],
     paragraphs: [
-      "Yes — website redesign and product improvement are core services: experience redesign, conversion optimisation, replatforming and migrations.",
+      "Yes, website redesign and product improvement are core services: experience redesign, conversion optimisation, replatforming and migrations.",
       "We start from what your users already do, keep what works, and change what measurably doesn't.",
     ],
   },
@@ -282,7 +282,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Do you build e-commerce stores?",
     keywords: ["ecommerce", "e commerce", "online store", "shop", "shopping", "cart", "checkout", "payments", "payment gateway", "woocommerce", "shopify", "headless commerce"],
     paragraphs: [
-      "Yes — headless storefronts, custom e-commerce platforms, PWAs, payment integrations and the growth layer (SEO, analytics, conversion) around them.",
+      "Yes, headless storefronts, custom e-commerce platforms, PWAs, payment integrations and the growth layer (SEO, analytics, conversion) around them.",
       "Built on the same Next.js/React foundation as the rest of our web work, so speed and search are engineered in from day one.",
     ],
   },
@@ -292,7 +292,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Can you build a SaaS product?",
     keywords: ["saas", "multi tenant", "multi-tenant", "subscription", "subscription billing", "platform product", "b2b product", "startup product", "mvp", "software as a service"],
     paragraphs: [
-      "Yes — SaaS platforms are a listed service: multi-tenant architecture, billing, dashboards, onboarding and the operational admin side behind them.",
+      "Yes, SaaS platforms are a listed service: multi-tenant architecture, billing, dashboards, onboarding and the operational admin side behind them.",
       "For founders we usually start with an MVP scope inside a fixed price, then grow in agreed increments.",
     ],
   },
@@ -302,7 +302,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Do you build custom software and internal tools?",
     keywords: ["custom software", "internal tool", "internal tools", "erp", "dashboard", "admin panel", "business software", "workflow system", "operations software", "management system", "portal for"],
     paragraphs: [
-      "Yes — custom software is one of six core services: operations systems, ERPs, CRMs, internal tools and workflow automation built around how your business actually runs.",
+      "Yes, custom software is one of six core services: operations systems, ERPs, CRMs, internal tools and workflow automation built around how your business actually runs.",
       "Node.js and Python behind, PostgreSQL underneath, and interfaces your team enjoys using.",
     ],
   },
@@ -312,7 +312,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Do you handle cloud and DevOps?",
     keywords: ["cloud", "devops", "aws", "azure", "gcp", "vercel", "hosting", "deploy", "deployment", "ci", "cd", "infrastructure", "server", "docker", "kubernetes", "scaling"],
     paragraphs: [
-      "Yes — Cloud & DevOps is a listed service: infrastructure on AWS, Vercel and Cloudflare, Docker-based delivery, CI/CD pipelines, monitoring and scaling.",
+      "Yes, Cloud & DevOps is a listed service: infrastructure on AWS, Vercel and Cloudflare, Docker-based delivery, CI/CD pipelines, monitoring and scaling.",
       "The same team that builds runs it, so deployment is never an afterthought.",
     ],
   },
@@ -322,7 +322,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Can you integrate with our existing systems?",
     keywords: ["api", "integration", "integrate", "third party", "webhook", "connect to", "sync", "stripe", "payment integration", "crm integration", "erp integration", "existing system"],
     paragraphs: [
-      "Yes — API development & integration is standard work here: payment gateways, CRMs, ERPs, messaging, maps and anything with an API (or a database we can reach).",
+      "Yes, API development & integration is standard work here: payment gateways, CRMs, ERPs, messaging, maps and anything with an API (or a database we can reach).",
       "We also document what we connect so your own team can maintain it.",
     ],
   },
@@ -332,7 +332,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Do you do SEO and digital growth?",
     keywords: ["seo", "search engine", "google ranking", "aeo", "geo", "answer engine", "digital marketing", "growth marketing", "traffic", "ranking", "ads", "content marketing"],
     paragraphs: [
-      "Yes — Growth is our sixth discipline: technical SEO, AEO (answer-engine optimisation) and GEO for AI-driven search, plus digital marketing that compounds.",
+      "Yes, Growth is our sixth discipline: technical SEO, AEO (answer-engine optimisation) and GEO for AI-driven search, plus digital marketing that compounds.",
       "Every web build ships with the technical layer already in place: structured data, canonical URLs and analytics.",
     ],
     links: [{ label: "Our services", href: "/services" }],
@@ -343,7 +343,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Why should we choose Savo?",
     keywords: ["why", "why savo", "why choose", "different", "differentiator", "special", "better", "compare", "competitor", "usps", "unique", "trust"],
     paragraphs: [
-      "One accountable team since 2015 — the person who replies owns your outcome, no hand-offs into a void. Fixed-scope written proposals, so the price never drifts mid-project.",
+      "One accountable team since 2015, the person who replies owns your outcome, no hand-offs into a void. Fixed-scope written proposals, so the price never drifts mid-project.",
       "Case studies publish only verified outcomes, AI work ships with guardrails and evaluation, and every message reaches a human within one business day.",
     ],
   },
@@ -353,7 +353,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "What are your payment terms?",
     keywords: ["payment terms", "pay", "invoice", "billing", "instalment", "installment", "upfront", "advance", "milestone payment", "how do we pay"],
     paragraphs: [
-      "Payment terms come with your written proposal — fixed price, fixed scope, agreed before work starts, with milestones tied to visible progress.",
+      "Payment terms come with your written proposal, fixed price, fixed scope, agreed before work starts, with milestones tied to visible progress.",
       "Hire-a-developer engagements run on transparent monthly rates with a two-week trial.",
     ],
   },
@@ -364,7 +364,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     keywords: ["contract", "agreement", "terms", "legal", "paperwork", "sign", "engagement letter", "statement of work", "sow"],
     paragraphs: [
       "Every engagement runs on a written statement of work: scope, price, timeline and deliverables agreed in writing before anything starts.",
-      "Scope changes never move an agreed price — new ideas become a follow-up scope with its own written price.",
+      "Scope changes never move an agreed price, new ideas become a follow-up scope with its own written price.",
     ],
   },
   {
@@ -373,7 +373,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Can we book a call or meeting?",
     keywords: ["call", "book a call", "meeting", "schedule", "discovery call", "zoom", "video call", "talk on phone", "phone call", "consultation"],
     paragraphs: [
-      "Yes — the fastest way is a callback request or the live chat: leave your number and a senior consultant calls within two business hours.",
+      "Yes, the fastest way is a callback request or the live chat: leave your number and a senior consultant calls within two business hours.",
       "Prefer to type first? Send the problem and constraints and we'll reply within one business day.",
     ],
     links: [
@@ -388,7 +388,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     keywords: ["contact", "email", "phone number", "call you", "reach you", "whatsapp", "email address", "phone no", "number"],
     paragraphs: [
       "Email hello@savotechnologies.com, main line +91 75029 01234 (HR: +91 78988 52345), WhatsApp from the site, or the live chat right here.",
-      "A senior consultant replies within one business day — and this chat can connect you to the team live.",
+      "A senior consultant replies within one business day, and this chat can connect you to the team live.",
     ],
     links: [{ label: "Contact page", href: "/contact" }],
   },
@@ -399,7 +399,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     keywords: ["timezone", "time zone", "ist", "cet", "working hours", "overlap", "when are you available", "office hours"],
     paragraphs: [
       "The engineering headquarters in Indore, India (IST) and the Switzerland head office (CET) give us a natural bridge across European and Indian working hours.",
-      "Clients keep one agreed rhythm — demo checkpoints, standups for hired engineers, and replies within one business day regardless of zone.",
+      "Clients keep one agreed rhythm, demo checkpoints, standups for hired engineers, and replies within one business day regardless of zone.",
     ],
   },
 
@@ -434,8 +434,8 @@ export const CONVERSATION_ENTRIES: AssistantEntry[] = [
     question: "Say hello",
     keywords: ["hi", "hello", "hey", "hii", "hiii", "yo", "namaste", "good morning", "good afternoon", "good evening", "greetings", "anyone there", "anybody there"],
     paragraphs: [
-      "Hello — welcome to Savo. I'm the Savo Assistant: instant answers about our services, process, pricing, technology and offices, straight from this site.",
-      "Ask me anything, or pick a question below — and if you'd rather talk to a person, the team is one tap away.",
+      "Hello, welcome to Savo! I'm the Savo Assistant. Ask me anything about our services, pricing, timelines or how we work, and I'll answer straight away.",
+      "Pick a question below if you like, or just type. And if you'd rather talk to a real person, the team is one tap away.",
     ],
     links: [
       { label: "What Savo builds", href: "/services" },
@@ -448,7 +448,7 @@ export const CONVERSATION_ENTRIES: AssistantEntry[] = [
     question: "Thanks!",
     keywords: ["thanks", "thank", "thank you", "thx", "ty", "appreciate", "bye", "goodbye", "see you", "cheers"],
     paragraphs: [
-      "Happy to help! If anything else comes up — services, pricing, timelines, technology — just ask.",
+      "Happy to help! If anything else comes up, services, pricing, timelines, technology, just ask.",
       "And whenever you'd like a human on the other side, the Savo team is one tap away.",
     ],
   },
@@ -458,7 +458,7 @@ export const CONVERSATION_ENTRIES: AssistantEntry[] = [
     question: "How are you?",
     keywords: ["how are you", "how r u", "how's it going", "hows it going", "how are things", "whats up", "what's up", "sup", "hope you are good"],
     paragraphs: [
-      "Running well, thanks for asking! More importantly — how can I help you today?",
+      "Running well, thanks for asking! More importantly, how can I help you today?",
       "Ask me about Savo's services, pricing, timelines, technology or offices, or pick a question below.",
     ],
   },
@@ -486,7 +486,7 @@ export const CONVERSATION_ENTRIES: AssistantEntry[] = [
     question: "Are you a bot?",
     keywords: ["are you a bot", "are you human", "are you real", "are you ai", "are you a robot", "who made you", "am i talking to a human", "is this a chatbot", "are you machine", "robot", "talking to a robot", "talking to a human", "talking to a person"],
     paragraphs: [
-      "Honest answer: I'm the Savo Assistant — an AI, not a person. I answer from verified Savo site content only, and I won't pretend to be human.",
+      "Honest answer: I'm the Savo Assistant, an AI, not a person. I answer from verified Savo site content only, and I won't pretend to be human.",
       "Whenever you want a real person from the team, the human chat is one tap away.",
     ],
   },
@@ -496,7 +496,7 @@ export const CONVERSATION_ENTRIES: AssistantEntry[] = [
     question: "What can you help with?",
     keywords: ["what can you do", "how can you help", "what do you know", "help me", "can you help", "help", "options", "what should i ask", "how does this work", "what is this"],
     paragraphs: [
-      "I can answer anything about Savo — services (web, mobile, AI, software, SaaS, design, growth), pricing approach, timelines, our process, technologies, industries, offices and careers.",
+      "I can answer anything about Savo, services (web, mobile, AI, software, SaaS, design, growth), pricing approach, timelines, our process, technologies, industries, offices and careers.",
       "And for anything personal to your project, I'll connect you to the team. Pick a question below or just type naturally.",
     ],
   },

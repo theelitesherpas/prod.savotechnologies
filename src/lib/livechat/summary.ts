@@ -45,7 +45,7 @@ export function buildAiSummary(input: SummaryInput): string {
 
   const head: string[] = [];
   if (input.leadName) head.push(input.leadName);
-  if (input.service) head.push(`wants to discuss: ${input.service}`);
+  if (input.service) head.push(`wants to discuss ${input.service}`);
   else head.push("topic not specified yet");
   if (input.stage) head.push(`stage: ${input.stage}`);
   lines.push(head.join(" · "));
@@ -58,11 +58,11 @@ export function buildAiSummary(input: SummaryInput): string {
   if (msgs.length > 0) {
     lines.push("");
     lines.push("From the AI conversation:");
-    for (const m of msgs) lines.push(`— “${excerpt(m)}”`);
+    for (const m of msgs) lines.push(`“${excerpt(m)}”`);
   }
 
   if (lines.length === 1) {
-    lines.push("No requirement details captured yet — ask the visitor for the project shape and timeline.");
+    lines.push("No requirement details captured yet, ask the visitor for the project shape and timeline.");
   }
 
   return lines.join("\n");

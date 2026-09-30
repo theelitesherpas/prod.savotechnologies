@@ -278,7 +278,7 @@ const HANDOFF_PROMPT =
   "Of course. I can connect you with the Savo team. I'll collect a few details first so the right person has some context before joining the conversation.";
 
 const MISS_TEXT =
-  "That one's beyond my verified notes — and I won't guess. Ask me about Savo's services, process, pricing, technology, offices or careers — or talk to the team directly and a senior consultant replies within one business day.";
+  "That one's beyond my verified notes, and I won't guess. Ask me about Savo's services, process, pricing, technology, offices or careers, or talk to the team directly and a senior consultant replies within one business day.";
 
 export async function visitorAsk(conversationId: string, text: string): Promise<AskResult | null> {
   if (!prisma) return null;
@@ -443,14 +443,14 @@ export async function startHumanRequest(input: {
     q.requirement ?? conv.requirement ? `Requirement: ${(q.requirement ?? conv.requirement)!.slice(0, 400)}` : null,
     q.timeline ?? conv.timeline ? `Timeline: ${q.timeline ?? conv.timeline}` : null,
     q.budget ?? conv.budget ? `Budget: ${q.budget ?? conv.budget}` : null,
-    `Contact: ${[phoneDisplay, input.contact.email?.trim()].filter(Boolean).join(" · ") || "—"}`,
+    `Contact: ${[phoneDisplay, input.contact.email?.trim()].filter(Boolean).join(" · ") || ", "}`,
     mergedContext.currentPage ? `Page: ${String(mergedContext.currentPage).slice(0, 120)}` : null,
   ].filter((l): l is string => l !== null);
   await appendMessage(conv.id, { type: "system", body: detailLines.join("\n") });
 
   await appendMessage(conv.id, {
     type: "system",
-    body: "Visitor requested human assistance — requirement and contact details captured.",
+    body: "Visitor requested human assistance, requirement and contact details captured.",
   });
   await recordEvent(conv.id, "human_requested", { name: input.contact.name }, { service: q.service ?? null, stage: q.stage ?? null });
 
@@ -458,13 +458,13 @@ export async function startHumanRequest(input: {
   // request waits for an agent even outside business hours, and the sweep
   // moves it to follow-up with the honest message if nobody joins in time.
   const offline = input.offline === true;
-  await setStatus(conv.id, "waiting_for_agent", { note: offline ? "Requested outside live hours — waiting window started" : "Waiting for an available Savo agent" });
+  await setStatus(conv.id, "waiting_for_agent", { note: offline ? "Requested outside live hours, waiting window started" : "Waiting for an available Savo agent" });
   await appendMessage(conv.id, { type: "ai", body: "We've shared your requirement with our team. A Savo specialist should join shortly." });
 
   await recordEvent(conv.id, "agent_notified");
   notifyAgents(conv.id, {
     name: input.contact.name,
-    service: q.service ?? conv.service ?? "—",
+    service: q.service ?? conv.service ?? ", ",
     stage: q.stage ?? conv.stage ?? null,
     requirement: q.requirement ?? conv.requirement ?? "",
     timeline: q.timeline ?? conv.timeline ?? null,
@@ -574,7 +574,7 @@ export async function agentMessage(conversationId: string, agent: AgentInfo, bod
   if (!prisma) return { error: "unavailable" };
   const conv = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
   if (!conv) return { error: "not_found" };
-  const msg = await appendMessage(conversationId, { type: "agent", body, agentId: agent.id, senderName: `${agent.name} — Savo` });
+  const msg = await appendMessage(conversationId, { type: "agent", body, agentId: agent.id, senderName: `${agent.name} from Savo` });
   const patch: Record<string, unknown> = {};
   if (!conv.firstResponseAt) patch.firstResponseAt = new Date();
   // Any agent reply engages the thread — waiting, timed-out or left: the
@@ -623,7 +623,7 @@ export async function endConversationByVisitor(conversationId: string): Promise<
   const conv = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
   if (!conv || conv.status === "closed" || conv.status === "spam") return;
   await setStatus(conversationId, "closed", { note: "Conversation ended by visitor" });
-  await appendMessage(conversationId, { type: "system", body: "Conversation ended. If you need further assistance, message us back — Savo AI is ready 24/7, and the team is one tap away." });
+  await appendMessage(conversationId, { type: "system", body: "Conversation ended. If you need further assistance, message us back, Savo AI is ready 24/7, and the team is one tap away." });
 }
 
 /** Agent asks the visitor to confirm ending the chat — the visitor decides

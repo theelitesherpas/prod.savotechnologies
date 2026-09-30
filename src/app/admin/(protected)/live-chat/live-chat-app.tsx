@@ -360,7 +360,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
             <Stat label="Agents online" value={stats.agentsOnline} />
             <Stat label="Unassigned" value={stats.unassigned} />
             <Stat label="Follow-ups" value={stats.followUpsPending} />
-            <Stat label="Avg response today" value={stats.avgResponseSec != null ? `${stats.avgResponseSec}s` : "—"} />
+            <Stat label="Avg response today" value={stats.avgResponseSec != null ? `${stats.avgResponseSec}s` : "not set"} />
             <Stat label="Requests today" value={stats.todayRequests} />
           </>
         ) : (
@@ -393,7 +393,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
 
       {/* Three-column console */}
       <div className="grid min-h-0 flex-1 lg:grid-cols-[20rem_1fr_19rem]">
-        {/* LEFT — views + list */}
+        {/* LEFT, views + list */}
         <aside className={cn("flex min-h-0 flex-col border-r border-border", mobilePane === "thread" && "hidden lg:flex")}>
           <div className="border-b border-border px-3 py-2.5">
             <input
@@ -442,7 +442,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
                     ) : null}
                     <span className="t-caption shrink-0 text-muted">{timeAgo(c.lastMessageAt)}</span>
                   </div>
-                  <p className="t-caption mt-1 truncate text-muted">{c.service ?? "—"}</p>
+                  <p className="t-caption mt-1 truncate text-muted">{c.service ?? "not set"}</p>
                   <div className="mt-1 flex items-center gap-2">
                     <span className={cn("t-caption rounded-[3px] border px-1.5 py-0.5", statusTone(c.status))}>{STATUS_CHIP[c.status] ?? c.status}</span>
                     <span className="t-caption min-w-0 flex-1 truncate text-muted">{c.lastMessage ?? ""}</span>
@@ -455,7 +455,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
           </ul>
         </aside>
 
-        {/* CENTER — thread */}
+        {/* CENTER, thread */}
         <section className={cn("flex min-h-0 flex-col", mobilePane === "list" && "hidden lg:flex")}>
           {detail ? (
             <>
@@ -545,7 +545,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
                 {showAssist && assistText ? (
                   <div className="rounded-[6px] border border-accent/30 bg-accent/[0.05] p-3">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="t-caption font-semibold text-accent">✦ Savo AI Assist — internal, never auto-sent</p>
+                      <p className="t-caption font-semibold text-accent">✦ Savo AI Assist, internal, never auto-sent</p>
                       <div className="flex gap-1.5">
                         <button onClick={() => setDraft(assistText)} className="t-caption rounded-[4px] border border-accent/40 px-2 py-1 text-accent">
                           Use as draft
@@ -620,7 +620,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
           )}
         </section>
 
-        {/* RIGHT — lead context */}
+        {/* RIGHT, lead context */}
         <aside className={cn("min-h-0 overflow-y-auto border-l border-border px-4 py-4", mobilePane === "thread" ? "hidden xl:block" : "hidden lg:block")}>
           {detail ? <LeadPanel detail={detail} agents={data?.agents ?? []} action={action} flash={flash} aiAssist={aiAssist} /> : <p className="t-caption text-muted">No conversation selected.</p>}
         </aside>
@@ -756,9 +756,9 @@ function LeadPanel({
       <section>
         <h3 className="t-caption mb-2 font-semibold uppercase tracking-wide text-muted">Contact</h3>
         <dl className="space-y-1.5">
-          <Row k="Name" v={detail.leadName ?? "—"} onCopy={() => copy("Name", detail.leadName)} />
-          <Row k="Phone" v={detail.leadPhone ?? detail.leadPhoneMasked ?? "—"} onCopy={() => copy("Phone", detail.leadPhone ?? detail.leadPhoneMasked)} />
-          <Row k="Email" v={detail.leadEmail ?? "—"} onCopy={() => copy("Email", detail.leadEmail)} />
+          <Row k="Name" v={detail.leadName ?? "not set"} onCopy={() => copy("Name", detail.leadName)} />
+          <Row k="Phone" v={detail.leadPhone ?? detail.leadPhoneMasked ?? "not set"} onCopy={() => copy("Phone", detail.leadPhone ?? detail.leadPhoneMasked)} />
+          <Row k="Email" v={detail.leadEmail ?? "not set"} onCopy={() => copy("Email", detail.leadEmail)} />
         </dl>
       </section>
 
@@ -766,10 +766,10 @@ function LeadPanel({
       <section>
         <h3 className="t-caption mb-2 font-semibold uppercase tracking-wide text-muted">Requirement</h3>
         <dl className="space-y-1.5">
-          <Row k="Service" v={detail.service ?? "—"} />
-          <Row k="Stage" v={detail.stage ?? "—"} />
-          <Row k="Timeline" v={detail.timeline ?? "—"} />
-          <Row k="Budget" v={detail.budget ?? "—"} />
+          <Row k="Service" v={detail.service ?? "not set"} />
+          <Row k="Stage" v={detail.stage ?? "not set"} />
+          <Row k="Timeline" v={detail.timeline ?? "not set"} />
+          <Row k="Budget" v={detail.budget ?? "not set"} />
         </dl>
         {detail.requirement ? <p className="t-sm mt-2 rounded-[6px] border border-border bg-white px-3 py-2 text-foreground/85">{detail.requirement}</p> : null}
       </section>
@@ -863,9 +863,9 @@ function LeadPanel({
       <section>
         <h3 className="t-caption mb-2 font-semibold uppercase tracking-wide text-muted">Context</h3>
         <dl className="space-y-1.5">
-          <Row k="Landing page" v={detail.context?.landingPage ?? "—"} />
-          <Row k="Current page" v={detail.context?.currentPage ?? "—"} />
-          <Row k="Referrer" v={detail.context?.referrer ?? "—"} />
+          <Row k="Landing page" v={detail.context?.landingPage ?? "not set"} />
+          <Row k="Current page" v={detail.context?.currentPage ?? "not set"} />
+          <Row k="Referrer" v={detail.context?.referrer ?? "not set"} />
           <Row k="Created" v={new Date(detail.createdAt).toLocaleString()} />
         </dl>
         {detail.context?.utm && Object.keys(detail.context.utm).length > 0 ? (
@@ -884,7 +884,7 @@ function Row({ k, v, onCopy }: { k: string; v: string; onCopy?: () => void }) {
     <div className="flex items-baseline gap-2">
       <dt className="t-caption w-24 shrink-0 text-muted">{k}</dt>
       <dd className="t-sm min-w-0 flex-1 break-words text-foreground/90">{v}</dd>
-      {onCopy && v !== "—" ? (
+      {onCopy && v !== "not set" ? (
         <button onClick={onCopy} className="t-caption shrink-0 text-muted hover:text-accent" aria-label={`Copy ${k}`}>
           ⧉
         </button>

@@ -83,6 +83,11 @@ const HANDOFF_LINE =
 
 const WHATSAPP_URL = `https://wa.me/917502901234?text=${encodeURIComponent("Hi Savo! I have a question.")}`;
 
+/* WhatsApp chip: brand-green outline, same shape and size as every other
+   chip in the widget. */
+const WHATSAPP_CHIP =
+  "t-caption inline-flex items-center gap-1.5 rounded-[4px] border border-[#25D366]/70 px-2.5 py-1.5 text-[#128C4A] transition-colors hover:border-[#25D366] hover:text-[#0E7A38]";
+
 /* ───────────────────────── page/lead context ───────────────────────── */
 
 function captureContext() {
@@ -193,7 +198,7 @@ export function AskSavoBar() {
           setPhase("live");
           sayServer({
             kind: "system",
-            body: "Welcome back — your conversation with Savo is right where you left it.",
+            body: "Welcome back. Your conversation with Savo is right where you left it.",
           });
         } else {
           setPhase("ai");
@@ -527,10 +532,10 @@ export function AskSavoBar() {
           sayServer({ kind: "ai", body: HANDOFF_LINE });
           return;
         }
-        // The thread belongs to a human — the message went to the team.
+        // The thread belongs to a human, the message went to the team.
         if (json.ok && json.result?.kind === "human_mode") {
           setPhase("live");
-          sayServer({ kind: "system", body: "Your message was sent to the Savo team — they have this conversation." });
+          sayServer({ kind: "system", body: "Your message was sent to the Savo team. They have this conversation." });
           return;
         }
         if (json.ok && json.result?.kind === "entry" && json.result.entryId) {
@@ -548,7 +553,7 @@ export function AskSavoBar() {
             .slice(0, 4);
           say(
             <div>
-              <p>That one&apos;s beyond my verified notes — and I won&apos;t guess.</p>
+              <p>That one&apos;s beyond my verified notes, and I won&apos;t guess.</p>
               <p className="mt-2 text-muted">Try one of these, or talk to the team directly:</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {suggestions.map((e) => (
@@ -571,7 +576,7 @@ export function AskSavoBar() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => track("ask_savo_whatsapp")}
-                  className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/40 hover:text-foreground"
+                  className={WHATSAPP_CHIP}
                 >
                   WhatsApp us
                 </a>
@@ -580,7 +585,7 @@ export function AskSavoBar() {
           );
           return;
         }
-        say(<p className="text-muted">I couldn&apos;t reach my notes just now — please try again in a moment.</p>);
+        say(<p className="text-muted">I couldn&apos;t reach my notes just now, please try again in a moment.</p>);
       }, 420);
     } catch {
       setTyping(false);
@@ -611,7 +616,7 @@ export function AskSavoBar() {
         body: JSON.stringify({ token: convToken, text: clean }),
       });
     } catch {
-      setError("Message may not have sent — check your connection and resend.");
+      setError("Message may not have sent. Check your connection and resend.");
     }
   }
 
@@ -641,14 +646,14 @@ export function AskSavoBar() {
     (!cEmail.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cEmail.trim())) &&
     consent;
 
-  /* Validation with explicit feedback — the visitor always sees exactly
+  /* Validation with explicit feedback, the visitor always sees exactly
      what's missing instead of a dead button. */
   function contactProblem(): string | null {
     if (cName.trim().length < 2) return "Please share your name so we know who we're talking to.";
     if ((session?.phoneRequired ?? true) && (!cPhone.trim() || !phoneCheck || phoneCheck.ok !== true)) {
       return phoneCheck && !phoneCheck.ok ? phoneCheck.error : "A phone number is needed so the team can reach you if the chat disconnects.";
     }
-    if (cEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cEmail.trim())) return "That email address doesn't look right — please check it.";
+    if (cEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cEmail.trim())) return "That email address doesn't look right. Please check it.";
     if (!consent) return "Please confirm we may contact you about this enquiry.";
     return null;
   }
@@ -686,7 +691,7 @@ export function AskSavoBar() {
       });
       const json = (await res.json().catch(() => ({}))) as { ok?: boolean; conversationToken?: string; status?: string; error?: string };
       if (!res.ok || !json.ok) {
-        setError(json.error ?? "Something went wrong — please try again.");
+        setError(json.error ?? "Something went wrong. Please try again.");
         setSending(false);
         return;
       }
@@ -695,7 +700,7 @@ export function AskSavoBar() {
       setPhase("live");
       sayServer({ kind: "system", body: "Connecting you with the Savo team…" });
     } catch {
-      setError("Network problem — please try again.");
+      setError("Network problem. Please try again.");
     }
     setSending(false);
   }
@@ -711,11 +716,11 @@ export function AskSavoBar() {
   const fresh = phase === "boot" || phase === "welcome" || (phase === "ai" && messages.length === 0 && !typing);
 
   const placeholder = useMemo(() => {
-    if (phase === "ended") return "Start a new conversation — Savo AI is ready…";
+    if (phase === "ended") return "Start a new conversation, Savo AI is ready…";
     if (phase === "prechat" && qStep === 2) return "Tell us briefly about your project or requirement…";
     if (phase === "live" && activeChat) return "Write to the Savo team…";
     if (phase === "live" && waiting) return "You can write while we connect you…";
-    return fresh ? "Ask anything about Savo" : "What else can I help with?";
+    return fresh ? "Ask anything about Savo, or chat with us live" : "What else can I help with?";
   }, [phase, qStep, activeChat, waiting, fresh]);
   void liveStatus;
 
@@ -861,12 +866,12 @@ export function AskSavoBar() {
 
               {/* Thread */}
               {/* data-lenis-prevent: the site's smooth-scroll library hijacks
-                  wheel events page-wide — without this the thread can't scroll. */}
+                  wheel events page-wide, without this the thread can't scroll. */}
               <div ref={threadRef} aria-live="polite" data-lenis-prevent className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain [touch-action:pan-y] px-4 py-4">
                 {/* Welcome hero (spec §1) */}
                 {phase === "welcome" ? (
                   <div className="pt-2">
-                    <p className="t-h4">Ask anything about Savo — or talk to our team now.</p>
+                    <p className="t-h4">Ask anything about Savo, or talk to our team now.</p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <button
                         onClick={startAi}
@@ -909,11 +914,10 @@ export function AskSavoBar() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => track("ask_savo_whatsapp")}
-                          className="t-caption inline-flex items-center gap-1.5 rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+                          className={WHATSAPP_CHIP}
                         >
-                          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Z" />
-                            <path d="M9.3 8.6c.6 2.7 3.4 5.5 6.1 6.1l.9-1.6-2.2-1-.9.8c-1-.5-1.6-1.1-2.1-2.1l.8-.9-1-2.2-1.6.9Z" />
+                          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor">
+                            <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Zm4.6 12.2c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1a10 10 0 0 1-3.4-2.1 9 9 0 0 1-1.9-2.8c-.2-.6-.2-1.2 0-1.7.2-.4.6-.8 1-1 .2-.1.5-.1.7.1l.9 1.5c.1.2.1.4 0 .6l-.4.5c.4.8 1 1.4 1.7 1.8l.5-.4c.2-.1.4-.2.6-.1l1.5.8c.2.1.3.4.2.6Z"/>
                           </svg>
                           WhatsApp us
                         </a>
@@ -921,8 +925,8 @@ export function AskSavoBar() {
                     </ul>
                     <p className="t-caption mt-5 text-muted">
                       {liveOpen
-                        ? "Our team is around — type anything for Savo AI, or talk to a human for a live conversation."
-                        : "Savo AI answers instantly, 24/7. The team is away right now — the human chat option takes a message and we get back to you."}
+                        ? "Our team is around, type anything for Savo AI, or talk to a human for a live conversation."
+                        : "Savo AI answers instantly, 24/7. The team is away right now, the human chat option takes a message and we get back to you."}
                     </p>
                   </div>
                 ) : null}
@@ -953,11 +957,11 @@ export function AskSavoBar() {
                 ) : null}
 
                 {/* Timeout → follow-up actions (the situation itself arrives as a
-                    message from the server — no duplicated headline). The team
+                    message from the server, no duplicated headline). The team
                     owns the thread until it ends; no AI offers mid-human-chat. */}
                 {timedOut && phase === "live" ? (
                   <div className="rounded-[6px] border border-foreground/10 bg-surface-2 px-3.5 py-3">
-                    <p className="t-caption text-muted">You can leave further messages here — the team reads everything when they reply.</p>
+                    <p className="t-caption text-muted">You can leave further messages here, the team reads everything when they reply.</p>
                     <div className="mt-2.5 flex flex-wrap gap-2">
                       <button
                         onClick={endChatLocally}
@@ -1006,7 +1010,7 @@ export function AskSavoBar() {
                         onClick={() => void answerEndRequest(true)}
                         className="t-caption rounded-[4px] border border-accent/50 bg-accent/[0.06] px-2.5 py-1.5 font-semibold text-accent transition-colors hover:border-accent"
                       >
-                        Yes, all resolved — end chat
+                        Yes, all resolved, end chat
                       </button>
                       <button
                         onClick={() => void answerEndRequest(false)}
@@ -1018,11 +1022,11 @@ export function AskSavoBar() {
                   </div>
                 ) : null}
 
-                {/* Ended state — history preserved, new help offered */}
+                {/* Ended state, history preserved, new help offered */}
                 {phase === "ended" ? (
                   <div className="rounded-[6px] border border-foreground/15 bg-surface-2 px-3.5 py-3.5">
                     <p className="t-sm font-semibold text-foreground/90">This conversation has ended.</p>
-                    <p className="t-sm mt-1 text-muted">If you need further assistance, message us back — Savo AI is ready 24/7, and the team is one tap away.</p>
+                    <p className="t-sm mt-1 text-muted">If you need further assistance, message us back. Savo AI is ready 24/7 and the team is one tap away.</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <button
                         onClick={() => beginFreshAi()}
@@ -1104,7 +1108,7 @@ export function AskSavoBar() {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => track("ask_savo_whatsapp")}
-                      className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+                      className={WHATSAPP_CHIP}
                     >
                       WhatsApp us
                     </a>
@@ -1115,7 +1119,7 @@ export function AskSavoBar() {
           </div>
         </div>
 
-        {/* The bar/composer — always visible, attached below the window */}
+        {/* The bar/composer, always visible, attached below the window */}
         <form
           onSubmit={submit}
           aria-label="Ask Savo"
@@ -1129,7 +1133,7 @@ export function AskSavoBar() {
                 </span>
 
                 <label htmlFor="ask-savo-input" className="sr-only">
-                  {isLiveThread ? "Write to the Savo team" : "Ask anything about Savo"}
+                  {isLiveThread ? "Write to the Savo team" : "Ask anything about Savo, or chat with us live"}
                 </label>
                 <input
                   ref={inputRef}
@@ -1269,7 +1273,7 @@ function QualifyPanel(p: QualifyProps) {
   const rule = COUNTRY_PHONE_RULES[p.contact.country];
   return (
     <div className="rounded-[8px] border border-foreground/15 bg-surface-2/50 p-3.5">
-      {/* Q1 — service */}
+      {/* Q1, service */}
       {p.step === 0 ? (
         <fieldset>
           <legend className="t-sm mb-2.5 font-semibold text-foreground/90">What would you like to discuss with Savo?</legend>
@@ -1277,7 +1281,7 @@ function QualifyPanel(p: QualifyProps) {
         </fieldset>
       ) : null}
 
-      {/* Q2 — stage */}
+      {/* Q2, stage */}
       {p.step === 1 ? (
         <fieldset>
           <legend className="t-sm mb-2.5 font-semibold text-foreground/90">Where are you currently with the project?</legend>
@@ -1285,12 +1289,12 @@ function QualifyPanel(p: QualifyProps) {
         </fieldset>
       ) : null}
 
-      {/* Q3 — requirement: composer handles free text; hint here */}
+      {/* Q3, requirement: composer handles free text; hint here */}
       {p.step === 2 ? (
-        <p className="t-sm text-muted">Tell us briefly about your project or requirement — type in the box below.</p>
+        <p className="t-sm text-muted">Tell us briefly about your project or requirement, type in the box below.</p>
       ) : null}
 
-      {/* Q4 — timeline (optional) */}
+      {/* Q4, timeline (optional) */}
       {p.step === 3 ? (
         <fieldset>
           <legend className="t-sm mb-2.5 font-semibold text-foreground/90">When are you hoping to start?</legend>
@@ -1301,7 +1305,7 @@ function QualifyPanel(p: QualifyProps) {
         </fieldset>
       ) : null}
 
-      {/* Q5 — budget (optional) */}
+      {/* Q5, budget (optional) */}
       {p.step === 4 ? (
         <fieldset>
           <legend className="t-sm mb-2.5 font-semibold text-foreground/90">Do you have an approximate budget in mind?</legend>
@@ -1340,9 +1344,10 @@ function QualifyPanel(p: QualifyProps) {
             <input
               value={p.contact.phone}
               onChange={(e) => p.onContact.setPhone(e.target.value)}
-              placeholder={p.phoneRequired ? `Phone (${rule ? rule.min === rule.max ? rule.min : `${rule.min}–${rule.max}` : ""} digits)` : "Phone (optional)"}
+              placeholder={p.phoneRequired ? `Phone (${rule ? (rule.min === rule.max ? rule.min : `${rule.min} to ${rule.max}`) : ""} digits)` : "Phone (optional)"}
               inputMode="tel"
               autoComplete="tel-national"
+              maxLength={rule ? rule.max + rule.dial.length + 1 : 18}
               aria-label="Phone number"
               aria-invalid={!!p.contact.phone && !p.phoneCheck}
               className="t-sm min-w-0 flex-1 rounded-[6px] border border-foreground/20 bg-white px-3 py-2.5 outline-none transition-colors focus:border-accent aria-[invalid=true]:border-error"
@@ -1453,7 +1458,7 @@ function EntryAnswer({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => track("ask_savo_whatsapp")}
-                className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+                className={WHATSAPP_CHIP}
               >
                 WhatsApp us
               </a>
