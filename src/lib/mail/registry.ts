@@ -52,11 +52,18 @@ import {
   buildWhatsNext,
   type MailTemplate,
 } from "@/lib/mail/templates";
+import {
+  meetingInvitation,
+  meetingAvailabilityReceived,
+  meetingConfirmed,
+  meetingAdminNotification,
+} from "@/lib/mail/meeting-templates";
 
 export type TemplateRecipient = "customer" | "team" | "hr" | "client" | "candidate" | "employee" | "external" | "prospect";
 
 export type TemplateCategory =
   | "enquiries"
+  | "meetings"
   | "pitches"
   | "careers"
   | "portal"
@@ -67,6 +74,7 @@ export type TemplateCategory =
 
 export const CATEGORY_LABEL: Record<TemplateCategory, string> = {
   enquiries: "Enquiries & Assistant",
+  meetings: "Client Meetings",
   pitches: "Client Pitch & Projects",
   careers: "Careers & Applications",
   portal: "Client Portal & Billing",
@@ -78,6 +86,7 @@ export const CATEGORY_LABEL: Record<TemplateCategory, string> = {
 
 export const CATEGORY_ORDER: TemplateCategory[] = [
   "enquiries",
+  "meetings",
   "pitches",
   "careers",
   "recruitment",
@@ -122,6 +131,46 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     dept: "hello",
     vars: { name: "Priya Sharma", projectType: "Website" },
     default: (v) => enquiryAck(v.name, v.projectType, v.__to),
+  },
+  {
+    key: "meetingInvitation",
+    category: "meetings",
+    label: "Meeting invitation",
+    fires: "Meeting created with client email, or admin clicks Send Invitation",
+    recipient: "customer",
+    dept: "hello",
+    vars: { clientName: "Uday Sharma", meetingTitle: "Project Kickoff Discussion", meetingType: "in_person", durationMin: "60", agenda: "Scope, timeline and approach", reference: "STPL-2026-8X4K2", schedulingLink: "https://savotechnologies.com/meeting/STPL-2026-8X4K2" },
+    default: (v) => meetingInvitation({ clientName: v.clientName, meetingTitle: v.meetingTitle, meetingType: v.meetingType, durationMin: Number(v.durationMin) || 60, agenda: v.agenda, reference: v.reference, schedulingLink: v.schedulingLink, to: v.__to }),
+  },
+  {
+    key: "meetingAvailabilityReceived",
+    category: "meetings",
+    label: "Availability received",
+    fires: "Client submits their preferred date and time",
+    recipient: "customer",
+    dept: "hello",
+    vars: { clientName: "Uday Sharma", meetingTitle: "Project Kickoff Discussion", date: "Thursday, 15 October 2026", time: "3:30 PM", durationMin: "60", reference: "STPL-2026-8X4K2" },
+    default: (v) => meetingAvailabilityReceived({ clientName: v.clientName, meetingTitle: v.meetingTitle, date: v.date, time: v.time, durationMin: Number(v.durationMin) || 60, reference: v.reference, to: v.__to }),
+  },
+  {
+    key: "meetingConfirmed",
+    category: "meetings",
+    label: "Meeting confirmed",
+    fires: "Admin confirms the meeting after reviewing client availability",
+    recipient: "customer",
+    dept: "hello",
+    vars: { clientName: "Uday Sharma", meetingTitle: "Project Kickoff Discussion", date: "Thursday, 15 October 2026", time: "3:30 PM", durationMin: "60", meetingType: "in_person", location: "Savo Technologies office, Indore", reference: "STPL-2026-8X4K2" },
+    default: (v) => meetingConfirmed({ clientName: v.clientName, meetingTitle: v.meetingTitle, date: v.date, time: v.time, durationMin: Number(v.durationMin) || 60, meetingType: v.meetingType, location: v.location, reference: v.reference, to: v.__to }),
+  },
+  {
+    key: "meetingAdminNotification",
+    category: "meetings",
+    label: "Team notification: response received",
+    fires: "Client submits availability, alerts the team inbox",
+    recipient: "team",
+    dept: "hello",
+    vars: { clientName: "Uday Sharma", clientCompany: "Pratham Real Estate", meetingTitle: "Project Kickoff Discussion", date: "Thursday, 15 October 2026", time: "3:30 PM", reference: "STPL-2026-8X4K2" },
+    default: (v) => meetingAdminNotification({ clientName: v.clientName, clientCompany: v.clientCompany, meetingTitle: v.meetingTitle, date: v.date, time: v.time, reference: v.reference }),
   },
   {
     key: "callbackAck",
