@@ -210,8 +210,8 @@ function WorkCard({
           </span>
         ) : null}
       </div>
-      <div className="flex flex-wrap items-start justify-between gap-4 border-t border-border p-6 sm:p-8">
-        <div>
+      <div className="flex items-start justify-between gap-4 border-t border-border p-6 sm:p-8">
+        <div className="min-w-0 flex-1">
           <h3 className="t-h3">{item.name}</h3>
           <p className="t-label mt-2.5 text-muted">{item.industry}</p>
           <p className="t-caption mt-3 text-muted">{item.outcome}</p>
@@ -219,7 +219,7 @@ function WorkCard({
         {item.slug ? (
           <span
             aria-hidden="true"
-            className="t-sm inline-flex items-center gap-2 font-semibold text-foreground transition-colors group-hover:text-accent"
+            className="t-sm inline-flex shrink-0 items-center gap-2 whitespace-nowrap pt-1 font-semibold text-foreground transition-colors group-hover:text-accent"
           >
             View Project
             <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -230,7 +230,7 @@ function WorkCard({
         <span
           aria-disabled="true"
           title="Case study in preparation"
-          className="t-sm inline-flex items-center gap-2 font-semibold text-muted"
+          className="t-sm inline-flex shrink-0 items-center gap-2 whitespace-nowrap pt-1 font-semibold text-muted"
         >
           View Project
           <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6">
