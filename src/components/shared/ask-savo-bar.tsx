@@ -226,6 +226,15 @@ export function AskSavoBar() {
         const evt = JSON.parse(raw.data) as { message?: { id: string; type: string; body: string; senderName?: string | null } };
         const msg = evt.message;
         if (!msg || seenIdsRef.current.has(msg.id)) return;
+        // In AI mode the client renders its own rich question/answer pair
+        // after /ask — the server's plain-text echoes of the same turn would
+        // double every message. Live SSE in AI mode only carries human-side
+        // events (agent lines, system notes, late accepts). History on
+        // restore still comes fully from /session.
+        if (phaseRef.current === "ai" && (msg.type === "ai" || msg.type === "visitor")) {
+          seenIdsRef.current.add(msg.id);
+          return;
+        }
         // Skip the echo of our own just-sent visitor message (optimistic copy).
         if (msg.type === "visitor") {
           const dup = messagesRef.current.some(
@@ -544,8 +553,36 @@ export function AskSavoBar() {
     (!cEmail.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cEmail.trim())) &&
     consent;
 
+  /* Validation with explicit feedback — the visitor always sees exactly
+     what's missing instead of a dead button. */
+  function contactProblem(): string | null {
+    if (cName.trim().length < 2) return "Please share your name so we know who we're talking to.";
+    if ((session?.phoneRequired ?? true) && (!cPhone.trim() || !phoneCheck || phoneCheck.ok !== true)) {
+      return phoneCheck && !phoneCheck.ok ? phoneCheck.error : "A phone number is needed so the team can reach you if the chat disconnects.";
+    }
+    if (cEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cEmail.trim())) return "That email address doesn't look right — please check it.";
+    if (!consent) return "Please confirm we may contact you about this enquiry.";
+    return null;
+  }
+
+  function goToReview() {
+    const problem = contactProblem();
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setError(null);
+    setQStep(6);
+  }
+
   async function startLiveChat() {
-    if (!canSubmitContact || sending) return;
+    if (sending) return;
+    const problem = contactProblem();
+    if (problem) {
+      setError(problem);
+      setQStep(5);
+      return;
+    }
     setSending(true);
     setError(null);
     track("ask_savo_live_request", { offline: !session?.availability.liveChatOpen });
@@ -742,7 +779,9 @@ export function AskSavoBar() {
               </div>
 
               {/* Thread */}
-              <div ref={threadRef} aria-live="polite" className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain [touch-action:pan-y] px-4 py-4">
+              {/* data-lenis-prevent: the site's smooth-scroll library hijacks
+                  wheel events page-wide — without this the thread can't scroll. */}
+              <div ref={threadRef} aria-live="polite" data-lenis-prevent className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain [touch-action:pan-y] px-4 py-4">
                 {/* Welcome hero (spec §1) */}
                 {phase === "welcome" ? (
                   <div className="pt-2">
@@ -879,6 +918,7 @@ export function AskSavoBar() {
                   requirement={qRequirement}
                   contact={{ name: cName, country: cCountry, phone: cPhone, email: cEmail, consent }}
                   phoneCheck={phoneCheck?.ok === true}
+                  phoneHint={phoneCheck && !phoneCheck.ok ? phoneCheck.error : null}
                   phoneRequired={session?.phoneRequired ?? true}
                   sending={sending}
                   canSubmit={canSubmitContact}
@@ -889,9 +929,15 @@ export function AskSavoBar() {
                   onSkipTimeline={() => { setQTimeline(null); setQStep(4); }}
                   onBudget={(b) => { setQBudget(b); setQStep(5); sayServer({ kind: "visitor", body: b }); }}
                   onSkipBudget={() => { setQBudget(null); setQStep(5); }}
-                  onContact={{ setName: setCName, setCountry: setCCountry, setPhone: setCPhone, setEmail: setCEmail, setConsent }}
+                  onContact={{
+                    setName: (v) => { setCName(v); if (error) setError(null); },
+                    setCountry: (v) => { setCCountry(v); if (error) setError(null); },
+                    setPhone: (v) => { setCPhone(v); if (error) setError(null); },
+                    setEmail: (v) => { setCEmail(v); if (error) setError(null); },
+                    setConsent: (v) => { setConsent(v); if (error) setError(null); },
+                  }}
                   onStart={startLiveChat}
-                  onReview={() => setQStep(6)}
+                  onReview={goToReview}
                   onEdit={() => setQStep(5)}
                 /> : null}
               </div>
@@ -1035,6 +1081,7 @@ type QualifyProps = {
   requirement: string;
   contact: { name: string; country: string; phone: string; email: string; consent: boolean };
   phoneCheck: boolean;
+  phoneHint: string | null;
   phoneRequired: boolean;
   sending: boolean;
   canSubmit: boolean;
@@ -1186,7 +1233,7 @@ function QualifyPanel(p: QualifyProps) {
           </label>
           <button
             onClick={p.onReview}
-            disabled={!p.canSubmit || p.sending}
+            disabled={p.sending}
             className="inline-flex h-10 w-full items-center justify-center rounded-[6px] border border-accent/50 bg-accent/[0.06] px-4 t-sm font-semibold text-accent transition-colors hover:border-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
             {p.sending ? "Sending…" : "Review & Continue"}
@@ -1194,6 +1241,11 @@ function QualifyPanel(p: QualifyProps) {
           {p.error ? (
             <p role="alert" className="t-caption text-error">
               {p.error}
+            </p>
+          ) : null}
+          {p.contact.phone && !p.phoneCheck ? (
+            <p className="t-caption text-error" role="alert">
+              {p.phoneHint}
             </p>
           ) : null}
         </div>
