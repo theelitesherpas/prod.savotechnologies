@@ -1,8 +1,6 @@
-import Image from "next/image";
 import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { ImageReveal } from "@/components/ui/image-reveal";
-import { Parallax } from "@/components/ui/parallax";
 import { withBasePath } from "@/lib/utils";
 
 const CHAIN = ["Strategy", "Design", "Technology", "Intelligence", "Growth"] as const;
@@ -41,15 +39,17 @@ export function Introduction() {
       <Reveal delay={160}>
         <figure className="mt-16 sm:mt-20">
           <ImageReveal className="relative aspect-[16/9] overflow-hidden border border-border sm:aspect-[21/9]">
-            <Parallax strength={56} className="absolute inset-0">
-              <Image
-                src={withBasePath("/images/team.webp")}
-                alt="A product team reviewing work together around a studio table"
-                fill
-                sizes="(max-width: 1536px) 100vw, 1440px"
-                className="photo object-cover"
-              />
-            </Parallax>
+            <video
+              src={withBasePath("/videos/studio-team.mp4")}
+              poster={withBasePath("/images/team.webp")}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-label="A product team collaborating in the Savo studio"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[rgb(16_19_25/0.35)] to-transparent"
