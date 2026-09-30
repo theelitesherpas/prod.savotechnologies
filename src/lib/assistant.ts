@@ -41,8 +41,8 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Websites and web apps on Next.js and React; iOS and Android apps in Flutter or React Native; AI agents, RAG systems and copilots in production, plus the design and growth work that keeps them improving after launch.",
     ],
     links: [
-      { label: "Explore services", href: "/#services" },
-      { label: "Industries we serve", href: "/#industries" },
+      { label: "Explore services", href: "/services" },
+      { label: "Industries we serve", href: "/industries" },
     ],
   },
   {
@@ -55,8 +55,8 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "A first agent typically deploys in 2 to 4 weeks, trained on your data.",
     ],
     links: [
-      { label: "AI & intelligent systems", href: "/#ai" },
-      { label: "Start an AI project", href: "/#start" },
+      { label: "AI & intelligent systems", href: "/ai-agents" },
+      { label: "Start an AI project", href: "/start" },
     ],
   },
   {
@@ -114,7 +114,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "It depends on scope, and we are straight about it. Most engagements fall between $5k and $100k+, and you always see a fixed-scope proposal with a fixed price before any work starts.",
       "Tell us what you are building and a senior consultant replies within one business day with a realistic range, no discovery paywall.",
     ],
-    links: [{ label: "Start a project", href: "/#start" }],
+    links: [{ label: "Start a project", href: "/start" }],
   },
   {
     id: "start",
@@ -136,7 +136,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Five steps: Discover (frame the problem and success metrics), Define (requirements, architecture, direction), Design (journeys, interfaces, systems), Build (engineer in iterations with visible progress), Grow (measure, improve, scale).",
       "You see working software early and often, no black-box phases.",
     ],
-    links: [{ label: "Our methodology", href: "/#methodology" }],
+    links: [{ label: "Our methodology", href: "/#process" }],
   },
   {
     id: "scope",
@@ -146,7 +146,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     paragraphs: [
       "The agreed price never moves mid-scope. New ideas go into a follow-up scope with its own fixed price, agreed before work starts, in writing.",
     ],
-    links: [{ label: "Start a project", href: "/#start" }],
+    links: [{ label: "Start a project", href: "/start" }],
   },
 
   /* ------------------------------ Company ----------------------------- */
@@ -223,7 +223,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "One accountable team, not a rotating cast: the senior consultant who replies to your first message stays involved, and the same named engineers and designer carry your project through delivery.",
       "Need more capacity? Vetted engineers join from the hire-a-developer bench with a two-week trial.",
     ],
-    links: [{ label: "Our methodology", href: "/#methodology" }],
+    links: [{ label: "Our methodology", href: "/#process" }],
   },
   {
     id: "communication",
@@ -264,7 +264,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Yes — Maintenance & Development Support is one of our listed services, and Existing-project support for teams who need urgent help with systems they already run.",
       "Launch is a milestone here, not an exit: measure, improve and scale is literally the fifth step of our process.",
     ],
-    links: [{ label: "Our services", href: "/#services" }],
+    links: [{ label: "Our services", href: "/services" }],
   },
   {
     id: "redesign",
@@ -335,7 +335,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Yes — Growth is our sixth discipline: technical SEO, AEO (answer-engine optimisation) and GEO for AI-driven search, plus digital marketing that compounds.",
       "Every web build ships with the technical layer already in place: structured data, canonical URLs and analytics.",
     ],
-    links: [{ label: "Our services", href: "/#services" }],
+    links: [{ label: "Our services", href: "/services" }],
   },
   {
     id: "why",
@@ -377,7 +377,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Prefer to type first? Send the problem and constraints and we'll reply within one business day.",
     ],
     links: [
-      { label: "Book a call", href: "/#start" },
+      { label: "Book a call", href: "/start" },
       { label: "Contact us", href: "/contact" },
     ],
   },
@@ -438,8 +438,8 @@ export const CONVERSATION_ENTRIES: AssistantEntry[] = [
       "Ask me anything, or pick a question below — and if you'd rather talk to a person, the team is one tap away.",
     ],
     links: [
-      { label: "What Savo builds", href: "/#services" },
-      { label: "Start a project", href: "/#start" },
+      { label: "What Savo builds", href: "/services" },
+      { label: "Start a project", href: "/start" },
     ],
   },
   {

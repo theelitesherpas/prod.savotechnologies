@@ -81,6 +81,8 @@ const TIMELINES = ["As soon as possible", "Within a few weeks", "Within 1–3 mo
 const HANDOFF_LINE =
   "Of course. I'll collect a few details so the right person at Savo has some context before joining. What would you like to discuss?";
 
+const WHATSAPP_URL = `https://wa.me/917502901234?text=${encodeURIComponent("Hi Savo! I have a question.")}`;
+
 /* ───────────────────────── page/lead context ───────────────────────── */
 
 function captureContext() {
@@ -97,11 +99,6 @@ function captureContext() {
   } catch {
     return null;
   }
-}
-
-function maskPhone(dial: string, phone: string): string {
-  const d = phone.replace(/\D/g, "");
-  return `${dial} ••••• ${d.slice(-3) || "•••"}`;
 }
 
 /* ─────────────────────────── component ─────────────────────────── */
@@ -569,6 +566,15 @@ export function AskSavoBar() {
                 >
                   Talk to a Human
                 </button>
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => track("ask_savo_whatsapp")}
+                  className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/40 hover:text-foreground"
+                >
+                  WhatsApp us
+                </a>
               </div>
             </div>,
           );
@@ -645,16 +651,6 @@ export function AskSavoBar() {
     if (cEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cEmail.trim())) return "That email address doesn't look right — please check it.";
     if (!consent) return "Please confirm we may contact you about this enquiry.";
     return null;
-  }
-
-  function goToReview() {
-    const problem = contactProblem();
-    if (problem) {
-      setError(problem);
-      return;
-    }
-    setError(null);
-    setQStep(6);
   }
 
   async function startLiveChat() {
@@ -887,7 +883,7 @@ export function AskSavoBar() {
                     </div>
                     <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Quick actions">
                       <li>
-                        <Link href="/#services" onClick={() => setOpen(false)} className="t-caption inline-block rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground">
+                        <Link href="/services" onClick={() => setOpen(false)} className="t-caption inline-block rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground">
                           Explore Services
                         </Link>
                       </li>
@@ -906,6 +902,21 @@ export function AskSavoBar() {
                         >
                           Estimate a Project
                         </button>
+                      </li>
+                      <li>
+                        <a
+                          href={WHATSAPP_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => track("ask_savo_whatsapp")}
+                          className="t-caption inline-flex items-center gap-1.5 rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+                        >
+                          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Z" />
+                            <path d="M9.3 8.6c.6 2.7 3.4 5.5 6.1 6.1l.9-1.6-2.2-1-.9.8c-1-.5-1.6-1.1-2.1-2.1l.8-.9-1-2.2-1.6.9Z" />
+                          </svg>
+                          WhatsApp us
+                        </a>
                       </li>
                     </ul>
                     <p className="t-caption mt-5 text-muted">
@@ -1059,8 +1070,6 @@ export function AskSavoBar() {
                     setConsent: (v) => { setConsent(v); if (error) setError(null); },
                   }}
                   onStart={startLiveChat}
-                  onReview={goToReview}
-                  onEdit={() => setQStep(5)}
                 /> : null}
               </div>
 
@@ -1088,6 +1097,17 @@ export function AskSavoBar() {
                     >
                       {HUMAN_LABEL}
                     </button>
+                  </li>
+                  <li>
+                    <a
+                      href={WHATSAPP_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => track("ask_savo_whatsapp")}
+                      className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+                    >
+                      WhatsApp us
+                    </a>
                   </li>
                 </ul>
               ) : null}
@@ -1222,8 +1242,6 @@ type QualifyProps = {
     setConsent: (v: boolean) => void;
   };
   onStart: () => void;
-  onReview: () => void;
-  onEdit: () => void;
 };
 
 function Chips({ options, onPick, accentFirst }: { options: string[]; onPick: (o: string) => void; accentFirst?: boolean }) {
@@ -1354,11 +1372,11 @@ function QualifyPanel(p: QualifyProps) {
             </span>
           </label>
           <button
-            onClick={p.onReview}
+            onClick={p.onStart}
             disabled={p.sending}
             className="inline-flex h-10 w-full items-center justify-center rounded-[6px] border border-accent/50 bg-accent/[0.06] px-4 t-sm font-semibold text-accent transition-colors hover:border-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {p.sending ? "Sending…" : "Review & Continue"}
+            {p.sending ? "Starting live chat…" : "Start Live Chat"}
           </button>
           {p.error ? (
             <p role="alert" className="t-caption text-error">
@@ -1372,52 +1390,10 @@ function QualifyPanel(p: QualifyProps) {
           ) : null}
         </div>
       ) : null}
-
-      {/* Review before connecting (spec §7) */}
-      {p.step === 6 ? (
-        <div>
-          <p className="t-sm font-semibold text-foreground/90">You&apos;re about to connect with Savo</p>
-          <dl className="mt-2.5 space-y-1.5">
-            {p.service ? <Row k="Project" v={p.service} /> : null}
-            {p.stage ? <Row k="Stage" v={p.stage} /> : null}
-            {p.requirement ? <Row k="Requirement" v={p.requirement.length > 90 ? `${p.requirement.slice(0, 89)}…` : p.requirement} /> : null}
-            {p.timeline ? <Row k="Timeline" v={p.timeline} /> : null}
-            {p.budget ? <Row k="Budget" v={p.budget} /> : null}
-            <Row k="Name" v={p.contact.name} />
-            <Row k="Phone" v={p.contact.phone && rule ? maskPhone(rule.dial, p.contact.phone) : "—"} />
-            {p.contact.email ? <Row k="Email" v={p.contact.email} /> : null}
-          </dl>
-          <div className="mt-3.5 flex flex-wrap gap-2">
-            <button
-              onClick={p.onStart}
-              disabled={p.sending}
-              className="inline-flex h-10 items-center rounded-[6px] border border-accent/50 bg-accent/[0.06] px-4 t-sm font-semibold text-accent transition-colors hover:border-accent disabled:opacity-50"
-            >
-              {p.sending ? "Connecting…" : "Start Live Chat"}
-            </button>
-            <button onClick={p.onEdit} className="inline-flex h-10 items-center rounded-[6px] border border-foreground/20 bg-white px-4 t-sm font-semibold text-foreground/80 transition-colors hover:border-accent hover:text-accent">
-              Edit Details
-            </button>
-          </div>
-          {p.error ? (
-            <p role="alert" className="t-caption mt-2.5 text-error">
-              {p.error}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   );
 }
 
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="flex gap-3">
-      <dt className="t-caption w-24 shrink-0 text-muted">{k}</dt>
-      <dd className="t-sm min-w-0 flex-1 text-foreground/90">{v}</dd>
-    </div>
-  );
-}
 
 /* ─────────────────── rich AI answer (existing grammar) ─────────────────── */
 
@@ -1470,6 +1446,17 @@ function EntryAnswer({
               >
                 Talk to a human
               </button>
+            </li>
+            <li>
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => track("ask_savo_whatsapp")}
+                className="t-caption rounded-[4px] border border-foreground/20 px-2.5 py-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+              >
+                WhatsApp us
+              </a>
             </li>
           </ul>
         </div>
