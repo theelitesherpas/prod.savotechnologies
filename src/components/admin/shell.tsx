@@ -32,6 +32,8 @@ export type AdminNavNode = {
   /** Leaf destination when the node is a direct link. */
   href?: string;
   badge?: number;
+  /** Green pulsing dot - renders after the label (e.g. Live Chat is online). */
+  online?: boolean;
   /** Submenu items - the node becomes an expandable group. */
   items?: AdminNavItem[];
 };
@@ -108,6 +110,7 @@ function SidebarLink({
   icon,
   count,
   badge,
+  online,
   active,
   onNavigate,
   collapsed,
@@ -118,6 +121,7 @@ function SidebarLink({
   icon: AdminIconName;
   count?: number;
   badge?: number;
+  online?: boolean;
   active: boolean;
   onNavigate?: () => void;
   collapsed?: boolean;
@@ -170,6 +174,12 @@ function SidebarLink({
       <span className={cn("min-w-0 flex-1 truncate text-[0.875rem]", active ? "font-semibold" : "font-medium")}>
         {label}
       </span>
+      {online ? (
+        <span className="mr-0.5 flex h-2 w-2 shrink-0 items-center justify-center" title="Online" aria-label="Live chat is online">
+          <span className="absolute h-2 w-2 animate-ping rounded-full bg-emerald-400/60" />
+          <span className="relative h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        </span>
+      ) : null}
       {typeof badge === "number" && badge > 0 ? (
         <BadgeChip count={badge} />
       ) : typeof count === "number" && count > 0 ? (
@@ -203,6 +213,7 @@ function NavNode({
         label={node.label}
         icon={node.icon}
         badge={node.badge}
+        online={node.online}
         active={isActive(pathname, node.href ?? "/admin")}
         onNavigate={onNavigate}
         collapsed={collapsed}

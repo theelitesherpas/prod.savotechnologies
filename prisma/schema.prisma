@@ -231,6 +231,7 @@ model ClientUser {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   sessions ClientSession[]
+  meetings Meeting[] @relation("MeetingClient")
   projects ClientProject[]
   invoices Invoice[]
 
@@ -686,4 +687,144 @@ model ChatSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("chat_settings")
+}
+
+// ─────────────────────── Client Meeting Scheduling ───────────────────────
+
+/// Meeting requests created by admins, sent to clients via secure links.
+model Meeting {
+  id            String   @id @default(cuid())
+  /// Human reference, e.g. MTG-2026-00421.
+  reference     String   @unique
+  /// SHA-256 of the public scheduling token.
+  tokenHash     String   @unique @map("token_hash")
+  /// Raw token (admin-only visibility for link sharing; public API never exposes it).
+  tokenPlain    String   @default("") @map("token_plain")
+  /// Link expiration; null = never expires.
+  expiresAt     DateTime? @map("expires_at")
+
+  // ── Client info (snapshot at creation, may link to portal user) ──
+  clientId      String?  @map("client_id")
+  client        ClientUser? @relation("MeetingClient", fields: [clientId], references: [id], onDelete: SetNull)
+  clientName    String   @map("client_name")
+  clientCompany String   @default("") @map("client_company")
+  clientPhone   String?  @map("client_phone")
+  clientEmail   String?  @map("client_email")
+  clientRole    String?  @map("client_role")
+
+  // ── Meeting details ──
+  title         String
+  agenda        String   @default("")
+  /// in_person | video | phone | office_visit | client_office | custom
+  meetingType   String   @default("in_person") @map("meeting_type")
+  /// Minutes: 15 | 30 | 45 | 60 | 90 | custom value
+  durationMin   Int      @default(60) @map("duration_min")
+  /// savo_office | client_office | google_meet | zoom | teams | phone | custom
+  locationType  String   @default("savo_office") @map("location_type")
+  locationAddress String? @map("location_address")
+  meetingUrl    String?  @map("meeting_url")
+  notes         String?  @map("notes")
+
+  // ── Admin-defined availability ──
+  /// JSON array of ISO dates the admin offered: ["2026-10-02","2026-10-03"]
+  availableDates Json?    @map("available_dates")
+  /// e.g. "10:00" and "18:00"
+  availableFrom String   @default("10:00") @map("available_from")
+  availableTo   String   @default("18:00") @map("available_to")
+  /// Allow client to suggest a date outside the offered ones.
+  allowSuggest  Boolean  @default(true) @map("allow_suggest")
+  /// Auto-confirm when client picks a predefined slot.
+  autoConfirm   Boolean  @default(false) @map("auto_confirm")
+
+  // ── Client response (filled when client submits) ──
+  /// ISO datetime string in the meeting timezone
+  preferredDate String?  @map("preferred_date")
+  preferredTime String?  @map("preferred_time")
+  altDate       String?  @map("alt_date")
+  altTime       String?  @map("alt_time")
+  locationPreference String? @map("location_preference")
+  clientAddress String?  @map("client_address")
+  attendeeCount Int      @default(1) @map("attendee_count")
+  clientNotes   String?  @map("client_notes")
+  specialReqs   String?  @map("special_reqs")
+
+  // ── Final confirmed slot (set on confirm, may differ from preferred) ──
+  confirmedAt   DateTime? @map("confirmed_at")
+  confirmedDate String?  @map("confirmed_date")
+  confirmedTime String?  @map("confirmed_time")
+
+  // ── Status & assignment ──
+  /// draft | awaiting_client | availability_received | confirmed |
+  /// reschedule_requested | completed | cancelled | expired
+  status        String   @default("draft")
+  assignedTo    String?  @map("assigned_to")
+  /// When the admin last opened this meeting (marks availability as read).
+  seenAt        DateTime? @map("seen_at")
+  internalNotes String?  @map("internal_notes")
+
+  createdBy     String   @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  attendees     MeetingAttendee[]
+  activity      MeetingActivity[]
+  reschedules   MeetingReschedule[]
+
+  @@index([status])
+  @@index([clientId])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@index([confirmedAt])
+  @@map("meetings")
+}
+
+/// Additional attendees the client adds to their response.
+model MeetingAttendee {
+  id         String  @id @default(cuid())
+  meetingId  String  @map("meeting_id")
+  meeting    Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  name       String
+  email      String?
+  role       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([meetingId])
+  @@map("meeting_attendees")
+}
+
+/// Full audit trail: created, sent, opened, responded, confirmed, etc.
+model MeetingActivity {
+  id         String   @id @default(cuid())
+  meetingId  String   @map("meeting_id")
+  meeting    Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  /// created | invitation_sent | invitation_opened | availability_submitted |
+  /// meeting_confirmed | confirmation_email_sent | reschedule_requested |
+  /// meeting_rescheduled | meeting_completed | meeting_cancelled | link_regenerated
+  type       String
+  actorName  String?  @map("actor_name")
+  meta       Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([meetingId, createdAt])
+  @@map("meeting_activity")
+}
+
+/// Reschedule history — never overwrite, always append.
+model MeetingReschedule {
+  id            String   @id @default(cuid())
+  meetingId     String   @map("meeting_id")
+  meeting       Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  /// Previous slot
+  previousDate  String?  @map("previous_date")
+  previousTime  String?  @map("previous_time")
+  /// New slot
+  newDate       String   @map("new_date")
+  newTime       String   @map("new_time")
+  /// admin | client
+  requestedBy   String   @map("requested_by")
+  reason        String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([meetingId])
+  @@map("meeting_reschedules")
 }

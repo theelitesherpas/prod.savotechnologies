@@ -54,10 +54,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!user) redirect("/admin/login");
 
   // Live counts for the spine (null-safe: a missing DB keeps the panel usable).
-  const [newEnquiries, liveChatWaiting, contentCounts, servicesCount, industriesCount, clientCount, projectCount, invoiceCount] = prisma
+  const [newEnquiries, liveChatWaiting, newMeetings, contentCounts, servicesCount, industriesCount, clientCount, projectCount, invoiceCount] = prisma
     ? await Promise.all([
         prisma.projectEnquiry.count({ where: { status: "new" } }).catch(() => 0),
         prisma.chatConversation.count({ where: { status: "waiting_for_agent" } }).catch(() => 0),
+        prisma.meeting.count({ where: { status: "availability_received", seenAt: null } }).catch(() => 0),
         prisma.contentItem
           .groupBy({ by: ["collection"], _count: { _all: true } })
           .then((rows) => Object.fromEntries(rows.map((r) => [r.collection, r._count._all])))
@@ -68,7 +69,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         prisma.clientProject.count().catch(() => 0),
         prisma.invoice.count().catch(() => 0),
       ])
-    : [0, 0, {} as Record<string, number>, 0, 0, 0, 0, 0];
+    : [0, 0, 0, {} as Record<string, number>, 0, 0, 0, 0, 0];
 
   const contentItems = COLLECTION_KEYS.filter((key) => key !== "case-studies").map((key) => ({
     href: `/admin/content/${key}`,
@@ -80,10 +81,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const allow = (k: SectionKey) => canAccess(user, k);
   const nav = ([
     { key: "overview", label: "Dashboard", icon: "gauge", href: "/admin" },
-    ...(allow("live-chat")
-      ? [{ key: "live-chat", label: "Live Chat", icon: "chat" as const, href: "/admin/live-chat", badge: liveChatWaiting }]
-      : []),
-    { key: "emails", label: "Emails", icon: "inbox", href: "/admin/emails" },
     ...(allow("enquiries")
       ? [
           {
@@ -95,20 +92,25 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           },
         ]
       : []),
+    ...(allow("live-chat")
+      ? [{ key: "live-chat", label: "Live Chat", icon: "chat" as const, href: "/admin/live-chat", badge: liveChatWaiting, online: true }]
+      : []),
+    { key: "emails", label: "Emails", icon: "inbox", href: "/admin/emails" },
     ...(allow("analytics")
       ? [{ key: "analytics", label: "Analytics", icon: "trend" as const, href: "/admin/analytics" }]
       : []),
-    ...(allow("employees")
+    ...(allow("clients")
       ? [
     {
-      key: "employees",
-      label: "Employee portal",
-      icon: "crew",
+      key: "clients",
+      label: "Client Portal",
+      icon: "user",
       items: [
-        { href: "/admin/employees", label: "Dashboard · All employees", icon: "gauge" },
-        { href: "/admin/employees/leaves", label: "Leave management", icon: "sun" },
-        { href: "/admin/employees/new", label: "Add employee", icon: "plus" },
-        { href: "/admin/email-compose?dept=hr", label: "Send HR email", icon: "pen" },
+        { href: "/admin/clients", label: "Clients", icon: "user", count: clientCount },
+        { href: "/admin/meetings", label: "Meetings", icon: "chat", badge: newMeetings },
+        { href: "/admin/projects", label: "Projects", icon: "folder", count: projectCount },
+        { href: "/admin/invoices", label: "Payments", icon: "gauge", count: invoiceCount },
+        { href: "/admin/email-compose?dept=hello", label: "Send client email", icon: "pen" },
       ],
     },
         ]
@@ -117,7 +119,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       ? [
     {
       key: "hr-portal",
-      label: "HR portal",
+      label: "HR Portal",
       icon: "bot",
       items: [
         { href: "/admin/hr-portal", label: "Recruitment pipeline", icon: "inbox" },
@@ -126,17 +128,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     },
         ]
       : []),
-    ...(allow("clients")
+    ...(allow("employees")
       ? [
     {
-      key: "clients",
-      label: "Client portal",
-      icon: "user",
+      key: "employees",
+      label: "Employee Portal",
+      icon: "crew",
       items: [
-        { href: "/admin/clients", label: "Clients", icon: "user", count: clientCount },
-        { href: "/admin/projects", label: "Projects", icon: "folder", count: projectCount },
-        { href: "/admin/invoices", label: "Payments", icon: "gauge", count: invoiceCount },
-        { href: "/admin/email-compose?dept=hello", label: "Send client email", icon: "pen" },
+        { href: "/admin/employees", label: "Dashboard · All employees", icon: "gauge" },
+        { href: "/admin/employees/leaves", label: "Leave management", icon: "sun" },
+        { href: "/admin/employees/new", label: "Add employee", icon: "plus" },
+        { href: "/admin/email-compose?dept=hr", label: "Send HR email", icon: "pen" },
       ],
     },
         ]
@@ -161,9 +163,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     },
         ]
       : []),
-    ...(allow("email-templates")
-      ? [{ key: "email-templates", label: "Email templates", icon: "pen" as const, href: "/admin/email-templates" }]
-      : []),
     ...(allow("settings")
       ? [
     {
@@ -179,13 +178,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     },
         ]
       : []),
-    ...(allow("audit")
-      ? [{ key: "system", label: "Audit log", icon: "trail" as const, href: "/admin/audit" }]
+    ...(allow("email-templates")
+      ? [{ key: "email-templates", label: "Email Templates", icon: "pen" as const, href: "/admin/email-templates" }]
       : []),
     ...(allow("audit")
-      ? [{ key: "bug-reports", label: "Bug reports", icon: "alert" as const, href: "/admin/bug-reports" }]
+      ? [{ key: "bug-reports", label: "Bug Reports", icon: "alert" as const, href: "/admin/bug-reports" }]
       : []),
-    { key: "my-profile", label: "My profile", icon: "user", href: "/admin/my-profile" },
+    ...(allow("audit")
+      ? [{ key: "system", label: "Audit Log", icon: "trail" as const, href: "/admin/audit" }]
+      : []),
+    { key: "my-profile", label: "My Profile", icon: "user", href: "/admin/my-profile" },
   ] satisfies unknown[]) as AdminNavNode[];
 
   return (
