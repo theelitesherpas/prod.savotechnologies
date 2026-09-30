@@ -27,11 +27,11 @@ export function Technology() {
                     <span aria-hidden="true" className="h-1.5 w-1.5 bg-accent" />
                     {group.category}
                   </p>
-                  <ul className="space-y-0 border-t border-border">
+                  <ul className="grid grid-cols-2 gap-x-4 sm:block sm:space-y-0 sm:border-t sm:border-border">
                     {group.items.map((item) => (
                       <li
                         key={item}
-                        className="t-sm border-b border-border py-2.5 font-medium text-foreground/85 transition-colors hover:text-accent"
+                        className="t-sm border-b border-border py-1.5 font-medium text-foreground/85 transition-colors hover:text-accent sm:py-2.5"
                       >
                         {item}
                       </li>
