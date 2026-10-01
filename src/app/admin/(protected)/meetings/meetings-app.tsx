@@ -151,7 +151,7 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
   }), [meetings]);
 
   if (selected && detail) {
-    return <DetailView detail={detail} onBack={() => { setSelected(null); setDetail(null); }} action={action} flash={flash} />;
+    return <DetailView detail={detail} onBack={() => { setSelected(null); setDetail(null); }} action={action} flash={flash} onDeleted={() => { setSelected(null); setDetail(null); void load(); }} />;
   }
 
   return (
@@ -423,13 +423,17 @@ function CreateDrawer({ onClose, onCreated, flash, me }: { onClose: () => void; 
 
 /* ───────────────────────── detail view ───────────────────────── */
 
-function DetailView({ detail, onBack, action, flash }: {
+function DetailView({ detail, onBack, action, flash, onDeleted }: {
   detail: MeetingDetail;
   onBack: () => void;
   action: (id: string, act: string, data?: object) => Promise<{ ok?: boolean; token?: string; error?: string }>;
   flash: (m: string) => void;
+  onDeleted: () => void;
 }) {
   const [internalNotes, setInternalNotes] = useState(detail.internalNotes ?? "");
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const meetingLink = detail.reference ? `${typeof window !== "undefined" ? window.location.origin : ""}/meeting/${detail.reference}` : "";
   const waMsg = encodeURIComponent(`Hello ${detail.clientName}, as discussed, please use the link below to select your preferred date and time for our meeting:\n\n${meetingLink}`);
 
@@ -559,6 +563,170 @@ function DetailView({ detail, onBack, action, flash }: {
             ))}
           </ul>
         </section>
+      </div>
+
+      {/* Edit drawer */}
+      {showEdit ? (
+        <EditDrawer
+          detail={detail}
+          onClose={() => setShowEdit(false)}
+          onSaved={() => { setShowEdit(false); }}
+          action={action}
+          flash={flash}
+        />
+      ) : null}
+
+      {/* Delete confirmation */}
+      {showDelete ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+            <div className="border-b border-border bg-red-50 px-6 py-4">
+              <h3 className="text-[1.0625rem] font-bold text-red-600">Delete this meeting?</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-[0.875rem] text-muted">
+                <strong>{detail.title}</strong> ({detail.reference}) for {detail.clientName} will be permanently deleted.
+                This cannot be undone. The scheduling link will stop working immediately.
+              </p>
+              <div className="mt-5 flex gap-2.5">
+                <button onClick={() => setShowDelete(false)} className="flex-1 rounded-xl border-2 border-border py-3 text-[0.9375rem] font-semibold text-muted transition-colors hover:text-foreground">Cancel</button>
+                <button
+                  onClick={async () => {
+                    setDeleting(true);
+                    const res = await fetch(`/api/admin/meetings/${detail.id}`, { method: "DELETE" });
+                    const json = await res.json();
+                    setDeleting(false);
+                    if (json.ok) { flash("Meeting deleted."); onDeleted(); }
+                    else flash(json.error ?? "Failed to delete.");
+                  }}
+                  disabled={deleting}
+                  className="flex-1 rounded-xl border border-red-500 bg-red-500 py-3 text-[0.9375rem] font-bold text-white transition-all hover:brightness-110 disabled:opacity-50"
+                >
+                  {deleting ? "Deleting…" : "Delete Permanently"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ───────────────────────── edit drawer ───────────────────────── */
+
+function EditDrawer({ detail, onClose, onSaved, action, flash }: {
+  detail: MeetingDetail;
+  onClose: () => void;
+  onSaved: () => void;
+  action: (id: string, act: string, data?: object) => Promise<{ ok?: boolean; error?: string }>;
+  flash: (m: string) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    clientName: detail.clientName,
+    clientCompany: detail.clientCompany,
+    clientPhone: detail.clientPhone ?? "",
+    clientEmail: detail.clientEmail ?? "",
+    title: detail.title,
+    agenda: detail.agenda,
+    meetingType: detail.meetingType,
+    durationMin: detail.durationMin,
+    locationType: detail.locationType,
+    locationAddress: detail.locationAddress ?? "",
+    meetingUrl: detail.meetingUrl ?? "",
+    availableDates: detail.availableDates,
+    availableFrom: detail.availableFrom,
+    availableTo: detail.availableTo,
+    allowSuggest: detail.allowSuggest,
+    autoConfirm: detail.autoConfirm,
+  });
+
+  const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
+
+  const save = async () => {
+    if (!form.clientName.trim()) return flash("Client name is required.");
+    if (!form.title.trim()) return flash("Meeting title is required.");
+    setSaving(true);
+    const r = await action(detail.id, "edit", form);
+    setSaving(false);
+    if (r.ok) { flash("Meeting updated. Link unchanged."); onSaved(); }
+    else flash(r.error ?? "Failed to update.");
+  };
+
+  const isOnline = ["google_meet", "zoom", "teams"].includes(form.locationType);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
+      <div className="my-8 w-full max-w-2xl rounded-2xl border border-border bg-white shadow-2xl" role="dialog" aria-label="Edit Meeting">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div>
+            <h2 className="text-[1.125rem] font-bold">Edit Meeting</h2>
+            <p className="mt-0.5 text-[0.8125rem] text-muted">Reference {detail.reference} stays the same, the scheduling link is unchanged.</p>
+          </div>
+          <button onClick={onClose} className="text-[0.8125rem] text-muted hover:text-foreground">Close</button>
+        </div>
+
+        <div className="space-y-5 p-6">
+          <fieldset className="rounded-xl border border-border p-4">
+            <legend className="px-2 text-[0.75rem] font-semibold text-muted">Client Information</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><label className="adm-label mb-1 block">Name *</label><input value={form.clientName} onChange={(e) => set("clientName", e.target.value)} className="adm-input w-full" /></div>
+              <div><label className="adm-label mb-1 block">Company</label><input value={form.clientCompany} onChange={(e) => set("clientCompany", e.target.value)} className="adm-input w-full" /></div>
+              <div><label className="adm-label mb-1 block">Phone</label><input value={form.clientPhone} onChange={(e) => set("clientPhone", e.target.value)} type="tel" className="adm-input w-full" /></div>
+              <div><label className="adm-label mb-1 block">Email</label><input value={form.clientEmail} onChange={(e) => set("clientEmail", e.target.value)} type="email" className="adm-input w-full" /></div>
+            </div>
+          </fieldset>
+
+          <fieldset className="rounded-xl border border-border p-4">
+            <legend className="px-2 text-[0.75rem] font-semibold text-muted">Meeting Details</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2"><label className="adm-label mb-1 block">Title *</label><input value={form.title} onChange={(e) => set("title", e.target.value)} className="adm-input w-full" /></div>
+              <div className="sm:col-span-2"><label className="adm-label mb-1 block">Agenda</label><textarea value={form.agenda} onChange={(e) => set("agenda", e.target.value)} rows={2} className="adm-input w-full resize-none" /></div>
+              <div>
+                <label className="adm-label mb-1 block">Type</label>
+                <select value={form.meetingType} onChange={(e) => set("meetingType", e.target.value)} className="adm-select w-full">{MEETING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
+              </div>
+              <div>
+                <label className="adm-label mb-1 block">Duration</label>
+                <select value={form.durationMin} onChange={(e) => set("durationMin", Number(e.target.value))} className="adm-select w-full">{DURATIONS.map((d) => <option key={d} value={d}>{d} minutes</option>)}</select>
+              </div>
+              <div>
+                <label className="adm-label mb-1 block">Location</label>
+                <select value={form.locationType} onChange={(e) => set("locationType", e.target.value)} className="adm-select w-full">{LOCATIONS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}</select>
+              </div>
+              {isOnline ? (
+                <div><label className="adm-label mb-1 block">Meeting URL</label><input value={form.meetingUrl} onChange={(e) => set("meetingUrl", e.target.value)} className="adm-input w-full" /></div>
+              ) : form.locationType !== "phone" ? (
+                <div><label className="adm-label mb-1 block">Address</label><input value={form.locationAddress} onChange={(e) => set("locationAddress", e.target.value)} className="adm-input w-full" /></div>
+              ) : null}
+            </div>
+          </fieldset>
+
+          <fieldset className="rounded-xl border border-border p-4">
+            <legend className="px-2 text-[0.75rem] font-semibold text-muted">Available Dates & Hours</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><label className="adm-label mb-1 block">From</label><input type="time" value={form.availableFrom} onChange={(e) => set("availableFrom", e.target.value)} className="adm-input w-full" /></div>
+              <div><label className="adm-label mb-1 block">To</label><input type="time" value={form.availableTo} onChange={(e) => set("availableTo", e.target.value)} className="adm-input w-full" /></div>
+            </div>
+            <div className="mt-3">
+              <label className="adm-label mb-1 block">Available dates</label>
+              <div className="flex flex-wrap gap-2">
+                {form.availableDates.map((d) => (
+                  <button key={d} type="button" onClick={() => set("availableDates", form.availableDates.filter((x) => x !== d))} className="rounded-md border border-accent/40 bg-accent/[0.06] px-2.5 py-1 text-[0.75rem] font-medium text-accent">{fDate(d)} ✕</button>
+                ))}
+                <input type="date" onChange={(e) => { if (e.target.value && !form.availableDates.includes(e.target.value)) set("availableDates", [...form.availableDates, e.target.value].sort()); e.target.value = ""; }} className="adm-input h-8 w-36 text-[0.75rem]" />
+              </div>
+            </div>
+          </fieldset>
+
+          <div className="flex justify-end gap-2 border-t border-border pt-4">
+            <button onClick={onClose} className="adm-btn-secondary h-10 px-5">Cancel</button>
+            <button onClick={() => void save()} disabled={saving} className="inline-flex h-10 items-center gap-2 rounded-xl border border-accent bg-accent px-5 text-[0.9375rem] font-bold text-white transition-all hover:brightness-110 disabled:opacity-50">
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
