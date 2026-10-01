@@ -92,6 +92,7 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [editMeetingId, setEditMeetingId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [detail, setDetail] = useState<MeetingDetail | null>(null);
   const [filterStatus, setFilterStatus] = useState("");
@@ -255,6 +256,14 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
       )}
 
       {showCreate ? <CreateDrawer onClose={() => setShowCreate(false)} onCreated={(link) => { setCreatedLink(link); void load(); }} flash={flash} me={me} /> : null}
+      {editMeetingId ? (
+        <EditMeetingDrawer
+          meetingId={editMeetingId}
+          onClose={() => setEditMeetingId(null)}
+          onSaved={() => { setEditMeetingId(null); flash("Meeting updated. Link unchanged."); void load(); if (selected === editMeetingId) void loadDetail(editMeetingId); }}
+          flash={flash}
+        />
+      ) : null}
       {toast ? <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-border bg-white px-4 py-2 text-[0.8125rem] shadow-lg">{toast}</div> : null}
     </div>
   );
@@ -676,6 +685,145 @@ function EditDrawer({ detail, onClose, onSaved, action, flash }: {
           <div>
             <h2 className="text-[1.125rem] font-bold">Edit Meeting</h2>
             <p className="mt-0.5 text-[0.8125rem] text-muted">Reference {detail.reference} stays the same, the scheduling link is unchanged.</p>
+          </div>
+          <button onClick={onClose} className="text-[0.8125rem] text-muted hover:text-foreground">Close</button>
+        </div>
+
+        <div className="space-y-5 p-6">
+          <fieldset className="rounded-xl border border-border p-4">
+            <legend className="px-2 text-[0.75rem] font-semibold text-muted">Client Information</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><label className="adm-label mb-1 block">Name *</label><input value={form.clientName} onChange={(e) => set("clientName", e.target.value)} className="adm-input w-full" /></div>
+              <div><label className="adm-label mb-1 block">Company</label><input value={form.clientCompany} onChange={(e) => set("clientCompany", e.target.value)} className="adm-input w-full" /></div>
+              <div><label className="adm-label mb-1 block">Phone</label><input value={form.clientPhone} onChange={(e) => set("clientPhone", e.target.value)} type="tel" className="adm-input w-full" /></div>
+              <div><label className="adm-label mb-1 block">Email</label><input value={form.clientEmail} onChange={(e) => set("clientEmail", e.target.value)} type="email" className="adm-input w-full" /></div>
+            </div>
+          </fieldset>
+
+          <fieldset className="rounded-xl border border-border p-4">
+            <legend className="px-2 text-[0.75rem] font-semibold text-muted">Meeting Details</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2"><label className="adm-label mb-1 block">Title *</label><input value={form.title} onChange={(e) => set("title", e.target.value)} className="adm-input w-full" /></div>
+              <div className="sm:col-span-2"><label className="adm-label mb-1 block">Agenda</label><textarea value={form.agenda} onChange={(e) => set("agenda", e.target.value)} rows={2} className="adm-input w-full resize-none" /></div>
+              <div>
+                <label className="adm-label mb-1 block">Type</label>
+                <select value={form.meetingType} onChange={(e) => set("meetingType", e.target.value)} className="adm-select w-full">{MEETING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
+              </div>
+              <div>
+                <label className="adm-label mb-1 block">Duration</label>
+                <select value={form.durationMin} onChange={(e) => set("durationMin", Number(e.target.value))} className="adm-select w-full">{DURATIONS.map((d) => <option key={d} value={d}>{d} minutes</option>)}</select>
+              </div>
+              <div>
+                <label className="adm-label mb-1 block">Location</label>
+                <select value={form.locationType} onChange={(e) => set("locationType", e.target.value)} className="adm-select w-full">{LOCATIONS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}</select>
+              </div>
+              {isOnline ? (
+                <div><label className="adm-label mb-1 block">Meeting URL</label><input value={form.meetingUrl} onChange={(e) => set("meetingUrl", e.target.value)} className="adm-input w-full" /></div>
+              ) : form.locationType !== "phone" ? (
+                <div><label className="adm-label mb-1 block">Address</label><input value={form.locationAddress} onChange={(e) => set("locationAddress", e.target.value)} className="adm-input w-full" /></div>
+              ) : null}
+            </div>
+          </fieldset>
+
+          <fieldset className="rounded-xl border border-border p-4">
+            <legend className="px-2 text-[0.75rem] font-semibold text-muted">Available Dates & Hours</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><label className="adm-label mb-1 block">From</label><input type="time" value={form.availableFrom} onChange={(e) => set("availableFrom", e.target.value)} className="adm-input w-full" /></div>
+              <div><label className="adm-label mb-1 block">To</label><input type="time" value={form.availableTo} onChange={(e) => set("availableTo", e.target.value)} className="adm-input w-full" /></div>
+            </div>
+            <div className="mt-3">
+              <label className="adm-label mb-1 block">Available dates</label>
+              <div className="flex flex-wrap gap-2">
+                {form.availableDates.map((d) => (
+                  <button key={d} type="button" onClick={() => set("availableDates", form.availableDates.filter((x) => x !== d))} className="rounded-md border border-accent/40 bg-accent/[0.06] px-2.5 py-1 text-[0.75rem] font-medium text-accent">{fDate(d)} ✕</button>
+                ))}
+                <input type="date" onChange={(e) => { if (e.target.value && !form.availableDates.includes(e.target.value)) set("availableDates", [...form.availableDates, e.target.value].sort()); e.target.value = ""; }} className="adm-input h-8 w-36 text-[0.75rem]" />
+              </div>
+            </div>
+          </fieldset>
+
+          <div className="flex justify-end gap-2 border-t border-border pt-4">
+            <button onClick={onClose} className="adm-btn-secondary h-10 px-5">Cancel</button>
+            <button onClick={() => void save()} disabled={saving} className="inline-flex h-10 items-center gap-2 rounded-xl border border-accent bg-accent px-5 text-[0.9375rem] font-bold text-white transition-all hover:brightness-110 disabled:opacity-50">
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+/* ───────────────────────── edit drawer ───────────────────────── */
+
+function EditMeetingDrawer({ meetingId, onClose, onSaved, flash }: {
+  meetingId: string;
+  onClose: () => void;
+  onSaved: () => void;
+  flash: (m: string) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [form, setForm] = useState({
+    clientName: "", clientCompany: "", clientPhone: "", clientEmail: "",
+    title: "", agenda: "", meetingType: "in_person", durationMin: 60,
+    locationType: "savo_office", locationAddress: "", meetingUrl: "",
+    availableDates: [] as string[], availableFrom: "10:00", availableTo: "18:00",
+  });
+
+  useEffect(() => {
+    fetch(`/api/admin/meetings/${meetingId}`).then((r) => r.json()).then((j) => {
+      if (j.ok && j.meeting) {
+        const m = j.meeting;
+        setForm({
+          clientName: m.clientName ?? "", clientCompany: m.clientCompany ?? "",
+          clientPhone: m.clientPhone ?? "", clientEmail: m.clientEmail ?? "",
+          title: m.title ?? "", agenda: m.agenda ?? "",
+          meetingType: m.meetingType ?? "in_person", durationMin: m.durationMin ?? 60,
+          locationType: m.locationType ?? "savo_office", locationAddress: m.locationAddress ?? "",
+          meetingUrl: m.meetingUrl ?? "",
+          availableDates: Array.isArray(m.availableDates) ? m.availableDates : [],
+          availableFrom: m.availableFrom ?? "10:00", availableTo: m.availableTo ?? "18:00",
+        });
+        setLoaded(true);
+      }
+    }).catch(() => undefined);
+  }, [meetingId]);
+
+  const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
+
+  const save = async () => {
+    if (!form.clientName.trim()) return flash("Client name is required.");
+    if (!form.title.trim()) return flash("Meeting title is required.");
+    setSaving(true);
+    const res = await fetch(`/api/admin/meetings/${meetingId}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "edit", ...form }),
+    });
+    const json = (await res.json()) as { ok: boolean; error?: string };
+    setSaving(false);
+    if (json.ok) onSaved();
+    else flash(json.error ?? "Failed to update.");
+  };
+
+  const isOnline = ["google_meet", "zoom", "teams"].includes(form.locationType);
+
+  if (!loaded) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="rounded-2xl border border-border bg-white p-8 text-[0.9375rem] text-muted shadow-2xl">Loading meeting…</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
+      <div className="my-8 w-full max-w-2xl rounded-2xl border border-border bg-white shadow-2xl" role="dialog" aria-label="Edit Meeting">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div>
+            <h2 className="text-[1.125rem] font-bold">Edit Meeting</h2>
+            <p className="mt-0.5 text-[0.8125rem] text-muted">The scheduling link stays the same. No email is sent on save.</p>
           </div>
           <button onClick={onClose} className="text-[0.8125rem] text-muted hover:text-foreground">Close</button>
         </div>
