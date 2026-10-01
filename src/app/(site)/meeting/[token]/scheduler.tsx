@@ -34,17 +34,58 @@ function fmtTime(t: string): string {
   const [h, m] = t.split(":").map(Number);
   return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
 }
+/**
+ * Get the current date and time in IST (Asia/Kolkata), regardless of the
+ * visitor's local timezone. Meeting slots are defined in IST, so all
+ * past-date and past-time comparisons must use IST time.
+ */
+function getISTNow(): { date: string; hours: number; minutes: number } {
+  try {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    }).formatToParts(new Date());
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "0";
+    const year = get("year");
+    const month = get("month");
+    const day = get("day");
+    const hour = get("hour") === "24" ? "0" : get("hour");
+    return {
+      date: `${year}-${month}-${day}`,
+      hours: Number(hour),
+      minutes: Number(get("minute")),
+    };
+  } catch {
+    // Fallback if Intl timezone support is unavailable
+    const now = new Date();
+    const utc = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+    return {
+      date: `${utc.getUTCFullYear()}-${String(utc.getUTCMonth() + 1).padStart(2, "0")}-${String(utc.getUTCDate()).padStart(2, "0")}`,
+      hours: utc.getUTCHours(),
+      minutes: utc.getUTCMinutes(),
+    };
+  }
+}
+
+/**
+ * Generate available 30-min slots for a date, hiding past slots.
+ * Both the date and the slot times are in IST — a visitor in any
+ * timezone sees the same correct availability.
+ */
 function genSlots(from: string, to: string, date: string): string[] {
   const [fh, fm] = from.split(":").map(Number);
   const [th, tm] = to.split(":").map(Number);
-  const slotNow = new Date();
-  const todayLocal = `${slotNow.getFullYear()}-${String(slotNow.getMonth() + 1).padStart(2, "0")}-${String(slotNow.getDate()).padStart(2, "0")}`;
-  const isToday = date === todayLocal;
-  const nowMin = slotNow.getHours() * 60 + slotNow.getMinutes();
+  const ist = getISTNow();
+  const isTodayInIST = date === ist.date;
+  const nowISTMin = ist.hours * 60 + ist.minutes;
   const out: string[] = [];
-  for (let t = fh*60+fm; t < th*60+tm; t += 30) {
-    if (isToday && t <= nowMin + 30) continue; // skip past and too-soon slots today
-    out.push(`${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`);
+  for (let t = fh * 60 + fm; t < th * 60 + tm; t += 30) {
+    // Hide slots that have already passed (IST), plus a 30-min buffer
+    if (isTodayInIST && t <= nowISTMin + 30) continue;
+    // Hide all slots if the date is already past in IST
+    if (date < ist.date) continue;
+    out.push(`${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`);
   }
   return out;
 }
@@ -83,9 +124,10 @@ export function MeetingScheduler({ data, token }: { data: PublicMeetingData; tok
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Local-time "today" (not UTC) so past dates are correctly blocked in IST.
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  // IST-based "today" — meeting times are in IST, so date filtering
+  // must use the IST calendar date, not the visitor's local date.
+  const istNow = getISTNow();
+  const today = istNow.date;
   const isSuggested = selectedDate && !data.availableDates.includes(selectedDate);
   const needsEmail = !data.clientEmail;
   const needsAddress = ["client_office","savo_office","in_person","office_visit","custom"].includes(data.locationType) && !data.locationAddress;
@@ -271,7 +313,7 @@ export function MeetingScheduler({ data, token }: { data: PublicMeetingData; tok
                   if (!v) return;
                   if (v < today) {
                     e.target.value = "";
-                    setError("Please pick today or a future date.");
+                    setError("Please pick today or a future date (IST).");
                     setTimeout(() => setError(null), 3000);
                     return;
                   }
