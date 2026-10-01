@@ -238,18 +238,50 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
                   </td>
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => loadDetail(m.id)} className="text-[0.8125rem] font-semibold text-accent hover:underline">View</button>
-                      <button onClick={() => loadDetail(m.id)} className="text-[0.8125rem] font-semibold text-muted hover:text-accent">Edit</button>
-                      <button
-                        onClick={async () => {
-                          if (!confirm(`Delete "${m.title}" (${m.reference}) for ${m.clientName}?\nThis cannot be undone.`)) return;
-                          const res = await fetch(`/api/admin/meetings/${m.id}`, { method: "DELETE" });
-                          const json = await res.json();
-                          if (json.ok) { flash("Meeting deleted."); void load(); }
-                          else flash(json.error ?? "Failed.");
-                        }}
-                        className="text-[0.8125rem] font-semibold text-red-500 hover:text-red-600 hover:underline"
-                      >Delete</button>
+                      {m.status === "trash" ? (
+                        <>
+                          <button
+                            onClick={async () => {
+                              const res = await fetch(`/api/admin/meetings/${m.id}`, {
+                                method: "PUT", headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ action: "restore" }),
+                              });
+                              const json = await res.json();
+                              if (json.ok) { flash("Meeting restored."); void load(); }
+                              else flash(json.error ?? "Failed.");
+                            }}
+                            className="text-[0.8125rem] font-semibold text-emerald-600 hover:underline"
+                          >Restore</button>
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`Permanently delete "${m.title}" (${m.reference})?\nThis CANNOT be undone.`)) return;
+                              const res = await fetch(`/api/admin/meetings/${m.id}`, {
+                                method: "PUT", headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ action: "permanent_delete" }),
+                              });
+                              const json = await res.json();
+                              if (json.ok) { flash("Permanently deleted."); void load(); }
+                              else flash(json.error ?? "Failed.");
+                            }}
+                            className="text-[0.8125rem] font-semibold text-red-600 hover:underline"
+                          >Delete Forever</button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`Move "${m.title}" (${m.reference}) to trash?\nThe client will see "no longer available" on their link.`)) return;
+                              const res = await fetch(`/api/admin/meetings/${m.id}`, { method: "DELETE" });
+                              const json = await res.json();
+                              if (json.ok) { flash("Moved to trash."); void load(); }
+                              else flash(json.error ?? "Failed.");
+                            }}
+                            className="text-[0.8125rem] font-semibold text-red-500 hover:underline"
+                          >Delete</button>
+                          <button onClick={() => loadDetail(m.id)} className="text-[0.8125rem] font-semibold text-foreground/70 hover:text-accent">Edit</button>
+                          <button onClick={() => loadDetail(m.id)} className="text-[0.8125rem] font-semibold text-accent hover:underline">View</button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
