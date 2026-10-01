@@ -232,7 +232,20 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => loadDetail(m.id)} className="text-[0.8125rem] font-semibold text-accent hover:underline">View</button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => loadDetail(m.id)} className="text-[0.8125rem] font-semibold text-accent hover:underline">View</button>
+                      <button onClick={() => loadDetail(m.id)} className="text-[0.8125rem] font-semibold text-muted hover:text-accent">Edit</button>
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`Delete "${m.title}" (${m.reference}) for ${m.clientName}?\nThis cannot be undone.`)) return;
+                          const res = await fetch(`/api/admin/meetings/${m.id}`, { method: "DELETE" });
+                          const json = await res.json();
+                          if (json.ok) { flash("Meeting deleted."); void load(); }
+                          else flash(json.error ?? "Failed.");
+                        }}
+                        className="text-[0.8125rem] font-semibold text-red-500 hover:text-red-600 hover:underline"
+                      >Delete</button>
+                    </div>
                   </td>
                 </tr>
               ))}
