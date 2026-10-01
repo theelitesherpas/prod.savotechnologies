@@ -153,8 +153,22 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
     trash: meetings.filter((m) => m.status === "trash").length,
   }), [meetings]);
 
+  if (editMeetingId) {
+    return (
+      <div>
+        <PageHeader title="Edit Meeting" description="Update the details. The scheduling link stays the same. No email is sent on save." />
+        <EditMeetingDrawer
+          meetingId={editMeetingId}
+          onClose={() => setEditMeetingId(null)}
+          onSaved={() => { setEditMeetingId(null); flash("Meeting updated. Link unchanged."); void load(); if (selected === editMeetingId) void loadDetail(editMeetingId); }}
+          flash={flash}
+        />
+      </div>
+    );
+  }
+
   if (selected && detail) {
-    return <DetailView detail={detail} onBack={() => { setSelected(null); setDetail(null); }} action={action} flash={flash} onDeleted={() => { setSelected(null); setDetail(null); void load(); }} />;
+    return <DetailView detail={detail} onBack={() => { setSelected(null); setDetail(null); }} action={action} flash={flash} onDeleted={() => { setSelected(null); setDetail(null); void load(); }} onEdit={() => setEditMeetingId(detail.id)} />;
   }
 
   return (
@@ -278,7 +292,7 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
                             }}
                             className="text-[0.8125rem] font-semibold text-red-500 hover:underline"
                           >Delete</button>
-                          <button onClick={() => loadDetail(m.id)} className="text-[0.8125rem] font-semibold text-foreground/70 hover:text-accent">Edit</button>
+                          <button onClick={() => setEditMeetingId(m.id)} className="text-[0.8125rem] font-semibold text-foreground/70 hover:text-accent">Edit</button>
                           <button onClick={() => loadDetail(m.id)} className="text-[0.8125rem] font-semibold text-accent hover:underline">View</button>
                         </>
                       )}
@@ -481,12 +495,13 @@ function CreateDrawer({ onClose, onCreated, flash, me }: { onClose: () => void; 
 
 /* ───────────────────────── detail view ───────────────────────── */
 
-function DetailView({ detail, onBack, action, flash, onDeleted }: {
+function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
   detail: MeetingDetail;
   onBack: () => void;
   action: (id: string, act: string, data?: object) => Promise<{ ok?: boolean; token?: string; error?: string }>;
   flash: (m: string) => void;
   onDeleted: () => void;
+  onEdit: () => void;
 }) {
   const [internalNotes, setInternalNotes] = useState(detail.internalNotes ?? "");
   const [showEdit, setShowEdit] = useState(false);
@@ -846,22 +861,20 @@ function EditMeetingDrawer({ meetingId, onClose, onSaved, flash }: {
   const isOnline = ["google_meet", "zoom", "teams"].includes(form.locationType);
 
   if (!loaded) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-        <div className="rounded-2xl border border-border bg-white p-8 text-[0.9375rem] text-muted shadow-2xl">Loading meeting…</div>
-      </div>
-    );
+    return <div className="adm-card p-8 text-center text-[0.9375rem] text-muted">Loading meeting data…</div>;
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
-      <div className="my-8 w-full max-w-2xl rounded-2xl border border-border bg-white shadow-2xl" role="dialog" aria-label="Edit Meeting">
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <button onClick={onClose} className="adm-btn-secondary h-9 px-3 text-[0.8125rem]">← Back to Meetings</button>
+      </div>
+      <div className="adm-card">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
             <h2 className="text-[1.125rem] font-bold">Edit Meeting</h2>
             <p className="mt-0.5 text-[0.8125rem] text-muted">The scheduling link stays the same. No email is sent on save.</p>
           </div>
-          <button onClick={onClose} className="text-[0.8125rem] text-muted hover:text-foreground">Close</button>
         </div>
 
         <div className="space-y-5 p-6">
