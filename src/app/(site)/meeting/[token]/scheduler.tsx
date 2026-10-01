@@ -237,7 +237,7 @@ export function MeetingScheduler({ data, token }: { data: PublicMeetingData; tok
           Select a Date <span className="text-accent">*</span>
         </h2>
         <div className="flex flex-wrap gap-2.5">
-          {data.availableDates.filter((d) => d > today).map((d) => {
+          {data.availableDates.filter((d) => d >= today).map((d) => {
             const dt = new Date(d + "T00:00:00");
             return (
               <button
@@ -269,9 +269,9 @@ export function MeetingScheduler({ data, token }: { data: PublicMeetingData; tok
                 onChange={(e) => {
                   const v = e.target.value;
                   if (!v) return;
-                  if (v <= today) {
+                  if (v < today) {
                     e.target.value = "";
-                    setError("Please pick a future date (tomorrow or later).");
+                    setError("Please pick today or a future date.");
                     setTimeout(() => setError(null), 3000);
                     return;
                   }

@@ -36,6 +36,11 @@ type MeetingDetail = Meeting & {
 
 type ClientOption = { id: string; name: string; company: string; email: string };
 
+function localToday(): string {
+  const t = new Date();
+  return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+}
+
 const STATUS_CHIP: Record<string, string> = {
   draft: "border-border text-muted",
   awaiting_client: "border-amber-500/40 text-amber-600 bg-amber-500/[0.04]",
@@ -392,10 +397,10 @@ function CreateDrawer({ onClose, onCreated, flash, me }: { onClose: () => void; 
             <div className="mt-3">
               <label className="adm-label mb-1 block">Available dates (click to add)</label>
               <div className="flex flex-wrap gap-2">
-                {form.availableDates.filter((d) => d > new Date().toISOString().slice(0, 10)).map((d) => (
+                {form.availableDates.filter((d) => d >= localToday()).map((d) => (
                   <button key={d} type="button" onClick={() => set("availableDates", form.availableDates.filter((x) => x !== d))} className="rounded-md border border-accent/40 bg-accent/[0.06] px-2.5 py-1 text-[0.75rem] font-medium text-accent">{fDate(d)} ✕</button>
                 ))}
-                <input type="date" min={new Date().toISOString().slice(0, 10)} onChange={(e) => { if (e.target.value && e.target.value > new Date().toISOString().slice(0, 10) && !form.availableDates.includes(e.target.value)) set("availableDates", [...form.availableDates, e.target.value].sort()); e.target.value = ""; }} className="adm-input h-8 w-36 text-[0.75rem]" />
+                <input type="date" min={localToday()} onChange={(e) => { if (e.target.value && e.target.value >= localToday() && !form.availableDates.includes(e.target.value)) set("availableDates", [...form.availableDates, e.target.value].sort()); e.target.value = ""; }} className="adm-input h-8 w-36 text-[0.75rem]" />
               </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-4">
