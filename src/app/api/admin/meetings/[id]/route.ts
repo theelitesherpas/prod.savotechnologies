@@ -133,23 +133,50 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       });
       return apiOk({});
     }
+    case "restore": {
+      const existing = await prisma.meeting.findUnique({ where: { id }, select: { deletedAt: true, status: true } });
+      if (!existing) return apiError("Meeting not found.", 404);
+      if (!existing.deletedAt && existing.status !== "trash") return apiError("Meeting is not in trash.", 400);
+      // Restore to its pre-trash state (or awaiting_client if it was active)
+      const restoreStatus = ["draft", "awaiting_client", "availability_received", "confirmed", "reschedule_requested"].includes(existing.status) ? existing.status : "awaiting_client";
+      await prisma.meeting.update({ where: { id }, data: { deletedAt: null, status: restoreStatus } });
+      await prisma.meetingActivity.create({ data: { meetingId: id, type: "meeting_restored", actorName: user.name } });
+      return apiOk({});
+    }
+    case "permanent_delete": {
+      // Hard delete: removes the meeting and all related records permanently
+      await prisma.meeting.delete({ where: { id } });
+      return apiOk({ permanentlyDeleted: true });
+    }
     default:
       return apiError("Unknown action.", 400);
   }
 }
 
-/** DELETE /api/admin/meetings/[id] — permanently deletes a meeting and all related records. */
+/** DELETE /api/admin/meetings/[id] — soft-delete: moves meeting to trash.
+ *  The scheduling link shows "no longer available" to the client.
+ *  Use PUT action "restore" to bring it back, or "permanent_delete" to remove forever. */
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAdminUser();
   if (!user) return apiError("Not authorized.", 401);
   if (!prisma) return apiError("Database unavailable.", 503);
 
   const { id } = await params;
-  const existing = await prisma.meeting.findUnique({ where: { id }, select: { reference: true } });
+  const existing = await prisma.meeting.findUnique({ where: { id }, select: { reference: true, deletedAt: true } });
   if (!existing) return apiError("Meeting not found.", 404);
 
-  // Cascades delete attendees, activity, and reschedules automatically
-  await prisma.meeting.delete({ where: { id } });
+  if (existing.deletedAt) {
+    return apiError("Meeting is already in trash.", 409);
+  }
 
-  return apiOk({ deleted: existing.reference });
+  // Soft delete: set deletedAt + status trash (client sees "no longer available")
+  await prisma.meeting.update({
+    where: { id },
+    data: { deletedAt: new Date(), status: "trash" },
+  });
+  await prisma.meetingActivity.create({
+    data: { meetingId: id, type: "meeting_deleted", actorName: user.name },
+  });
+
+  return apiOk({ trashed: existing.reference });
 }

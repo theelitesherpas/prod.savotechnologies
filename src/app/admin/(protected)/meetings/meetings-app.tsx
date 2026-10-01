@@ -50,6 +50,7 @@ const STATUS_CHIP: Record<string, string> = {
   completed: "border-border text-muted",
   cancelled: "border-red-500/40 text-red-500 bg-red-500/[0.04]",
   expired: "border-border text-muted",
+  trash: "border-red-300/60 text-red-400 bg-red-50/50",
 };
 
 const MEETING_TYPES = [
@@ -149,6 +150,7 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
     awaiting: meetings.filter((m) => m.status === "awaiting_client").length,
     confirmed: meetings.filter((m) => m.status === "confirmed").length,
     completed: meetings.filter((m) => m.status === "completed").length,
+    trash: meetings.filter((m) => m.status === "trash").length,
   }), [meetings]);
 
   if (selected && detail) {
@@ -168,6 +170,7 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
         <StatTile label="Awaiting Response" value={counts.awaiting} />
         <StatTile label="Confirmed" value={counts.confirmed} />
         <StatTile label="Completed" value={counts.completed} />
+        <StatTile label="Trash" value={counts.trash} />
       </div>
 
       {/* Toolbar */}
@@ -175,6 +178,7 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search client, company, ref…" className="adm-input h-9 w-56" />
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="adm-select h-9 w-44">
           <option value="">All statuses</option>
+          <option value="trash">🗑 Trash</option>
           {Object.keys(STATUS_CHIP).map((s) => <option key={s} value={s}>{sLabel(s)}</option>)}
         </select>
         <button onClick={() => setView(view === "list" ? "calendar" : "list")} className="adm-btn-secondary h-9 px-3 text-[0.8125rem]">

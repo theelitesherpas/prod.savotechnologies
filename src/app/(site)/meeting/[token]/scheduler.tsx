@@ -195,6 +195,58 @@ export function MeetingScheduler({ data, token }: { data: PublicMeetingData; tok
     );
   }
 
+  /* ── Meeting cancelled by admin ── */
+  if (data.status === "cancelled") {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-16 sm:py-20">
+        <div className="rounded-2xl border border-border bg-surface-2/40 p-8 text-center sm:p-10">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10">
+            <svg viewBox="0 0 24 24" className="h-7 w-7 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="m15 9-6 6M9 9l6 6" />
+            </svg>
+          </div>
+          <h1 className="t-h3">This meeting has been cancelled.</h1>
+          <p className="t-body mt-2 text-muted">
+            We apologise for the inconvenience. Please contact us to reschedule or discuss alternatives.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <a href="mailto:hello@savotechnologies.com" className="rounded-xl border border-accent/50 bg-accent/[0.06] px-6 py-3 t-sm font-semibold text-accent transition-colors hover:bg-accent/[0.1]">
+              Contact Savo
+            </a>
+            <a href="https://wa.me/917502901234" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[#25D366]/60 bg-[#25D366]/[0.06] px-6 py-3 t-sm font-semibold text-[#128C4A]">
+              WhatsApp Us
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Meeting completed ── */
+  if (data.status === "completed") {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-16 sm:py-20">
+        <div className="rounded-2xl border border-border bg-surface-2/40 p-8 text-center sm:p-10">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10">
+            <svg viewBox="0 0 24 24" className="h-7 w-7 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </div>
+          <h1 className="t-h3">This meeting has been completed.</h1>
+          <p className="t-body mt-2 text-muted">
+            Thank you for meeting with us. Here are the details for your reference.
+          </p>
+          <div className="mt-6 rounded-xl border border-border bg-background p-5 text-left">
+            <DetailRow icon="cal" k="Date" v={fmtDate(data.confirmedDate ?? data.preferredDate ?? "")} />
+            <DetailRow icon="clock" k="Time" v={`${fmtTime(data.confirmedTime ?? data.preferredTime ?? "")} IST`} />
+            <DetailRow icon="video" k="Meeting" v={data.title} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   /* ── Already responded ── */
   if (data.preferredDate && data.status !== "reschedule_requested") {
     return (

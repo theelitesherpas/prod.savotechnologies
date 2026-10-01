@@ -46,6 +46,7 @@ export const MEETING_STATUSES = [
   "completed",
   "cancelled",
   "expired",
+  "trash",
 ] as const;
 export type MeetingStatus = (typeof MEETING_STATUSES)[number];
 

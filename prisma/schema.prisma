@@ -760,6 +760,8 @@ model Meeting {
   assignedTo    String?  @map("assigned_to")
   /// When the admin last opened this meeting (marks availability as read).
   seenAt        DateTime? @map("seen_at")
+  /// Soft delete timestamp — meeting moved to trash, not permanently deleted.
+  deletedAt     DateTime? @map("deleted_at")
   internalNotes String?  @map("internal_notes")
 
   createdBy     String   @map("created_by")
