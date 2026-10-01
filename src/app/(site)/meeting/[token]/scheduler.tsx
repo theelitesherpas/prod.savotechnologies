@@ -99,7 +99,7 @@ function Icon({ name, className }: { name: string; className?: string }) {
     clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></>,
     pin: <><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="3" /></>,
     video: <><rect x="2" y="6" width="14" height="12" rx="2" /><path d="m16 12 6-4v8l-6-4" /></>,
-    cal: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></>,
+    cal: <><rect x="3" y="5" width="18" height="17" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /><path d="M12 14v3M10.5 15.5h3" /></>,
     note: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" /></>,
   };
   return (
