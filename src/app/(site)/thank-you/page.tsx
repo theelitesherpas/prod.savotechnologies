@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { isValidEnquiryReference } from "@/lib/enquiry-reference";
 import { ThankYouHero } from "@/sections/thank-you/thank-you-hero";
 import { ReviewInvite } from "@/sections/thank-you/review-invite";
 import { ContinueExploring } from "@/sections/thank-you/continue-exploring";
 import { ThankYouAnalytics } from "@/components/shared/thank-you-analytics";
-import { ReviewInviteModalPreview } from "@/components/shared/review-invite-modal";
+import { ThankYouReviewInvite } from "@/components/shared/review-invite-modal";
 import { CAREERS_EMAIL } from "@/constants/careers";
 import { SITE } from "@/constants/site";
 
@@ -72,10 +71,8 @@ export default async function ThankYouPage({
       {/* 03: The quiet close */}
       <ContinueExploring journey={journey} />
 
-      {/* Review-invitation rehearsal, development only (?modal=review) */}
-      <Suspense fallback={null}>
-        <ReviewInviteModalPreview journey={reference ? journey : "generic"} />
-      </Suspense>
+      {/* Review invitation: once per session, only for verified submissions */}
+      <ThankYouReviewInvite journey={reference ? journey : "generic"} />
     </>
   );
 }

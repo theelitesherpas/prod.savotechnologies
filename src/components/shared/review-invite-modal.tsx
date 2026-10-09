@@ -2,22 +2,23 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
 import { GOOGLE_REVIEW_URL, SITE } from "@/constants/site";
 import { CAREERS_EMAIL } from "@/constants/careers";
 
 /**
- * ReviewInviteModal — the reusable Google review invitation (thank-you
- * experience, part 4). Deliberately NOT auto-shown after form submissions:
- * it is a controlled component for meaningful moments (a completed project,
- * a resolved support thread) that the host surface decides to open.
+ * ReviewInviteModal — the Google review invitation shown on the /thank-you
+ * confirmation after a verified submission (contact, careers, project
+ * brief, enquiry drawer). The confirmation stays the priority: the
+ * invitation opens only after the hero has settled (~2s), once per visitor
+ * per session, and closes quietly via Esc, the close control, or a
+ * backdrop tap. No "maybe later" nag that implies we'll keep asking.
  *
  * Full dialog idiom of the site (Esc, focus trap, scroll lock, aria-modal),
- * quiet motion, mobile-first panel. Dismissal is always available and
- * never begged: the close control, Esc, or a backdrop tap quietly end it.
- * No "maybe later" nag that implies we'll keep asking.
+ * quiet motion, mobile-first panel. Also reusable as a controlled
+ * component for meaningful moments (completed projects, support
+ * resolutions) that a host surface decides to open.
  */
 
 const FOCUSABLE =
@@ -63,18 +64,26 @@ export function ReviewInviteModal({
   open,
   onClose,
   contact,
+  journey = "project",
 }: {
   open: boolean;
   onClose: () => void;
   /** Journey-specific contact shown in the invitation. Defaults to the
    *  main Savo line; careers contexts pass the HR desk. */
   contact?: { email: string; phone: string; phoneE164: string };
+  /** Shapes the first paragraph: clients review working with us,
+ *      applicants review their experience with the hiring team. */
+  journey?: "careers" | "project";
 }) {
   const c = contact ?? {
     email: SITE.email,
     phone: SITE.phone,
     phoneE164: SITE.phoneE164,
   };
+  const intro =
+    journey === "careers"
+      ? "Thank you for applying to Savo Technologies. If you have a couple of minutes, a short Google review about your experience with our hiring team helps other candidates know what to expect. Good or critical, we read every single one."
+      : "Thank you for choosing Savo Technologies. If you have a couple of minutes, a Google review in your own words tells other businesses what it's really like to work with us, good or critical. We read every single one.";
   const panelRef = useRef<HTMLDivElement | null>(null);
   /* Portal-mount guard without setState-in-effect: false on the server
      and during hydration, true on the client after mount. */
@@ -176,12 +185,7 @@ export function ReviewInviteModal({
             Your experience means a lot to us.
           </h2>
           <div id="review-invite-body" className="mt-4 space-y-4">
-            <p className="t-sm text-muted">
-              Thank you for choosing Savo Technologies. If you have a couple
-              of minutes, a Google review in your own words tells other
-              businesses what it&rsquo;s really like to work with us, good or
-              critical. We read every single one.
-            </p>
+            <p className="t-sm text-muted">{intro}</p>
             <p className="t-sm text-muted">
               If anything makes it difficult, we&rsquo;re here for that too.
               The link won&rsquo;t open, you&rsquo;re not sure what to write, or
@@ -240,26 +244,48 @@ export function ReviewInviteModal({
 }
 
 /**
- * Preview hook (development only): open /thank-you?modal=review in `next
- * dev` to rehearse the invitation. The param is inert in production
- * builds, so no visitor is ever prompted from the confirmation page.
- * Contact follows the journey: careers enquiries see the HR desk.
+ * The auto-invitation for the /thank-you page. Opens once, ~2s after a
+ * verified submission lands, so the confirmation hero is seen first. The
+ * once-per-session guard (sessionStorage) means a refresh or a second
+ * submission in the same session never prompts again; the generic state
+ * (no verified reference) never prompts at all.
  */
-export function ReviewInviteModalPreview({ journey }: { journey: "careers" | "project" | "generic" }) {
-  const params = useSearchParams();
+export function ThankYouReviewInvite({
+  journey,
+}: {
+  journey: "careers" | "project" | "generic";
+}) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (process.env.NODE_ENV === "development" && params.get("modal") === "review") {
-      const t = setTimeout(() => setOpen(true), 600);
-      return () => clearTimeout(t);
+    if (journey === "generic") return;
+    try {
+      if (sessionStorage.getItem("savo_review_invite_shown")) return;
+    } catch {
+      // Storage unavailable (private mode): still invite, just this once.
     }
-  }, [params]);
+    const t = setTimeout(() => {
+      setOpen(true);
+      try {
+        sessionStorage.setItem("savo_review_invite_shown", "1");
+      } catch {
+        /* best effort */
+      }
+    }, 2200);
+    return () => clearTimeout(t);
+  }, [journey]);
 
   const contact =
     journey === "careers"
       ? { email: CAREERS_EMAIL, phone: SITE.hrPhone, phoneE164: SITE.hrPhoneE164 }
       : undefined;
 
-  return <ReviewInviteModal open={open} onClose={() => setOpen(false)} contact={contact} />;
+  return (
+    <ReviewInviteModal
+      open={open}
+      onClose={() => setOpen(false)}
+      contact={contact}
+      journey={journey === "careers" ? "careers" : "project"}
+    />
+  );
 }
