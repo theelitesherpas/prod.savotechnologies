@@ -21,6 +21,7 @@ import {
   type EnquiryInput,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
+import { redirectToThankYou } from "@/lib/thank-you";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { cn, withBasePath } from "@/lib/utils";
 
@@ -237,12 +238,16 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         error?: string;
+        reference?: string;
         fieldErrors?: EnquiryFieldErrors;
       };
       if (res.ok && json.ok) {
         setStatus("success");
         track("enquiry_form_success");
         captcha.refresh();
+        // Server-confirmed receipt → the shared thank-you page. The
+        // drawer's inline receipt stays as the no-reference fallback.
+        if (redirectToThankYou(json.reference)) return;
         return;
       }
       if (res.status === 400 && json.fieldErrors) {

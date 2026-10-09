@@ -10,6 +10,7 @@ import {
   type EnquiryFieldErrors,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
+import { redirectToThankYou } from "@/lib/thank-you";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { PhoneField } from "@/components/shared/phone-field";
 import { SuccessDialog, type SuccessStep } from "@/components/shared/success-dialog";
@@ -141,13 +142,17 @@ export function StartBrief({ initialType }: { initialType?: string }) {
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         error?: string;
+        reference?: string;
         fieldErrors?: EnquiryFieldErrors;
       };
       if (res.ok && json.ok) {
         setStatus("success");
-        setDialogOpen(true);
         captcha.refresh();
         track("enquiry_form_success", { form: "start-page" });
+        // Server-confirmed receipt → the shared thank-you page. The
+        // SuccessDialog below remains the no-reference fallback.
+        if (redirectToThankYou(json.reference)) return;
+        setDialogOpen(true);
         return;
       }
       if (res.status === 400 && json.fieldErrors) {

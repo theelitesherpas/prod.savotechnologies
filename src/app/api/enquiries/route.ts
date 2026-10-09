@@ -7,6 +7,7 @@ import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/ap
 import { logger } from "@/lib/logger";
 import { enquirySchema } from "@/schemas/enquiry";
 import { enforceCaptcha } from "@/lib/captcha";
+import { generateEnquiryReference } from "@/lib/enquiry-reference";
 import { sendTemplateNow, teamEmail } from "@/lib/mail";
 import { publish } from "@/lib/livechat/pubsub";
 
@@ -88,28 +89,59 @@ export async function POST(req: Request) {
   }
 
   try {
-    await prisma.projectEnquiry.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        company: data.company ?? null,
-        phone: data.phone || null,
-        projectType: data.projectType,
-        budget: data.budget ?? null,
-        message: data.message,
-        data: (details as Prisma.InputJsonValue) ?? undefined,
-        source,
-        userAgent: req.headers.get("user-agent")?.slice(0, 255) ?? null,
-        // Salted hash prefix - raw IPs are never persisted (privacy).
-        ipHash:
-          ip === "unknown"
-            ? null
-            : createHash("sha256")
-                .update(`${env.ENQUIRY_IP_SALT}:${ip}`)
-                .digest("hex")
-                .slice(0, 32),
-      },
-    });
+    // Crypto-random public reference (SAVO-XXXXXXXX) — generated
+    // server-side, stored with the row, returned only on success so the
+    // client can route to /thank-you without trusting a fabricated value.
+    // A unique-collision retry is near-theoretical (31^8 space); if both
+    // draws collide the request fails — an enquiry is never confirmed
+    // (to the visitor or the inbox) unless it was actually stored.
+    let reference: string | null = null;
+    for (let attempt = 0; attempt < 2 && reference === null; attempt += 1) {
+      const candidate = generateEnquiryReference();
+      try {
+        await prisma.projectEnquiry.create({
+          data: {
+            reference: candidate,
+            name: data.name,
+            email: data.email,
+            company: data.company ?? null,
+            phone: data.phone || null,
+            projectType: data.projectType,
+            budget: data.budget ?? null,
+            message: data.message,
+            data: (details as Prisma.InputJsonValue) ?? undefined,
+            source,
+            userAgent: req.headers.get("user-agent")?.slice(0, 255) ?? null,
+            // Salted hash prefix - raw IPs are never persisted (privacy).
+            ipHash:
+              ip === "unknown"
+                ? null
+                : createHash("sha256")
+                    .update(`${env.ENQUIRY_IP_SALT}:${ip}`)
+                    .digest("hex")
+                    .slice(0, 32),
+          },
+        });
+        reference = candidate;
+      } catch (createErr) {
+        // P2002 on the unique reference index → regenerate and retry once;
+        // anything else (validation, connectivity) surfaces below.
+        if (
+          attempt === 0 &&
+          createErr instanceof Error &&
+          /Unique constraint/i.test(createErr.message)
+        ) {
+          continue;
+        }
+        throw createErr;
+      }
+    }
+    if (reference === null) {
+      // Should be unreachable (two draws from 31^8 colliding twice) —
+      // the enquiry is NOT stored in this branch, so fail loudly rather
+      // than confirm an enquiry the team never received.
+      throw new Error("reference generation exhausted retries");
+    }
     logger.info("enquiry.stored", { source, type: data.projectType });
 
     // Real-time admin alert: new enquiry in the inbox
@@ -158,7 +190,7 @@ export async function POST(req: Request) {
       });
     }
 
-    return apiOk();
+    return apiOk({ reference });
   } catch (err) {
     logger.error("enquiry.store_failed", {
       message: err instanceof Error ? err.message : "unknown",

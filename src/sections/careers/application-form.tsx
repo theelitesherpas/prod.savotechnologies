@@ -20,6 +20,7 @@ import {
   type EnquiryInput,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
+import { redirectToThankYou } from "@/lib/thank-you";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { PhoneField } from "@/components/shared/phone-field";
 import { SuccessDialog, type SuccessStep } from "@/components/shared/success-dialog";
@@ -169,14 +170,19 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         error?: string;
+        reference?: string;
         fieldErrors?: EnquiryFieldErrors;
       };
       if (res.ok && json.ok) {
         setStatus("success");
-        setConfirmation({ name: data.name ?? "", email: data.email ?? "" });
-        setDialogOpen(true);
         captcha.refresh();
         track("enquiry_form_success", { form: "careers", role });
+        // Server-confirmed receipt → the shared thank-you page (which
+        // carries the careers next steps). Without a reference the
+        // SuccessDialog flow below remains the durable fallback.
+        if (redirectToThankYou(json.reference)) return;
+        setConfirmation({ name: data.name ?? "", email: data.email ?? "" });
+        setDialogOpen(true);
         return;
       }
       if (res.status === 400 && json.fieldErrors) {

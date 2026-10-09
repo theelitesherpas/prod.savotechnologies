@@ -55,14 +55,19 @@ describe("POST /api/enquiries", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it("stores a valid enquiry and returns ok", async () => {
+  it("stores a valid enquiry and returns ok with a public reference", async () => {
     create.mockResolvedValue({});
     const res = await POST(jsonReq(validBody, "10.0.0.2"));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    // Public, unguessable, unambiguous reference — returned only once the
+    // row is stored, so /thank-you can confirm without exposing ids.
+    expect(json.reference).toMatch(/^SAVO-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/);
     expect(create).toHaveBeenCalledTimes(1);
 
     const stored = create.mock.calls[0][0].data;
+    expect(stored.reference).toBe(json.reference);
     expect(stored.name).toBe("Priya Mehta");
     expect(stored.source).toBe("homepage");
     // IP stored as salted hash prefix — never raw.

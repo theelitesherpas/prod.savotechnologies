@@ -54,6 +54,13 @@ export const SITE = {
 } as const;
 
 /**
+ * Official Google Business Profile review link (supplied by Savo).
+ * Opens Google's own review interface — the only sanctioned way we
+ * invite reviews; participation is always optional.
+ */
+export const GOOGLE_REVIEW_URL = "https://g.page/r/CV--6sBtIZCNEAE/review";
+
+/**
  * Social profiles - genuine, Savo-controlled company accounts, supplied by
  * Savo. Shown in the footer and referenced as `sameAs` in the Organization
  * structured data (verified profiles only, per the hard content rule).

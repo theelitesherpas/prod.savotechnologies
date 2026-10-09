@@ -23,6 +23,9 @@ datasource db {
 /// Inbound project enquiries and phone callback requests (single inbox).
 model ProjectEnquiry {
   id          String   @id @default(cuid())
+  /// Public-facing enquiry reference (SAVO-XXXXXXXX) shown on the
+  /// thank-you page — crypto-random, never the row id or a sequence.
+  reference   String?  @unique
   name        String
   email       String?
   company     String?

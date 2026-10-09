@@ -11,6 +11,7 @@ import {
   type EnquiryInput,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
+import { redirectToThankYou } from "@/lib/thank-you";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { PhoneField } from "@/components/shared/phone-field";
 import { cn, withBasePath } from "@/lib/utils";
@@ -75,12 +76,16 @@ export function ContactForm() {
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         error?: string;
+        reference?: string;
         fieldErrors?: EnquiryFieldErrors;
       };
       if (res.ok && json.ok) {
         setStatus("success");
         captcha.refresh();
         track("enquiry_form_success", { form: "contact" });
+        // Server-confirmed receipt → the shared thank-you page. Without a
+        // reference (legacy response) the inline confirmation below stands.
+        if (redirectToThankYou(json.reference)) return;
         return;
       }
       if (res.status === 400 && json.fieldErrors) {
