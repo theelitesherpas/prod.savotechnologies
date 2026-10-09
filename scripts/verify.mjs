@@ -23,7 +23,15 @@ const browser = await chromium.launch({ executablePath: CHROME, headless: true }
 for (const width of WIDTHS) {
   const page = await browser.newPage({ viewport: { width, height: 900 } });
   const errors = [];
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  page.on(
+    "console",
+    (m) =>
+      m.type() === "error" &&
+      // Google's own framed reCAPTCHA page emits a report-only CSP notice
+      // ("no further action has been taken") - harmless third-party noise.
+      !m.text().includes("report-only Content Security Policy") &&
+      errors.push(m.text()),
+  );
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.goto(BASE, { waitUntil: "load" });
   await page.waitForTimeout(1200);

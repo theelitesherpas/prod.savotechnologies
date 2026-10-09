@@ -1,6 +1,8 @@
-import { apiOk, apiError, isJsonRequest, readJsonBody } from "@/lib/api";
+import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
+import { enforceCaptcha } from "@/lib/captcha";
 import { resolveVisitor, visitorCookieOptions, VISITOR_COOKIE, visitorRateLimit } from "@/lib/livechat/http";
-import { ensureAiConversation, visitorAsk } from "@/lib/livechat/service";
+import { prisma } from "@/lib/prisma";
+import { ensureAiConversation, getResumableConversation, visitorAsk } from "@/lib/livechat/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +25,21 @@ export async function POST(req: Request) {
   if (!text) return apiError("Ask something first.", 400);
   if (text.length > 2000) return apiError("Message too long.", 413);
   if (!visitorRateLimit(visitor.visitorId, "ask", 30, 60_000)) return apiError("You're sending messages very quickly — pause for a moment.", 429);
+
+  // Always-on captcha for conversation creation: a bot can never start
+  // a thread. Once a conversation exists, turns are protected by the
+  // visitor rate limit instead (a challenge per message would kill UX).
+  const existing = prisma ? await getResumableConversation(visitor.visitorId) : null;
+  if (!existing) {
+    const cap = await enforceCaptcha(clientIp(req), (body.data as { captchaToken?: unknown }).captchaToken);
+    if (!cap.ok) {
+      if ("captchaRequired" in cap) {
+        return apiError("Please complete the human verification and try again.", 400);
+      }
+      return apiError(cap.error, 400);
+    }
+  }
+
 
   const pageContextRaw = (body.data as { pageContext?: unknown }).pageContext;
   const pageContext =

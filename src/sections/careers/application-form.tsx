@@ -184,6 +184,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
         setStatus("idle");
         return;
       }
+      // A rejected token is single-use - re-arm the widget for a retry.
+      if (res.status === 400) captcha.reset();
       setServerMessage(
         json.error ?? "Something went wrong sending your application. Please try again in a moment.",
       );

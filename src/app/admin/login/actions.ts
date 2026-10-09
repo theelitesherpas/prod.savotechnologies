@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
-import { enforceLoginCaptcha, recordLoginFailure, clearLoginFailures } from "@/lib/captcha";
+import { enforceLoginCaptcha } from "@/lib/captcha";
 import { clientIpFromHeaders } from "@/lib/api";
 import { login } from "@/lib/auth";
 
@@ -30,7 +30,7 @@ export async function loginAction(formData: FormData): Promise<void> {
   const hdrs = await headers();
   const ip = clientIpFromHeaders(hdrs);
 
-  // Progressive captcha: after 2 failed attempts, verify before processing.
+  // Always-on captcha: every login attempt must be verified.
   const cap = await enforceLoginCaptcha("admin", ip, formData.get("captchaToken"));
   if (!cap.ok) {
     if ("captchaRequired" in cap) {
@@ -50,10 +50,8 @@ export async function loginAction(formData: FormData): Promise<void> {
   );
 
   if (!result.ok) {
-    recordLoginFailure("admin", ip);
     redirect(`/admin/login?e=${result.reason === "rate_limited" ? "rate" : "invalid"}`);
   }
 
-  clearLoginFailures("admin", ip);
   redirect("/admin");
 }

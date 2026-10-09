@@ -3,6 +3,7 @@ import { z } from "zod";
 import { randomBytes } from "node:crypto";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/api";
+import { enforceCaptcha } from "@/lib/captcha";
 import { logger } from "@/lib/logger";
 import { newSession, step, type SalesbotSession } from "@/lib/salesbot";
 
@@ -20,6 +21,7 @@ export const dynamic = "force-dynamic";
 const bodySchema = z.object({
   sessionId: z.string().regex(/^[a-zA-Z0-9_-]{6,64}$/).nullish(),
   message: z.string().trim().min(1).max(1000),
+  captchaToken: z.string().optional(),
 });
 
 const SESSION_TTL = 30 * 60 * 1000;
@@ -58,6 +60,18 @@ export async function POST(req: Request) {
     let id = parsed.data.sessionId ?? undefined;
     let session = id ? sessions.get(id) : undefined;
     if (!session) {
+      // Always-on captcha for session creation: a bot can never start a
+      // demo. Established sessions continue under the rate limit.
+      const cap = await enforceCaptcha(ip, parsed.data.captchaToken);
+      if (!cap.ok) {
+        if ("captchaRequired" in cap) {
+          return NextResponse.json(
+            { ok: false, error: "Please complete the human verification and try again.", captchaRequired: true },
+            { status: 400 },
+          );
+        }
+        return NextResponse.json({ ok: false, error: cap.error }, { status: 400 });
+      }
       id = randomBytes(9).toString("base64url");
       session = newSession(id);
       sessions.set(id, session);

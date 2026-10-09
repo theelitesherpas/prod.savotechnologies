@@ -55,6 +55,7 @@ Prerequisites: **Node 20+** (22 recommended), **PostgreSQL 14+**.
 | `ENQUIRY_IP_SALT` | prod | Pepper for hashing enquirer IPs at rest |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | seed only | Initial admin (bcrypt-hashed by `db:seed`) |
 | `NEXT_PUBLIC_GA_ID` | no | GA4 id; analytics stay inert when unset |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` / `RECAPTCHA_SECRET_KEY` | prod | Always-on reCAPTCHA v2 on every form + login — [docs/CAPTCHA.md](./docs/CAPTCHA.md) |
 | `LOG_LEVEL` | no | `debug·info·warn·error` (default `info`) |
 
 Server-only variables are validated and typed in `src/lib/env.ts`; they are
@@ -68,7 +69,7 @@ never imported into client components.
 | `npm run build` / `npm start` | Production build / serve |
 | `npm run lint` | ESLint (flat config, next/core-web-vitals) |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run test:run` | Vitest unit + integration (49 tests) |
+| `npm run test:run` | Vitest unit + integration (182 tests) |
 | `npm run test:e2e` | Playwright-core smoke suite — needs the server running |
 | `npm run db:push` / `db:seed` / `db:studio` | Prisma schema push / seeding / studio |
 
@@ -155,6 +156,9 @@ on demand.
   HSTS + full header set in `next.config.ts`
 - Zod validation at every trust boundary; honeypots + sliding-window rate
   limits on public forms (5/h/IP) and admin login (8/15min/IP+email)
+- **Always-on Google reCAPTCHA v2 on every form submission and login
+  attempt** — no free allowance, hostname-allowlist verification, see
+  [docs/CAPTCHA.md](./docs/CAPTCHA.md) for the full protection matrix
 - IP addresses stored only as salted SHA-256 prefixes (data minimisation)
 - Session tokens hashed at rest; bcrypt(12) passwords; constant-time compare
 - Server-side authorization on every admin mutation; destructive actions
@@ -186,12 +190,17 @@ on demand.
 
 ## Testing & CI
 
-- **Vitest**: 49 unit/integration tests — phone rules, rate limiter, API
+- **Vitest**: 182 unit/integration tests — phone rules, rate limiter, API
   helpers (origin/JSON/size), enquiry schema, route handlers with mocked
-  Prisma (415/400/429/honeypot/200 paths), auth crypto, status vocabulary
+  Prisma (415/400/429/honeypot/200 paths), auth crypto, status vocabulary,
+  and 26 captcha tests (always-on gate, hostname policy, every protected
+  route)
 - **`scripts/verify.mjs`** (Playwright-core, Chrome): 42 end-to-end checks —
   responsive overflow, fonts, images, menus, dialog a11y, SEO/AEO endpoints,
   admin gate, CSRF guard, health
+- **`scripts/verify-captcha.mjs`** (`npm run verify:captcha`): captcha e2e —
+  widget renders on every protected form, submission blocked until solved,
+  solved challenge lets the enquiry through (against Google's servers)
 - **GitHub Actions** (`.github/workflows/ci.yml`): install → lint →
   typecheck → tests → build → audit report
 

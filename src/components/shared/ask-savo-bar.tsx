@@ -19,6 +19,7 @@ import {
 } from "@/lib/assistant";
 import { CALLBACK_COUNTRIES, COUNTRY_PHONE_RULES, validatePhone } from "@/lib/phone";
 import { track } from "@/lib/analytics";
+import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { cn, withBasePath } from "@/lib/utils";
 
 /**
@@ -120,6 +121,12 @@ export function AskSavoBar() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /* Always-on reCAPTCHA — required to start an AI thread (first message)
+     and to submit the live-chat qualification. Solved tokens are
+     single-use, so the gate re-arms after each verified submission. */
+  const captcha = useCaptcha();
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
 
   /* Session / live chat */
   const [session, setSession] = useState<Session | null>(null);
@@ -506,26 +513,45 @@ export function AskSavoBar() {
   async function ask(question: string) {
     const clean = question.trim();
     if (!clean || typing) return;
+    // First message of a fresh thread: a solved captcha is required.
+    const needsCaptcha = captcha.required && !convToken;
+    if (needsCaptcha && captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification below.");
+      return;
+    }
     track("ask_savo_question");
     idRef.current += 1;
     setMessages((m) => [...m, { id: `me-${idRef.current}`, side: "user", text: clean, at: Date.now() }]);
     setInput("");
     setError(null);
+    setCaptchaErr(null);
     setTyping(true);
     try {
       const res = await fetch(withBasePath("/api/live-chat/ask"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: clean, pageContext: captureContext() }),
+        body: JSON.stringify({
+          text: clean,
+          pageContext: captureContext(),
+          ...(needsCaptcha ? { captchaToken: captcha.token } : {}),
+        }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
+        captchaRequired?: boolean;
         conversationToken?: string;
         result?: { kind: string; entryId?: string; handoff?: boolean };
       };
       if (json.conversationToken) setConvToken(json.conversationToken);
+      // The token was consumed by this verification - re-arm the gate.
+      if (needsCaptcha && json.ok) captcha.reset();
       later(() => {
         setTyping(false);
+        if (!json.ok && json.captchaRequired) {
+          setCaptchaErr("Please complete the human verification and try again.");
+          captcha.reset();
+          return;
+        }
         if (json.ok && json.result?.kind === "handoff") {
           setPhase("prechat");
           setQStep(0);
@@ -666,8 +692,15 @@ export function AskSavoBar() {
       setQStep(5);
       return;
     }
+    // Always-on captcha: the lead submission needs a solved challenge.
+    if (captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification.");
+      setQStep(5);
+      return;
+    }
     setSending(true);
     setError(null);
+    setCaptchaErr(null);
     track("ask_savo_live_request", { offline: !session?.availability.liveChatOpen });
     try {
       const res = await fetch(withBasePath("/api/live-chat/qualify"), {
@@ -675,6 +708,7 @@ export function AskSavoBar() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversationToken: convToken,
+          captchaToken: captcha.token,
           name: cName.trim(),
           country: cCountry,
           phone: cPhone.trim() || null,
@@ -689,12 +723,17 @@ export function AskSavoBar() {
           pageContext: captureContext(),
         }),
       });
-      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; conversationToken?: string; status?: string; error?: string };
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; captchaRequired?: boolean; conversationToken?: string; status?: string; error?: string };
       if (!res.ok || !json.ok) {
-        setError(json.error ?? "Something went wrong. Please try again.");
+        if (json.captchaRequired) {
+          setCaptchaErr("Please complete the human verification and try again.");
+          captcha.reset();
+        } else setError(json.error ?? "Something went wrong. Please try again.");
         setSending(false);
         return;
       }
+      // The token was consumed by this verification - re-arm the gate.
+      captcha.reset();
       if (json.conversationToken) setConvToken(json.conversationToken);
       setLiveStatus(json.status ?? "waiting_for_agent");
       setPhase("live");
@@ -1040,6 +1079,7 @@ export function AskSavoBar() {
                   sending={sending}
                   canSubmit={canSubmitContact}
                   error={error}
+                  verification={qStep === 5 ? <CaptchaGate captcha={captcha} error={captchaErr} /> : null}
                   onService={(s) => { setQService(s); setQStep(1); sayServer({ kind: "visitor", body: s }); }}
                   onStage={(s) => { setQStage(s); setQStep(2); sayServer({ kind: "visitor", body: s }); }}
                   onTimeline={(t) => { setQTimeline(t); setQStep(4); sayServer({ kind: "visitor", body: t }); }}
@@ -1138,6 +1178,15 @@ export function AskSavoBar() {
             </div>
           </div>
         </div>
+
+        {/* Human verification gate - required before the first AI message
+            of a fresh thread (the live/lead flow shows its own gate in the
+            qualification panel). */}
+        {captcha.required && !convToken && phase !== "prechat" && phase !== "live" && open ? (
+          <div className="px-4 py-2">
+            <CaptchaGate captcha={captcha} error={captchaErr} />
+          </div>
+        ) : null}
 
         {/* The bar/composer, always visible, attached below the window */}
         <form
@@ -1266,6 +1315,7 @@ type QualifyProps = {
     setConsent: (v: boolean) => void;
   };
   onStart: () => void;
+  verification?: ReactNode;
 };
 
 function Chips({ options, onPick, accentFirst }: { options: string[]; onPick: (o: string) => void; accentFirst?: boolean }) {
@@ -1403,6 +1453,7 @@ function QualifyPanel(p: QualifyProps) {
           >
             {p.sending ? "Starting live chat…" : "Start Live Chat"}
           </button>
+          {p.verification}
           {p.error ? (
             <p role="alert" className="t-caption text-error">
               {p.error}

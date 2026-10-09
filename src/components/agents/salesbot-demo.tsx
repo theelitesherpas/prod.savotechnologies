@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 
 /**
  * SalesBot live demo - a conversational console plus the agent's live
@@ -58,6 +59,11 @@ export function SalesbotDemo() {
   const [started, setStarted] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
 
+  /* Always-on captcha: starting a demo session needs a solved challenge;
+     established sessions continue under the rate limit. */
+  const captcha = useCaptcha();
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
+
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
   }, [turns, busy]);
@@ -65,18 +71,37 @@ export function SalesbotDemo() {
   const send = async (raw: string) => {
     const message = raw.trim();
     if (!message || busy) return;
+    const needsCaptcha = !state.sessionId;
+    if (needsCaptcha && captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification first.");
+      return;
+    }
     setBusy(true);
     setStarted(true);
+    setCaptchaErr(null);
     setTurns((t) => [...t, { role: "user", text: message }]);
     setInput("");
     try {
       const res = await fetch("/api/agents/salesbot/demo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...(state.sessionId ? { sessionId: state.sessionId } : {}), message }),
+        body: JSON.stringify({
+          ...(state.sessionId ? { sessionId: state.sessionId } : {}),
+          ...(needsCaptcha ? { captchaToken: captcha.token } : {}),
+          message,
+        }),
       });
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "The demo could not process that - try again.");
+      if (!data.ok) {
+        if (data.captchaRequired) {
+          setCaptchaErr(data.error || "Please complete the human verification and try again.");
+          captcha.reset();
+          setTurns((t) => t.slice(0, -1)); // take the blocked turn back
+        } else throw new Error(data.error || "The demo could not process that - try again.");
+        return;
+      }
+      // The token was consumed by this verification - re-arm the gate.
+      if (needsCaptcha) captcha.reset();
       await new Promise((r) => setTimeout(r, 320 + Math.random() * 280));
       setTurns((t) => [...t, { role: "bot", text: data.reply }]);
       setState({
@@ -170,6 +195,12 @@ export function SalesbotDemo() {
                   {s}
                 </button>
               ))}
+            </div>
+          ) : null}
+
+          {captcha.required && !state.sessionId ? (
+            <div className="border-t border-border px-4 py-2">
+              <CaptchaGate captcha={captcha} error={captchaErr} />
             </div>
           ) : null}
 

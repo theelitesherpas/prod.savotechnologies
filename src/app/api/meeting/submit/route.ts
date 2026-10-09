@@ -1,5 +1,6 @@
-import { apiOk, apiError, isJsonRequest, readJsonBody } from "@/lib/api";
+import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
 import { rateLimit } from "@/lib/rate-limit";
+import { enforceCaptcha } from "@/lib/captcha";
 import { submitAvailability } from "@/lib/meeting/service";
 
 export const runtime = "nodejs";
@@ -13,6 +14,15 @@ export async function POST(req: Request) {
   const body = await readJsonBody(req);
   if (!body.ok) return apiError("Invalid request.", 400);
   const d = body.data as Record<string, unknown>;
+
+  // Always-on captcha: every submission must carry a verified token.
+  const cap = await enforceCaptcha(clientIp(req), d.captchaToken);
+  if (!cap.ok) {
+    if ("captchaRequired" in cap) {
+      return apiError("Please complete the human verification and try again.", 400);
+    }
+    return apiError(cap.error, 400);
+  }
 
   const token = typeof d.token === "string" ? d.token : "";
   if (!token) return apiError("Missing token.", 400);

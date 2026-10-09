@@ -11,7 +11,7 @@ import { useState } from "react";
  * clients who need their credentials re-issued.
  */
 export function PortalLoginCard({ error }: { error?: string }) {
-  const captcha = useCaptcha("client");
+  const captcha = useCaptcha();
   const [captchaErr, setCaptchaErr] = useState<string | null>(null);
   return (
     <div className="relative border border-border bg-surface p-8 sm:p-10">

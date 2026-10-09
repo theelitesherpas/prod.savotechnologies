@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { PublicMeetingData } from "@/lib/meeting/service";
 import { COUNTRY_PHONE_RULES, validatePhone } from "@/lib/phone";
+import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -123,6 +124,8 @@ export function MeetingScheduler({ data, token }: { data: PublicMeetingData; tok
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const captcha = useCaptcha();
+  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
 
   // IST-based "today" — meeting times are in IST, so date filtering
   // must use the IST calendar date, not the visitor's local date.
@@ -145,21 +148,31 @@ export function MeetingScheduler({ data, token }: { data: PublicMeetingData; tok
   const submit = async () => {
     if (!canSubmit) return;
     if (needsPhone && !phoneCheck?.ok) { setError("Please enter a valid phone number."); return; }
-    setSubmitting(true); setError(null);
+    if (captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification.");
+      return;
+    }
+    setSubmitting(true); setError(null); setCaptchaErr(null);
     try {
       const res = await fetch("/api/meeting/submit", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token, preferredDate: selectedDate, preferredTime: selectedTime,
+          captchaToken: captcha.token,
           ...(phoneCheck?.ok ? { clientPhone: phoneCheck.normalized } : {}),
           ...(clientEmail.trim() ? { clientEmail: clientEmail.trim() } : {}),
           ...(clientAddress.trim() ? { clientAddress: clientAddress.trim() } : {}),
           ...(notes.trim() ? { clientNotes: notes.trim() } : {}),
         }),
       });
-      const json = (await res.json()) as { ok: boolean; error?: string };
+      const json = (await res.json()) as { ok: boolean; error?: string; captchaRequired?: boolean };
       if (json.ok) setSubmitted(true);
-      else setError(json.error ?? "Something went wrong. Please try again.");
+      else {
+        if (json.captchaRequired) {
+          setCaptchaErr(json.error ?? "Please complete the human verification.");
+          captcha.reset();
+        } else setError(json.error ?? "Something went wrong. Please try again.");
+      }
     } catch { setError("Network error. Please try again."); }
     setSubmitting(false);
   };
@@ -518,6 +531,13 @@ export function MeetingScheduler({ data, token }: { data: PublicMeetingData; tok
       {/* Error */}
       {error ? (
         <div className="mb-4 rounded-xl border-2 border-red-500/30 bg-red-500/[0.04] px-5 py-3.5 text-[0.9375rem] text-red-600">{error}</div>
+      ) : null}
+
+      {/* Human verification — solved before the confirm dialog */}
+      {selectedTime && captcha.required ? (
+        <div className="mb-5">
+          <CaptchaGate captcha={captcha} error={captchaErr} />
+        </div>
       ) : null}
 
       {/* Submit */}

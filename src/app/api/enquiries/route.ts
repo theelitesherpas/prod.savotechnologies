@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
 import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { enquirySchema } from "@/schemas/enquiry";
-import { enforceCaptcha, recordSubmission } from "@/lib/captcha";
+import { enforceCaptcha } from "@/lib/captcha";
 import { sendTemplateNow, teamEmail } from "@/lib/mail";
 import { publish } from "@/lib/livechat/pubsub";
 
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
   const data = parsed.data;
   const raw = body.data as Record<string, unknown>;
 
-  // Progressive captcha: free twice per IP per day, then verify.
+  // Always-on captcha: every submission must carry a verified token.
   const cap = await enforceCaptcha(ip, raw.captchaToken);
   if (!cap.ok) {
     if ("captchaRequired" in cap) {
@@ -117,7 +117,6 @@ export async function POST(req: Request) {
       type: "enquiry.new",
       enquiry: { name: data.name, projectType: data.projectType, source },
     });
-    recordSubmission(ip);
 
     /* Transactional mail - never blocks the response, never fails the
        request. Careers applications acknowledge the candidate and ping

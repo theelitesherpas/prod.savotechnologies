@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
 import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
 import { validatePhone, COUNTRY_PHONE_RULES } from "@/lib/phone";
 import { logger } from "@/lib/logger";
-import { enforceCaptcha, recordSubmission } from "@/lib/captcha";
+import { enforceCaptcha } from "@/lib/captcha";
 import { sendTemplateNow, teamEmail } from "@/lib/mail";
 import { publish } from "@/lib/livechat/pubsub";
 
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     return apiOk();
   }
 
-  // Progressive captcha: free twice per IP per day, then verify.
+  // Always-on captcha: every request must carry a verified token.
   const rawBody = body.data as Record<string, unknown>;
   const cap = await enforceCaptcha(ip, rawBody.captchaToken);
   if (!cap.ok) {
@@ -104,7 +104,6 @@ export async function POST(req: Request) {
     });
 
     logger.info("callback.stored", { country: data.country });
-    recordSubmission(ip);
     sendTemplateNow("teamCallback", teamEmail(), {
       name: data.name || "Callback request",
       phone: phone.normalized,

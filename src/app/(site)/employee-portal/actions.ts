@@ -7,7 +7,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-import { enforceLoginCaptcha, recordLoginFailure, clearLoginFailures } from "@/lib/captcha";
+import { enforceLoginCaptcha } from "@/lib/captcha";
 import { clientIpFromHeaders } from "@/lib/api";
 
 /**
@@ -47,7 +47,7 @@ export async function employeeLoginAction(formData: FormData): Promise<void> {
     redirect("/employee-portal?e=Portal not configured.");
   }
 
-  // Progressive captcha: after 2 failed attempts, verify before processing.
+  // Always-on captcha: every login attempt must be verified.
   const cap = await enforceLoginCaptcha("employee", ip, formData.get("captchaToken"));
   if (!cap.ok) {
     if ("captchaRequired" in cap) {
@@ -63,7 +63,6 @@ export async function employeeLoginAction(formData: FormData): Promise<void> {
 
   if (!employee || employee.status === "exited") {
     logger.warn("employee_auth.login_failed", { email, reason: "not_found_or_exited" });
-    recordLoginFailure("employee", ip);
     redirect("/employee-portal?e=Email or password is incorrect.");
   }
 
@@ -76,11 +75,8 @@ export async function employeeLoginAction(formData: FormData): Promise<void> {
   const { compareSync } = await import("bcryptjs");
   if (!compareSync(password, panelUser.passwordHash)) {
     logger.warn("employee_auth.login_failed", { email, reason: "bad_password" });
-    recordLoginFailure("employee", ip);
     redirect("/employee-portal?e=Email or password is incorrect.");
   }
-
-  clearLoginFailures("employee", ip);
 
   // Create session token
   const token = randomBytes(32).toString("hex");

@@ -107,6 +107,8 @@ export function CallbackForm() {
         setStatus("success");
         track("enquiry_form_success", { type: "callback" });
       } else {
+        // A rejected token is single-use - re-arm the widget for a retry.
+        if (res.status === 400) captcha.reset();
         setError(json.error ?? "Could not send your request. Please try again.");
         setStatus("error");
       }

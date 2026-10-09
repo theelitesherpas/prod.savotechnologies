@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { loginClient, logoutClient } from "@/lib/client-auth";
 import { clientIpFromHeaders } from "@/lib/api";
-import { enforceLoginCaptcha, recordLoginFailure, clearLoginFailures } from "@/lib/captcha";
+import { enforceLoginCaptcha } from "@/lib/captcha";
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Please enter a valid email.").max(120),
@@ -23,7 +23,7 @@ export async function clientLoginAction(formData: FormData): Promise<void> {
   const hdrs = await headers();
   const ip = clientIpFromHeaders(hdrs);
 
-  // Progressive captcha: after 2 failed attempts, verify before processing.
+  // Always-on captcha: every login attempt must be verified.
   const cap = await enforceLoginCaptcha("client", ip, formData.get("captchaToken"));
   if (!cap.ok) {
     if ("captchaRequired" in cap) {
@@ -34,11 +34,9 @@ export async function clientLoginAction(formData: FormData): Promise<void> {
 
   const result = await loginClient(parsed.data.email, parsed.data.password);
   if (!result.ok) {
-    recordLoginFailure("client", ip);
     redirect(`/portal?e=${encodeURIComponent(result.error)}`);
   }
 
-  clearLoginFailures("client", ip);
   redirect("/portal/dashboard");
 }
 

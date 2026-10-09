@@ -1,4 +1,5 @@
-import { apiOk, apiError, isJsonRequest, readJsonBody } from "@/lib/api";
+import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
+import { enforceCaptcha } from "@/lib/captcha";
 import { validatePhone, COUNTRY_PHONE_RULES } from "@/lib/phone";
 import { resolveVisitor, visitorCookieOptions, VISITOR_COOKIE, visitorRateLimit } from "@/lib/livechat/http";
 import { startHumanRequest, getConversationByPublicToken } from "@/lib/livechat/service";
@@ -31,6 +32,15 @@ export async function POST(req: Request) {
 
   if (!visitorRateLimit(visitor.visitorId, "qualify", 5, 10 * 60_000)) {
     return apiError("A request was already sent — the team has it and will reply soon.", 429);
+  }
+
+  // Always-on captcha: the lead submission must carry a verified token.
+  const cap = await enforceCaptcha(clientIp(req), data.captchaToken);
+  if (!cap.ok) {
+    if ("captchaRequired" in cap) {
+      return apiError("Please complete the human verification and try again.", 400);
+    }
+    return apiError(cap.error, 400);
   }
 
   // ── Contact (name always, phone per settings, email optional) ──
