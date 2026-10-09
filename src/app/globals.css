@@ -276,6 +276,24 @@ body {
   will-change: auto;
 }
 
+/* Doodle fills — the paint arrives just after the line that contains it
+   (same is-inview trigger as data-draw; reduced motion shows the
+   finished doodle immediately). */
+.js .doodle-fill {
+  fill-opacity: 0;
+  transition: fill-opacity 0.45s var(--ease-out-expo);
+  transition-delay: var(--draw-delay, 0.4s);
+}
+.js .is-inview .doodle-fill {
+  fill-opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .doodle-fill {
+    fill-opacity: 1;
+    transition: none;
+  }
+}
+
 /* Image mask reveal — the frame wipes up, the photo settles */
 .js .img-reveal {
   clip-path: inset(100% 0 0 0);
