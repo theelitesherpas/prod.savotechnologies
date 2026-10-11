@@ -13,7 +13,7 @@ export function ContactIntroduction({ email, heroImage = CONTACT_HERO_IMAGE, her
     <h1 id="contact-heading"><span>Let’s talk about</span><span>what’s <em>next.</em></span></h1>
     <p>A new idea, a product that needs work, or a question about Savo. Tell us what’s on your mind.</p>
     <div className={styles.introActions}><Link href="#send">Send a message<ContactArrow /></Link><Link href="#channels">Reach us directly</Link></div>
-    <figure className={styles.heroFigure}><div className={styles.heroPhoto}><Image src={withBasePath(heroImage)} alt={heroAlt} fill sizes="(min-width: 1344px) 510px, (min-width: 900px) 40vw, 1px" /><a href={`mailto:${email}`} className={styles.helloMark} aria-label={`Email ${email}`}>Say<br/>hello.<ContactArrow diagonal /></a></div></figure>
+    <figure className={styles.heroFigure}><div className={styles.heroPhoto}><Image src={withBasePath(heroImage)} alt={heroAlt} fill sizes="(min-width: 1344px) 510px, (min-width: 900px) 40vw, 100vw" /><a href={`mailto:${email}`} className={styles.helloMark} aria-label={`Email ${email}`}>Say<br/>hello.<ContactArrow diagonal /></a></div></figure>
     <p className={styles.introEmail}>Prefer email?<a href={`mailto:${email}`}>{email}<ContactArrow diagonal /></a></p>
   </div>;
 }
