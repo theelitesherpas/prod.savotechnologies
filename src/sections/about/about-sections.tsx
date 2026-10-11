@@ -27,7 +27,7 @@ export function AboutHero({ heroImage = ABOUT_HERO_IMAGE, heroAlt = ABOUT_HERO_A
       <h1 id="about-heading">One team,{" "}<br /><span>accountable{" "}<br />since {SITE.registration.foundedYear}.</span></h1>
       <p>{SITE.name} is a team of engineers, designers and consultants who believe software outsourcing should feel like part of your own team.</p>
       <div className={s.heroActions}><Link href="/contact#send" className={s.primaryAction}>Start the conversation<AboutArrow /></Link><Link href="/case-studies#work" className={s.secondary}>Explore our work<AboutArrow /></Link></div>
-    </div><figure className={s.heroFigure}><div className={s.heroPhoto} data-image-guard><Image src={withBasePath(heroImage)} alt={heroAlt} fill priority sizes="(max-width: 899px) 100vw, 50vw" /></div><div className={s.photoSignature}><span>Since {SITE.registration.foundedYear}</span><p>{SITE.tagline}</p></div><figcaption>Editorial workplace photography - not the Savo team or office.</figcaption></figure></div>
+    </div><figure className={s.heroFigure}><div className={s.heroPhoto} data-image-guard><Image src={withBasePath(heroImage)} alt={heroAlt} fill priority sizes="(max-width: 899px) 100vw, 50vw" /></div><div className={s.photoSignature}><span>Since {SITE.registration.foundedYear}</span><p>{SITE.tagline}</p></div></figure></div>
     <nav className={s.journey} aria-label="Explore Savo"><a href="#story">Our story<AboutArrow /></a><a href="#team">Meet the team<AboutArrow /></a><a href="#values">What we believe<AboutArrow /></a><a href="#offices">Where we work<AboutArrow /></a></nav>
   </div></section>;
 }

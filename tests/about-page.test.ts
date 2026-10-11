@@ -124,7 +124,8 @@ describe("About complete company story", () => {
     const html = render(await AboutPage());
     expect(html).toContain("/images/team.webp");
     expect(html).toContain("/images/meeting.webp");
-    expect(html).toContain("Editorial workplace photography - not the Savo team or office.");
+    // The hero caption was removed on request; the culture caption stays.
+    expect(html).not.toContain("Editorial workplace photography - not the Savo team or office.");
     expect(html).toContain("Editorial collaboration image - not the Savo team or office.");
     expect((html.match(/src="\/images\/team\//g) ?? [])).toHaveLength(4);
   });
