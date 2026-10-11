@@ -64,9 +64,10 @@ const SECTIONS: Array<{ title: string; body: string[] }> = [
     ],
   },
   {
-    title: "Governing law",
+    title: "Governing Law and Jurisdiction",
     body: [
-      "These terms are governed by the laws of India, with jurisdiction in the courts of Indore, Madhya Pradesh. [Company to confirm before production launch.]",
+      "These Terms shall be governed by and interpreted in accordance with the laws of India.",
+      "Any dispute, claim, or legal proceeding arising out of or relating to these Terms, the use of this website, or the services provided by Savo Technologies Private Limited shall be subject to the exclusive jurisdiction of the competent courts located in Indore, Madhya Pradesh, India.",
     ],
   },
   {

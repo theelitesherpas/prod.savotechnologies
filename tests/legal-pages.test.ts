@@ -57,10 +57,13 @@ describe.each(documents)("$kind legal reading page", ({ kind, path, Page, metada
 });
 
 describe("Shared legal presentation", () => {
-  it("does not conceal or silently approve the governing-law confirmation note", () => {
+  it("renders the confirmed governing-law and jurisdiction clause", () => {
     const html = renderToStaticMarkup(React.createElement(TermsPage));
-    expect(html).toContain("[Company to confirm before production launch.]");
+    expect(html).toContain("Governing Law and Jurisdiction");
+    expect(html).toContain("These Terms shall be governed by and interpreted in accordance with the laws of India.");
+    expect(html).toContain("exclusive jurisdiction of the competent courts located in Indore, Madhya Pradesh, India");
     expect(html).toContain("separate written agreement signed by both parties");
+    expect(html).not.toContain("[Company to confirm before production launch.]");
   });
   it("uses scoped brand typography, a readable measure, native anchors and responsive contents", () => {
     const css = readFileSync("src/sections/legal/legal-document.module.css", "utf8");
