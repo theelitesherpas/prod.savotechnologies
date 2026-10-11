@@ -59,8 +59,8 @@
 .mobileLink .description { font-size:.8125rem; }
 .mobileOverview { display:flex; min-height:48px; align-items:center; justify-content:space-between; gap:16px; margin-top:20px; color:#ff6b6b; font-size:.875rem; font-weight:600; }
 .mobileFooter { flex-shrink:0; padding:16px 24px max(20px,env(safe-area-inset-bottom)); background:#171717; }
-.mobileFooter button { display:flex; width:100%; min-height:48px; align-items:center; justify-content:center; gap:12px; border-radius:5px; background:#df2525; color:#fff; font-size:.875rem; font-weight:600; }
-.mobileFooter button:hover { background:#c92121; }
+.mobileFooter :is(a,button) { display:flex; width:100%; min-height:48px; align-items:center; justify-content:center; gap:12px; border-radius:5px; background:#df2525; color:#fff; font-size:.875rem; font-weight:600; }
+.mobileFooter :is(a,button):hover { background:#c92121; }
 .mobileFooter p { margin-top:10px; color:#b0b0b0; font-size:.75rem; line-height:1.65; text-align:center; }
 :global(body):has(.mobile[data-open="true"]) :global([data-development-preview]) { visibility:hidden; }
 :global(body):has(.mobile[data-open="true"], .mega) :global([data-home-assistant]) { visibility:hidden; }

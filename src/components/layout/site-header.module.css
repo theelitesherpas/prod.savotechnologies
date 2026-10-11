@@ -3,6 +3,12 @@
 .projectButton { display:inline-flex; flex-shrink:0; white-space:nowrap; min-height:44px; border-radius:6px; background:#df2525; color:#fff; }
 .projectButton:hover { background:#b82222; color:#fff; }
 
+/* The desktop catalogue must fit as a single row, never wrapped labels. */
+.primaryNav { flex-shrink:0; }
+.primaryNav > ul { flex-wrap:nowrap; }
+.primaryNav > ul > li { flex-shrink:0; }
+.primaryNav > ul > li > :is(a, button) { white-space:nowrap; }
+
 /* Homepage-only chrome shares the hero's dark atmosphere. Other routes
    keep their existing header styling and navigation behavior. */
 .home {
@@ -73,6 +79,13 @@
   color: #fff;
   border-color: rgb(255 255 255 / 0.22);
   background: rgb(255 255 255 / 0.035);
+}
+
+/* Keep readable type and 44px targets on smaller laptops; trim only gaps. */
+@media (min-width:1280px) and (max-width:1439px) {
+  .bar, .home .bar { gap:12px; }
+  .primaryNav > ul > li > :is(a, button),
+  .home nav.primaryNav[aria-label="Primary"] > ul > li > :is(a, button) { padding-inline:8px; }
 }
 
 @media (max-width: 1279px) {
