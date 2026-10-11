@@ -80,3 +80,18 @@ export const WHAT_HAPPENS_NEXT = [
     text: "A fixed-scope proposal with honest estimates. NDA on request, then the team gets to work.",
   },
 ] as const;
+
+/**
+ * Contact page hero photo - the figure beside "Let's talk about what's
+ * next." on /contact. Managed from the admin panel (Website content →
+ * Contact page photo); these constants are the coded fallback when no
+ * override is stored in SiteSetting. The public slot renders at a strict
+ * 1.75 aspect (max 510 CSS px wide), so admin uploads are cropped to
+ * exactly CONTACT_HERO_WIDTH × CONTACT_HERO_HEIGHT (2× the slot for
+ * sharp retina rendering).
+ */
+export const CONTACT_HERO_IMAGE = "/images/contact/coworking-meeting.webp";
+export const CONTACT_HERO_ALT =
+  "People meeting around a table in a co-working space";
+export const CONTACT_HERO_WIDTH = 1050;
+export const CONTACT_HERO_HEIGHT = 600;

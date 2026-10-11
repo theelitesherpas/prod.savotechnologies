@@ -27,14 +27,21 @@ export default async function ContentHubPage() {
       label: "Services",
       icon: "layers" as const,
       note: "Header Services panel, homepage sections and the /services/ directory.",
-      count: prisma ? await prisma.service.count({ where: { active: true } }).catch(() => 0) : 0,
+      badge: String(prisma ? await prisma.service.count({ where: { active: true } }).catch(() => 0) : 0),
     },
     {
       href: "/admin/industries",
       label: "Industries",
       icon: "grid" as const,
       note: "Header Industries panel, homepage atlas and the /industries/ pages.",
-      count: prisma ? await prisma.industry.count({ where: { active: true } }).catch(() => 0) : 0,
+      badge: String(prisma ? await prisma.industry.count({ where: { active: true } }).catch(() => 0) : 0),
+    },
+    {
+      href: "/admin/content/contact",
+      label: "Contact page",
+      icon: "chat" as const,
+      note: "Hero photo beside “Let’s talk about what’s next.” on /contact.",
+      badge: "photo",
     },
   ];
 
@@ -62,7 +69,7 @@ export default async function ContentHubPage() {
               </span>
               <span className="text-[0.9375rem] font-bold text-foreground group-hover:text-accent">{c.label}</span>
               <span className="tnum ml-auto rounded-full bg-foreground/[0.06] px-2 py-0.5 text-[0.6875rem] font-semibold text-muted">
-                {c.count}
+                {c.badge}
               </span>
             </div>
             <p className="text-[0.8125rem] leading-relaxed text-muted">{c.note}</p>

@@ -29,6 +29,7 @@ const CRUMB_LABELS: Record<string, string> = {
   services: "Services",
   industries: "Industries",
   content: "Content",
+  contact: "Contact page",
   insights: "Insights articles",
   careers: "Careers roles",
   "case-studies": "Case studies",
@@ -152,6 +153,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       items: [
         { href: "/admin/services", label: "Services", icon: "layers", count: servicesCount },
         { href: "/admin/industries", label: "Industries", icon: "grid", count: industriesCount },
+        { href: "/admin/content/contact", label: "Contact page", icon: "chat" },
         {
           href: "/admin/case-studies",
           label: "Case studies",

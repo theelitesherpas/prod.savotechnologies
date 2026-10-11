@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { cachePublicData, PUBLIC_SITE_CHROME_CACHE_TAG } from "@/lib/public-cache";
 import { SITE } from "@/constants/site";
+import { CONTACT_HERO_ALT, CONTACT_HERO_IMAGE } from "@/constants/contact";
 
 /**
  * Site-wide settings the admin panel can override at runtime.
@@ -24,6 +25,11 @@ export type SiteSettings = {
   };
   /** Project lead popup master switch (auto-triggers only; CTA opens always work). */
   leadModalEnabled: boolean;
+  /** Contact page hero photo ("Let's talk about what's next." figure) and
+   * its alt text - admin-uploaded via /admin/content, content-addressed
+   * /api/site-img/<hash> WebP or a coded /images/ path. */
+  contactHeroImage: string;
+  contactHeroAlt: string;
 };
 
 const KEYS = [
@@ -35,6 +41,8 @@ const KEYS = [
   "metric_industries",
   "metric_markets",
   "lead_modal_enabled",
+  "contact_hero_image",
+  "contact_hero_alt",
 ] as const;
 
 function defaultSettings(): SiteSettings {
@@ -44,7 +52,18 @@ function defaultSettings(): SiteSettings {
     announcement: null,
     metrics: { projectsDelivered: "", clientsSupported: "", industriesServed: "", marketsReached: "" },
     leadModalEnabled: true,
+    contactHeroImage: CONTACT_HERO_IMAGE,
+    contactHeroAlt: CONTACT_HERO_ALT,
   };
+}
+
+/** A hero value may only be a content-addressed site upload or a coded
+ * local raster - anything else (empty, stale, injected) falls back. */
+function safeHeroImage(value: string | undefined): string {
+  const v = value?.trim() ?? "";
+  if (/^\/api\/site-img\/[a-f0-9]{64}$/.test(v)) return v;
+  if (/^\/images\/[a-zA-Z0-9_./-]+\.(?:webp|png|jpe?g|avif)$/i.test(v) && !v.includes("..")) return v;
+  return CONTACT_HERO_IMAGE;
 }
 
 async function readSettings(): Promise<SiteSettings> {
@@ -68,6 +87,8 @@ async function readSettings(): Promise<SiteSettings> {
         marketsReached: map.get("metric_markets")?.trim() ?? "",
       },
       leadModalEnabled: map.get("lead_modal_enabled") !== "0",
+      contactHeroImage: safeHeroImage(map.get("contact_hero_image")),
+      contactHeroAlt: map.get("contact_hero_alt")?.trim().slice(0, 200) || CONTACT_HERO_ALT,
     };
   } catch {
     return defaults; // never break rendering over settings

@@ -34,7 +34,7 @@ export default async function ContactPage() {
   ] };
   return <div className={styles.page} data-contact-page="correspondence-studio">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(graph).replace(/</g, "\\u003c") }} />
-    <section className={styles.opening} aria-labelledby="contact-heading"><div className={`${styles.rail} ${styles.openingGrid}`}><ContactIntroduction email={settings.contactEmail} /><div id="send" className={styles.composer}><ContactForm email={settings.contactEmail} /></div></div></section>
+    <section className={styles.opening} aria-labelledby="contact-heading"><div className={`${styles.rail} ${styles.openingGrid}`}><ContactIntroduction email={settings.contactEmail} heroImage={settings.contactHeroImage} heroAlt={settings.contactHeroAlt} /><div id="send" className={styles.composer}><ContactForm email={settings.contactEmail} /></div></div></section>
     <ContactChannels email={settings.contactEmail} phone={settings.contactPhone} phoneE164={SITE.phoneE164} />
     <div className={`${teamStyles.page} ${styles.people}`}><AboutTeam people={team} demo={false} heading="Key people" /></div>
     <ContactNextSteps />

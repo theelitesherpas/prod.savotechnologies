@@ -4,15 +4,16 @@ import { withBasePath } from "@/lib/utils";
 import { OFFICES, PRESENCE_LABEL } from "@/constants/site";
 import { CAREERS_EMAIL } from "@/constants/careers";
 import { CONTACT_NEXT_STEPS, CONTACT_QUESTIONS } from "./contact-content";
+import { CONTACT_HERO_ALT, CONTACT_HERO_IMAGE } from "@/constants/contact";
 import styles from "./contact.module.css";
 
 export function ContactArrow({ diagonal = false }: { diagonal?: boolean }) { return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={diagonal ? "M5 19 19 5M5 5h14v14" : "M4 12h16m-6-6 6 6-6 6"} /></svg>; }
-export function ContactIntroduction({ email }: { email: string }) {
+export function ContactIntroduction({ email, heroImage = CONTACT_HERO_IMAGE, heroAlt = CONTACT_HERO_ALT }: { email: string; heroImage?: string; heroAlt?: string }) {
   return <div className={styles.introduction}>
     <h1 id="contact-heading"><span>Let’s talk about</span><span>what’s <em>next.</em></span></h1>
     <p>A new idea, a product that needs work, or a question about Savo. Tell us what’s on your mind.</p>
     <div className={styles.introActions}><Link href="#send">Send a message<ContactArrow /></Link><Link href="#channels">Reach us directly</Link></div>
-    <figure className={styles.heroFigure}><div className={styles.heroPhoto}><Image src={withBasePath("/images/contact/conversation-desk.webp")} alt="A laptop and notes on a work desk" fill sizes="(min-width: 1344px) 510px, (min-width: 900px) 40vw, 1px" /><a href={`mailto:${email}`} className={styles.helloMark} aria-label={`Email ${email}`}>Say<br/>hello.<ContactArrow diagonal /></a></div><figcaption>Editorial workspace · not a Savo office.</figcaption></figure>
+    <figure className={styles.heroFigure}><div className={styles.heroPhoto}><Image src={withBasePath(heroImage)} alt={heroAlt} fill sizes="(min-width: 1344px) 510px, (min-width: 900px) 40vw, 1px" /><a href={`mailto:${email}`} className={styles.helloMark} aria-label={`Email ${email}`}>Say<br/>hello.<ContactArrow diagonal /></a></div></figure>
     <p className={styles.introEmail}>Prefer email?<a href={`mailto:${email}`}>{email}<ContactArrow diagonal /></a></p>
   </div>;
 }

@@ -21,7 +21,7 @@
 /build
 
 # Runtime-uploaded, content-addressed editorial covers
-/public/uploads/insights/
+/public/uploads/
 
 # misc
 .DS_Store

@@ -59,10 +59,12 @@ const nextConfig: NextConfig = {
     localPatterns: [
       { pathname: "/images/**", search: "" },
       { pathname: "/api/insight-image/**", search: "" },
+      { pathname: "/api/site-img/**", search: "" },
       ...(basePath
         ? [
             { pathname: `${basePath}/images/**`, search: "" },
             { pathname: `${basePath}/api/insight-image/**`, search: "" },
+            { pathname: `${basePath}/api/site-img/**`, search: "" },
           ]
         : []),
     ],
