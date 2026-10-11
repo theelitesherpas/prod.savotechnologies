@@ -80,9 +80,28 @@ export const INDUSTRY_LINKS: NavLink[] = [
   { label: "Energy & Utilities", href: "/industries/energy", desc: "Grid, billing, field operations" },
 ];
 
+/** Company destinations shared by the desktop mega-menu and mobile drawer. */
+export const WHO_WE_ARE_LINKS: NavLink[] = [
+  { label: "About Us", href: "/about", desc: "Our team, story and approach to building software" },
+  { label: "Services", href: "/services", desc: "Explore the full range of design and engineering services" },
+  { label: "Enterprise", href: "/enterprise", desc: "Delivery, collaboration and vendor review for larger organisations" },
+  { label: "Contact Us", href: "/contact", desc: "Start a conversation or reach our team directly" },
+];
+
 /* ----------------------------- Header nav ----------------------------- */
 
 export const HEADER_NAV: NavItem[] = [
+  {
+    label: "Who we are",
+    mega: true,
+    children: WHO_WE_ARE_LINKS,
+    feature: {
+      title: "Meet Savo",
+      copy: "Get to know our team, explore our services and find the right way to work together.",
+      cta: "About Us",
+      href: "/about",
+    },
+  },
   {
     label: "AI",
     href: "/ai-agents",
@@ -133,7 +152,6 @@ export const HEADER_NAV: NavItem[] = [
     },
   },
   { label: "Case Studies", href: "/case-studies" },
-  { label: "Enterprise", href: "/enterprise" },
   { label: "Insights", href: "/insights" },
   { label: "Careers", href: "/careers" },
   { label: "Contact", href: "/contact" },

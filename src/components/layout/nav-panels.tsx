@@ -23,6 +23,7 @@ export const NAV_INTROS: Record<string, string> = {
   Services: "From the first design decision to the systems behind your product. Find the discipline your project needs.",
   "Hire Developers": "Bring the right engineering skills into your team. Explore roles around the work you need to get done.",
   Industries: "Different industries work in different ways. Explore products and systems shaped around your sector.",
+  "Who we are": "Get to know Savo: the people behind the work, the services we offer and how to start a conversation.",
 };
 
 const canonical = (href: string) => href.replace(/\/$/, "");
@@ -38,6 +39,15 @@ export function MenuChevron() {
 
 function MenuGlyph({ href }: { href: string }) {
   if (/^\/(?:ai-agents|ai\/)/.test(href)) return <AiGlyph kind={href} size={22} />;
+  // Company destinations have their own pictograms, not the code-window fallback.
+  const companyIcons: Record<string, React.ReactNode> = {
+    "/about": <><circle cx="9" cy="8" r="3" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m2 10v-2a5 5 0 0 0-2-4" /></>,
+    "/services": <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
+    "/enterprise": <><rect x="5" y="3" width="14" height="18" rx="1" /><path d="M3 21h18M9 7h1m4 0h1M9 11h1m4 0h1M10 21v-6h4v6" /></>,
+    "/contact": <path d="M21 11a8 8 0 0 1-8 8H8l-5 3V7a4 4 0 0 1 4-4h6a8 8 0 0 1 8 8ZM7 8h10M7 12h7" />,
+  };
+  const companyIcon = companyIcons[canonical(href)];
+  if (companyIcon) return <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round">{companyIcon}</svg>;
   const paths = /mobile/.test(href) ? <><rect x="7" y="3" width="10" height="18" rx="2" /><path d="M10 17h4" /></> : /ai|machine-learning/.test(href) ? <><rect x="7" y="7" width="10" height="10" rx="2" /><path d="M9 3v4m6-4v4M9 17v4m6-4v4M3 9h4m-4 6h4m10-6h4m-4 6h4M10 10h4v4h-4z" /></> : /cloud|devops/.test(href) ? <><path d="M7 17H6a4 4 0 0 1-1-7.8 6 6 0 0 1 11.7-1.6A4.7 4.7 0 0 1 18 17h-1M12 13v8m-3-5 3-3 3 3" /></> : /design/.test(href) ? <><path d="m5 19 1-5L17 3l4 4-11 11-5 1Zm9-13 4 4M3 21h18" /></> : /data|analytics/.test(href) ? <><path d="M4 4v16h16M8 16V9m5 7V6m5 10v-5" /></> : /hire/.test(href) ? <><circle cx="9" cy="8" r="3" /><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m2 9v-2a5 5 0 0 0-2-4" /></> : /healthcare/.test(href) ? <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z" /> : /fintech/.test(href) ? <><path d="m3 8 9-5 9 5H3Zm0 13h18M5 11v7m7-7v7m7-7v7" /></> : /industries/.test(href) ? <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></> : /marketing/.test(href) ? <><path d="m4 14 5-5 4 3 7-8M15 4h5v5M4 20h16" /></> : <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18m-12 4-2 2 2 2m6-4 2 2-2 2" /></>;
   return <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round">{paths}</svg>;
 }

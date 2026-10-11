@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { AI_LINKS, SERVICE_LINKS, HIRE_LINKS, INDUSTRY_LINKS, HEADER_NAV, FOOTER_NAV } from "../src/constants/navigation";
+import { AI_LINKS, SERVICE_LINKS, HIRE_LINKS, INDUSTRY_LINKS, WHO_WE_ARE_LINKS, HEADER_NAV, FOOTER_NAV } from "../src/constants/navigation";
 import { SERVICE_DETAILS } from "../src/constants/services-detail";
 import { HIRE_ROLES } from "../src/constants/hire";
 import { AI_SERVICES } from "../src/constants/ai-services";
@@ -14,11 +14,34 @@ const hrefs = (links: { href: string }[]) => links.map(l => l.href);
 const legacySlugs = ["/services/mobile-apps", "/services/ui-ux", "/services/custom-software", "/ai"];
 
 describe("Navigation connectivity contract", () => {
-  const allNavLinks = [...AI_LINKS, ...SERVICE_LINKS, ...HIRE_LINKS, ...INDUSTRY_LINKS];
+  const allNavLinks = HEADER_NAV.flatMap(item => item.children ?? []);
   const topLevel = HEADER_NAV.flatMap(item => item.href ? [item.href] : []);
   const featureHrefs = HEADER_NAV.flatMap(item => item.feature ? [item.feature.href] : []);
   const footerHrefs = Object.values(FOOTER_NAV).flatMap(links => links.map(l => l.href));
   const everyInternalHref = [...hrefs(allNavLinks), ...topLevel, ...featureHrefs, ...footerHrefs].filter(h => h.startsWith("/"));
+
+  it("groups company pages under Who we are without moving the Services menu", () => {
+    const company = HEADER_NAV.find(item => item.label === "Who we are");
+    expect(company?.children).toEqual([
+      { label: "About Us", href: "/about", desc: expect.any(String) },
+      { label: "Services", href: "/services", desc: expect.any(String) },
+      { label: "Enterprise", href: "/enterprise", desc: expect.any(String) },
+      { label: "Contact Us", href: "/contact", desc: expect.any(String) },
+    ]);
+    expect(company?.children).toBe(WHO_WE_ARE_LINKS);
+    expect(company?.mega).toBe(true);
+    expect(company?.feature?.href).toBe("/about");
+    expect(HEADER_NAV.some(item => item.label === "Enterprise")).toBe(false);
+    expect(HEADER_NAV[0]).toBe(company);
+    expect(HEADER_NAV[1]?.label).toBe("AI");
+    expect(HEADER_NAV[2]).toMatchObject({ label: "Services", href: "/services", children: SERVICE_LINKS });
+    expect(HEADER_NAV.find(item => item.label === "Contact")?.href).toBe("/contact");
+  });
+
+  it("retains all company destinations in the existing sitemap", () => {
+    const sitemap = fs.readFileSync("src/app/sitemap.ts", "utf8");
+    for (const { href } of WHO_WE_ARE_LINKS) expect(sitemap).toContain(`page("${href}",`);
+  });
 
   it("uses root-relative hrefs without trailing slashes or doubled slashes", () => {
     for (const href of everyInternalHref) {
@@ -51,7 +74,7 @@ describe("Navigation connectivity contract", () => {
 
   it("resolves every static top-level and footer destination to a real app route or declared redirect", () => {
     const redirects = fs.readFileSync("next.config.ts", "utf8");
-    const staticHrefs = [...topLevel, ...footerHrefs, "/privacy-policy", "/terms-and-conditions"].filter(h => !h.includes("#") && !h.startsWith("/services/") && !h.startsWith("/industries/") && !h.startsWith("/hire/") && !h.startsWith("/ai/"));
+    const staticHrefs = [...topLevel, ...hrefs(allNavLinks), ...footerHrefs, "/privacy-policy", "/terms-and-conditions"].filter(h => !h.includes("#") && !h.startsWith("/services/") && !h.startsWith("/industries/") && !h.startsWith("/hire/") && !h.startsWith("/ai/"));
     for (const href of new Set(staticHrefs)) {
       const page = path.join("src/app/(site)", href, "page.tsx");
       const exists = fs.existsSync(page);

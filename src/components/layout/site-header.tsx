@@ -9,6 +9,7 @@ import { useEnquiry } from "@/components/shared/enquiry-dialog";
 import { MegaDrawer, NavigationLink, NavigationFeature, AiNavigationLinks, NAV_INTROS, MenuArrow, MenuChevron } from "./nav-panels";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
+import { activeNavigationLabel } from "@/lib/navigation-active";
 import styles from "./site-header.module.css";
 import menu from "./nav-panels.module.css";
 
@@ -208,11 +209,8 @@ export function SiteHeader({ nav = HEADER_NAV }: { nav?: NavItem[] }) {
       keepOpen(); setOpenPanel(next.label); triggerRefs.current[next.label]?.focus();
     }
   };
-  const isActive = (item: NavItem) => [item.href, ...(item.children?.map(child => child.href) ?? [])].some(href => {
-    if (!href) return false;
-    const p = pathname.replace(/\/$/, ""), h = href.replace(/\/$/, "");
-    return p === h || (h !== "" && p.startsWith(h + "/"));
-  });
+  const activeLabel = activeNavigationLabel(pathname, nav);
+  const isActive = (item: NavItem) => item.label === activeLabel;
   const mobileNavigate = (label: string) => { closeMobile(); track("nav_link_click", { label, mobile:true }); };
 
   return <header ref={headerRef} role={mobileOpen ? "dialog" : undefined} aria-modal={mobileOpen ? true : undefined} aria-label={mobileOpen ? "Site navigation" : undefined} className={cn(
