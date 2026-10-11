@@ -1,4 +1,4 @@
-# Engineering Refactor Report — savo.v6 Platform Phase
+# Engineering Refactor Report — Savo v7 Platform Phase
 
 Scope: audit → restructure → harden → test → document the v6 codebase for the
 multi-page + admin-panel era, following the enterprise master prompt.
@@ -55,7 +55,7 @@ flows, analytics, design system — untouched behaviorally.
 See `ARCHITECTURE.md` for the full annotated map and data flows. Summary:
 
 ```text
-savo.v6/
+savo.v7/
 ├── prisma/schema.prisma          # ProjectEnquiry · AdminUser/Session/AuditLog
 │                                 # · Service · Industry · SiteSetting
 ├── src/

@@ -1,4 +1,4 @@
-# PRODUCT.md — SAVO Technologies (savo.v6)
+# PRODUCT.md — SAVO Technologies (savo.v7)
 
 > Inferred entirely from the client's master brief (no interview was possible in this
 > environment). Assumptions are labeled `[assumption]`.

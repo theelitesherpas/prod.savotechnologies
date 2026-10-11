@@ -4,7 +4,7 @@ export function cn(...classes: Array<string | false | null | undefined>): string
 }
 
 /**
- * Deployment base path ("" locally; "/savo.v6" when hosted under a sub-path).
+ * Deployment base path ("" locally; "/savo.v7" when hosted under a sub-path).
  * `next/link` applies it automatically; raw fetches, asset URLs and
  * window.location assignments must go through this helper instead.
  */

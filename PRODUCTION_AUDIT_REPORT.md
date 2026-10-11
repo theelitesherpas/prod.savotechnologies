@@ -1,4 +1,4 @@
-# PRODUCTION AUDIT REPORT — savo.v6 Demo Content System
+# PRODUCTION AUDIT REPORT — Savo v7 Demo Content System
 
 **Date:** 2026-09-25 · **Scope:** full content audit + Demo Content System implementation
 **Policy:** Demo Data & Placeholder Replacement Policy (staging stays visually complete; production never publishes invented facts)

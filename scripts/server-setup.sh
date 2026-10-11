@@ -2,7 +2,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # savotechnologies.com — Bluehost VPS one-shot provisioning (Ubuntu 24.04)
 #
-# Installs Node 22, PostgreSQL, Nginx, PM2, Certbot; deploys savo.v6
+# Installs Node 22, PostgreSQL, Nginx, PM2, Certbot; deploys Savo v7
 # (branch feat/admin-console) with a production database, admin user and
 # production content mode; starts everything under PM2 + Nginx.
 #

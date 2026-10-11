@@ -1,6 +1,6 @@
 # DEMO CONTENT REPLACEMENT — Master Table
 
-Every demo value in savo.v6, where it renders, and what Savo must supply before production.
+Every demo value in Savo v7, where it renders, and what Savo must supply before production.
 
 **Mode:** staging runs `NEXT_PUBLIC_CONTENT_MODE=demo` (default). Production launch requires
 `NEXT_PUBLIC_CONTENT_MODE=production` — demo rows below then suppress automatically.
