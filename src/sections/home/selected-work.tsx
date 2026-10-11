@@ -172,7 +172,7 @@ function WorkCard({
 }) {
   const card = (
     <>
-      <div className={`relative overflow-hidden ${aspect}`}>
+      <div className={`relative overflow-hidden ${aspect}`} data-image-guard>
         {item.image?.src ? (
           // Attached visual - slot-matched to this card class (featured vs
           // standard), cropped to its exact aspect in the admin studio.

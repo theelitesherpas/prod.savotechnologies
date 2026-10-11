@@ -44,7 +44,7 @@ export function CaseStudyHero({ name, industry, introduction, liveUrl, visual, c
 }
 
 export function CaseStudyCover({ visual }: { visual: PortfolioVisual }) {
-  return <figure className={styles.coverFrame} data-case-study-cover>
+  return <figure className={styles.coverFrame} data-case-study-cover data-image-guard>
     {/* Stored covers are already compressed and served through the cacheable
         image endpoint. No alternate sizes exist to advertise in a srcset. */}
     {/* eslint-disable-next-line @next/next/no-img-element */}

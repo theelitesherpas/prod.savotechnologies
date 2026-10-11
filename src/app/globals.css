@@ -1233,3 +1233,11 @@ div:has(> .adm-select[aria-invalid="true"]) > label {
   from { opacity: 0; transform: translateX(32px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
+/* ── Photo deterrence (SiteImageGuard) ──────────────────────────────────
+   Marked sections (data-image-guard) suppress the mobile long-press
+   save/share sheet and WebKit image dragging; right-click and Firefox
+   drags are blocked by the delegated listener in SiteImageGuard. This is
+   an honest deterrent against casual copying, not prevention. */
+[data-image-guard] { -webkit-touch-callout: none; }
+[data-image-guard] img { -webkit-user-drag: none; user-select: none; -webkit-touch-callout: none; }

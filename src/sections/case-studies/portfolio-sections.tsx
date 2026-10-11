@@ -9,7 +9,7 @@ export function PortfolioImage({ visual, eager = false }: { visual: PortfolioVis
   // Covers use the same 16:9 frame on cards and the detail-page overview.
   // Full screenshots remain available separately in the project gallery.
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={visual.src} alt={visual.alt} width={visual.width} height={visual.height} loading={eager ? "eager" : "lazy"} decoding="async" className={styles.image} />;
+  return <img src={visual.src} alt={visual.alt} width={visual.width} height={visual.height} loading={eager ? "eager" : "lazy"} decoding="async" className={styles.image} data-image-guard />;
 }
 export function PortfolioCardView({ entry, eager = false }: { entry: PortfolioCard; eager?: boolean }) {
   const discipline = PORTFOLIO_CATEGORIES.find(c => c.id === entry.discipline)?.label;

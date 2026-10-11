@@ -5,6 +5,7 @@ import { EnquiryProvider } from "@/components/shared/enquiry-dialog";
 import { AskSavoBar } from "@/components/shared/ask-savo-bar";
 import { ProjectModalProvider } from "@/components/shared/project-lead-modal";
 import { AnalyticsBeacon } from "@/components/shared/analytics-beacon";
+import { SiteImageGuard } from "@/components/shared/image-guard";
 import { HEADER_NAV, type NavItem } from "@/constants/navigation";
 import { SITE, SOCIAL_LINKS } from "@/constants/site";
 import { absoluteUrl } from "@/lib/env";
@@ -215,6 +216,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         contact={{ email: settings.contactEmail, phone: settings.contactPhone, phoneE164: SITE.phoneE164 }}
       />
       <AskSavoBar />
+      <SiteImageGuard />
       </SmoothScroll>
       </ProjectModalProvider>
     </EnquiryProvider>

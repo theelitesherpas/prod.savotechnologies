@@ -84,7 +84,7 @@ export function ProjectGallery({ images, name }: { images: PortfolioVisual[]; na
         through the page instead of switching to native scrolling mid-gesture. */}
     <div className={styles.sliderTrack} ref={track} id={id} tabIndex={0} data-lenis-prevent-horizontal aria-label="Project images. Use left and right arrow keys or scroll to browse.">
       {views.map((image, index) => <figure key={`${image.src}-${index}`} className={styles.slide} role="group" aria-roledescription="slide" aria-label={`Image ${index + 1} of ${views.length}`}>
-        <div className={styles.slideImage}>
+        <div className={styles.slideImage} data-image-guard>
           <span className={styles.counter} aria-hidden="true">{String(index + 1).padStart(2, "0")}/{String(views.length).padStart(2, "0")}</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={image.src} alt={image.alt} width={image.width} height={image.height} loading={index < 2 ? "eager" : "lazy"} decoding="async" draggable={false} />

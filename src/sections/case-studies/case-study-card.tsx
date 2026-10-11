@@ -202,7 +202,7 @@ export function CaseStudyCard({
 
   const card = (
     <>
-      <div className={`relative overflow-hidden ${aspect}`}>
+      <div className={`relative overflow-hidden ${aspect}`} data-image-guard>
         {hero ? (
           // Attached visual (admin crop studio, slot-matched to this card)
           // - the same image family the detail-page showcase renders.
