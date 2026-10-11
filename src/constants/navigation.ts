@@ -85,6 +85,7 @@ export const WHO_WE_ARE_LINKS: NavLink[] = [
   { label: "About Us", href: "/about", desc: "Our team, story and approach to building software" },
   { label: "Services", href: "/services", desc: "Explore the full range of design and engineering services" },
   { label: "Enterprise", href: "/enterprise", desc: "Delivery, collaboration and vendor review for larger organisations" },
+  { label: "Trust & Security", href: "/trust", desc: "Security practices, privacy and information for vendor review" },
   { label: "Contact Us", href: "/contact", desc: "Start a conversation or reach our team directly" },
 ];
 

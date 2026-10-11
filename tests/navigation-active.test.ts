@@ -7,6 +7,7 @@ describe("Header route ownership", () => {
     ["/", null],
     ["/about", "Who We Are"],
     ["/enterprise", "Who We Are"],
+    ["/trust", "Who We Are"],
     ["/services", "Services"],
     ["/services/web-development", "Services"],
     ["/services/mobile-app-development/", "Services"],

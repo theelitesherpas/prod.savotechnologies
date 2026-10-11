@@ -26,6 +26,7 @@ describe("Navigation connectivity contract", () => {
       { label: "About Us", href: "/about", desc: expect.any(String) },
       { label: "Services", href: "/services", desc: expect.any(String) },
       { label: "Enterprise", href: "/enterprise", desc: expect.any(String) },
+      { label: "Trust & Security", href: "/trust", desc: expect.any(String) },
       { label: "Contact Us", href: "/contact", desc: expect.any(String) },
     ]);
     expect(company?.children).toBe(WHO_WE_ARE_LINKS);

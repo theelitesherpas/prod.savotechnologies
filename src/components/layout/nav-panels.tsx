@@ -44,6 +44,7 @@ function MenuGlyph({ href }: { href: string }) {
     "/about": <><circle cx="9" cy="8" r="3" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m2 10v-2a5 5 0 0 0-2-4" /></>,
     "/services": <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
     "/enterprise": <><rect x="5" y="3" width="14" height="18" rx="1" /><path d="M3 21h18M9 7h1m4 0h1M9 11h1m4 0h1M10 21v-6h4v6" /></>,
+    "/trust": <><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z" /><path d="m8 12 3 3 5-6" /></>,
     "/contact": <path d="M21 11a8 8 0 0 1-8 8H8l-5 3V7a4 4 0 0 1 4-4h6a8 8 0 0 1 8 8ZM7 8h10M7 12h7" />,
   };
   const companyIcon = companyIcons[canonical(href)];
