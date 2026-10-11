@@ -23,6 +23,8 @@ import { insightRichHtmlToText, sanitizeInsightRichHtml } from "@/lib/insight-ri
 import { industryDossierSchema } from "@/content/industries/schema";
 import { ABOUT_TEAM_PHOTO_SIZE } from "@/constants/about-team";
 import { persistTestimonialPoster } from "@/lib/testimonial-poster";
+import { isAllowedStoredPhoto, persistSitePhoto } from "@/lib/site-photo";
+import { ABOUT_HERO_ALT, ABOUT_HERO_HEIGHT, ABOUT_HERO_WIDTH } from "@/constants/about";
 
 /**
  * Generic collection mutations. FormData is parsed against the
@@ -479,4 +481,54 @@ export async function importDefaultsAction(formData: FormData): Promise<void> {
   const count = await importDefaults(collection);
   await audit(user.id, "content.import_defaults", "ContentItem", collection, { count });
   redirect(`/admin/content/${collection}?saved=imported&n=${count}`);
+}
+
+/**
+ * About page hero photo - the figure beside "One team, accountable since
+ * {year}." on /about. Managed from the About team collection page
+ * (Website content → About team); stored as SiteSetting keys
+ * (about_hero_image / about_hero_alt). The crop tool fixes uploads at
+ * exactly ABOUT_HERO_WIDTH × ABOUT_HERO_HEIGHT (the slot's canonical 6:5
+ * desktop aspect at 2× its ~650px render width; narrower viewports crop
+ * the same master wider via object-fit:cover, like the coded photo).
+ */
+export async function saveAboutHeroAction(formData: FormData): Promise<void> {
+  const user = await requireAdmin();
+  await requireSection("content");
+
+  const image = String(formData.get("image") ?? "");
+  const alt = String(formData.get("alt") ?? "")
+    .trim()
+    .slice(0, 200);
+
+  // A fresh upload arrives as a data URL; an untouched form resubmits the
+  // currently stored (already validated) path - only the alt may change.
+  let stored: string | null = null;
+  if (image.startsWith("data:image/")) stored = await persistSitePhoto(image, ABOUT_HERO_WIDTH, ABOUT_HERO_HEIGHT);
+  else if (image && isAllowedStoredPhoto(image)) stored = image;
+  if (!stored) {
+    redirect(`/admin/content/team?e=${encodeURIComponent("Invalid about photo - attach one with the crop tool and save again.")}`);
+  }
+
+  const heroAlt = alt || ABOUT_HERO_ALT;
+
+  await prisma!.$transaction([
+    prisma!.siteSetting.upsert({
+      where: { key: "about_hero_image" },
+      create: { key: "about_hero_image", value: stored },
+      update: { value: stored },
+    }),
+    prisma!.siteSetting.upsert({
+      where: { key: "about_hero_alt" },
+      create: { key: "about_hero_alt", value: heroAlt },
+      update: { value: heroAlt },
+    }),
+  ]);
+
+  await audit(user.id, "content.hero", "SiteSetting", "about_hero_image", {
+    image: stored,
+    alt: heroAlt,
+  });
+  await revalidateManagedContent();
+  redirect("/admin/content/team?saved=hero");
 }

@@ -2,8 +2,13 @@ import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { getSettings } from "@/lib/settings";
 import { saveContactHeroAction } from "./actions";
-import { ContactHeroForm } from "@/components/admin/contact-hero-form";
+import { SitePhotoForm } from "@/components/admin/site-photo-form";
 import { PageHeader, Notice } from "@/components/admin/ui";
+import {
+  CONTACT_HERO_ALT,
+  CONTACT_HERO_HEIGHT,
+  CONTACT_HERO_WIDTH,
+} from "@/constants/contact";
 
 export const metadata: Metadata = { title: "Contact page" };
 
@@ -39,10 +44,16 @@ export default async function ContactContentPage({
             the current photo.
           </p>
         </div>
-        <ContactHeroForm
+        <SitePhotoForm
           action={saveContactHeroAction}
           currentImage={settings.contactHeroImage}
           currentAlt={settings.contactHeroAlt}
+          fallbackAlt={CONTACT_HERO_ALT}
+          targetWidth={CONTACT_HERO_WIDTH}
+          targetHeight={CONTACT_HERO_HEIGHT}
+          uploadLabel="Replacement photo"
+          uploadHint={`Shown beside “Let’s talk about what’s next.” — exported at exactly ${CONTACT_HERO_WIDTH} × ${CONTACT_HERO_HEIGHT} px.`}
+          saveLabel="Save contact photo"
         />
       </section>
     </div>

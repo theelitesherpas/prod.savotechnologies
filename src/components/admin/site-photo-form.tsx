@@ -4,27 +4,34 @@ import { useState } from "react";
 import { ImageCropField, type AttachedImage } from "@/components/admin/image-crop-field";
 import { SubmitButton } from "@/components/admin/form";
 import { withBasePath } from "@/lib/utils";
-import {
-  CONTACT_HERO_ALT,
-  CONTACT_HERO_HEIGHT,
-  CONTACT_HERO_WIDTH,
-} from "@/constants/contact";
 
 /**
- * Contact page hero photo editor - the figure beside "Let's talk about
- * what's next." on /contact. Mirrors the editorial image field used by
- * content collections: shows the current photo, then the crop tool fixed
- * at the exact render size (1050 × 600) with drag positioning; the server
- * action persists the export as a content-addressed WebP.
+ * Generic site-photo editor for admin-managed page heroes (contact, about,
+ * …). Mirrors the editorial image field used by content collections: shows
+ * the current photo, then the crop tool fixed at the exact render
+ * dimensions with drag positioning; the server action persists the export
+ * as a content-addressed WebP.
  */
-export function ContactHeroForm({
+export function SitePhotoForm({
   action,
   currentImage,
   currentAlt,
+  fallbackAlt,
+  targetWidth,
+  targetHeight,
+  uploadLabel,
+  uploadHint,
+  saveLabel = "Save photo",
 }: {
   action: (formData: FormData) => Promise<void>;
   currentImage: string;
   currentAlt: string;
+  fallbackAlt: string;
+  targetWidth: number;
+  targetHeight: number;
+  uploadLabel: string;
+  uploadHint: string;
+  saveLabel?: string;
 }) {
   const [currentPath, setCurrentPath] = useState(
     currentImage.startsWith("data:") ? "" : currentImage,
@@ -40,7 +47,7 @@ export function ContactHeroForm({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={withBasePath(currentPath)}
-            alt="Current contact page photo"
+            alt="Current photo"
             className="h-16 w-28 rounded-[2px] border border-border object-cover"
           />
           <p className="t-caption text-muted">
@@ -49,31 +56,31 @@ export function ContactHeroForm({
         </div>
       ) : null}
 
-      <label className="block" htmlFor="contact-hero-alt">
+      <label className="block" htmlFor="site-photo-alt">
         <span className="adm-label mb-1.5 block">
           Photo description
           <span aria-hidden="true" className="ml-1 text-accent">*</span>
         </span>
         <input
-          id="contact-hero-alt"
+          id="site-photo-alt"
           type="text"
           name="alt"
           required
           maxLength={200}
-          defaultValue={currentAlt || CONTACT_HERO_ALT}
+          defaultValue={currentAlt || fallbackAlt}
           className="adm-input w-full"
           placeholder="Describe the photo for screen readers"
         />
         <p className="t-caption mt-1.5 text-muted">
-          Alt text for the contact page photo - required for screen readers.
+          Alt text for the photo - required for screen readers.
         </p>
       </label>
 
       <ImageCropField
-        label="Replacement photo"
-        hint={`Shown beside “Let’s talk about what’s next.” — exported at exactly ${CONTACT_HERO_WIDTH} × ${CONTACT_HERO_HEIGHT} px.`}
-        targetWidth={CONTACT_HERO_WIDTH}
-        targetHeight={CONTACT_HERO_HEIGHT}
+        label={uploadLabel}
+        hint={uploadHint}
+        targetWidth={targetWidth}
+        targetHeight={targetHeight}
         value={attached}
         showAltText={false}
         onChange={(next) => {
@@ -83,7 +90,7 @@ export function ContactHeroForm({
       />
 
       <div className="border-t border-border pt-4">
-        <SubmitButton label="Save contact photo" />
+        <SubmitButton label={saveLabel} />
       </div>
     </form>
   );

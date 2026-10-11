@@ -5,6 +5,7 @@ import { IS_DEMO } from "@/lib/content-mode";
 import { withBasePath } from "@/lib/utils";
 import { ABOUT_CRAFTS, ABOUT_DISCIPLINES, ABOUT_FAQS, ABOUT_PURPOSE, ABOUT_VALUES, aboutFacts } from "./about-content";
 import { ABOUT_PREVIEW_LEADERSHIP, ABOUT_PREVIEW_MILESTONES } from "./about-preview-content";
+import { ABOUT_HERO_ALT, ABOUT_HERO_IMAGE } from "@/constants/about";
 import { AboutArrow, AboutGlyph, AboutLinkedIn, AboutMail, AboutPlus } from "./about-art";
 import s from "./about.module.css";
 
@@ -20,13 +21,13 @@ import s from "./about.module.css";
  * finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
  */
 
-export function AboutHero() {
+export function AboutHero({ heroImage = ABOUT_HERO_IMAGE, heroAlt = ABOUT_HERO_ALT }: { heroImage?: string; heroAlt?: string } = {}) {
   return <section className={`${s.section} ${s.hero}`} aria-labelledby="about-heading"><div className={s.rail}>
     <div className={s.opening}><div className={s.heroCopy}>
       <h1 id="about-heading">One team,{" "}<br /><span>accountable{" "}<br />since {SITE.registration.foundedYear}.</span></h1>
       <p>{SITE.name} is a team of engineers, designers and consultants who believe software outsourcing should feel like part of your own team.</p>
       <div className={s.heroActions}><Link href="/contact#send" className={s.primaryAction}>Start the conversation<AboutArrow /></Link><Link href="/case-studies#work" className={s.secondary}>Explore our work<AboutArrow /></Link></div>
-    </div><figure className={s.heroFigure}><div className={s.heroPhoto} data-image-guard><Image src={withBasePath("/images/team.webp")} alt="Editorial photograph of people collaborating in a software workspace" fill priority sizes="(max-width: 899px) 100vw, 50vw" /></div><div className={s.photoSignature}><span>Since {SITE.registration.foundedYear}</span><p>{SITE.tagline}</p></div><figcaption>Editorial workplace photography - not the Savo team or office.</figcaption></figure></div>
+    </div><figure className={s.heroFigure}><div className={s.heroPhoto} data-image-guard><Image src={withBasePath(heroImage)} alt={heroAlt} fill priority sizes="(max-width: 899px) 100vw, 50vw" /></div><div className={s.photoSignature}><span>Since {SITE.registration.foundedYear}</span><p>{SITE.tagline}</p></div><figcaption>Editorial workplace photography - not the Savo team or office.</figcaption></figure></div>
     <nav className={s.journey} aria-label="Explore Savo"><a href="#story">Our story<AboutArrow /></a><a href="#team">Meet the team<AboutArrow /></a><a href="#values">What we believe<AboutArrow /></a><a href="#offices">Where we work<AboutArrow /></a></nav>
   </div></section>;
 }

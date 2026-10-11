@@ -63,7 +63,7 @@ export default async function AboutPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <div className={styles.page} data-about-page="complete-company-story">
-        <AboutHero />
+        <AboutHero heroImage={settings.aboutHeroImage} heroAlt={settings.aboutHeroAlt} />
         <AboutOverview metrics={metrics} />
         <AboutStory />
         <AboutPurpose />

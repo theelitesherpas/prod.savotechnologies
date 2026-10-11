@@ -14,7 +14,11 @@ import {
   reorderItemsAction,
   deleteItemAction,
   importDefaultsAction,
+  saveAboutHeroAction,
 } from "../actions";
+import { getSettings } from "@/lib/settings";
+import { SitePhotoForm } from "@/components/admin/site-photo-form";
+import { ABOUT_HERO_ALT, ABOUT_HERO_HEIGHT, ABOUT_HERO_WIDTH } from "@/constants/about";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: "Content" };
@@ -25,6 +29,7 @@ const SAVED_MESSAGES: Record<string, string> = {
   updated: "Changes saved. Public visibility follows its active flag and publication status.",
   deleted: "Item deleted.",
   imported: "Defaults imported - the collection is now editable.",
+  hero: "About photo saved. The public About page regenerates on the next request.",
 };
 
 export default async function CollectionPage({
@@ -83,6 +88,9 @@ export default async function CollectionPage({
       ) : null}
       {sp.e === "invalid" ? <Notice kind="alert">Check the fields - a required value is missing or invalid.</Notice> : null}
       {sp.e === "dup" ? <Notice kind="alert">That slug is already in use. Choose another.</Notice> : null}
+      {sp.e && sp.e !== "invalid" && sp.e !== "dup" ? <Notice kind="alert">{decodeURIComponent(sp.e)}</Notice> : null}
+
+      {def.key === "team" ? <AboutHeroPanel /> : null}
 
       {fallback ? (
         <EmptyState
@@ -161,5 +169,42 @@ export default async function CollectionPage({
         />
       )}
     </div>
+  );
+}
+
+/**
+ * About page hero photo panel - rendered only on the About team
+ * collection. The photo beside "One team, accountable since {year}." on
+ * /about; uploads crop to exactly ABOUT_HERO_WIDTH × ABOUT_HERO_HEIGHT
+ * (the slot's canonical 6:5 desktop aspect at 2× its ~650px render
+ * width). Narrower viewports crop the same master wider, like the coded
+ * photo always has.
+ */
+async function AboutHeroPanel() {
+  const settings = await getSettings();
+  return (
+    <section className="adm-card mb-6 space-y-5 p-5 sm:p-6">
+      <div>
+        <h2 className="text-[0.9375rem] font-bold text-foreground">About page hero photo</h2>
+        <p className="t-caption mt-1 text-muted">
+          The photo beside “One team, accountable” on /about. Uploads are cropped to the
+          canonical desktop slot - exactly {ABOUT_HERO_WIDTH} × {ABOUT_HERO_HEIGHT} px (6:5).
+          Phones and tablets show the same master, cropped slightly wider by the design;
+          position the crop for what must stay visible. Leave the crop tool untouched to
+          keep the current photo.
+        </p>
+      </div>
+      <SitePhotoForm
+        action={saveAboutHeroAction}
+        currentImage={settings.aboutHeroImage}
+        currentAlt={settings.aboutHeroAlt}
+        fallbackAlt={ABOUT_HERO_ALT}
+        targetWidth={ABOUT_HERO_WIDTH}
+        targetHeight={ABOUT_HERO_HEIGHT}
+        uploadLabel="Replacement photo"
+        uploadHint="Shown beside “One team, accountable” on /about - exported at exactly 1320 × 1100 px (6:5)."
+        saveLabel="Save about photo"
+      />
+    </section>
   );
 }
