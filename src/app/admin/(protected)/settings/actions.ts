@@ -30,6 +30,7 @@ const settingsSchema = z.object({
     .max(24)
     .regex(/^[+0-9 ()-]+$/, "Digits, spaces and + ( ) - only."),
   announcement: z.string().trim().max(180).optional().or(z.literal("")),
+  leadModalEnabled: z.coerce.boolean().optional().default(true),
   metricProjects: metricValue,
   metricClients: metricValue,
   metricIndustries: metricValue,
@@ -43,6 +44,7 @@ export async function saveSettingsAction(formData: FormData): Promise<void> {
     contactEmail: formData.get("contactEmail"),
     contactPhone: formData.get("contactPhone"),
     announcement: formData.get("announcement") ?? "",
+    leadModalEnabled: formData.get("leadModalEnabled") === "on",
     metricProjects: formData.get("metricProjects") ?? "",
     metricClients: formData.get("metricClients") ?? "",
     metricIndustries: formData.get("metricIndustries") ?? "",
@@ -54,7 +56,7 @@ export async function saveSettingsAction(formData: FormData): Promise<void> {
     redirect(`/admin/settings?e=${encodeURIComponent(issue?.message ?? "invalid")}`);
   }
 
-  const { contactEmail, contactPhone, announcement, metricProjects, metricClients, metricIndustries, metricMarkets } = parsed.data;
+  const { contactEmail, contactPhone, announcement, metricProjects, metricClients, metricIndustries, metricMarkets, leadModalEnabled } = parsed.data;
 
   const metricRows = [
     ["metric_projects", metricProjects ?? ""],
@@ -86,6 +88,11 @@ export async function saveSettingsAction(formData: FormData): Promise<void> {
         update: { value },
       }),
     ),
+    prisma!.siteSetting.upsert({
+      where: { key: "lead_modal_enabled" },
+      create: { key: "lead_modal_enabled", value: leadModalEnabled ? "1" : "0" },
+      update: { value: leadModalEnabled ? "1" : "0" },
+    }),
   ]);
 
   await audit(user.id, "settings.update", "SiteSetting", undefined, {

@@ -1,0 +1,22 @@
+import { describe, expect, it } from "vitest";
+import { AGENTS, AGENT_FAQS, AGENT_DEPLOY_STEPS } from "../src/constants/agents";
+import { AI_SERVICES, aiService } from "../src/constants/ai-services";
+import { AI_LINKS } from "../src/constants/navigation";
+import { ARTICLES } from "../src/constants/insights";
+import { agentExample, AGENT_EXAMPLES, PRACTICE_FIT, FOUNDATIONS, TOOL_ICONS, relatedAiArticles } from "../src/sections/ai/ai-content";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+describe("AI page coverage and truthful scope",()=>{
+ it.each(AGENTS.map(a=>[a.slug]))("gives %s a complete role and illustrative example",slug=>{const a=AGENTS.find(a=>a.slug===slug)!;expect(a.name).toContain("Savo");expect(a.deliverables).toHaveLength(4);expect(a.tags).toHaveLength(3);expect(a.detail.length).toBeGreaterThan(100);const e=agentExample(slug);expect(e.source).toContain("Example");expect(e.review.length).toBeGreaterThan(30);expect(e.action).toContain("Prepare");expect(AGENT_EXAMPLES[slug]).toBe(e);});
+ it.each(AI_SERVICES.map(a=>[a.slug]))("gives %s a distinct practical journey",slug=>{const a=aiService(slug)!;expect(a.process).toHaveLength(4);expect(a.engagements.length).toBeGreaterThanOrEqual(6);expect(a.faqs.length).toBeGreaterThanOrEqual(4);expect(new Set(a.faqs.map(f=>f.q)).size).toBe(a.faqs.length);expect(PRACTICE_FIT[slug].yes).toHaveLength(3);expect(PRACTICE_FIT[slug].no.length).toBeGreaterThan(50);});
+ it("retains all five canonical AI menu entries and the agent PRO flag",()=>{expect(AI_LINKS.map(a=>a.href)).toEqual(["/ai-agents","/ai/automation","/ai/generative-ai","/ai/consulting","/ai/machine-learning"]);expect(AI_LINKS[0].pro).toBe(true);});
+ it("does not invent a missing practice",()=>expect(aiService("unknown-practice")).toBeUndefined());
+ it("falls back honestly for a new managed role",()=>expect(agentExample("new-managed-role").source).toContain("Example"));
+ it("keeps every FAQ substantive and avoids old unsupported guarantees",()=>{expect(AGENT_FAQS).toHaveLength(6);for(const f of [...AGENT_FAQS,...AI_SERVICES.flatMap(a=>a.faqs)])expect(f.a.length).toBeGreaterThan(60);expect(JSON.stringify([AGENTS,AI_SERVICES,AGENT_FAQS])).not.toMatch(/two to four weeks|roughly a third|native quality|bias audit report for every/i);});
+ it("retains complete automation breadth",()=>{expect(aiService("automation")!.engagements).toHaveLength(10);expect(aiService("automation")!.stack).toHaveLength(14);expect(aiService("automation")!.faqs).toHaveLength(8);});
+ it("uses four substantive engineering foundations and a supervised delivery path",()=>{expect(FOUNDATIONS).toHaveLength(4);expect(AGENT_DEPLOY_STEPS).toHaveLength(4);expect(AGENT_DEPLOY_STEPS[3].name).toContain("supervision");});
+ it("selects three relevant existing AI insights in a useful reading order",()=>{expect(relatedAiArticles(ARTICLES).map(a=>a.slug)).toEqual(["ai-agent-vs-workflow-automation","rag-vs-fine-tuning","how-to-evaluate-an-ai-development-company"]);});
+ it("does not backfill missing managed insights with constants",()=>{const article={...ARTICLES[0],slug:"managed-ai-note",title:"Managed title",excerpt:"Managed excerpt"};expect(relatedAiArticles([article,ARTICLES[1]])).toEqual([article]);expect(relatedAiArticles([])).toEqual([]);expect(relatedAiArticles([ARTICLES[1]])).toEqual([]);});
+ it("caps related reading without mutating the public collection",()=>{const input=[...ARTICLES];const before=[...input];expect(relatedAiArticles(input)).toHaveLength(3);expect(input).toEqual(before);});
+ it("only names local technology artwork that exists",()=>{for(const icon of Object.values(TOOL_ICONS))expect(existsSync(resolve(`public/images/technology/${icon}.svg`))).toBe(true);});
+});

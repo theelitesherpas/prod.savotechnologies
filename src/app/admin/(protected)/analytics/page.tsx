@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -82,6 +83,7 @@ export default async function AdminAnalyticsPage({
 }: {
   searchParams: Promise<{ range?: string }>;
 }) {
+  await requireAdminPage("/admin/analytics");
   const { range } = await searchParams;
   const days = RANGES.some((r) => r.key === range) ? Number(range) : 30;
   const since = sinceDays(days);

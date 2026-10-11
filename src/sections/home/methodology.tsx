@@ -5,6 +5,15 @@ import { Section } from "@/components/ui/section";
 import { Reveal } from "@/components/ui/reveal";
 import { METHODOLOGY } from "@/constants/content";
 
+/** Deliverables per phase (master spec Part 29) - what the client receives. */
+const DELIVERABLES: Record<string, string[]> = {
+  Discover: ["Discovery summary", "Success criteria", "Constraints report"],
+  Define: ["Requirements", "Architecture", "Roadmap & milestones"],
+  Design: ["Prototype", "Design system", "Accessibility review"],
+  Build: ["Working software", "Staging environment", "Test evidence"],
+  Grow: ["Analytics", "Performance report", "Improvement plan"],
+};
+
 export function Methodology() {
   const ref = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0);
@@ -66,10 +75,29 @@ export function Methodology() {
                 </div>
                 <h3 className="t-h3 mt-5">{step.name}</h3>
                 <p className="t-sm mt-3 max-w-[26ch] text-muted">{step.text}</p>
+                {DELIVERABLES[step.name] ? (
+                  <ul className="mt-4 space-y-1.5 border-l border-border pl-3">
+                    {DELIVERABLES[step.name].map((d) => (
+                      <li key={d} className="t-label text-muted">{d}</li>
+                    ))}
+                  </ul>
+                ) : null}
               </Reveal>
             </li>
           ))}
         </ol>
+
+        {/* No black box development (master spec Part 30) */}
+        <Reveal delay={150}>
+          <div className="mt-14 flex flex-wrap items-baseline justify-between gap-4 border-t border-border pt-8">
+            <p className="t-h4 font-serif">No black-box development.</p>
+            <p className="t-sm max-w-[52ch] text-muted">
+              Dedicated project manager and technical lead, weekly updates, sprint reviews, meeting notes, staging
+              environments and documented approvals. You see the work while it happens - in the client portal, not in a
+              monthly slide.
+            </p>
+          </div>
+        </Reveal>
       </div>
     </Section>
   );

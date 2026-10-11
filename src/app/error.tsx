@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { reportReactError, reportUserReport } from "@/lib/report";
-import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
+import { reportReactError } from "@/lib/report";
 
 /**
  * Route-level error boundary - v6 styled, never exposes internals.
@@ -19,10 +18,7 @@ export default function Error({
 }) {
   const [note, setNote] = useState("");
   const [noteSent, setNoteSent] = useState(false);
-  const [sending, setSending] = useState(false);
   const reportedRef = useRef(false);
-  const captcha = useCaptcha();
-  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
 
   useEffect(() => {
     console.error("[route-error]", error.message, error.digest ?? "");
@@ -32,30 +28,16 @@ export default function Error({
     }
   }, [error]);
 
-  const sendUserReport = async () => {
-    if (!note.trim() || sending) return;
-    if (captchaBlocked(captcha)) {
-      setCaptchaErr("Please complete the human verification.");
-      return;
-    }
-    setSending(true);
-    setCaptchaErr(null);
-    const result = await reportUserReport({
-      message: `User context: ${error.message || "page error"}`,
-      details: note.trim().slice(0, 2000),
-      captchaToken: captcha.token,
-    });
-    setSending(false);
-    if (result.ok) {
-      setNoteSent(true);
-      return;
-    }
-    if (result.captchaRequired) {
-      setCaptchaErr(result.error ?? "Please complete the human verification and try again.");
-      captcha.reset();
-      return;
-    }
-    setCaptchaErr(result.error ?? "Could not send the report. Please try again.");
+  const sendUserReport = () => {
+    if (!note.trim()) return;
+    import("@/lib/report").then(({ reportBug }) =>
+      reportBug({
+        type: "user_report",
+        message: `User context: ${error.message || "page error"}`,
+        details: note.trim().slice(0, 2000),
+      }),
+    );
+    setNoteSent(true);
   };
 
   return (
@@ -94,14 +76,11 @@ export default function Error({
               <button
                 type="button"
                 onClick={sendUserReport}
-                disabled={!note.trim() || sending}
+                disabled={!note.trim()}
                 className="inline-flex h-11 shrink-0 items-center rounded-[2px] border border-foreground/30 px-4 text-[0.8125rem] font-semibold transition-colors hover:border-foreground disabled:opacity-40"
               >
-                {sending ? "Sending…" : "Send"}
+                Send
               </button>
-            </div>
-            <div className="mt-3">
-              <CaptchaGate captcha={captcha} error={captchaErr} />
             </div>
           </div>
         ) : (

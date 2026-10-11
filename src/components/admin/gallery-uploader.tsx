@@ -12,10 +12,11 @@ import type { AttachedImage } from "./image-crop-field";
  */
 
 const MAX_DIM = 1600;
-const QUALITY_LADDER = [0.78, 0.7, 0.62]; // walk down only if over budget
-/** ≈4.5 bytes/px: a 1600×1200 gallery shot lands ≈430KB, crisp. */
+const QUALITY_LADDER = [0.78, 0.7, 0.62, 0.55, 0.5]; // walk down only if over budget
+/** ≈7 bytes/px web budget - same cap as the crop studio, so gallery shots
+ *  ship at hero-image weight (1600×1000 → ≤229KB) and pages stay fast. */
 const budgetChars = (w: number, h: number) =>
-  Math.round((Math.max(90_000, (w * h) / 4.5)) * 1.375) + 200;
+  Math.round((Math.max(90_000, (w * h) / 7)) * 1.375) + 200;
 const MAX_BYTES = 4_000_000;
 
 export function GalleryUploader({
@@ -52,15 +53,22 @@ export function GalleryUploader({
     ctx.drawImage(bitmap, 0, 0, w, h);
     bitmap.close();
 
-    let dataUrl = canvas.toDataURL("image/jpeg", QUALITY_LADDER[0]);
+    // JPEG ladder, then a WebP pass (35% smaller on gradients/photography).
+    // Best effort is accepted up to 2× the web budget; 4MB stays the ceiling.
     const budget = Math.min(MAX_BYTES, budgetChars(w, h));
-    if (dataUrl.length > budget) {
-      for (const q of QUALITY_LADDER.slice(1)) {
-        dataUrl = canvas.toDataURL("image/jpeg", q);
-        if (dataUrl.length <= budget) break;
-      }
+    const attempts: { fmt: string; q: number }[] = [
+      ...QUALITY_LADDER.map((q) => ({ fmt: "image/jpeg", q })),
+      ...[0.85, 0.75, 0.65].map((q) => ({ fmt: "image/webp", q })),
+    ];
+    let dataUrl = "";
+    let best = "";
+    for (const { fmt, q } of attempts) {
+      dataUrl = canvas.toDataURL(fmt, q);
+      if (!best || dataUrl.length < best.length) best = dataUrl;
+      if (dataUrl.length <= budget) break;
     }
-    if (dataUrl.length > MAX_BYTES) {
+    if (dataUrl.length > budget) dataUrl = best;
+    if (dataUrl.length > Math.min(MAX_BYTES, budget * 2)) {
       setError(`${file.name}: image too large even after compression. Try a smaller image.`);
       return null;
     }
@@ -149,7 +157,7 @@ export function GalleryUploader({
               Click to add images ({images.length}/8)
             </span>
             <span className="t-caption text-muted">
-              JPEG, PNG or WebP · best at 1600 × 1200 (4:3) · auto-compressed
+              JPEG, PNG or WebP · original ratio kept · auto-compressed to ≤≈230 KB each
             </span>
           </span>
         )}
@@ -166,6 +174,9 @@ export function GalleryUploader({
                 alt={img.alt || `Gallery image ${i + 1}`}
                 className="aspect-[4/3] w-full object-cover"
               />
+              <span className="absolute right-1.5 top-1.5 rounded bg-background/80 px-1.5 py-0.5 text-[0.625rem] tnum text-muted backdrop-blur" title="Auto-compressed weight">
+                {Math.max(1, Math.round(((img.dataUrl.length - img.dataUrl.indexOf(",") - 1) * 3) / 4 / 1024))} KB
+              </span>
               {/* Order controls */}
               <div className="absolute left-1.5 top-1.5 flex gap-1">
                 <button

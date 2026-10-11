@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { getAdminUser } from "@/lib/auth";
+import { getAdminUser, type AdminSessionUser } from "@/lib/auth";
 
 /**
  * Section-based access control for the admin panel.
@@ -9,11 +9,9 @@ import { getAdminUser } from "@/lib/auth";
  *   admin  - full access, bypasses permissions, manages panel users
  *   editor - access is exactly the sections granted in `permissions`
  *
- * Enforcement is central: the admin layout reads the request path
- * (forwarded by middleware as x-pathname), maps it to a section and
- * redirects to the dashboard with a denial notice. Navigation is
- * filtered with the same source, so a user never sees - or reaches -
- * a section outside their grant.
+ * Pages/data readers must authorize before queries; a layout cannot guard
+ * independently executing RSC children. The layout's forwarded-path check
+ * and navigation are additional defenses, not the data-access boundary.
  */
 
 export type SectionKey =
@@ -57,34 +55,29 @@ function permissionList(user: PermittedUser): string[] {
 
 export function canAccess(user: PermittedUser, section: string): boolean {
   if (user.role === "admin") return true;
-  return permissionList(user).includes(section);
+  return user.role === "editor" && permissionList(user).includes(section);
 }
 
-/** Map an admin path to its section (null = always accessible). */
+/** Map an admin path to its section (null = unmapped or self-profile). */
 export function pathToSection(path: string): SectionKey | "dashboard" | "users" | "compose" | null {
-  const p = path.replace(/\/+$/, "");
+  const p = path.split(/[?#]/, 1)[0].replace(/\/+$/, "");
   if (p === "/admin" || p === "/admin/login") return "dashboard";
-  if (p.startsWith("/admin/live-chat")) return "live-chat";
-  if (p.startsWith("/admin/enquiries")) return "enquiries";
-  if (p.startsWith("/admin/analytics")) return "analytics";
-  if (p.startsWith("/admin/employees")) return "employees";
-  if (p.startsWith("/admin/clients") || p.startsWith("/admin/projects") || p.startsWith("/admin/invoices"))
-    return "clients";
-  if (
-    p.startsWith("/admin/services") ||
-    p.startsWith("/admin/industries") ||
-    p.startsWith("/admin/case-studies") ||
-    p.startsWith("/admin/content")
-  )
-    return "content";
-  if (p.startsWith("/admin/email-templates")) return "email-templates";
-  if (p.startsWith("/admin/email-compose")) return "compose";
-  if (p.startsWith("/admin/settings")) return "settings";
-  if (p.startsWith("/admin/users")) return "users";
-  if (p.startsWith("/admin/audit")) return "audit";
-  if (p.startsWith("/admin/bug-reports")) return "bug-reports";
-  if (p.startsWith("/admin/hr-portal")) return "hr-portal";
-  if (p.startsWith("/admin/emails")) return "emails";
+  const under = (segment: string) => p === `/admin/${segment}` || p.startsWith(`/admin/${segment}/`);
+  if (under("content-inventory")) return "audit";
+  if (under("live-chat")) return "live-chat";
+  if (under("enquiries")) return "enquiries";
+  if (under("analytics")) return "analytics";
+  if (under("employees")) return "employees";
+  if (["clients", "projects", "invoices", "meetings"].some(under)) return "clients";
+  if (["services", "industries", "case-studies", "content"].some(under)) return "content";
+  if (under("email-templates")) return "email-templates";
+  if (under("email-compose")) return "compose";
+  if (under("settings")) return "settings";
+  if (under("users")) return "users";
+  if (under("audit") || under("proof")) return "audit";
+  if (under("bug-reports")) return "bug-reports";
+  if (under("hr-portal")) return "hr-portal";
+  if (under("emails")) return "emails";
   return null;
 }
 
@@ -95,6 +88,21 @@ export function pathToSection(path: string): SectionKey | "dashboard" | "users" 
 export async function enforcePathAccess(path: string): Promise<void> {
   const user = await getAdminUser();
   if (!user || !path) return;
+  assertPathAccess(user, path);
+}
+
+/** Fixed page-owned path, never the client/forwarded request pathname. */
+export async function requireAdminPage(path: string): Promise<AdminSessionUser> {
+  const user = await getAdminUser();
+  if (!user || !["admin", "editor"].includes(user.role)) redirect("/admin/login");
+  if (pathToSection(path) === null && path !== "/admin/my-profile") {
+    redirect("/admin?denied=Unmapped%20section");
+  }
+  assertPathAccess(user, path);
+  return user;
+}
+
+function assertPathAccess(user: AdminSessionUser, path: string): void {
   const section = pathToSection(path);
   if (section === null || section === "dashboard") return;
   if (section === "users" && user.role !== "admin") {
@@ -143,6 +151,7 @@ export async function requireSection(section: SectionKey): Promise<void> {
 /** Which compose scopes this user may open. */
 export function allowedComposeDepts(user: PermittedUser): ("hr" | "hello")[] {
   if (user.role === "admin") return ["hr", "hello"];
+  if (user.role !== "editor") return [];
   const has = permissionList(user);
   const out: ("hr" | "hello")[] = [];
   if (has.includes("employees")) out.push("hr");

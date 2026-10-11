@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/live-chat/typing — visitor typing signal for the agent inbox.
+ * POST /api/live-chat/typing - visitor typing signal for the agent inbox.
  * { token, typing: boolean }
  */
 

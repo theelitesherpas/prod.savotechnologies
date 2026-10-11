@@ -1,90 +1,32 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect } from "react";
-import { report404 } from "@/lib/report";
+import { SavoLogo } from "@/components/shared/savo-logo";
+import { NOT_FOUND_COPY, NOT_FOUND_DESTINATIONS } from "@/sections/not-found/not-found-content";
+import { NotFoundReport } from "@/sections/not-found/not-found-report";
+import s from "@/sections/not-found/not-found.module.css";
 
 /**
- * Designed 404 fallback: clean, professional, no auto-redirect.
- *
- * Industry standard (Google, Stripe, Apple, Vercel): a 404 page should
- * help the visitor self-recover, never force them somewhere. The page
- * states clearly what happened, offers the most likely destinations,
- * and lets the visitor choose. The HTTP response stays a proper 404.
+ * THESIS: explain the missing page, then offer a chosen recovery - not a redirect.
+ * OWN-WORLD: approved Outfit/Inter, white-grey field, black directory, red action.
+ * STORY: missing address, homepage/project action, all nine original destinations.
+ * FIRST VIEWPORT: genuine brand/home link; grey recovery copy beside a black link directory.
+ * FORM: user-delegated existing Savo world, native destinations, no invented relocation story.
+ * FINISH: unreviewed and undocumented is unfinished; this build ends with the
+ * finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
+ * A named section works standalone or inside a retained (site) main after streaming.
+ * Next controls HTTP/noindex semantics; streamed responses may be 200, not 404.
  */
-
-const POPULAR = [
-  ["Services", "/services"],
-  ["Industries", "/industries"],
-  ["Case Studies", "/case-studies"],
-  ["Insights", "/insights"],
-  ["About Savo", "/about"],
-  ["Careers", "/careers"],
-  ["Contact", "/contact"],
-  ["Hire Developers", "/hire"],
-  ["AI Agents", "/ai-agents"],
-] as const;
+function RecoveryArrow({ back = false }: { back?: boolean }) {
+  return <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={back ? s.backArrow : undefined}><path d="M4 12h16m-6-6 6 6-6 6" /></svg>;
+}
 
 export default function NotFound() {
-  useEffect(() => {
-    report404();
-  }, []);
-
-  return (
-    <section className="chapter-ink flex min-h-[100svh] items-center bg-background text-foreground">
-      <div className="shell py-24">
-        {/* Rail */}
-        <div className="mb-12 flex items-center gap-4">
-          <span className="t-label tnum text-muted">404</span>
-          <span aria-hidden="true" className="h-px flex-1 bg-border" />
-          <span className="t-label text-muted">Page not found</span>
-        </div>
-
-        <h1 className="t-statement max-w-[16ch]">
-          We&apos;ve redesigned our website
-          <span aria-hidden="true" className="text-accent">.</span>
-        </h1>
-
-        <p className="t-body-lg mt-8 max-w-lg text-muted">
-          The page you&apos;re looking for moved during the redesign, or the
-          link is from an older version of our site. Everything you need
-          is here. Use the menu above or pick a destination below.
-        </p>
-
-        <div className="mt-10 flex flex-wrap gap-4">
-          <Link
-            href="/"
-            className="group/btn inline-flex h-[3.25rem] items-center gap-2.5 rounded-[2px] bg-foreground px-7 text-base font-semibold text-background transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-accent hover:text-on-accent"
-          >
-            Go to the homepage
-            <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3 transition-transform duration-300 group-hover/btn:-translate-x-[3px]" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <path d="M13 7H2M6.5 2.5 2 7l4.5 4.5" />
-            </svg>
-          </Link>
-          <Link
-            href="/#start"
-            className="inline-flex h-[3.25rem] items-center rounded-[2px] border border-foreground/30 px-7 text-base font-semibold transition-colors duration-300 hover:border-foreground hover:bg-foreground/[0.05]"
-          >
-            Start a Project
-          </Link>
-        </div>
-
-        {/* Quick links */}
-        <div className="mt-14 border-t border-border pt-8">
-          <p className="t-label mb-4 text-muted">Where would you like to go?</p>
-          <div className="flex flex-wrap gap-x-8 gap-y-3">
-            {POPULAR.map(([label, href]) => (
-              <Link
-                key={href}
-                href={href}
-                className="t-sm font-medium text-foreground/70 transition-colors hover:text-accent"
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+  return <div className={s.page} data-not-found-page="clear-native-recovery" data-design-contract="not-found-v7:THESIS=chosen-recovery-no-redirect;OWN-WORLD=Outfit-Inter-white-black-red-grey;STORY=missing-address-home-project-nine-destinations;FIRST-VIEWPORT=brand-grey-recovery-black-directory;FORM=user-delegated-established-world;FINISH=review-verdict-documentation-provenance">
+    <NotFoundReport />
+    <a href="#not-found-main" className={s.skip}>Skip to recovery options</a>
+    <header className={s.header}><div className={s.rail}><Link href="/" className={s.brand} aria-label="Savo Technologies homepage"><SavoLogo /></Link></div></header>
+    <section id="not-found-main" className={s.main} tabIndex={-1} aria-labelledby="not-found-heading"><div className={`${s.rail} ${s.layout}`}>
+      <div className={s.copy}><h1 id="not-found-heading">We can’t find<br /> <span>this page.</span></h1><p>{NOT_FOUND_COPY.description}</p><div className={s.actions}><Link href="/" className={s.primary}><RecoveryArrow back />Go to the homepage</Link><Link href="/#start" className={s.secondary}>Start a Project<RecoveryArrow /></Link></div><p className={s.note}>{NOT_FOUND_COPY.recovery}</p></div>
+      <nav className={s.directory} aria-labelledby="not-found-destinations"><h2 id="not-found-destinations">Explore Savo.</h2><ul>{NOT_FOUND_DESTINATIONS.map(([label, href]) => <li key={href}><Link href={href} data-not-found-destination>{label}<RecoveryArrow /></Link></li>)}</ul></nav>
+    </div></section>
+  </div>;
 }

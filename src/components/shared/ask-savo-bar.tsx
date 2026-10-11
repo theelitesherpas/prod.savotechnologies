@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import styles from "./ask-savo-bar.module.css";
 import {
   useCallback,
   useEffect,
@@ -19,7 +21,6 @@ import {
 } from "@/lib/assistant";
 import { CALLBACK_COUNTRIES, COUNTRY_PHONE_RULES, validatePhone } from "@/lib/phone";
 import { track } from "@/lib/analytics";
-import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { cn, withBasePath } from "@/lib/utils";
 
 /**
@@ -38,7 +39,8 @@ import { cn, withBasePath } from "@/lib/utils";
  *   continuity afterwards. Cross-page and cross-visit: the thread is
  *   restored from the server on open.
  *
- * Visual language: the existing floating bar + glass frame, unchanged.
+ * Visual language: the homepage's Outfit/Inter, black/white and Savo-red,
+ * with the existing floating composer and conversation behavior preserved.
  */
 
 /* ────────────────────────────── types ────────────────────────────── */
@@ -110,6 +112,9 @@ function captureContext() {
 /* ─────────────────────────── component ─────────────────────────── */
 
 export function AskSavoBar() {
+  const pathname = usePathname();
+  const launcherRef = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
   /* Bar visibility (scroll hysteresis) + window state */
   const [visible, setVisible] = useState(false);
   const [open, setOpen] = useState(false);
@@ -121,12 +126,6 @@ export function AskSavoBar() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  /* Always-on reCAPTCHA — required to start an AI thread (first message)
-     and to submit the live-chat qualification. Solved tokens are
-     single-use, so the gate re-arms after each verified submission. */
-  const captcha = useCaptcha();
-  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
 
   /* Session / live chat */
   const [session, setSession] = useState<Session | null>(null);
@@ -340,7 +339,7 @@ export function AskSavoBar() {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && document.activeElement?.closest("form[aria-label='Ask Savo']")) {
+      if (e.key === "Escape" && frameRef.current?.contains(document.activeElement)) {
         e.preventDefault();
         setOpen(false);
         inputRef.current?.blur();
@@ -513,45 +512,26 @@ export function AskSavoBar() {
   async function ask(question: string) {
     const clean = question.trim();
     if (!clean || typing) return;
-    // First message of a fresh thread: a solved captcha is required.
-    const needsCaptcha = captcha.required && !convToken;
-    if (needsCaptcha && captchaBlocked(captcha)) {
-      setCaptchaErr("Please complete the human verification below.");
-      return;
-    }
     track("ask_savo_question");
     idRef.current += 1;
     setMessages((m) => [...m, { id: `me-${idRef.current}`, side: "user", text: clean, at: Date.now() }]);
     setInput("");
     setError(null);
-    setCaptchaErr(null);
     setTyping(true);
     try {
       const res = await fetch(withBasePath("/api/live-chat/ask"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: clean,
-          pageContext: captureContext(),
-          ...(needsCaptcha ? { captchaToken: captcha.token } : {}),
-        }),
+        body: JSON.stringify({ text: clean, pageContext: captureContext() }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
-        captchaRequired?: boolean;
         conversationToken?: string;
         result?: { kind: string; entryId?: string; handoff?: boolean };
       };
       if (json.conversationToken) setConvToken(json.conversationToken);
-      // The token was consumed by this verification - re-arm the gate.
-      if (needsCaptcha && json.ok) captcha.reset();
       later(() => {
         setTyping(false);
-        if (!json.ok && json.captchaRequired) {
-          setCaptchaErr("Please complete the human verification and try again.");
-          captcha.reset();
-          return;
-        }
         if (json.ok && json.result?.kind === "handoff") {
           setPhase("prechat");
           setQStep(0);
@@ -692,15 +672,8 @@ export function AskSavoBar() {
       setQStep(5);
       return;
     }
-    // Always-on captcha: the lead submission needs a solved challenge.
-    if (captchaBlocked(captcha)) {
-      setCaptchaErr("Please complete the human verification.");
-      setQStep(5);
-      return;
-    }
     setSending(true);
     setError(null);
-    setCaptchaErr(null);
     track("ask_savo_live_request", { offline: !session?.availability.liveChatOpen });
     try {
       const res = await fetch(withBasePath("/api/live-chat/qualify"), {
@@ -708,7 +681,6 @@ export function AskSavoBar() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversationToken: convToken,
-          captchaToken: captcha.token,
           name: cName.trim(),
           country: cCountry,
           phone: cPhone.trim() || null,
@@ -723,17 +695,12 @@ export function AskSavoBar() {
           pageContext: captureContext(),
         }),
       });
-      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; captchaRequired?: boolean; conversationToken?: string; status?: string; error?: string };
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; conversationToken?: string; status?: string; error?: string };
       if (!res.ok || !json.ok) {
-        if (json.captchaRequired) {
-          setCaptchaErr("Please complete the human verification and try again.");
-          captcha.reset();
-        } else setError(json.error ?? "Something went wrong. Please try again.");
+        setError(json.error ?? "Something went wrong. Please try again.");
         setSending(false);
         return;
       }
-      // The token was consumed by this verification - re-arm the gate.
-      captcha.reset();
       if (json.conversationToken) setConvToken(json.conversationToken);
       setLiveStatus(json.status ?? "waiting_for_agent");
       setPhase("live");
@@ -826,7 +793,10 @@ export function AskSavoBar() {
 
   useEffect(() => {
     if (open && (phase === "prechat" || phase === "live" || phase === "ai")) inputRef.current?.focus();
-  }, [open, phase, qStep]);
+    else if (open && !wasOpen.current) frameRef.current?.querySelector<HTMLButtonElement>("#ask-savo-sheet button")?.focus();
+    else if (!open && wasOpen.current && !dismissed && launcherRef.current?.getClientRects().length) launcherRef.current.focus();
+    wasOpen.current = open;
+  }, [open, phase, qStep, dismissed]);
 
   /* ─────────────────────────── render ─────────────────────────── */
 
@@ -834,11 +804,26 @@ export function AskSavoBar() {
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <div
         ref={frameRef}
+        data-home-assistant={pathname === "/"}
+        /* One consistent assistant on every page: the full composer bar on
+         * desktop/tablet, the compact pill on phones - matching the homepage
+         * treatment everywhere. */
+        data-compact-assistant={true}
+        data-open={open}
+        inert={!shown}
         className={cn(
-          "pointer-events-auto w-[min(44rem,calc(100%-1.5rem))] rounded-[14px] border border-foreground/10 bg-background p-[7px] shadow-[0_24px_70px_rgb(10_10_14/0.22)] transition-[transform,opacity] duration-500 ease-[var(--ease-out-expo)]",
+          styles.frame,
+          "pointer-events-auto transition-[transform,opacity] duration-300 ease-[var(--ease-out-expo)]",
           shown ? "translate-y-0 opacity-100" : "translate-y-[150%] opacity-0",
         )}
       >
+        <button
+          ref={launcherRef} type="button" className={styles.launcher} onClick={() => void openIt()}
+          aria-label="Open Savo Assistant" aria-expanded={open} aria-controls="ask-savo-sheet"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6 3V6a2 2 0 0 1 2-2Z" /><path d="M7 9h10M7 13h6" /></svg>
+          Ask Savo
+        </button>
         {/* Conversation window */}
         <div
           id="ask-savo-sheet"
@@ -853,33 +838,34 @@ export function AskSavoBar() {
           <div className="overflow-hidden">
             <div
               className={cn(
-                "flex h-[min(78dvh,36rem)] flex-col overflow-hidden rounded-t-[8px] border border-b-0 border-foreground/20 bg-white transition-[transform,opacity] duration-500 ease-[var(--ease-out-expo)] sm:h-[min(72dvh,36rem)]",
+                styles.window,
+                "transition-[transform,opacity] duration-300 ease-[var(--ease-out-expo)]",
                 open ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
               )}
             >
               {/* Title bar */}
-              <div className="flex items-center gap-2 border-b border-foreground/10 px-3 py-2.5 sm:px-4">
+              <div className={styles.header}>
                 <button
                   onClick={minimize}
                   aria-label="Minimize the Savo Assistant"
                   title="Minimize"
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-[4px] border border-foreground/15 text-muted transition-colors hover:border-accent hover:text-accent"
+                  className={styles.windowControl}
                 >
                   <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
                     <path d="M2.5 7h9" />
                   </svg>
                 </button>
 
-                <span aria-hidden="true" className="ml-1 flex h-4 w-4 shrink-0 items-center justify-center border border-accent/70">
-                  <span className={cn("h-1.5 w-1.5 bg-accent", waiting && "animate-pulse")} />
-                </span>
-                <p className="t-h4 min-w-0 flex-1 truncate">
-                  {isLiveThread ? "Savo Team" : "Ask Savo"}
-                  {activeChat ? <span className="t-caption ml-2 text-muted">live</span> : null}
-                </p>
-                <p className="t-caption hidden shrink-0 text-muted sm:block">
-                  {isLiveThread ? (waiting ? "connecting…" : "Savo specialist · live") : "Savo Assistant · instant answers"}
-                </p>
+                <div className={styles.identity}>
+                  <p className={styles.headerTitle}>
+                    {isLiveThread ? "Savo Team" : "Ask Savo"}
+                    {activeChat ? <span className={styles.liveLabel}>live</span> : null}
+                  </p>
+                  <p className={styles.headerStatus}>
+                    <span aria-hidden="true" className={cn(styles.statusDot, waiting && "animate-pulse")} />
+                    {isLiveThread ? (waiting ? "connecting…" : "Savo specialist · live") : "Savo Assistant · instant answers"}
+                  </p>
+                </div>
 
                 {(phase === "live" || phase === "ai") && (
                   <button
@@ -902,7 +888,7 @@ export function AskSavoBar() {
                   onClick={newChat}
                   aria-label="Start a new chat"
                   title="New chat"
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-[4px] border border-foreground/15 text-muted transition-colors hover:border-accent hover:text-accent"
+                  className={styles.windowControl}
                 >
                   <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 7A5 5 0 1 1 7 2c1.9 0 3.4 1 4.3 2.4" />
@@ -913,7 +899,7 @@ export function AskSavoBar() {
                   onClick={closeWindow}
                   aria-label="Close the Savo Assistant"
                   title="Close"
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-[4px] border border-foreground/15 text-muted transition-colors hover:border-accent hover:text-accent"
+                  className={styles.windowControl}
                 >
                   <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
                     <path d="M3 3l8 8M11 3l-8 8" />
@@ -924,13 +910,13 @@ export function AskSavoBar() {
               {/* Thread */}
               {/* data-lenis-prevent: the site's smooth-scroll library hijacks
                   wheel events page-wide, without this the thread can't scroll. */}
-              <div ref={threadRef} aria-live="polite" data-lenis-prevent className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain [touch-action:pan-y] px-4 py-4">
+              <div ref={threadRef} aria-live="polite" data-lenis-prevent className={styles.thread}>
                 {/* Welcome hero (headline + context). All choices live in the
                     option strip right above the composer for easy picking. */}
                 {phase === "welcome" ? (
-                  <div className="pt-2">
-                    <p className="t-h4">Ask anything about Savo, or talk to our team now.</p>
-                    <p className="t-caption mt-3 text-muted">
+                  <div className={styles.welcome}>
+                    <p className={styles.welcomeTitle}>Ask anything about Savo, or talk to our team now.</p>
+                    <p className={styles.welcomeCopy}>
                       {liveOpen
                         ? "Savo AI answers instantly, and our team is around for a live chat right now."
                         : "Savo AI answers instantly, 24/7. The team will take your message and get back to you."}
@@ -1079,7 +1065,6 @@ export function AskSavoBar() {
                   sending={sending}
                   canSubmit={canSubmitContact}
                   error={error}
-                  verification={qStep === 5 ? <CaptchaGate captcha={captcha} error={captchaErr} /> : null}
                   onService={(s) => { setQService(s); setQStep(1); sayServer({ kind: "visitor", body: s }); }}
                   onStage={(s) => { setQStage(s); setQStep(2); sayServer({ kind: "visitor", body: s }); }}
                   onTimeline={(t) => { setQTimeline(t); setQStep(4); sayServer({ kind: "visitor", body: t }); }}
@@ -1102,7 +1087,7 @@ export function AskSavoBar() {
                   mode it carries suggested questions plus the human/WhatsApp
                   paths. Links navigate but never close the chat. */}
               {phase === "welcome" || (phase === "ai" && fresh) ? (
-                <ul className="flex flex-wrap gap-1.5 border-t border-foreground/10 px-4 py-3" aria-label="Chat options">
+                <ul className={styles.options} aria-label="Chat options">
                   {phase === "welcome" ? (
                     <>
                       <li>
@@ -1179,22 +1164,13 @@ export function AskSavoBar() {
           </div>
         </div>
 
-        {/* Human verification gate - required before the first AI message
-            of a fresh thread (the live/lead flow shows its own gate in the
-            qualification panel). */}
-        {captcha.required && !convToken && phase !== "prechat" && phase !== "live" && open ? (
-          <div className="px-4 py-2">
-            <CaptchaGate captcha={captcha} error={captchaErr} />
-          </div>
-        ) : null}
-
         {/* The bar/composer, always visible, attached below the window */}
         <form
           onSubmit={submit}
           aria-label="Ask Savo"
           className={cn(
-            "flex h-14 items-center gap-3 rounded-[8px] border border-foreground/20 bg-white pl-4 pr-2 transition-[border-color,border-radius] duration-500 ease-[var(--ease-out-expo)] focus-within:border-foreground/40",
-            open && "rounded-t-none border-t-0",
+            styles.composer,
+            open && styles.composerOpen,
           )}
         >
                 <span aria-hidden="true" className="flex h-4 w-4 shrink-0 items-center justify-center border border-accent/70">
@@ -1217,7 +1193,7 @@ export function AskSavoBar() {
                   onFocus={openIt}
                   onClick={openIt}
                   placeholder={placeholder}
-                  className="t-sm min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted"
+                  className={styles.composerInput}
                 />
 
                 <button
@@ -1225,7 +1201,7 @@ export function AskSavoBar() {
                   aria-label={isLiveThread ? "Send message" : "Ask Savo"}
                   aria-expanded={open}
                   aria-controls="ask-savo-sheet"
-                  className="group/btn grid h-9 w-9 shrink-0 place-items-center rounded-[6px] border border-foreground/20 text-muted transition-colors duration-300 ease-[var(--ease-out-expo)] hover:border-accent hover:text-accent"
+                  className={styles.send}
                 >
                   <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3 transition-transform duration-300 group-hover/btn:-translate-y-[2px]" fill="none" stroke="currentColor" strokeWidth="1.6">
                     <path d="M7 13V1M2.5 5.5 7 1l4.5 4.5" />
@@ -1248,20 +1224,20 @@ function MessageRow({ msg }: { msg: ChatMsg }) {
   if (msg.side === "user") {
     return (
       <div className="flex justify-end">
-        <p className="t-sm max-w-[85%] rounded-[6px] bg-foreground px-3.5 py-2.5 text-background">{msg.text}</p>
+        <p className={styles.visitorMessage}>{msg.text}</p>
       </div>
     );
   }
   if (msg.side === "assistant") {
     return (
       <div className="flex justify-start">
-        <div className="t-sm w-full max-w-[92%] rounded-[6px] border border-foreground/10 bg-surface-2 px-3.5 py-3 text-foreground/90">{msg.node}</div>
+        <div className={styles.assistantMessage}>{msg.node}</div>
       </div>
     );
   }
   if (msg.kind === "system") {
     return (
-      <p className="t-caption mx-auto w-fit max-w-[90%] rounded-full border border-foreground/10 bg-surface-2/60 px-3 py-1.5 text-center text-muted" role="status">
+      <p className={styles.systemMessage} role="status">
         {msg.body}
       </p>
     );
@@ -1271,7 +1247,7 @@ function MessageRow({ msg }: { msg: ChatMsg }) {
       <div className="flex justify-start">
         <div>
           <p className="t-caption mb-1 ml-1 text-muted">{msg.senderName ?? "Savo Team"}</p>
-          <div className="t-sm max-w-[92%] whitespace-pre-wrap rounded-[6px] border border-accent/25 bg-accent/[0.05] px-3.5 py-2.5 text-foreground/90">{msg.body}</div>
+          <div className={styles.agentMessage}>{msg.body}</div>
         </div>
       </div>
     );
@@ -1279,7 +1255,7 @@ function MessageRow({ msg }: { msg: ChatMsg }) {
   // visitor message restored from the server
   return (
     <div className="flex justify-end">
-      <p className="t-sm max-w-[85%] rounded-[6px] bg-foreground px-3.5 py-2.5 text-background">{msg.body}</p>
+      <p className={styles.visitorMessage}>{msg.body}</p>
     </div>
   );
 }
@@ -1315,7 +1291,6 @@ type QualifyProps = {
     setConsent: (v: boolean) => void;
   };
   onStart: () => void;
-  verification?: ReactNode;
 };
 
 function Chips({ options, onPick, accentFirst }: { options: string[]; onPick: (o: string) => void; accentFirst?: boolean }) {
@@ -1342,7 +1317,7 @@ function Chips({ options, onPick, accentFirst }: { options: string[]; onPick: (o
 function QualifyPanel(p: QualifyProps) {
   const rule = COUNTRY_PHONE_RULES[p.contact.country];
   return (
-    <div className="rounded-[8px] border border-foreground/15 bg-surface-2/50 p-3.5">
+    <div className={styles.qualification}>
       {/* Q1, service */}
       {p.step === 0 ? (
         <fieldset>
@@ -1398,7 +1373,7 @@ function QualifyPanel(p: QualifyProps) {
             aria-label="Your name"
             className="t-sm w-full rounded-[6px] border border-foreground/20 bg-white px-3 py-2.5 outline-none transition-colors focus:border-accent"
           />
-          <div className="flex gap-2">
+          <div className={styles.phoneFields}>
             <select
               value={p.contact.country}
               onChange={(e) => p.onContact.setCountry(e.target.value)}
@@ -1449,11 +1424,10 @@ function QualifyPanel(p: QualifyProps) {
           <button
             onClick={p.onStart}
             disabled={p.sending}
-            className="inline-flex h-10 w-full items-center justify-center rounded-[6px] border border-accent/50 bg-accent/[0.06] px-4 t-sm font-semibold text-accent transition-colors hover:border-accent disabled:cursor-not-allowed disabled:opacity-50"
+            className={styles.startChat}
           >
             {p.sending ? "Starting live chat…" : "Start Live Chat"}
           </button>
-          {p.verification}
           {p.error ? (
             <p role="alert" className="t-caption text-error">
               {p.error}

@@ -20,7 +20,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/admin/live-chat/conversations/[id]/action — every agent
+ * POST /api/admin/live-chat/conversations/[id]/action - every agent
  * action in one endpoint: { action, …params }. All authorization is
  * server-side (session + live-chat section); statuses only ever change
  * through the service layer.
@@ -45,7 +45,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return apiOk({});
     }
     case "assign": {
-      // Resolve the target agent's name from the DB — never trust client input.
+      // Resolve the target agent's name from the DB - never trust client input.
       const targetId = typeof data.agentId === "string" && data.agentId ? data.agentId : null;
       let targetName: string | null = null;
       if (targetId) {

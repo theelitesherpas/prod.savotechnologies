@@ -53,21 +53,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   await enforcePathAccess(await currentAdminPath());
   if (!user) redirect("/admin/login");
 
-  // Live counts for the spine (null-safe: a missing DB keeps the panel usable).
+  const allow = (k: SectionKey) => canAccess(user, k);
+  // Only read counts for granted navigation; hidden sections are not queried.
   const [newEnquiries, liveChatWaiting, newMeetings, contentCounts, servicesCount, industriesCount, clientCount, projectCount, invoiceCount] = prisma
     ? await Promise.all([
-        prisma.projectEnquiry.count({ where: { status: "new" } }).catch(() => 0),
-        prisma.chatConversation.count({ where: { status: "waiting_for_agent" } }).catch(() => 0),
-        prisma.meeting.count({ where: { status: "availability_received", seenAt: null } }).catch(() => 0),
-        prisma.contentItem
+        allow("enquiries") ? prisma.projectEnquiry.count({ where: { status: "new" } }).catch(() => 0) : 0,
+        allow("live-chat") ? prisma.chatConversation.count({ where: { status: "waiting_for_agent" } }).catch(() => 0) : 0,
+        allow("clients") ? prisma.meeting.count({ where: { status: "availability_received", seenAt: null } }).catch(() => 0) : 0,
+        allow("content") ? prisma.contentItem
           .groupBy({ by: ["collection"], _count: { _all: true } })
           .then((rows) => Object.fromEntries(rows.map((r) => [r.collection, r._count._all])))
-          .catch((): Record<string, number> => ({})),
-        prisma.service.count({ where: { active: true } }).catch(() => 0),
-        prisma.industry.count({ where: { active: true } }).catch(() => 0),
-        prisma.clientUser.count().catch(() => 0),
-        prisma.clientProject.count().catch(() => 0),
-        prisma.invoice.count().catch(() => 0),
+          .catch((): Record<string, number> => ({})) : ({} as Record<string, number>),
+        allow("content") ? prisma.service.count({ where: { active: true } }).catch(() => 0) : 0,
+        allow("content") ? prisma.industry.count({ where: { active: true } }).catch(() => 0) : 0,
+        allow("clients") ? prisma.clientUser.count().catch(() => 0) : 0,
+        allow("clients") ? prisma.clientProject.count().catch(() => 0) : 0,
+        allow("clients") ? prisma.invoice.count().catch(() => 0) : 0,
       ])
     : [0, 0, 0, {} as Record<string, number>, 0, 0, 0, 0, 0];
 
@@ -78,7 +79,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     count: contentCounts[key] ?? 0,
   }));
 
-  const allow = (k: SectionKey) => canAccess(user, k);
   const nav = ([
     { key: "overview", label: "Dashboard", icon: "gauge", href: "/admin" },
     ...(allow("enquiries")
@@ -95,7 +95,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     ...(allow("live-chat")
       ? [{ key: "live-chat", label: "Live Chat", icon: "chat" as const, href: "/admin/live-chat", badge: liveChatWaiting, online: true }]
       : []),
-    { key: "emails", label: "Emails", icon: "inbox", href: "/admin/emails" },
+    ...(allow("emails") ? [{ key: "emails", label: "Emails", icon: "inbox", href: "/admin/emails" }] : []),
     ...(allow("analytics")
       ? [{ key: "analytics", label: "Analytics", icon: "trend" as const, href: "/admin/analytics" }]
       : []),
@@ -123,7 +123,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       icon: "bot",
       items: [
         { href: "/admin/hr-portal", label: "Recruitment pipeline", icon: "inbox" },
-        { href: "/admin/email-compose?dept=hr", label: "Send HR email", icon: "pen" },
+        ...(allow("employees") ? [{ href: "/admin/email-compose?dept=hr", label: "Send HR email", icon: "pen" }] : []),
       ],
     },
         ]
@@ -182,6 +182,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       ? [{ key: "email-templates", label: "Email Templates", icon: "pen" as const, href: "/admin/email-templates" }]
       : []),
     ...(allow("audit")
+      ? [{ key: "proof", label: "Proof Dashboard", icon: "trail" as const, href: "/admin/proof" }]
+      : []),
+    ...(allow("audit")
+      ? [{ key: "content-inventory", label: "Content Inventory", icon: "trail" as const, href: "/admin/content-inventory" }]
+      : []),
+    ...(allow("bug-reports")
       ? [{ key: "bug-reports", label: "Bug Reports", icon: "alert" as const, href: "/admin/bug-reports" }]
       : []),
     ...(allow("audit")
@@ -193,7 +199,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <AdminShell user={user} nav={nav} crumbLabels={CRUMB_LABELS}>
       {/* Never-miss-a-chat layer: chime + browser notifications + live nav badge */}
-      <LiveChatNotifier />
+      {allow("live-chat") ? <LiveChatNotifier /> : null}
       {children}
     </AdminShell>
   );

@@ -1,12 +1,22 @@
-# SAVO Technologies — Website (v6)
+# Savo Technologies — Website (v7)
 
-Production-grade Next.js website for **SAVO Technologies** — a technology
-services company (web, mobile, AI, software, design, growth) — with a
-PostgreSQL-backed lead pipeline, an operations admin panel, and a strong
-SEO / AEO / GEO foundation for classic and AI-driven search.
+Next.js corporate website and lead platform for **Savo Technologies**, with
+PostgreSQL-backed enquiries, an operations admin panel, client/employee
+portals, managed content, chat and meeting scheduling.
 
-- **Live (dev server):** http://localhost:4311 · **Admin:** http://localhost:4311/admin
-- Stack: **Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · PostgreSQL + Prisma 6 · Zod · Vitest**
+- **Current local review:** http://localhost:4312 · **Admin:** http://localhost:4312/admin
+- Stack: **Next.js 16.3.8 (App Router) · React 19.2.8 · TypeScript (strict) · Tailwind v4 · PostgreSQL + Prisma 6 · Zod · Vitest**
+
+## Enterprise audit status
+
+Hardening is **in progress**, not a production-readiness certification.
+Start with the verified [architecture/risk assessment and prioritized plan](docs/enterprise/ASSESSMENT.md)
+and the verified changes in [Steps 01](docs/enterprise/STEP-01.md)–[06](docs/enterprise/STEP-06.md) and the [Step 07 performance and cleanup record](docs/enterprise/STEP-07.md).
+Read [runtime/release prerequisites](docs/enterprise/RUNTIME-OPERATIONS.md) before promotion;
+live mail now requires explicit opt-in and previews must keep it off.
+Legacy sections below are being reconciled incrementally; the audit records
+identify unverified deployment, database, email and privacy assumptions.
+Production promotion still requires the reviewed [dev → test → prod workflow](docs/WORKFLOW.md).
 
 ---
 
@@ -29,18 +39,19 @@ SEO / AEO / GEO foundation for classic and AI-driven search.
 ## Quick start
 
 ```bash
-# 1. Install
-npm install
+# 1. Deterministic install
+npm ci
 
 # 2. Environment
 cp .env.example .env        # then edit values (see below)
 
-# 3. Database (PostgreSQL must be running)
-npm run db:push             # apply schema
-npm run db:seed             # create the admin user (ADMIN_EMAIL/ADMIN_PASSWORD)
+# 3. LOCAL database only (verify DATABASE_URL before these commands)
+# Never use this quick-start schema push/seed against production.
+npm run db:push             # local development schema
+npm run db:seed             # local admin user (ADMIN_EMAIL/ADMIN_PASSWORD)
 
 # 4. Run
-npm run dev                 # development
+npm run dev -- -p 4312       # development review
 npm run build && npm start  # production
 ```
 
@@ -55,7 +66,6 @@ Prerequisites: **Node 20+** (22 recommended), **PostgreSQL 14+**.
 | `ENQUIRY_IP_SALT` | prod | Pepper for hashing enquirer IPs at rest |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | seed only | Initial admin (bcrypt-hashed by `db:seed`) |
 | `NEXT_PUBLIC_GA_ID` | no | GA4 id; analytics stay inert when unset |
-| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` / `RECAPTCHA_SECRET_KEY` | prod | Always-on reCAPTCHA v2 on every form + login — [docs/CAPTCHA.md](./docs/CAPTCHA.md) |
 | `LOG_LEVEL` | no | `debug·info·warn·error` (default `info`) |
 
 Server-only variables are validated and typed in `src/lib/env.ts`; they are
@@ -69,7 +79,7 @@ never imported into client components.
 | `npm run build` / `npm start` | Production build / serve |
 | `npm run lint` | ESLint (flat config, next/core-web-vitals) |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run test:run` | Vitest unit + integration (182 tests) |
+| `npm run test:run` | Vitest unit + integration suite |
 | `npm run test:e2e` | Playwright-core smoke suite — needs the server running |
 | `npm run db:push` / `db:seed` / `db:studio` | Prisma schema push / seeding / studio |
 
@@ -131,15 +141,12 @@ rail on desktop, drawer on mobile), breadcrumbs, and white rounded cards.
   sessions revoke on change
 - **Audit log** — filterable, append-only trail of every panel action
 
-Every mutation is zod-validated, audited (`audit_logs`), and triggers
-`revalidatePath("/", "layout")` so static public pages regenerate on demand.
+Every mutation is zod-validated, audited (`audit_logs`), invalidates the tagged public-content cache where applicable, and triggers `revalidatePath("/", "layout")` for public rendering.
 
 Every public form stores its complete structured payload (`form_data`
 JSON: careers city/skills/notice/CTC/links, callback country, form origin)
 alongside the enquiry columns, so the inbox shows exactly what was
-submitted. Every mutation is zod-validated, audited (`audit_logs`), and
-triggers `revalidatePath("/", "layout")` so static public pages regenerate
-on demand.
+submitted.
 
 ## Content model: constants → DB → fallback
 
@@ -156,9 +163,6 @@ on demand.
   HSTS + full header set in `next.config.ts`
 - Zod validation at every trust boundary; honeypots + sliding-window rate
   limits on public forms (5/h/IP) and admin login (8/15min/IP+email)
-- **Always-on Google reCAPTCHA v2 on every form submission and login
-  attempt** — no free allowance, hostname-allowlist verification, see
-  [docs/CAPTCHA.md](./docs/CAPTCHA.md) for the full protection matrix
 - IP addresses stored only as salted SHA-256 prefixes (data minimisation)
 - Session tokens hashed at rest; bcrypt(12) passwords; constant-time compare
 - Server-side authorization on every admin mutation; destructive actions
@@ -190,17 +194,14 @@ on demand.
 
 ## Testing & CI
 
-- **Vitest**: 182 unit/integration tests — phone rules, rate limiter, API
-  helpers (origin/JSON/size), enquiry schema, route handlers with mocked
-  Prisma (415/400/429/honeypot/200 paths), auth crypto, status vocabulary,
-  and 26 captcha tests (always-on gate, hostname policy, every protected
-  route)
-- **`scripts/verify.mjs`** (Playwright-core, Chrome): 42 end-to-end checks —
-  responsive overflow, fonts, images, menus, dialog a11y, SEO/AEO endpoints,
-  admin gate, CSRF guard, health
-- **`scripts/verify-captcha.mjs`** (`npm run verify:captcha`): captcha e2e —
-  widget renders on every protected form, submission blocked until solved,
-  solved challenge lets the enquiry through (against Google's servers)
+- Current local checkpoint: **1,245 Vitest tests across 87 files**, TypeScript
+  typecheck, and ESLint all pass. See the latest [enterprise step record](docs/enterprise/STEP-07.md).
+- The production build was verified with database/mail disabled, production
+  content mode, and indexing disabled. Its no-database timings are not live
+  performance evidence.
+- `npm run test:e2e` runs the Playwright-core smoke suite when its local review
+  server and Chrome are available. A separate local, no-provider browser check
+  is recorded in Step 07; it did not submit forms or make non-GET requests.
 - **GitHub Actions** (`.github/workflows/ci.yml`): install → lint →
   typecheck → tests → build → audit report
 

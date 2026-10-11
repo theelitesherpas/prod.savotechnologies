@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { SITE } from "@/constants/site";
 import { absoluteUrl } from "@/lib/env";
-import { Section } from "@/components/ui/section";
-import { SectionHeader } from "@/components/ui/section-header";
-import { Reveal } from "@/components/ui/reveal";
+import { LegalDocument } from "@/sections/legal/legal-document";
 import { openGraphFor } from "@/lib/seo";
 
 /**
@@ -94,25 +92,12 @@ export default function TermsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <Section id="terms" index="Legal" labelledBy="terms-heading">
-        <SectionHeader
-          id="terms-heading"
-          heading="Terms and Conditions."
-          lead="The short, honest version: this site is informational, and real projects run on signed agreements."
-        />
-        <div className="mt-12 divide-y divide-border border-y border-border">
-          {SECTIONS.map((s) => (
-            <Reveal key={s.title} className="py-7">
-              <h2 className="t-h3">{s.title}</h2>
-              {s.body.map((p) => (
-                <p key={p.slice(0, 40)} className="t-body mt-3 max-w-3xl text-muted">
-                  {p}
-                </p>
-              ))}
-            </Reveal>
-          ))}
-        </div>
-      </Section>
+      <LegalDocument
+        kind="terms"
+        title="Terms and Conditions."
+        lead="The short, honest version: this site is informational, and real projects run on signed agreements."
+        sections={SECTIONS}
+      />
     </>
   );
 }

@@ -240,6 +240,9 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
       if (id) void loadDetail(id);
       scheduleBootstrap();
     };
+    // Reconnects (including bounded stream rotation) recover from the DB,
+    // not an assumed durable in-process replay buffer.
+    es.addEventListener("ready", onStatus as EventListener);
     es.addEventListener("message.new", onMessage as EventListener);
     es.addEventListener("typing", onTyping as EventListener);
     es.addEventListener("status.changed", onStatus as EventListener);

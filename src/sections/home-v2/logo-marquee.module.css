@@ -1,0 +1,96 @@
+.strip {
+  position: relative;
+  overflow: hidden;
+  padding-block: 32px 42px;
+  background: #000;
+}
+
+.viewport {
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: logos-left 46s linear infinite;
+  animation-play-state: paused;
+}
+
+.strip[data-running="true"][data-paused="false"] .viewport:not(:hover) .track {
+  animation-play-state: running;
+}
+
+/* Equal-length groups include the trailing space: -50% lands precisely
+   on the second group's first logo, without a jump or empty interval. */
+.group {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 56px;
+  margin: 0;
+  padding: 0 56px 0 0;
+  list-style: none;
+}
+
+.logo {
+  display: flex;
+  flex: 0 0 176px;
+  width: 176px;
+  height: 72px;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo img {
+  display: block;
+  max-width: 100%;
+  object-fit: contain;
+  opacity: 0.74;
+  transition: opacity 250ms ease;
+}
+
+.logo:hover img { opacity: 1; }
+
+.control {
+  position: absolute;
+  right: max(20px, calc((100% - 90rem) / 2 + 20px));
+  bottom: 8px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  color: #a3a3a3;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.control:hover { color: #fff; border-color: rgb(255 255 255 / 0.3); }
+.control:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+@keyframes logos-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (max-width: 639px) {
+  .strip { padding-block: 24px 38px; }
+  .group { gap: 40px; padding-right: 40px; }
+  .logo { flex-basis: 160px; width: 160px; }
+  .logo img { max-width: 148px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewport { padding-inline: 24px; mask-image: none; }
+  .track { display: block; width: 100%; animation: none; }
+  .group { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 20px; padding: 0; }
+  .group[data-copy="true"] { display: none; }
+  .logo { width: 100%; }
+  .logo img { max-width: 128px; transition: none; }
+  .control { display: none; }
+}

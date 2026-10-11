@@ -146,11 +146,17 @@ export async function ensureVisitor(
   return { id: row.id, token: fresh, created: true };
 }
 
-export async function getVisitorIdByToken(token: string): Promise<string | null> {
+export async function getVisitorAccessByToken(token: string): Promise<{ id: string; blocked: boolean } | null> {
   if (!prisma) return null;
-  const v = await prisma.chatVisitor.findUnique({ where: { tokenHash: hashVisitorToken(token) } });
-  if (!v || v.blocked) return null;
-  return v.id;
+  return prisma.chatVisitor.findUnique({
+    where: { tokenHash: hashVisitorToken(token) },
+    select: { id: true, blocked: true },
+  });
+}
+
+export async function getVisitorIdByToken(token: string): Promise<string | null> {
+  const visitor = await getVisitorAccessByToken(token);
+  return visitor && !visitor.blocked ? visitor.id : null;
 }
 
 export async function touchVisitor(visitorId: string): Promise<void> {

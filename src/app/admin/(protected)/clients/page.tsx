@@ -1,9 +1,12 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, Chip, EmptyState } from "@/components/admin/ui";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
+import { ClientPasswordReceipt } from "@/components/admin/client-password-receipt";
+import { hasClientPasswordReceipt } from "@/lib/client-password-receipt";
 import { deleteClientAction } from "./actions";
 
 export const metadata: Metadata = { title: "Clients" };
@@ -11,9 +14,11 @@ export const metadata: Metadata = { title: "Clients" };
 export default async function AdminClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ created?: string; reset?: string; saved?: string; deleted?: string; pw?: string; e?: string }>;
+  searchParams: Promise<{ created?: string; reset?: string; saved?: string; deleted?: string; e?: string }>;
 }) {
+  await requireAdminPage("/admin/clients");
   const sp = await searchParams;
+  const passwordReceiptAvailable = await hasClientPasswordReceipt();
   const clients = prisma
     ? await prisma.clientUser
         .findMany({
@@ -30,17 +35,17 @@ export default async function AdminClientsPage({
         description="Portal accounts - create a client, hand them their one-time password, then publish their projects and payments."
       />
 
-      {sp.created === "1" && sp.pw ? (
-        <Notice>
-          Client created. One-time password (shown once, copy it now):{" "}
-          <strong className="tnum select-all">{sp.pw}</strong>
-        </Notice>
+      {sp.created === "1" ? (
+        <div className="mb-6 space-y-3">
+          <Notice>Client created. Reveal its password if you need to copy it for secure handoff.</Notice>
+          <ClientPasswordReceipt available={passwordReceiptAvailable} />
+        </div>
       ) : null}
-      {sp.reset === "1" && sp.pw ? (
-        <Notice>
-          Password reset, existing sessions revoked. New one-time password:{" "}
-          <strong className="tnum select-all">{sp.pw}</strong>
-        </Notice>
+      {sp.reset === "1" ? (
+        <div className="mb-6 space-y-3">
+          <Notice>Password reset and existing sessions revoked. Reveal the new password for secure handoff.</Notice>
+          <ClientPasswordReceipt available={passwordReceiptAvailable} />
+        </div>
       ) : null}
       {sp.saved ? <Notice>Client saved.</Notice> : null}
       {sp.deleted ? <Notice>Client deleted (with their projects and payments).</Notice> : null}

@@ -13,7 +13,7 @@ export const CAREERS_EMAIL = "hr@savotechnologies.com";
  *  and never cross the server/client boundary or the HTML payload. */
 export type PublicRole = Omit<Role, "band" | "ctc">;
 
-/** Date the current role list was published (bump when roles change - feeds JobPosting schema). */
+/** Legacy seed date. Live vacancy dates come from managed publication timestamps. */
 export const ROLES_POSTED = "2026-09-24";
 
 export type RoleCategory = "eng" | "design" | "ops";
@@ -38,6 +38,8 @@ export type Role = {
   track: string;
   cat: RoleCategory;
   exp: string;
+  /** Actual managed publication date, never inferred from a seed or page load. */
+  datePosted?: string;
   band: string;
   /** CTC range in ₹ lakh per annum - feeds the JobPosting baseSalary. */
   ctc: [number, number];
@@ -46,11 +48,16 @@ export type Role = {
   brings: string[];
 };
 
+/** Explicit allowlist prevents private or future admin fields entering the RSC payload. */
+export function toPublicRole(role: Role): PublicRole {
+  return { title: role.title, track: role.track, cat: role.cat, exp: role.exp, blurb: role.blurb, duties: role.duties, brings: role.brings, ...(role.datePosted ? { datePosted: role.datePosted } : {}) };
+}
+
 export function roleSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
 
-/** Open positions - single source for the careers page, the apply form and JobPosting JSON-LD. */
+/** Legacy import seeds only. Public vacancies come exclusively from active Published managed rows. */
 export const ROLES: Role[] = [
   {
     title: "Senior Frontend Engineer",
@@ -180,6 +187,11 @@ export const GENERAL_APPLICATION = "General application" as const;
 /** Literal tuple - accepted for the projectType column when source is "careers". */
 export const CAREERS_TYPES = [...ROLE_TITLES, GENERAL_APPLICATION] as const;
 
+/** Managed titles may be new. Retain them in details/source without weakening the shared enum. */
+export function careerProjectType(title: string): (typeof CAREERS_TYPES)[number] {
+  return CAREERS_TYPES.find(value => value === title) ?? GENERAL_APPLICATION;
+}
+
 export const ROLE_FILTERS: ReadonlyArray<{ key: "all" | RoleCategory; label: string }> = [
   { key: "all", label: "All roles" },
   { key: "eng", label: "Engineering" },
@@ -187,28 +199,12 @@ export const ROLE_FILTERS: ReadonlyArray<{ key: "all" | RoleCategory; label: str
   { key: "ops", label: "Operations" },
 ];
 
-/** The four-step hiring promise (version-1 apply page, verbatim intent). */
+/** Possible hiring stages, not a deadline or a guarantee of progression. */
 export const HIRING_STEPS = [
-  {
-    step: "01",
-    title: "Two business days",
-    text: "Our hiring team reads every application and replies personally. Yes or no, you hear back.",
-  },
-  {
-    step: "02",
-    title: "Technical conversation",
-    text: "A conversation with our team about your experience, your work, and the role. Real questions, no trick puzzles.",
-  },
-  {
-    step: "03",
-    title: "Meet the team",
-    text: "A wider conversation with the people you would work with - how you collaborate and what you would own.",
-  },
-  {
-    step: "04",
-    title: "Written offer",
-    text: "Role, compensation, and start date - the full offer in writing, with time for your questions.",
-  },
+  { step: "01", title: "Application review", text: "Your skills and experience help establish whether the role is a fit." },
+  { step: "02", title: "Role conversation", text: "Discuss your work, your approach and the responsibilities of the role." },
+  { step: "03", title: "Team conversation", text: "Explore how you would collaborate and what you could contribute." },
+  { step: "04", title: "Offer & next steps", text: "If there is a mutual fit, discuss the terms and a possible start date." },
 ] as const;
 
 /** What working here is actually like - every claim is anchored to published site content. */
@@ -237,14 +233,8 @@ export const LIFE_POINTS = [
 
 /* ------------------------- Apply-form options ------------------------ */
 
-export const SKILLS = [
-  "React", "Next.js", "TypeScript", "Node.js", "Python", "PostgreSQL",
-  "AI / ML", "Flutter", "React Native", "AWS", "Docker", "Kubernetes",
-  "CI / CD", "Testing", "UI / UX", "Figma",
-] as const;
+export const EXPERIENCE_OPTIONS = ["Fresher", "Less than 1 year", "1 to 3 years", "3 to 5 years", "5 to 8 years", "8+ years"] as const;
 
-export const EXPERIENCE_OPTIONS = ["0 to 1 year", "1 to 3 years", "3 to 5 years", "5 to 8 years", "8+ years"] as const;
-
-export const NOTICE_OPTIONS = ["Immediate", "15 days", "30 days", "60 days", "90 days"] as const;
+export const NOTICE_OPTIONS = ["Immediate", "15 days", "30 days", "60 days", "90 days", "To be discussed"] as const;
 
 export const CTC_OPTIONS = ["Under ₹3L", "₹3L to ₹5L", "₹5L to ₹10L", "₹10L to ₹20L", "₹20L+", "Open to discussion"] as const;

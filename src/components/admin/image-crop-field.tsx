@@ -27,12 +27,16 @@ export type AttachedImage = {
 
 const MAX_SOURCE_BYTES = 25 * 1024 * 1024; // 25 MB source file guard
 const TARGET_BYTES_MAX = 4_000_000; // schema guard (data URL length)
-/** Web weight budget: ≈4.5 bytes per pixel keeps photography crisp
- *  while capping what ships inline in page HTML (1600×700 → ≤250KB,
- *  1280×800 → ≤230KB). Industry-standard hero-image weight. */
+/** Web weight budget: ≈7 bytes per pixel cap keeps every shipped image
+ *  light (1600×1000 → ≤229KB, 1280×800 → ≤146KB) so published pages stay
+ *  fast; the crop exports as JPEG and walks the quality ladder to fit. */
 const budgetChars = (w: number, h: number) =>
-  Math.round((Math.max(90_000, (w * h) / 4.5)) * 1.375) + 200; // bytes → base64 chars
-const EXPORT_QUALITIES = [0.82, 0.74, 0.66, 0.58]; // ladder down to fit the budget
+  Math.round((Math.max(90_000, (w * h) / 7)) * 1.375) + 200; // bytes → base64 chars
+const EXPORT_QUALITIES = [0.82, 0.74, 0.66, 0.58, 0.5]; // ladder down to fit the budget
+
+/** Human-readable compressed size for the editor UI. */
+export const attachedKb = (dataUrl: string): string =>
+  `${Math.max(1, Math.round(((dataUrl.length - dataUrl.indexOf(",") - 1) * 3) / 4 / 1024))} KB`;
 
 export function ImageCropField({
   label,
@@ -41,9 +45,15 @@ export function ImageCropField({
   targetHeight,
   value,
   onChange,
+  showAltText = true,
+  fieldId,
+  required = false,
 }: {
   label: string;
   hint?: string;
+  showAltText?: boolean;
+  fieldId?: string;
+  required?: boolean;
   targetWidth: number;
   targetHeight: number;
   value: AttachedImage | null;
@@ -180,15 +190,23 @@ export function ImageCropField({
     const sh = frameSize.h / scale;
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetWidth, targetHeight);
 
-    // Quality ladder: fit the per-slot web budget (visually lossless),
-    // with the schema's 4MB as the absolute ceiling.
+    // Quality ladder: fit the per-slot web budget (visually lossless).
+    // JPEG first, then WebP (35% smaller on gradients/photography) - the
+    // schema's 4MB stays the absolute ceiling, 2× budget the practical one.
     const budget = Math.min(TARGET_BYTES_MAX, budgetChars(targetWidth, targetHeight));
+    const attempts: { fmt: string; q: number }[] = [
+      ...EXPORT_QUALITIES.map((q) => ({ fmt: "image/jpeg", q })),
+      ...[0.85, 0.75, 0.65].map((q) => ({ fmt: "image/webp", q })),
+    ];
     let dataUrl = "";
-    for (const q of EXPORT_QUALITIES) {
-      dataUrl = canvas.toDataURL("image/jpeg", q);
+    let best = "";
+    for (const { fmt, q } of attempts) {
+      dataUrl = canvas.toDataURL(fmt, q);
+      if (!best || dataUrl.length < best.length) best = dataUrl;
       if (dataUrl.length <= budget) break;
     }
-    if (dataUrl.length > budget) {
+    if (dataUrl.length > budget) dataUrl = best; // best effort within the practical ceiling
+    if (dataUrl.length > Math.min(TARGET_BYTES_MAX, budget * 2)) {
       setError("The cropped image is still too heavy - try a simpler photo or lower zoom.");
       return;
     }
@@ -202,10 +220,10 @@ export function ImageCropField({
     "inline-flex h-9 items-center justify-center rounded-lg border border-border px-4 text-[0.8125rem] font-medium text-foreground transition-colors hover:border-foreground/40";
 
   return (
-    <div className="space-y-3">
+    <div id={fieldId} tabIndex={fieldId ? -1 : undefined} className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="adm-label">{label}</p>
+          <p className="adm-label">{label}{required ? <span aria-hidden="true" className="ml-1 text-accent">*</span> : null}</p>
           {hint ? <p className="t-caption mt-1 text-muted">{hint}</p> : null}
         </div>
         <p className="t-caption tnum rounded-[2px] border border-border px-2 py-1 text-muted">
@@ -220,16 +238,18 @@ export function ImageCropField({
           <img src={value.dataUrl} alt="Attached visual" className="h-20 w-24 rounded-[2px] border border-border object-cover" />
           <div className="min-w-0">
             <p className="t-sm font-medium">
-              Attached - {value.width} × {value.height} px
+              Attached - {value.width} × {value.height} px · <span className="text-muted">auto-compressed to {attachedKb(value.dataUrl)} web image</span>
             </p>
-            <input
-              className="adm-input mt-2 h-9 w-64 max-w-full"
-              placeholder="Alt text (describe the visual)"
-              value={value.alt}
-              onChange={(e) => onChange({ ...value, alt: e.target.value })}
-              maxLength={200}
-              aria-label="Image alt text"
-            />
+            {showAltText ? (
+              <input
+                className="adm-input mt-2 h-9 w-64 max-w-full"
+                placeholder="Alt text (describe the visual)"
+                value={value.alt}
+                onChange={(e) => onChange({ ...value, alt: e.target.value })}
+                maxLength={200}
+                aria-label="Image alt text"
+              />
+            ) : null}
           </div>
           <button type="button" className={cn(secondary, "ml-auto")} onClick={() => onChange(null)}>
             Remove

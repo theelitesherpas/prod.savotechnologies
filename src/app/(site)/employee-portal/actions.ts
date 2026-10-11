@@ -7,8 +7,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-import { enforceLoginCaptcha } from "@/lib/captcha";
+import { enforceLoginCaptcha, recordLoginFailure, clearLoginFailures } from "@/lib/captcha";
 import { clientIpFromHeaders } from "@/lib/api";
+import { verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/passwords";
+import { employeeAccessAllowed } from "@/lib/employee-access";
 
 /**
  * Employee portal auth - employees log in with their registered email
@@ -39,7 +41,8 @@ export async function employeeLoginAction(formData: FormData): Promise<void> {
   const ip = clientIpFromHeaders(hdrs);
 
   const limit = rateLimit(`employee-login:${ip}`, 10, 15 * 60 * 1000);
-  if (!limit.ok) {
+  const emailLimit = rateLimit(`employee-login-email:${createHash("sha256").update(email).digest("hex")}`, 10, 15 * 60 * 1000);
+  if (!limit.ok || !emailLimit.ok) {
     redirect("/employee-portal?e=Too many attempts. Please wait a few minutes.");
   }
 
@@ -47,7 +50,7 @@ export async function employeeLoginAction(formData: FormData): Promise<void> {
     redirect("/employee-portal?e=Portal not configured.");
   }
 
-  // Always-on captcha: every login attempt must be verified.
+  // Progressive captcha: after 2 failed attempts, verify before processing.
   const cap = await enforceLoginCaptcha("employee", ip, formData.get("captchaToken"));
   if (!cap.ok) {
     if ("captchaRequired" in cap) {
@@ -58,25 +61,20 @@ export async function employeeLoginAction(formData: FormData): Promise<void> {
 
   const employee = await prisma.employee.findUnique({
     where: { email },
-    include: { panelUsers: { take: 1, select: { passwordHash: true, role: true, permissions: true, id: true } } },
+    select: { id: true, employeeCode: true, status: true,
+      panelUsers: { take: 1, select: { passwordHash: true } } },
   });
 
-  if (!employee || employee.status === "exited") {
-    logger.warn("employee_auth.login_failed", { email, reason: "not_found_or_exited" });
+  // Same asynchronous work for unknown, exited and unlinked accounts.
+  const panelUser = employee?.panelUsers[0];
+  const passwordOk = await verifyPassword(password, panelUser?.passwordHash ?? DUMMY_PASSWORD_HASH);
+  if (!employee || !employeeAccessAllowed(employee) || !panelUser || !passwordOk) {
+    logger.warn("employee_auth.login_failed");
+    recordLoginFailure("employee", ip);
     redirect("/employee-portal?e=Email or password is incorrect.");
   }
 
-  // Check password against the linked panel user account
-  const panelUser = employee.panelUsers[0];
-  if (!panelUser) {
-    redirect("/employee-portal?e=Portal access not yet granted. Please contact HR.");
-  }
-
-  const { compareSync } = await import("bcryptjs");
-  if (!compareSync(password, panelUser.passwordHash)) {
-    logger.warn("employee_auth.login_failed", { email, reason: "bad_password" });
-    redirect("/employee-portal?e=Email or password is incorrect.");
-  }
+  clearLoginFailures("employee", ip);
 
   // Create session token
   const token = randomBytes(32).toString("hex");

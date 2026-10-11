@@ -1,0 +1,4 @@
+{
+  "prompt": "{\n  \"source\": \"public/images/code.webp\",\n  \"sourceSha256\": \"384599e3939b214b665570a9c91f677e01e649596c6eddba31285a020af4a491\",\n  \"target\": \"public/images/contact/conversation-desk.webp\",\n  \"operation\": \"Resize to1200px, grayscale, real WebP, quality88/effort6; no AI generation.\",\n  \"metadata\": {\n    \"format\": \"webp\",\n    \"mediaType\": \"image/webp\",\n    \"width\": 1200,\n    \"height\": 799,\n    \"space\": \"srgb\",\n    \"channels\": 3,\n    \"depth\": \"uchar\",\n    \"isProgressive\": false,\n    \"isPalette\": false,\n    \"hasProfile\": false,\n    \"hasAlpha\": false,\n    \"autoOrient\": {\n      \"width\": 1200,\n      \"height\": 799\n    }\n  },\n  \"classification\": \"Editorial workspace illustration - not Savo staff, office or client work.\",\n  \"rights\": \"Original photographer, source licence and publication rights remain unverified.\"\n}",
+  "createdAt": "2026-10-06T11:47:58.737Z"
+}

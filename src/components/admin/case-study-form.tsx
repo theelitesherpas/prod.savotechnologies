@@ -4,22 +4,21 @@
  * Case-study editor: the complete dossier form for /admin/case-studies.
  *
  * Sections (in order, matching the public detail page):
- *   1. Publishing  : lifecycle, order, featured
+ *   1. Publishing  : lifecycle, order, featured, NDA, level
  *   2. Identity     : title, discipline, client, industry, meta
- *   3. Project Images: showcase/cardWide/card with crop studio
+ *   3. Project Images: one cover (synced to every surface) + advanced per-slot overrides
  *   4. Gallery      : multi-image upload with auto-compression
  *   5. Content      : summary, challenge, solution
  *   6. Capabilities : services multi-select
  *   7. Tech Stack   : curated selectable chips + custom add
  *   8. Integrations : curated selectable chips + custom add
  *   9. Key Features : title + description repeater
- *  10. Outcomes     : metrics repeater (value/label/verified)
- *  11. Palette      : color swatches
- *  12. Testimonial  : quote, name, role
+ *  10. Testimonial  : quote, name, role
  *
- * All fields are mandatory except liveUrl, gallery, palette and
- * testimonial. Validation errors display on submit with inline
- * messages and auto-scroll to the first error.
+ * Draft saves at ANY completeness (only the title is needed so the record
+ * has a name). Publishing requires EVERY field: validation blocks the
+ * submit until the form is complete, and the server additionally
+ * downgrades any incomplete publish attempt to a saved draft.
  */
 
 import { useMemo, useState, type ReactNode } from "react";
@@ -31,7 +30,7 @@ import { CASE_DISCIPLINES } from "@/constants/case-studies";
 import { SubmitButton } from "./form";
 import { ImageCropField, type AttachedImage } from "./image-crop-field";
 import { GalleryUploader } from "./gallery-uploader";
-import { CASE_IMAGE_SLOTS, resolveCaseImages, type SlotKey } from "@/lib/case-study-schema";
+import { CASE_IMAGE_SLOTS, type SlotKey } from "@/lib/case-study-schema";
 import {
   TECH_STACK_OPTIONS,
   INTEGRATION_OPTIONS,
@@ -58,7 +57,6 @@ const LIFECYCLE = [
   { value: "published", label: "Published" },
 ] as const;
 
-type Result = CaseStudyRecord["results"][number];
 type Swatch = CaseStudyRecord["palette"][number];
 type Feature = { title: string; text: string };
 
@@ -192,7 +190,9 @@ function ChipSelector({
 export function CaseStudyForm({
   action,
   item,
+  industryOptions = [],
 }: {
+  industryOptions?: { slug: string; title: string }[];
   action: (formData: FormData) => Promise<void>;
   item?: { id: string; slug: string; contentStatus: string; order?: number; record?: CaseStudyRecord };
 }) {
@@ -209,6 +209,8 @@ export function CaseStudyForm({
   const [clientName, setClientName] = useState(r?.clientName ?? "");
   const [displayClientName, setDisplayClientName] = useState(r?.displayClientName ?? "");
   const [industry, setIndustry] = useState(r?.industry ?? "");
+  const [industrySlugs, setIndustrySlugs] = useState<string[]>(r?.industrySlugs ?? []);
+  const sectorOptions = [...industryOptions, ...industrySlugs.filter(slug => !industryOptions.some(o => o.slug === slug)).map(slug => ({ slug, title: `${slug} (not publicly listed)` }))];
   const [clientLocation, setClientLocation] = useState(r?.clientLocation ?? "");
   const [businessModel, setBusinessModel] = useState(r?.businessModel ?? "");
   const [platforms, setPlatforms] = useState(r?.platforms ?? "");
@@ -230,6 +232,7 @@ export function CaseStudyForm({
 
   // Content
   const [summary, setSummary] = useState(r?.summary ?? "");
+  const [introduction, setIntroduction] = useState(r?.introduction ?? "");
   const [challenge, setChallenge] = useState(r?.challenge ?? "");
   const [solution, setSolution] = useState(r?.solution ?? "");
 
@@ -240,8 +243,11 @@ export function CaseStudyForm({
 
   // Features & outcomes
   const [keyFeatures, setKeyFeatures] = useState<Feature[]>(r?.keyFeatures ?? []);
-  const [results, setResults] = useState<Result[]>(r?.results ?? []);
   const [palette, setPalette] = useState<Swatch[]>(r?.palette ?? []);
+
+  // NDA + case-study level
+  const [nda, setNda] = useState(r?.nda ?? false);
+  const [level, setLevel] = useState<CaseStudyRecord["level"]>(r?.level ?? "standard");
 
   // Testimonial
   const [hasTestimonial, setHasTestimonial] = useState(Boolean(r?.testimonial));
@@ -253,27 +259,31 @@ export function CaseStudyForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // ─── Payload ───
-  const filledResults = results.filter((r) => r.value.trim() !== "" || r.label.trim() !== "");
   const filledPalette = palette.filter((p) => p.name.trim() !== "" || p.hex !== "#14161c");
   const filledFeatures = keyFeatures.filter((f) => f.title.trim() !== "");
 
   const payload = JSON.stringify({
     title: title.trim(),
-    clientName, displayClientName, discipline, industry,
+    clientName, displayClientName, discipline, industry, industrySlugs,
     clientLocation, businessModel, platforms,
-    summary, challenge, solution,
+    summary, introduction, challenge, solution,
     services, technologies,
     integrations: integrations.filter(Boolean),
     keyFeatures: filledFeatures.map((f) => ({ title: f.title.trim(), text: f.text.trim() })),
-    results: filledResults.map((r) => ({ value: r.value.trim(), label: r.label.trim(), verified: r.verified })),
     palette: filledPalette.map((p) => ({ name: p.name.trim(), hex: p.hex })),
     year, duration, teamSize,
     testimonial: hasTestimonial && tQuote && tName && tRole ? { quote: tQuote, name: tName, role: tRole } : null,
     images: { showcase: images.showcase, cardWide: images.cardWide, card: images.card, dossierCard: images.dossierCard },
     gallery: gallery.map((g) => ({ dataUrl: g.dataUrl, width: g.width, height: g.height, alt: g.alt })),
     featured,
+    nda,
+    level,
     liveUrl: liveUrl.trim() || null,
     authorName,
+    // The dossier + outcome-metrics editors were removed per owner decision;
+    // existing stored data is preserved untouched on every save.
+    dossier: r?.dossier ?? undefined,
+    results: r?.results ?? undefined,
     status: contentStatus === "published" ? "verified" : "demo",
   });
 
@@ -302,18 +312,21 @@ export function CaseStudyForm({
       if (technologies.length === 0) errs.technologies = "Select at least 1 technology.";
       if (integrations.length === 0) errs.integrations = "Add at least 1 integration: payments, email, maps… or a custom one.";
       if (filledFeatures.length === 0) errs.keyFeatures = "Add at least 1 key feature.";
-      // Images: every rendering surface needs its slot filled
+      // Images: one cover feeds every surface (advanced slots may override)
       (Object.keys(CASE_IMAGE_SLOTS) as SlotKey[]).forEach((slot) => {
         if (!images[slot])
-          errs[`img-${slot}`] = `${CASE_IMAGE_SLOTS[slot].label} image is required (${CASE_IMAGE_SLOTS[slot].width} × ${CASE_IMAGE_SLOTS[slot].height}px).`;
+          errs[`img${slot.charAt(0).toUpperCase()}${slot.slice(1)}`] = `Project cover image is required (${CASE_IMAGE_SLOTS.showcase.width} × ${CASE_IMAGE_SLOTS.showcase.height}px, ${CASE_IMAGE_SLOTS.showcase.hint}) - it feeds every surface.`;
       });
-      if (gallery.length === 0) errs.gallery = "Add at least 1 gallery image (recommended 1600 × 1200, up to 8).";
+      if (gallery.length === 0) errs.gallery = "Add at least 1 gallery image (up to 8).";
       if (palette.length === 0) errs.palette = "Add at least 1 palette color.";
       else if (palette.some((p) => !p.name.trim() || !/^#[0-9a-fA-F]{6}$/.test(p.hex)))
         errs.palette = "Every palette color needs a name and a valid #RRGGBB hex.";
       if (!hasTestimonial) errs.testimonial = "Include the client testimonial: toggle it on and fill all three fields.";
+      // Everything below is mandatory to publish (drafts save without it)
+      if (!liveUrl.trim()) errs.liveUrl = "Live project URL is required to publish.";
+      if (authorName.trim().length < 2) errs.author = "Author credit is required (who wrote this case study).";
+      if (industrySlugs.length === 0) errs.industrySlugs = "Associate at least 1 industry sector.";
     }
-    // Results section removed: metrics not required
     if (liveUrl.trim() && !/^https?:\/\/.+\..+/.test(liveUrl.trim())) errs.liveUrl = "Enter a valid URL (https://example.com) or leave empty.";
     if (hasTestimonial) {
       if (tQuote.trim().length < 10) errs.tQuote = "Quote is required (min 10 characters).";
@@ -388,6 +401,19 @@ export function CaseStudyForm({
           <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
           Featured on homepage
         </label>
+        <label className="flex cursor-pointer items-center gap-2 text-[0.875rem] font-medium text-foreground" htmlFor="cs-level">
+          <span className="adm-label">Level</span>
+          <select id="cs-level" aria-label="Case-study level" value={level}
+            onChange={(e) => setLevel(e.target.value as CaseStudyRecord["level"])} className="adm-select h-9 py-1">
+            <option value="standard">Standard</option>
+            <option value="flagship">Flagship (deep dossier)</option>
+            <option value="verified-entry">Verified entry</option>
+          </select>
+        </label>
+        <label className="flex cursor-pointer items-center gap-2 text-[0.875rem] font-medium text-foreground" htmlFor="cs-nda">
+          <input id="cs-nda" type="checkbox" checked={nda} onChange={(e) => setNda(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
+          NDA engagement (withhold client identity publicly)
+        </label>
         <p className="t-caption ml-auto max-w-xs text-right text-muted">Only <strong>Published</strong> records render publicly. Drafts save at any completeness; starred fields are required to publish.</p>
       </div>
 
@@ -417,6 +443,17 @@ export function CaseStudyForm({
             <input id="cs-industry" className={cn(input, errors.industry && "border-error/50")} value={industry}
               onChange={(e) => setIndustry(e.target.value)} placeholder="Ecommerce · Web Platform · Product Engineering" required={publishing} maxLength={160} />
           </Field>
+          <fieldset className="sm:col-span-2 space-y-2" id="cs-industry-slugs">
+            <legend className={cn(label, errors.industrySlugs && "text-error")}>Related industries (choose at least one) {publishing ? <span className="text-error">*</span> : null}</legend>
+            {errors.industrySlugs ? <p className={errorText}>{errors.industrySlugs}</p> : null}
+            <p className="t-caption text-muted">Explicit associations only. Sector pages show this project only when it is active, Published and verified; this does not verify a sector claim.</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {sectorOptions.map(o => <label key={o.slug} className="flex min-h-11 items-center gap-3 text-sm">
+                <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={industrySlugs.includes(o.slug)} onChange={e => setIndustrySlugs(values => e.target.checked ? [...values, o.slug] : values.filter(v => v !== o.slug))} />
+                {o.title}
+              </label>)}
+            </div>
+          </fieldset>
           <Field id="cs-location" label="Client location" required={publishing} error={errors.location} hint="e.g. Indore, India or Dubai, UAE">
             <input id="cs-location" className={cn(input, errors.location && "border-error/50")} value={clientLocation} onChange={(e) => setClientLocation(e.target.value)}
               placeholder="Indore, India" required={publishing} maxLength={120} />
@@ -445,10 +482,12 @@ export function CaseStudyForm({
             <input id="cs-team" className={cn(input, errors.teamSize && "border-error/50")} value={teamSize}
               onChange={(e) => setTeamSize(e.target.value)} placeholder="5 specialists" required={publishing} maxLength={60} />
           </Field>
-          <Field id="cs-live" label="Live project URL" hint="Optional: shows as 'View Live' button. Leave empty if not public." error={errors.liveUrl}>
+          <div id="cs-live-url">
+          <Field id="cs-live" label="Live project URL" hint="Required to publish: shows as the 'View live project' button." error={errors.liveUrl}>
             <input id="cs-live" className={cn(input, errors.liveUrl && "border-error/50")} type="url" value={liveUrl}
               onChange={(e) => setLiveUrl(e.target.value)} placeholder="https://example.com" maxLength={500} />
           </Field>
+          </div>
           <div className="sm:col-span-2">
             <label className={label} htmlFor="cs-author">Case study author</label>
             <input id="cs-author" className={input} value={authorName}
@@ -462,34 +501,32 @@ export function CaseStudyForm({
       <div className={sectionCard}>
         <p className={sectionTitle}>2 · Project Images</p>
         <p className="t-caption text-muted">
-          Each image is cropped to exact dimensions and auto-compressed. Upload once:
-          the crop tool ensures consistency across all surfaces.
+          One cover upload feeds every public surface - the detail-page band, index cards
+          and related-project cards all show this same {CASE_IMAGE_SLOTS.showcase.hint} image. The gallery below powers the
+          project slider on the detail page.
         </p>
         <div className="space-y-6">
-          {(Object.keys(CASE_IMAGE_SLOTS) as SlotKey[]).map((slot) => (
-            <div key={slot} id={`cs-img-${slot}`}>
-              <div className="mb-2 flex items-baseline justify-between gap-3">
-                <p className="adm-label">
-                  {CASE_IMAGE_SLOTS[slot].label}
-                   <span className="text-error">*</span>
-                </p>
-                <p className="t-caption tnum text-muted">
-                  {CASE_IMAGE_SLOTS[slot].width} × {CASE_IMAGE_SLOTS[slot].height}px · max 4MB · {CASE_IMAGE_SLOTS[slot].hint}
-                </p>
-              </div>
-              <ImageCropField
-                label=""
-                hint=""
-                targetWidth={CASE_IMAGE_SLOTS[slot].width}
-                targetHeight={CASE_IMAGE_SLOTS[slot].height}
-                value={images[slot]}
-                onChange={(next) => setImages((prev) => ({ ...prev, [slot]: next }))}
-              />
-              {errors[`img-${slot}`] ? (
-                <p className="t-caption mt-1.5 text-error">{errors[`img-${slot}`]}</p>
-              ) : null}
+          <div id="cs-cover">
+            <div className="mb-2 flex items-baseline justify-between gap-3">
+              <p className={cn("adm-label", (errors.imgShowcase || errors.imgCardWide || errors.imgCard || errors.imgDossierCard) && "text-error")}>
+                Project cover image <span className="text-error">*</span>
+              </p>
+              <p className="t-caption tnum text-muted">{CASE_IMAGE_SLOTS.showcase.width} × {CASE_IMAGE_SLOTS.showcase.height}px · {CASE_IMAGE_SLOTS.showcase.hint} · auto-compressed</p>
             </div>
-          ))}
+            <ImageCropField
+              label=""
+              hint=""
+              targetWidth={CASE_IMAGE_SLOTS.showcase.width}
+              targetHeight={CASE_IMAGE_SLOTS.showcase.height}
+              value={images.showcase}
+              onChange={(next) => setImages(next ? { showcase: next, cardWide: next, card: next, dossierCard: next } : { showcase: null, cardWide: null, card: null, dossierCard: null })}
+            />
+            {errors.imgShowcase || errors.imgCardWide || errors.imgCard || errors.imgDossierCard ? (
+              <p className="t-caption mt-1.5 text-error">
+                {errors.imgShowcase ?? errors.imgCardWide ?? errors.imgCard ?? errors.imgDossierCard}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -497,7 +534,7 @@ export function CaseStudyForm({
       <div className={sectionCard} id="cs-gallery">
         <p className={sectionTitle}>3 · Project Gallery <span className="text-error">*</span></p>
         <p className={cn("t-caption", errors.gallery ? "text-error" : "text-muted")}>
-          {errors.gallery ?? "At least 1 image, up to 8. Recommended: 1600 × 1200 px (4:3) JPEG; other ratios are center-cropped. Displayed as a swipeable carousel."}
+          {errors.gallery ?? "Up to 8 JPEG, PNG or WebP images. Original image proportions are preserved in the manual project slider. Add descriptive alt text and arrange the viewing order below."}
         </p>
         <GalleryUploader images={gallery} onChange={setGallery} />
       </div>
@@ -510,6 +547,11 @@ export function CaseStudyForm({
           <textarea id="cs-summary" className={cn(input, "min-h-20 resize-y", errors.summary && "border-error/50")}
             value={summary} onChange={(e) => setSummary(e.target.value)} required={publishing} maxLength={600}
             placeholder="A modern commerce platform designed around faster product discovery…" />
+        </Field>
+        <Field id="cs-introduction" label="Project introduction (optional)"
+          hint="Detail-page hero only. Leave empty to use the summary; card descriptions and SEO summaries stay unchanged.">
+          <textarea id="cs-introduction" className={cn(input, "min-h-24 resize-y")}
+            value={introduction} onChange={(e) => setIntroduction(e.target.value)} maxLength={1200} />
         </Field>
         <Field id="cs-challenge" label="The challenge" required={publishing} error={errors.challenge}
           hint="What problem was the client facing? (max 4000 chars)">
@@ -610,7 +652,7 @@ export function CaseStudyForm({
           </p>
         </div>
         <p className={errors.keyFeatures ? errorText : "t-caption text-muted"}>
-          {errors.keyFeatures ?? `Add 1–6 features. Each shows as an animated card on the detail page (${keyFeatures.length}/6 added).`}
+          {errors.keyFeatures ?? `Add 1–6 features. These appear in a three-column desktop grid on the detail page (${keyFeatures.length}/6 added).`}
         </p>
         <div className={cn("space-y-2 rounded-lg border p-3", errors.keyFeatures && "border-error/40")}>
           {keyFeatures.length === 0 ? (

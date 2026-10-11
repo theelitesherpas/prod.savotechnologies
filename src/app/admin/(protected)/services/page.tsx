@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +21,7 @@ export default async function ServicesPage({
 }: {
   searchParams: Promise<{ saved?: string; deleted?: string; imported?: string; e?: string }>;
 }) {
+  await requireAdminPage("/admin/services");
   const sp = await searchParams;
   const services = prisma
     ? await prisma.service.findMany({ orderBy: [{ order: "asc" }, { title: "asc" }] })

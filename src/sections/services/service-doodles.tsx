@@ -1,11 +1,11 @@
 import type { ServiceDetail } from "@/constants/services-detail";
 
 /* ------------------------------------------------------------------ */
-/* Service doodles — the specimen plates that BUILD themselves.        */
+/* Service doodles - the specimen plates that BUILD themselves.        */
 /*                                                                     */
 /* Each service gets a small staged choreography: the browser frame    */
 /* inks in, the menu pops item by item, the hero slides up, text and   */
-/* icons land — the craft of the service, performed. Pure CSS          */
+/* icons land - the craft of the service, performed. Pure CSS          */
 /* (stroke draw / pop / grow, pathLength-normalised), staged with      */
 /* animation-delay. Reduced motion renders the finished drawing.       */
 /* Square nodes, hairlines, one vermilion accent: the house grammar.   */
@@ -44,7 +44,7 @@ const accentPop = (d: number) =>
 
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const };
 
-/* ══ Web: a site assembles itself — frame, logo, menu, hero, sections ══ */
+/* ══ Web: a site assembles itself - frame, logo, menu, hero, sections ══ */
 function WebDoodle() {
   return (
     <svg viewBox="0 0 160 120" {...S} aria-hidden="true" className="h-full w-full">

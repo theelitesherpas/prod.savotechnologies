@@ -1,0 +1,88 @@
+.page {
+  --home-space: clamp(56px, 6vw, 88px);
+  --home-button-red: #df2525;
+  background: #fff;
+  color: #000;
+}
+.page > section[data-home-section] { padding-block: var(--home-space); }
+.page > section[data-home-section] > div:first-child { max-width: 1280px; padding-inline: 32px; }
+.page > :is([id="faq"], [id="start"], [aria-labelledby="brand-heading"]) > :global(.shell) { max-width: 1280px; padding-inline: 32px; }
+.page > [aria-labelledby="brand-heading"] h2 { font-size: clamp(1.7rem, 3.4vw, 2.7rem); line-height: 1.1; letter-spacing: -.018em; }
+.sectionHead { max-width: 800px; }
+.centerHead { margin-inline: auto; text-align: center; }
+.sectionHead h2, .sectionTitle { font-family: var(--font-serif); font-size: clamp(1.7rem, 3.4vw, 2.7rem); font-weight: 600; line-height: 1.12; letter-spacing: -0.025em; text-wrap: balance; }
+.sectionHead p { max-width: 720px; margin-top: 16px; font-size: 1rem; line-height: 1.7; color: #666; }
+.centerHead p { margin-inline: auto; }
+.services { background: #fff; }
+.serviceGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 36px; border-top: 1px solid #e8e8e8; border-left: 1px solid #e8e8e8; }
+.service { display: flex; min-width: 0; gap: 20px; padding: 28px; border-right: 1px solid #e8e8e8; border-bottom: 1px solid #e8e8e8; transition: background 200ms ease; }
+.service:hover { background: #fff8f8; }
+.service > span:first-child { flex-shrink: 0; }
+.service h3 { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; font-family: var(--font-serif); font-size: 1.125rem; font-weight: 600; line-height: 1.35; }
+.service h3 svg { flex-shrink: 0; margin-top: 4px; color: #b82222; }
+.service p { margin-top: 10px; font-size: 0.875rem; line-height: 1.7; color: #666; }
+.service:focus-visible { outline: 2px solid #d72a2a; outline-offset: -4px; }
+.process { background: #f7f7f7; }
+.processSteps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px; margin-top: 40px; }
+.processStep { position: relative; padding-top: 24px; border-top: 1px solid #d6d6d6; }
+.processStep::before { position: absolute; top: -4px; left: 0; width: 7px; height: 7px; content: ""; background: #d72a2a; border-radius: 50%; }
+.processStep h3 { font-family: var(--font-serif); font-size: 1.125rem; font-weight: 600; }
+.processStep p { margin-top: 10px; font-size: 0.875rem; line-height: 1.7; color: #666; }
+.processAction { margin-top: 32px; text-align: center; }
+.primaryButton { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 12px; padding: 12px 24px; border-radius: 4px; background: #df2525; color: #fff; font-size: 0.9375rem; font-weight: 600; transition: background 200ms ease; }
+.primaryButton:hover { background: #c92121; }
+.proof { background: #fff; }
+.proofHeader { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+.proofHeader p { max-width: 620px; margin-top: 16px; font-size: 1rem; line-height: 1.7; color: #666; }
+.proofGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 36px; }
+.proofCard { overflow: hidden; border: 1px solid #e8e8e8; border-radius: 10px; }
+.proofMedia { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #171717; }
+.proofMedia :is(img, video) { width: 100%; height: 100%; object-fit: cover; }
+.mediaPending { display: flex; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; background: linear-gradient(140deg, #202020, #111); color: #ccc; }
+.mediaPending > svg { width: 48px; height: 48px; color: #b3b3b3; }
+.mediaPending p { font-size: 0.875rem; text-align: center; }
+.mediaLabel { position: absolute; bottom: 16px; left: 16px; padding: 6px 10px; border-radius: 3px; background: #111; color: #fff; font-size: 0.75rem; }
+.proofIdentity { padding: 20px 24px; text-align: center; }
+.proofIdentity > p:first-child { font-size: 1rem; font-weight: 600; }
+.proofIdentity > p + p { margin-top: 5px; color: #666; font-size: 0.8125rem; line-height: 1.5; }
+.previewNotice { display: inline-flex; padding: 6px 10px; border: 1px solid #e8e8e8; border-radius: 4px; font-size: 0.75rem; color: #666; }
+.techControls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; margin-top: 28px; }
+.techControls button { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #555; border-radius: 50%; color: #e8e8e8; }
+.techControls button:hover { border-color: #ff3333; }
+.techDots { display: flex; }
+.techDots button { border: none; border-radius: 4px; }
+.techDots button > span { width: 6px; height: 6px; border-radius: 3px; background: #777; }
+.techDots button[aria-current="true"] > span { width: 22px; background: #ff3333; }
+.techControls > span { color: #b0b0b0; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.articleCover { position: absolute; inset: 0; background: linear-gradient(transparent 35%, rgb(0 0 0 / .68)); }
+.articleCover span { position: absolute; bottom: 20px; left: 20px; right: 20px; font-family: var(--font-serif); font-size: clamp(1.2rem, 2vw, 1.6rem); line-height: 1.15; font-weight: 500; color: #fff; }
+.faq { --muted: #666; --border: #dedede; padding-block: var(--home-space, 72px); background: #f7f7f7; }
+.faqBody { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 64px; margin-top: 36px; }
+.faqAside { color: #666; font-size: 0.9375rem; line-height: 1.7; }
+.faqAside a { display: inline-flex; min-height: 44px; align-items: center; gap: 12px; margin-top: 20px; color: #000; font-weight: 600; }
+.page :is(button, a, summary) { scroll-margin-block: 112px; }
+.page :is(button, a):focus-visible { outline: 2px solid #d72a2a; outline-offset: 4px; }
+@media (max-width: 1023px) {
+  .serviceGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .processSteps { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .processStep { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 20px; padding-block: 20px; }
+  .processStep::before { display: none; }
+  .processStep p { margin-top: 0; }
+  .faqBody { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+}
+@media (max-width: 639px) {
+  .page > section[data-home-section] > div:first-child, .page > :is([id="faq"], [id="start"], [aria-labelledby="brand-heading"]) > :global(.shell) { padding-inline: 20px; }
+  .sectionHead p, .proofHeader p { font-size: 0.9375rem; }
+  .serviceGrid { grid-template-columns: minmax(0, 1fr); margin-top: 28px; }
+  .service { padding: 20px; gap: 16px; }
+  .service h3 { font-size: 1.0625rem; }
+  .service p { margin-top: 6px; }
+  .techControls { gap: 8px; }
+  .processSteps { margin-top: 28px; }
+  .processStep { grid-template-columns: 76px minmax(0, 1fr); gap: 16px; padding-block: 20px; }
+  .processStep h3 { font-size: 1.0625rem; }
+  .proofHeader { align-items: start; flex-direction: column; gap: 16px; }
+  .proofGrid { grid-template-columns: minmax(0, 1fr); margin-top: 28px; }
+  .faqBody { margin-top: 28px; }
+}
+@media (prefers-reduced-motion: reduce) { .service, .primaryButton { transition: none; } }

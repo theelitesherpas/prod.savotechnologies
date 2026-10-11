@@ -16,7 +16,7 @@ export default async function PortalProjectPage({ params }: { params: Promise<{ 
     include: {
       milestones: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] },
       updates: { orderBy: { createdAt: "desc" }, take: 12 },
-      invoices: { orderBy: { issuedAt: "desc" } },
+      invoices: { where: { clientId: client.id, status: { notIn: ["draft"] } }, orderBy: { issuedAt: "desc" } },
     },
   });
   if (!project) notFound();

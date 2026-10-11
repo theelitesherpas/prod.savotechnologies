@@ -1,0 +1,125 @@
+/* Shared action placement and hit areas; hero-specific tones remain intact. */
+.logo { display:inline-flex; min-width:44px; min-height:44px; align-items:center; }
+.projectButton { display:inline-flex; flex-shrink:0; white-space:nowrap; min-height:44px; border-radius:6px; background:#df2525; color:#fff; }
+.projectButton:hover { background:#b82222; color:#fff; }
+
+/* Homepage-only chrome shares the hero's dark atmosphere. Other routes
+   keep their existing header styling and navigation behavior. */
+.home {
+  --background: #05060a;
+  --foreground: #f7f7f7;
+  --surface: #111319;
+  --surface-secondary: #1b1e25;
+  --muted: #a3a8b3;
+  --border: rgb(255 255 255 / 0.12);
+  --accent: #ff7062;
+  --accent-hover: #ff9586;
+  --accent-strong: #ff9586;
+  --on-accent: #05060a;
+  color: var(--foreground);
+  background: transparent;
+  border-bottom: 1px solid transparent;
+}
+
+.solid {
+  background: rgb(5 6 10 / 0.92);
+  border-bottom-color: rgb(255 255 255 / 0.07);
+  backdrop-filter: blur(14px);
+}
+
+.home .bar { gap: clamp(12px, 1.2vw, 24px); }
+.home .actions { gap: 10px; }
+
+.home .logo {
+  color: #fff;
+  filter: drop-shadow(0 2px 14px rgb(255 89 61 / 0.18));
+}
+
+.home nav[aria-label="Primary"] > ul > li > :is(a, button) {
+  padding-inline: clamp(8px, 0.7vw, 12px);
+  font-size: 0.8125rem;
+  transition: color 220ms ease;
+}
+
+.home nav[aria-label="Primary"] > ul > li > :is(a, button):hover {
+  color: #fff;
+}
+
+.home .projectButton {
+  display: inline-flex;
+  flex-shrink: 0;
+  white-space: nowrap;
+  height: 44px;
+  background: #e02a2a;
+  color: #fff;
+  border: 1px solid rgb(255 131 111 / 0.32);
+  box-shadow: 0 4px 24px rgb(255 51 51 / 0.2);
+  transition: background-color 300ms ease, box-shadow 300ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home .projectButton:hover {
+  background: #e22a2a;
+  color: #fff;
+  box-shadow: 0 6px 32px rgb(255 51 51 / 0.32);
+  transform: translateY(-1px);
+}
+
+.home :is(.logo, .actions button, nav[aria-label="Primary"] a, nav[aria-label="Primary"] button):focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+
+.home .menuButton {
+  color: #fff;
+  border-color: rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.035);
+}
+
+@media (max-width: 1279px) {
+  .projectButton {
+    padding-inline: 14px;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .bar, .home .bar { gap: 10px; }
+  .actions, .home .actions { gap: 8px; }
+  .projectButton {
+    height: 44px;
+    padding-inline: 10px;
+    font-size: 0.75rem;
+  }
+  .projectButton svg { display: none; }
+}
+
+/* Service detail pages inherit Savo neutrals, not the legacy paper chapter. */
+.service { --background:#fff; --foreground:#000; --muted:#666; --border:#e8e8e8; --accent:#b82222; --accent-hover:#b82222; --on-accent:#fff; color:#000; background:#fff; }
+.service .projectButton { border:0; border-radius:6px; background:#df2525; color:#fff; }
+.service .projectButton:hover { background:#b82222; color:#fff; }
+.service :is(.logo,.actions button,nav[aria-label="Primary"] a,nav[aria-label="Primary"] button):focus-visible { outline:2px solid #b82222; outline-offset:4px; }
+.serviceHero { --background:#000; --foreground:#fff; --muted:#b0b0b0; --border:#454545; --accent:#ff6b6b; background:#000; color:#fff; }
+.serviceHero :is(.logo,.actions button,nav[aria-label="Primary"] a,nav[aria-label="Primary"] button):focus-visible { outline-color:#fff; }
+
+.menuActive {
+  --background: #111;
+  --foreground: #fff;
+  --muted: #b0b0b0;
+  --border: #383838;
+  --accent: #ff6b6b;
+  --accent-strong: #ff6b6b;
+  background: #111;
+  color: #fff;
+  border-bottom: 0;
+  backdrop-filter: none;
+}
+.menuActive .projectButton { background: #df2525; color: #fff; }
+.menuButton { min-width: 44px; min-height: 44px; }
+.menuActive .logo { color: #fff; }
+.menuActive :is(.logo, .actions button, nav[aria-label="Primary"] a, nav[aria-label="Primary"] button):focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .home .projectButton,
+  .home .projectButton:hover { transition: none; transform: none; }
+  .home .projectButton svg { transition: none; translate: none; }
+}

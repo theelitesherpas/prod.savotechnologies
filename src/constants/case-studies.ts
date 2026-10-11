@@ -23,7 +23,7 @@ import { slugifyCaseStudy, type CaseStudy } from "@/lib/case-study-schema";
  * DEMO DATA - NOT VERIFIED, never in production sitemap or structured data.
  */
 export const CASE_STUDY_DETAILS: CaseStudy[] = (
-  IS_DEMO ? DEMO_CASE_STUDIES.map(({ variant: _variant, ...record }) => record) : []
+  IS_DEMO ? DEMO_CASE_STUDIES.map(({ variant: _variant, ...record }) => { void _variant; return record; }) : []
 ).map((record) => ({ ...record, slug: slugifyCaseStudy(record.title) }));
 
 export type CaseEntry = {

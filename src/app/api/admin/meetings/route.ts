@@ -1,16 +1,18 @@
 import { apiOk, apiError, isJsonRequest, readJsonBody } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getAdminUser } from "@/lib/auth";
-import { createMeeting, generateICS, statusLabel } from "@/lib/meeting/service";
+import { canAccess } from "@/lib/permissions";
+import { createMeeting } from "@/lib/meeting/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET /api/admin/meetings — list + optional client directory. */
+/** GET /api/admin/meetings - list + optional client directory. */
 
 export async function GET(req: Request) {
   const user = await getAdminUser();
   if (!user) return apiError("Not authorized.", 401);
+  if (!canAccess(user, "clients")) return apiError("Not authorized.", 403);
   if (!prisma) return apiError("Database unavailable.", 503);
 
   const url = new URL(req.url);
@@ -42,15 +44,17 @@ export async function GET(req: Request) {
   });
 }
 
-/** POST /api/admin/meetings — create a new meeting request. */
+/** POST /api/admin/meetings - create a new meeting request. */
 
 export async function POST(req: Request) {
   const user = await getAdminUser();
   if (!user) return apiError("Not authorized.", 401);
+  if (!canAccess(user, "clients")) return apiError("Not authorized.", 403);
   if (!isJsonRequest(req)) return apiError("Unsupported format.", 415);
 
   const body = await readJsonBody(req);
   if (!body.ok) return apiError("Invalid request.", 400);
+  if (!body.data || typeof body.data !== "object" || Array.isArray(body.data)) return apiError("Invalid request.", 400);
   const d = body.data as Record<string, unknown>;
 
   const result = await createMeeting({

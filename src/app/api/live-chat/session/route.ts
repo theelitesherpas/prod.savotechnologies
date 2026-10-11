@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/live-chat/session — widget bootstrap. Ensures the visitor
+ * GET /api/live-chat/session - widget bootstrap. Ensures the visitor
  * cookie, reports live-chat availability (business hours + agents online)
  * and restores any resumable conversation (cross-page, cross-visit).
  */

@@ -1,169 +1,25 @@
-/**
- * AI practice pages - content for /ai/[slug]/ (generative-ai,
- * consulting, machine-learning). Capability copy only.
- */
-
-export type AiService = {
-  slug: string;
-  title: string;
-  short: string;
-  tagline: string;
-  heroLead: string;
-  metaDescription: string;
-  overview: [string, string];
-  engagements: { title: string; text: string }[];
-  process: { name: string; text: string }[];
-  stack: string[];
-  faqs: { q: string; a: string }[];
-};
-
+/** AI practice defaults. Managed records still take precedence. */
+export type AiService = { slug:string; title:string; short:string; tagline:string; heroLead:string; metaDescription:string; overview:[string,string]; engagements:{title:string;text:string}[]; process:{name:string;text:string}[]; stack:string[]; faqs:{q:string;a:string}[] };
 export const AI_SERVICES: AiService[] = [
-  {
-    slug: "generative-ai",
-    title: "Generative AI & LLM Integration",
-    short: "GenAI",
-    tagline: "Generative AI, wired into the business",
-    heroLead:
-      "Language models put to work inside your product, grounded in your data, guarded by evaluation suites, and priced for production rather than demos.",
-    metaDescription:
-      "Generative AI and LLM integration by Savo Technologies: RAG systems, copilots, content pipelines and AI features shipped into production, evaluated, observable and cost-aware.",
-    overview: [
-      "The gap between a generative AI demo and a generative AI feature that earns its place is engineering: retrieval that cites sources, prompts versioned like code, evaluations that catch regressions, and inference bills that stay explicable. That gap is where we work.",
-      "We integrate language models into real products, copilots beside your users' workflows, knowledge systems over your documents, content pipelines with human approval gates, on whichever model earns the job, abstracted so the frontier can move without breaking your product.",
-    ],
-    engagements: [
-      { title: "RAG knowledge systems", text: "Retrieval over your documents with sources attached, answers users can verify and trust." },
-      { title: "Product copilots", text: "Assistants embedded beside real workflows, acting with permissions and escalating deliberately." },
-      { title: "Content pipelines", text: "Drafting, tagging and localization flows with human approval gates and full revision history." },
-      { title: "AI search", text: "Natural-language search over structured and unstructured data, ranked for your domain." },
-      { title: "Model integration & abstraction", text: "Provider wiring that stays swappable, evaluations decide the model, not the marketing." },
-      { title: "Cost & safety engineering", text: "Inference budgets, caching, rate governance and guardrails tuned for production traffic." },
-    ],
-    process: [
-      { name: "Ground", text: "Retrieval and context built over your real data, with permissions scoped correctly." },
-      { name: "Guard", text: "Guardrails, approval gates and evaluation suites that measure quality continuously." },
-      { name: "Integrate", text: "The model wired into your product surfaces, not a chat box bolted to the side." },
-      { name: "Improve", text: "Traces, feedback loops and a tuning cadence that compounds instead of drifting." },
-    ],
-    stack: ["OpenAI", "Anthropic", "RAG", "Vector search", "Evaluations", "Guardrails"],
-    faqs: [
-      { q: "Which LLM should we use?", a: "The one that earns it on your tasks. We evaluate options for your workloads and wire the abstraction so models swap as the frontier moves, your product never marries a vendor." },
-      { q: "How do you prevent hallucinations?", a: "Grounding first: answers come from your data with sources attached, confidence gates route uncertainty to humans, and evaluation suites catch regressions before users do. No system is perfect; this one is accountable." },
-      { q: "What does inference cost to run?", a: "It is engineered, not discovered: caching, model tiering and prompt budgets keep costs explicable. We report inference spend as a product metric from the first release." },
-      { q: "Can you add AI to an existing product?", a: "Yes, most of our work lands inside existing products. The integration layer respects your architecture instead of demanding a rewrite." },
-    ],
-  },
-  {
-    slug: "consulting",
-    title: "AI Consulting & Strategy",
-    short: "AI Strategy",
-    tagline: "An AI strategy that survives contact with reality",
-    heroLead:
-      "Where AI actually pays in your business, mapped honestly, sequenced by value, and sized to the organisation that has to run it.",
-    metaDescription:
-      "AI consulting and strategy by Savo Technologies: opportunity mapping, feasibility assessment, build-vs-buy decisions and roadmaps. Honest advice, no hype, evidence-led.",
-    overview: [
-      "Most AI strategies fail in the same place: a slide deck full of use cases nobody can run. A real strategy starts from your workflows and data, separates the automatable from the aspirational, and sequences work by value delivered versus effort required.",
-      "We consult the way we build, honestly. If an off-the-shelf tool beats a custom build, we say so. If the data isn't ready, that is the first project. And every recommendation arrives with an estimated cost of ownership, not just a vision.",
-    ],
-    engagements: [
-      { title: "Opportunity mapping", text: "Your workflows inventoried and scored, where AI pays, where it merely impresses." },
-      { title: "Feasibility & data readiness", text: "An honest audit of data, integrations and skills, the real prerequisites, gap by gap." },
-      { title: "Build vs buy decisions", text: "Vendor-neutral analysis with total cost of ownership, not license-price theater." },
-      { title: "AI roadmap", text: "A sequenced plan with measurable checkpoints, pilot, prove, then scale what works." },
-      { title: "Governance & policy", text: "Usage policies, review boards and risk frameworks your organisation can actually operate." },
-      { title: "Team enablement", text: "Coaching and pairing that leaves your team able to run the AI practice without us." },
-    ],
-    process: [
-      { name: "Discover", text: "Workshops and interviews across the business, where the hours and the margin leak." },
-      { name: "Assess", text: "Data, systems and skills audited against what each opportunity actually needs." },
-      { name: "Sequence", text: "A roadmap cut by value and effort, with a first win chosen for its proof value." },
-      { name: "Accompany", text: "We stay through the first builds, steering, reviewing and transferring the capability." },
-    ],
-    stack: ["Discovery workshops", "Feasibility audits", "Roadmapping", "Governance", "Enablement"],
-    faqs: [
-      { q: "Do you only recommend building with you?", a: "No. Roughly a third of our recommendations are buy-or-configure, and we say so in writing. A strategy that always ends in custom development is a sales deck, not a strategy." },
-      { q: "How long does an AI strategy engagement take?", a: "A focused assessment runs a few weeks; deeper programmes with governance and enablement run a quarter. You get a written roadmap either way, never a workshop that ends in applause." },
-      { q: "Can you work with our existing AI team?", a: "Yes, we embed as senior sparring partners: reviewing architecture, raising standards and leaving the team stronger, not dependent." },
-      { q: "What if AI isn't right for us yet?", a: "Then you will hear that, with the reasons and what to fix first, usually data foundations. Honest noes are part of the service." },
-    ],
-  },
-  {
-    slug: "machine-learning",
-    title: "Machine Learning & Analytics",
-    short: "ML",
-    tagline: "Models that earn their keep in production",
-    heroLead:
-      "Forecasting, recommendation and anomaly systems, trained on your data, monitored in production, and retired honestly when they stop paying.",
-    metaDescription:
-      "Machine learning and analytics engineering by Savo Technologies: forecasting, recommendation engines, anomaly detection and MLOps. Models monitored, evaluated and maintained in production.",
-    overview: [
-      "A model is a promise that decays. Without monitoring, retraining and honest evaluation, last quarter's accurate forecast becomes this quarter's confident mistake. Production ML is a maintenance discipline as much as a modelling one.",
-      "We build the whole loop: pipelines that feed models reliably, training that is versioned and reproducible, deployment that is boring, and monitoring that tells you when the world has moved. Forecasting, recommendation, anomaly detection, the same standard applies.",
-    ],
-    engagements: [
-      { title: "Forecasting systems", text: "Demand, revenue and capacity forecasts with confidence bounds and tracked accuracy." },
-      { title: "Recommendation engines", text: "Ranking tuned to your metrics, relevance that serves the business, not just the benchmark." },
-      { title: "Anomaly detection", text: "Fraud, outage and drift signals with alerting that respects an operator's attention." },
-      { title: "Churn & LTV models", text: "Customer models wired into CRM actions, not parked in a dashboard." },
-      { title: "MLOps", text: "Deployment, drift monitoring and retraining loops so models stay honest after launch." },
-      { title: "Feature engineering", text: "Pipelines and stores that turn raw operational data into model-ready signal, versioned like code." },
-    ],
-    process: [
-      { name: "Frame", text: "The decision the model serves, the metric that proves it, and the baseline it must beat." },
-      { name: "Build", text: "Pipelines and training with versioned data and reproducible runs, no notebook archaeology." },
-      { name: "Deploy", text: "Models shipped behind monitoring, with rollback as easy as any other release." },
-      { name: "Maintain", text: "Drift alerts, scheduled retraining and honest retirement when a model stops paying." },
-    ],
-    stack: ["Python", "PyTorch", "scikit-learn", "Airflow", "MLflow", "Feast"],
-    faqs: [
-      { q: "Do we need a data science team first?", a: "No, we build the first systems and can operate them with you. Over time we document and transfer, so your team inherits capability instead of a black box." },
-      { q: "How do you know a model is working?", a: "Every model ships with a baseline, a target metric and live monitoring. If it stops beating the baseline, you will know before the board does." },
-      { q: "Can you take over an existing model?", a: "Yes, we audit training, data and monitoring first, stabilise what works, and rebuild only what is actually broken." },
-      { q: "What about our data privacy?", a: "Data stays in your infrastructure with scoped access, and models are trained where your governance allows. Nothing about your data needs to leave your cloud." },
-    ],
-  },
-  {
-    slug: "automation",
-    title: "Business Automation",
-    short: "Automation",
-    tagline: "Automate the work between the work",
-    heroLead:
-      "Workflow automation, no-code and low-code platforms, and AI-powered processes: we connect the applications, data, APIs and AI systems your business already runs into workflows that execute repetitive operational work automatically. Use no-code where it is sufficient, custom engineering where it is necessary, and both when that makes the best system.",
-    metaDescription:
-      "Business automation by Savo Technologies: no-code and low-code automation, workflow automation, business process automation and AI-powered workflows on n8n, Make, Zapier and Power Automate, connected to your CRM, ERP, documents and approvals with human oversight where it matters.",
-    overview: [
-      "Between every pair of systems in your company sits work nobody was hired to do: re-keying invoices, chasing approvals, updating the CRM after the call, assembling the report from four tabs. Business automation is the engineering discipline that removes that work. It connects rules, data, applications, AI and human approvals into workflows that actually execute, not chatbots that talk about executing.",
-      "Not every automation needs custom software, and not every automation needs AI. Rule-based workflows connect the tools you already run; AI-powered workflows add understanding, extraction, classification and decision support where judgment is required. We are an automation engineering partner, not an n8n agency: no-code where it is sufficient, custom APIs, integrations, databases and AI components where they are necessary, combined when that creates the best system.",
-    ],
-    engagements: [
-      { title: "Document processing", text: "Invoices, contracts, KYC and claims read, validated and posted into your systems, exceptions routed for review." },
-      { title: "Sales & CRM workflows", text: "Enrichment, follow-ups, pipeline updates and handoffs executed from real signals, not reminders." },
-      { title: "Finance & reporting", text: "Reconciliation, month-end packs and recurring reports assembled from source systems, checked and delivered." },
-      { title: "Onboarding & offboarding", text: "Customers or employees moved through every system, account, notification and approval in one tracked flow." },
-      { title: "Back-office operations", text: "Data entry, catalog updates, order processing and internal approvals, the quiet work, automated." },
-      { title: "Integration fabric", text: "API-driven connections between your existing tools, so automation reads and writes where the work already lives." },
-    ],
-    process: [
-      { name: "Map", text: "The process walked end to end, every system, handoff and wait state documented with the people who run it." },
-      { name: "Bound", text: "Decisions the machine may make defined explicitly, with thresholds, confidence gates and the human approval points." },
-      { name: "Connect", text: "The workflow wired into your existing systems through their APIs. Nothing gets replaced, everything gets connected." },
-      { name: "Run", text: "Live with full audit trails, monitoring on every step, and a tuning cadence that widens automation as trust earns." },
-    ],
-    stack: ["n8n", "Make", "Zapier", "Power Automate", "Webhooks & REST APIs", "PostgreSQL", "Supabase", "OpenAI", "Anthropic", "Gemini", "Google Workspace", "Microsoft 365", "Slack", "CRM & ERP connectors"],
-    faqs: [
-      { q: "Do we have to replace our current systems?", a: "No. The automation layer connects through the APIs of the tools you already run, your CRM, ERP, mail, documents and internal apps. We integrate what works instead of demanding a migration." },
-      { q: "Do we need AI for automation to be worth it?", a: "No. Plenty of valuable automation is pure workflow: rule-based connections between the apps you already use, moving data, triggering actions and keeping records in sync. AI earns its place only where a step needs understanding or judgment, and we will say so honestly when it does not." },
-      { q: "What is the difference between workflow automation and AI-powered automation?", a: "Workflow automation is rule-based: when this happens, do that, across your existing applications. AI-powered automation adds intelligent steps: classifying an email, extracting invoice fields, drafting a reply, deciding whether an exception needs a human. Most systems we ship combine both, with AI only where rules run out." },
-      { q: "Do you only work with n8n?", a: "No. n8n is one important tool in our stack, alongside Make, Zapier, Microsoft Power Automate and custom code. We are technology-agnostic: the platform is chosen for your systems, team and governance needs, not our preferences." },
-      { q: "What happens when the AI is unsure?", a: "It stops and asks. Every decision has explicit bounds and confidence thresholds; anything outside them routes to a human with the full context attached. The machine handles the routine, people handle judgment." },
-      { q: "What if we outgrow no-code?", a: "That is exactly why an engineering company runs this practice. When a workflow hits the limits of a no-code platform, we extend it with custom APIs, integrations, databases or AI components, so the system grows instead of getting rebuilt." },
-      { q: "Which processes should we automate first?", a: "High volume, rule-shaped and currently eating someone's week: document intake, follow-ups, reconciliation, onboarding. We map your workflows and sequence by value delivered against effort, quick wins fund the deeper builds." },
-      { q: "Is it auditable and secure?", a: "Every step is logged: what was read, what was decided, on what basis, who approved what. Access follows your existing permissions, data stays in your infrastructure, and the trail answers any auditor's question." },
-    ],
-  },
+  { slug:"generative-ai", title:"Generative AI & LLM Integration", short:"Generative AI", tagline:"Useful AI, inside the products you already run.", heroLead:"Bring language models into search, content and everyday product workflows - with relevant knowledge, clear permissions and human review where it matters.", metaDescription:"Generative AI and LLM integration by Savo Technologies: knowledge retrieval, product copilots, content workflows, model evaluation and integration into existing software.", overview:["A promising AI demo is only the starting point. A useful product feature also needs relevant information, understandable behavior, evaluation and an operating plan.","We work on the whole feature: its user experience, retrieval and model integration, permission boundaries, failure paths and the way your team reviews it after launch."],
+    engagements:[{title:"Knowledge & RAG systems",text:"Retrieve relevant information from approved sources and make citations available for review."},{title:"Product copilots",text:"Add assistance beside a real workflow, with tool access and handoff scoped to the task."},{title:"Content workflows",text:"Prepare, tag or localise drafts with brand guidance, source material and editorial approval."},{title:"AI search",text:"Connect natural-language questions with relevant structured and unstructured information."},{title:"Model integration",text:"Evaluate suitable providers and integrate the model behind a maintainable application interface."},{title:"Cost & safety engineering",text:"Plan usage limits, caching, evaluation, observability and fallback behavior around your traffic."}],
+    process:[{name:"Understand the task",text:"Choose the user problem and define what a useful answer or action looks like."},{name:"Connect the context",text:"Prepare information, retrieval and model access with the required permissions."},{name:"Evaluate & integrate",text:"Test normal and difficult cases, then connect the feature to the product experience."},{name:"Review & improve",text:"Use traces and feedback to improve quality, cost and the handling of uncertainty."}],
+    stack:["OpenAI","Anthropic","RAG","Vector search","Evaluations","Guardrails"],
+    faqs:[{q:"Which language model should we use?",a:"We compare suitable models against your tasks, information, cost and hosting requirements. The integration can be designed so a future provider change does not require rebuilding the entire product."},{q:"Can you prevent incorrect AI answers?",a:"No system can guarantee that. Retrieval, citations, evaluations and review paths can reduce risk and make mistakes easier to find. The feature should communicate its limits and avoid taking sensitive actions without the right checks."},{q:"What will it cost to run?",a:"Usage, model choice, context size and traffic all affect cost. We estimate the operating model, define sensible limits and consider caching or simpler models where they meet the task."},{q:"Can you add this to our existing product?",a:"Yes, subject to the product's architecture and available interfaces. We review where the feature belongs, what information it can access and how it fits the current user journey."}] },
+  { slug:"consulting", title:"AI Consulting & Strategy", short:"AI Strategy", tagline:"Know where AI belongs. And where it doesn’t.", heroLead:"Turn a broad AI ambition into a practical plan: the right problem, realistic data requirements and a first project your team can evaluate.", metaDescription:"AI consulting and strategy by Savo Technologies: opportunity mapping, feasibility, data readiness, build-vs-buy decisions, governance and practical roadmaps.", overview:["The starting point is your business, not a model. We look at the tasks people do, the information available and the constraints that matter to your team.","The result may be a focused AI pilot, a configured tool, a rule-based integration or work on your data foundations. Recommendations should explain the trade-offs and how the next step will be evaluated."],
+    engagements:[{title:"Opportunity mapping",text:"Identify useful workflows and compare their potential value, effort and operational risk."},{title:"Data & feasibility review",text:"Review information quality, access, integrations and the prerequisites for a credible pilot."},{title:"Build vs buy",text:"Compare existing tools, configuration and custom software against your actual requirements."},{title:"AI roadmap",text:"Sequence pilots and foundations with defined ownership and review checkpoints."},{title:"Governance & policy",text:"Define usage boundaries, approval responsibilities and risk-review requirements."},{title:"Team enablement",text:"Workshops, documentation and pairing to help the operating team understand the system."}],
+    process:[{name:"Listen & map",text:"Work with the people doing the tasks to understand friction and existing systems."},{name:"Assess the options",text:"Review data, feasibility, costs, alternatives and the risks of doing nothing."},{name:"Choose a first step",text:"Define a scoped pilot and the evidence needed to decide whether to continue."},{name:"Support the team",text:"Review the first implementation and document the decisions and operating responsibilities."}],
+    stack:["Discovery workshops","Feasibility reviews","Roadmapping","Governance","Enablement"],
+    faqs:[{q:"Do you always recommend a custom build?",a:"No. Existing software, configuration or a conventional integration may meet the need better. The recommendation should explain those options rather than assuming AI or custom development is the answer."},{q:"How long does a strategy engagement take?",a:"It depends on the number of workflows, stakeholders and systems involved. We agree the assessment scope and the expected outputs before defining a timeline."},{q:"Can you work with our existing AI team?",a:"Yes. We can support opportunity assessment, architecture review or a specific pilot alongside your team, with responsibilities and handover agreed up front."},{q:"What if we are not ready for AI?",a:"Then the useful next step may be improving information quality, access or process definitions. The assessment should make those prerequisites clear rather than pushing an unsuitable pilot."}] },
+  { slug:"machine-learning", title:"Machine Learning & Analytics", short:"Machine Learning", tagline:"Make better use of the data you already have.", heroLead:"Forecast demand, explore patterns and identify unusual events with models designed around a real business decision - not a benchmark alone.", metaDescription:"Machine learning and analytics by Savo Technologies: forecasting, recommendation, anomaly detection, data pipelines, model evaluation and MLOps.", overview:["A model matters when it supports a decision. Before modelling, we define that decision, the available information and the simpler baseline it needs to be compared with.","We connect data preparation, reproducible training, deployment and monitoring. After launch, performance and data changes need review; a model is an operating responsibility, not a one-off file."],
+    engagements:[{title:"Forecasting",text:"Demand, capacity or business forecasts with uncertainty and a defined validation approach."},{title:"Recommendations",text:"Rank relevant products or information around the user task and agreed business measures."},{title:"Anomaly detection",text:"Identify unusual patterns and define how people investigate or act on a signal."},{title:"Customer models",text:"Explore retention or customer-value patterns with appropriate data use and evaluation."},{title:"MLOps",text:"Version, deploy and monitor models, with a plan for retraining and rollback."},{title:"Feature engineering",text:"Build consistent, documented transformations from source data to model-ready inputs."}],
+    process:[{name:"Frame the decision",text:"Define the outcome, the baseline and the information the model may use."},{name:"Prepare & train",text:"Build data pipelines and reproducible training with appropriate validation splits."},{name:"Deploy & observe",text:"Connect outputs to the workflow and monitor data, quality and operational behavior."},{name:"Maintain & reassess",text:"Review drift, retraining and whether the model remains the right approach."}],
+    stack:["Python","PyTorch","scikit-learn","Airflow","MLflow","Feast"],
+    faqs:[{q:"Do we need an internal data science team?",a:"Not necessarily. We can work with your existing technical and business teams. A project still needs an owner for the decision, data access and ongoing operation, with responsibilities agreed before launch."},{q:"How will we know whether the model is useful?",a:"We define a baseline, validation method and relevant measures before building. A pilot should test whether the model improves the actual decision, not only whether it performs well on a historical dataset."},{q:"Can you review an existing model?",a:"Yes. We review its data, training, evaluation, deployment and monitoring, then discuss whether it needs stabilisation, revision or replacement."},{q:"What about privacy and hosting?",a:"Data access, hosting and retention follow the architecture and terms agreed for the project. We review those requirements before selecting infrastructure or model providers; a private environment is an option to assess, not an automatic promise."}] },
+  { slug:"automation", title:"Business Automation", short:"Automation", tagline:"Connect your tools. Simplify the work.", heroLead:"Connect your applications, documents and approvals into practical workflows. Use clear rules where they fit, and AI only where a step needs understanding.", metaDescription:"Business automation by Savo Technologies: connected workflows, document processing, CRM operations, approvals and AI-assisted tasks using no-code, low-code and custom engineering.", overview:["Re-entering data, chasing approvals and copying information between systems creates work around the real work. Automation connects those handoffs into a process people can follow.","Not every workflow needs AI or custom software. We choose between no-code, low-code and engineering based on your systems, the exceptions and the team that will operate it."],
+    engagements:[{title:"Document processing",text:"Extract and validate information from invoices, contracts or forms, with exceptions sent for review."},{title:"Lead qualification & routing",text:"Collect enquiry context and route leads according to agreed rules and responsibilities."},{title:"Support & ticket triage",text:"Classify requests, retrieve information and prepare responses or escalation context."},{title:"Sales & CRM workflows",text:"Connect follow-ups, record updates and handoffs to events in your sales process."},{title:"Appointments & scheduling",text:"Coordinate calendar availability, bookings, reminders and rescheduling rules."},{title:"Knowledge retrieval",text:"Connect questions to approved information and make the supporting sources visible."},{title:"Finance & reporting",text:"Assemble source information, run checks and route reports or reconciliations for approval."},{title:"Onboarding & offboarding",text:"Track accounts, notifications and approvals through a defined onboarding workflow."},{title:"Back-office operations",text:"Connect catalogues, orders, internal requests and routine records across tools."},{title:"Integration fabric",text:"Use APIs, webhooks and custom components to connect the systems where work already happens."}],
+    process:[{name:"Map the handoffs",text:"Understand the trigger, systems, people, exceptions and repeated effort."},{name:"Define the boundaries",text:"Choose rules or AI for each step and define approvals and failure paths."},{name:"Connect & test",text:"Build integrations and test them with routine inputs, missing information and errors."},{name:"Run & review",text:"Launch with visibility, monitoring and ownership, then improve the workflow as needs change."}],
+    stack:["n8n","Make","Zapier","Power Automate","Webhooks & REST APIs","PostgreSQL","Supabase","OpenAI","Anthropic","Gemini","Google Workspace","Microsoft 365","Slack","CRM & ERP connectors"],
+    faqs:[{q:"Do we need to replace our current tools?",a:"Usually the aim is to connect what already works. Feasibility depends on available APIs, permissions and the behavior of each system. We assess those interfaces before agreeing the integration."},{q:"Does automation need AI?",a:"No. Clear rules are often enough to move data, trigger an action or keep records in sync. AI is useful to assess when a step involves language, extraction or interpretation, with a suitable review path."},{q:"How is AI-assisted automation different?",a:"A rule-based flow follows defined conditions. An AI-assisted step can interpret a message, extract document fields or prepare a draft. Its outputs need validation and may require human approval before the workflow continues."},{q:"Do you only use n8n?",a:"No. We also assess Make, Zapier, Power Automate and custom integrations. Platform selection depends on your systems, governance, operating team and the limits of the workflow."},{q:"What happens when a step is uncertain?",a:"The flow can pause, request missing information or send the exception to a person. That behavior is defined and tested rather than treating every input as safe to process automatically."},{q:"What if no-code is not enough?",a:"We can extend a workflow with custom APIs, data services or application code where the platform permits. We assess those limits early so the proposed architecture fits the expected work."},{q:"Which workflow should we start with?",a:"Look for repeated work with a clear owner, understandable inputs and a manageable set of exceptions. A first pilot should be small enough to evaluate and useful enough to justify maintaining."},{q:"Can we review what the workflow did?",a:"Execution records, approvals and error reporting can be included in the design. Their detail, retention and access need to match your operating and governance requirements; logging alone is not a security or compliance guarantee."}] },
 ];
-
-export function aiService(slug: string): AiService | undefined {
-  return AI_SERVICES.find((s) => s.slug === slug);
-}
+export function aiService(slug:string):AiService|undefined { return AI_SERVICES.find(s=>s.slug===slug); }

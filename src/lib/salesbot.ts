@@ -94,7 +94,7 @@ function normalizeMoney(t: string): string {
     .replace(/\b(rupees?|rs\.?|inr)\b/gi, "₹")
     .replace(/\b(lacs?|lakhs?)\b/gi, "lakh")
     .replace(/\b(crores?)\b/gi, "crore")
-    .replace(/[–—]/g, "-");
+    .replace(/[\u2014\u2013]/g, "-");
 }
 
 const D = "(\\d+(?:\\.\\d+)?)";

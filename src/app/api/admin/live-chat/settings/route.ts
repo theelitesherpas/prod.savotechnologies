@@ -5,7 +5,7 @@ import { getLiveChatSettings, saveLiveChatSettings } from "@/lib/livechat/settin
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET/POST /api/admin/live-chat/settings — business hours, budgets,
+/** GET/POST /api/admin/live-chat/settings - business hours, budgets,
  *  quick replies, phone requirement, response window. Admin-only edits. */
 
 export async function GET() {

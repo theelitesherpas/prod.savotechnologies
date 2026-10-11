@@ -8,10 +8,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/admin/live-chat/ai-assist — Savo AI working FOR the agent
+ * POST /api/admin/live-chat/ai-assist - Savo AI working FOR the agent
  * (spec §36): suggested replies, technical answers from the verified
  * knowledge base, requirement digests and a follow-up email draft.
- * Deterministic and site-truth only — suggestions never auto-send.
+ * Deterministic and site-truth only - suggestions never auto-send.
  *
  * { conversationId, kind: "suggest" | "answer" | "digest" | "email", text? }
  */
@@ -23,14 +23,14 @@ function suggestReply(conv: { service?: string | null; stage?: string | null; le
   if (conv.stage === "Just exploring an idea" || conv.stage === "Planning requirements") {
     out.push("Happy to walk through it with you. To point you to the right approach: is this a new build, or improving something that already exists?");
   } else if (conv.stage === "Need urgent technical support") {
-    out.push("Understood — this sounds time-sensitive. Share the system affected and what changed most recently, and we'll triage it right away.");
+    out.push("Understood - this sounds time-sensitive. Share the system affected and what changed most recently, and we'll triage it right away.");
   } else if (conv.service?.toLowerCase().includes("ai")) {
     out.push("For AI work we usually start with a 2–4 week first deployment on your real data, with guardrails and evaluation from sprint one. Would a short discovery call help scope it?");
   } else {
     out.push("Could you share a little more about the project so I can bring in the right specialist?");
   }
   if (conv.requirement) {
-    out.push(`To confirm what I'm seeing: you're looking at ${conv.requirement.toLowerCase().slice(0, 120)} — is that the core of it?`);
+    out.push(`To confirm what I'm seeing: you're looking at ${conv.requirement.toLowerCase().slice(0, 120)} - is that the core of it?`);
   }
   out.push("Would you be available for a short discovery call this week? We can walk through your requirement together.");
   return out;
@@ -42,7 +42,7 @@ function emailDraft(conv: { leadName?: string | null; service?: string | null; r
     `Hi ${first},`,
     "",
     `Thank you for the chat on savotechnologies.com${conv.service ? ` about ${conv.service.toLowerCase()}` : ""}.`,
-    conv.requirement ? `To recap: ${conv.requirement}` : "To recap our conversation — you're exploring a project with our team.",
+    conv.requirement ? `To recap: ${conv.requirement}` : "To recap our conversation - you're exploring a project with our team.",
     conv.timeline ? `You mentioned hoping to start ${conv.timeline.toLowerCase()}.` : "",
     "A senior consultant will follow up with next steps and, if useful, a short discovery call.",
     "",

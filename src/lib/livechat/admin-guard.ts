@@ -4,7 +4,15 @@
  */
 
 import { getAdminUser, type AdminSessionUser } from "@/lib/auth";
-import { canAccess } from "@/lib/permissions";
+import { canAccess, type PermittedUser } from "@/lib/permissions";
+import type { BusEvent } from "./pubsub";
+
+/** Notification payloads retain the same section boundaries as their APIs. */
+export function canReceiveAdminEvent(user: PermittedUser, event: Pick<BusEvent, "type">): boolean {
+  if (event.type === "enquiry.new") return canAccess(user, "enquiries");
+  if (event.type === "email.new") return canAccess(user, "emails");
+  return canAccess(user, "live-chat");
+}
 
 export async function requireChatAgent(): Promise<AdminSessionUser | null> {
   const user = await getAdminUser();

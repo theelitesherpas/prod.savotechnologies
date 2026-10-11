@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminUser } from "@/lib/auth";
+import { canAccess } from "@/lib/permissions";
+import { rateLimit } from "@/lib/rate-limit";
 import { COLLECTION_KEYS, CONTENT_COLLECTIONS } from "@/lib/content-registry";
 
 export const runtime = "nodejs";
@@ -12,11 +14,17 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: Request) {
   const user = await getAdminUser();
-  if (!user) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!prisma) return NextResponse.json({ ok: true, groups: [] });
+  const headers = { "Cache-Control": "private, no-store" };
+  if (!user) return NextResponse.json({ ok: false }, { status: 401, headers });
+  const limit = rateLimit(`admin-search:${user.id}`, 60, 60_000);
+  if (!limit.ok) return NextResponse.json({ ok: false }, { status: 429, headers: { ...headers, "Retry-After": String(limit.retryAfterSeconds) } });
+  if (!prisma) return NextResponse.json({ ok: true, groups: [] }, { headers });
 
   const q = (new URL(req.url).searchParams.get("q") ?? "").trim().toLowerCase();
-  if (q.length < 2) return NextResponse.json({ ok: true, groups: [] });
+  if (q.length > 100) return NextResponse.json({ ok: false }, { status: 400, headers });
+  if (q.length < 2) return NextResponse.json({ ok: true, groups: [] }, { headers });
+  const contentAllowed = canAccess(user, "content");
+  const enquiriesAllowed = canAccess(user, "enquiries");
 
   const contains = { contains: q, mode: "insensitive" as const };
   type ItemRow = { id: string; collection: string; title: string; slug: string };
@@ -24,28 +32,28 @@ export async function GET(req: Request) {
   type EnqRow = { id: string; name: string; email: string | null; projectType: string };
   const empty = { items: [] as ItemRow[], services: [] as NamedRow[], industries: [] as NamedRow[], enquiries: [] as EnqRow[] };
   const [items, services, industries, enquiries] = await Promise.all([
-    prisma.contentItem.findMany({
+    contentAllowed ? prisma.contentItem.findMany({
       where: { OR: [{ title: contains }, { slug: contains }] },
       orderBy: [{ order: "asc" }],
       take: 24,
       select: { id: true, collection: true, title: true, slug: true },
-    }),
-    prisma.service.findMany({
+    }) : Promise.resolve(empty.items),
+    contentAllowed ? prisma.service.findMany({
       where: { OR: [{ title: contains }, { slug: contains }] },
       take: 5,
       select: { id: true, title: true, slug: true },
-    }),
-    prisma.industry.findMany({
+    }) : Promise.resolve(empty.services),
+    contentAllowed ? prisma.industry.findMany({
       where: { OR: [{ title: contains }, { slug: contains }] },
       take: 5,
       select: { id: true, title: true, slug: true },
-    }),
-    prisma.projectEnquiry.findMany({
+    }) : Promise.resolve(empty.industries),
+    enquiriesAllowed ? prisma.projectEnquiry.findMany({
       where: { OR: [{ name: contains }, { email: contains }, { company: contains }] },
       orderBy: { createdAt: "desc" },
       take: 6,
       select: { id: true, name: true, email: true, projectType: true },
-    }),
+    }) : Promise.resolve(empty.enquiries),
   ]).catch(() => [empty.items, empty.services, empty.industries, empty.enquiries]);
 
   const groups: { label: string; icon: string; results: { href: string; title: string; hint: string }[] }[] = [];
@@ -100,5 +108,5 @@ export async function GET(req: Request) {
     });
   }
 
-  return NextResponse.json({ ok: true, groups });
+  return NextResponse.json({ ok: true, groups }, { headers });
 }

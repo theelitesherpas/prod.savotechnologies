@@ -1,63 +1,55 @@
-import { Hero } from "@/sections/home/hero";
-import { Introduction } from "@/sections/home/introduction";
-import { CapabilityMarquee } from "@/sections/home/capability-marquee";
-import { Services } from "@/sections/home/services";
-import { AISystems } from "@/sections/home/ai-systems";
-import { SelectedWork } from "@/sections/home/selected-work";
-import { Methodology } from "@/sections/home/methodology";
-import { Technology } from "@/sections/home/technology";
-import { WhySavo } from "@/sections/home/why-savo";
-import { Metrics } from "@/sections/home/metrics";
-import { Industries } from "@/sections/home/industries";
-import { Growth } from "@/sections/home/growth";
-import { HomeFaq } from "@/sections/home/home-faq";
+import { getManagedArticles, getManagedTestimonials } from "@/lib/content-items";
+import { articlePreview } from "@/sections/insights/insights-content";
+import { getCaseStudies } from "@/lib/case-studies";
+import { buildHomePortfolioFeatures } from "@/sections/home-v2/portfolio-content";
+import { DEMO_LEAD_TESTIMONIALS } from "@/constants/testimonials";
+import { IS_DEMO } from "@/lib/content-mode";
+import { HeroV2 } from "@/sections/home-v2/hero";
+import {
+  ServicesV2,
+  AIBandV2,
+  TechnologiesGridV2,
+  WorkV2,
+  ProcessV2,
+  TestimonialsVideoV2,
+  InsightsV2,
+} from "@/sections/home-v2/sections";
 import { BrandStatement } from "@/sections/home/brand-statement";
 import { FinalCTA } from "@/sections/home/final-cta";
+import { HomeFaq } from "@/sections/home/home-faq";
+import { IndustryFan } from "@/sections/home-v2/industry-fan";
+import styles from "@/sections/home-v2/homepage.module.css";
 
 /**
- * Savo Technologies - homepage narrative.
+ * Savo Technologies - homepage (v2: modern IT-services look).
  *
- * Testimonials are intentionally absent: the brief forbids fabricated
- * quotes, and none have been supplied. Add a testimonials section only
- * when real, attributable client quotes exist.
+ * Composition: hero + logos → services → portfolio → consolidated AI →
+ * industries → process → client proof → technology → insights → FAQ →
+ * belief → final CTA. The shared footer closes the page.
  *
- * Metrics render as pending placeholders until verified figures arrive.
  */
+
 export const revalidate = 0; // always fresh: managed content
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [managedTestimonials, articles, caseStudies] = await Promise.all([getManagedTestimonials(), getManagedArticles(), getCaseStudies()]);
+  const videoTestimonials =
+    managedTestimonials.length > 0 ? managedTestimonials : IS_DEMO ? DEMO_LEAD_TESTIMONIALS.map((t) => ({ ...t, video: undefined })) : [];
+
   return (
-    <>
-      {/* 01: Hero: what SAVO is, instantly */}
-      <Hero />
-      {/* 03: Positioning: one partner from idea to scale */}
-      <Introduction />
-      {/* 04: Capability divider */}
-      <CapabilityMarquee />
-      {/* 05: The six disciplines */}
-      <Services />
-      {/* 06: AI as serious engineering (ink chapter) */}
-      <AISystems />
-      {/* 07: Proof, honestly staged */}
-      <SelectedWork />
-      {/* 08: How ideas become products */}
-      <Methodology />
-      {/* 09: Technology chosen for the problem */}
-      <Technology />
-      {/* 10: Differentiators that mean something */}
-      <WhySavo />
-      {/* 11: Impact, measured honestly (ink band) */}
-      <Metrics />
-      {/* 13: Where the work applies */}
-      <Industries />
-      {/* 14: Discoverability after launch */}
-      <Growth />
-      {/* 15: The answers buyers and engines look for (AEO/GEO) */}
+    <div className={styles.page}>
+      <HeroV2 />
+      <ServicesV2 />
+      <WorkV2 features={buildHomePortfolioFeatures(caseStudies)} />
+      <AIBandV2 />
+      <IndustryFan />
+      <ProcessV2 />
+      <TestimonialsVideoV2 items={videoTestimonials} demo={IS_DEMO && managedTestimonials.length === 0} />
+      <TechnologiesGridV2 />
+      <InsightsV2 articles={articles.slice(0, 3).map(articlePreview)} />
       <HomeFaq />
-      {/* 16: Brand moment (ink chapter) */}
       <BrandStatement />
-      {/* 17: Conversion (vermilion chapter) */}
       <FinalCTA />
-    </>
+    </div>
   );
 }

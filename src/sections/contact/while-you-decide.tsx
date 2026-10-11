@@ -11,8 +11,8 @@ import { withBasePath } from "@/lib/utils";
  * (the footer already carries the full six-region presence on every page,
  * so the contact body no longer duplicates it). Three recent field notes
  * from the insights library give a mid-decision visitor something real to
- * judge the thinking by - the same engineers who reply to the form wrote
- * them. Admin-managed via the "insights" collection; renders nothing when
+ * explore the thinking by. Authorship is never inferred from an enquiry
+ * contact. Admin-managed via the "insights" collection; renders nothing when
  * the library is empty.
  */
 export async function WhileYouDecide() {
@@ -28,14 +28,8 @@ export async function WhileYouDecide() {
     >
       <SectionHeader
         id="reading-heading"
-        heading="Written by the people who reply."
-        lead={
-          <>
-            No whitepapers behind a form, no thought-leadership theatre. A few
-            recent field notes from the build: if the thinking fits, the work
-            will too.
-          </>
-        }
+        heading="A little more to think about."
+        lead="Explore published articles on AI, engineering, design and delivery while you consider your next step."
       />
 
       <div className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
@@ -58,11 +52,6 @@ export async function WhileYouDecide() {
                 </span>
               </div>
               <div className="flex flex-1 flex-col p-6 sm:p-7">
-                <p className="t-label text-muted transition-colors duration-300 group-hover:text-background/70">
-                  {article.date}
-                  <span className="mx-2 text-muted group-hover:text-background/50">·</span>
-                  {article.time}
-                </p>
                 <h3 className="t-h4 mt-3 leading-snug transition-colors duration-300 group-hover:text-background">
                   {article.title}
                 </h3>

@@ -4,10 +4,11 @@ import { SERVICE_DETAILS } from "@/constants/services-detail";
 import { ServicesDirectory } from "@/sections/services/services-directory";
 import { DetailCta } from "@/components/shared/detail-cta";
 import { openGraphFor } from "@/lib/seo";
+import styles from "@/sections/services/services-directory.module.css";
 
 /**
- * Services - the catalogue. Ten services, one standard; each row opens
- * its service chapter. Capability copy only (PRODUCT.md hard rule).
+ * Homepage-aligned service catalogue. All ten canonical services, original
+ * descriptions, stack labels, artwork and enquiry destinations are retained.
  */
 
 const DESCRIPTION = `Services from Savo Technologies: web development, mobile apps, UI/UX design, cloud and DevOps, data and analytics, AI agent development, custom software, digital marketing and SEO, QA and product engineering. One team, end to end.`;
@@ -53,7 +54,7 @@ export default function ServicesPage() {
   };
 
   return (
-    <>
+    <div className={styles.page} data-services-page="directory">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -69,6 +70,6 @@ export default function ServicesPage() {
         secondaryLabel="Explore Industries"
         secondaryHref="/industries"
       />
-    </>
+    </div>
   );
 }

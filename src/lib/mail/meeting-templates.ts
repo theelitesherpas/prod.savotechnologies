@@ -1,5 +1,5 @@
 /**
- * Meeting email templates — built on the site's shared template shell.
+ * Meeting email templates - built on the site's shared template shell.
  * Same brand fonts, wordmark, spec rows, CTA buttons, colophon and
  * sign-off as every other transactional email.
  */
@@ -19,16 +19,6 @@ const TYPE_LABELS: Record<string, string> = {
   office_visit: "Office visit",
   client_office: "Client office",
   custom: "Meeting",
-};
-
-const LOC_LABELS: Record<string, string> = {
-  savo_office: "Savo Technologies office",
-  client_office: "Your office",
-  google_meet: "Google Meet",
-  zoom: "Zoom",
-  teams: "Microsoft Teams",
-  phone: "Phone",
-  custom: "Custom location",
 };
 
 /* ─────────────────── 1 · Meeting Invitation ─────────────────── */

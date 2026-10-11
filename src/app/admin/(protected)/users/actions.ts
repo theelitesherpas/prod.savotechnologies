@@ -10,6 +10,7 @@ import { audit } from "@/lib/audit";
 import { sanitizePermissions } from "@/lib/permissions";
 import { rateLimit } from "@/lib/rate-limit";
 import { accountEmailSchema, accountPasswordSchema, notifyEmailChanged, propagateAdminName } from "@/lib/admin-account";
+import { passwordFitsBcrypt } from "@/lib/passwords";
 
 /**
  * Panel user management - admin role only. Passwords are bcrypt-hashed
@@ -25,7 +26,8 @@ const nameSchema = z.string().trim().min(2).max(80);
 const passwordSchema = z
   .string()
   .min(10, "Passwords need at least 10 characters.")
-  .max(200);
+  .max(200)
+  .refine(passwordFitsBcrypt, "Use at most 72 UTF-8 bytes for this password.");
 
 export async function createUserAction(formData: FormData): Promise<void> {
   const admin = await requireAdminRole();
@@ -186,7 +188,7 @@ export async function resetUserPasswordAction(formData: FormData): Promise<void>
   const d = parsed.data;
   if (!rateLimit(`users-password:${admin.id}`, 10, 15 * 60 * 1000).ok) redirect("/admin/users?e=rate");
 
-  const target = await prisma!.adminUser.findUnique({ where: { id: d.id }, select: { id: true, passwordHash: true } });
+  const target = await prisma!.adminUser.findUnique({ where: { id: d.id }, select: { id: true, passwordHash: true, employeeId: true } });
   if (!target) redirect("/admin/users?e=invalid");
 
   if (d.id === admin.id) {
@@ -195,19 +197,24 @@ export async function resetUserPasswordAction(formData: FormData): Promise<void>
     }
   }
 
-  await prisma!.adminUser.update({ where: { id: d.id }, data: { passwordHash: await hashPassword(d.newPassword) } });
-
-  // Revoke the target's sessions. If the admin is resetting their own
-  // password, keep the current session (they just proved it's really them).
-  if (d.id === admin.id) {
-    const store = await cookies();
-    const token = store.get(ADMIN_COOKIE)?.value;
-    if (token) {
-      await prisma!.adminSession.deleteMany({ where: { userId: d.id, NOT: { tokenHash: hashToken(token) } } });
+  const passwordHash = await hashPassword(d.newPassword);
+  const currentToken = d.id === admin.id ? (await cookies()).get(ADMIN_COOKIE)?.value : undefined;
+  // Credential change and ALL related revocations commit together, or not at all.
+  // Keep only the reauthenticated actor's current admin session.
+  await prisma!.$transaction(async tx => {
+    const updated = await tx.adminUser.update({
+      where: { id: d.id, passwordHash: target.passwordHash },
+      data: { passwordHash },
+      select: { employeeId: true },
+    });
+    await tx.adminSession.deleteMany({ where: {
+      userId: d.id,
+      ...(currentToken ? { NOT: { tokenHash: hashToken(currentToken) } } : {}),
+    } });
+    if (updated.employeeId) {
+      await tx.employeeSession.deleteMany({ where: { employeeId: updated.employeeId } });
     }
-  } else {
-    await prisma!.adminSession.deleteMany({ where: { userId: d.id } });
-  }
+  });
 
   await audit(admin.id, "user.password_reset", "AdminUser", d.id, { self: d.id === admin.id });
   revalidatePath("/admin/users");

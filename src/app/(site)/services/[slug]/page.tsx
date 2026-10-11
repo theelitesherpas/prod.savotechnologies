@@ -2,18 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { absoluteUrl } from "@/lib/env";
 import { openGraphFor } from "@/lib/seo";
-import { SERVICE_DETAILS, serviceDetail } from "@/constants/services-detail";
+import { SERVICE_DETAILS } from "@/constants/services-detail";
+import { servicePageDetail as serviceDetail } from "@/sections/services/service-page-content";
 import { INDUSTRIES_ATLAS } from "@/constants/industries";
-import {
-  ServiceDetailHero,
-  ServiceOverview,
-  ServiceFaqs,
-  ServiceCrossLinks,
-} from "@/sections/services/service-detail";
-import { ServiceDeliverables } from "@/sections/services/service-workbench";
-import { ServiceProcess } from "@/sections/services/service-process";
-import { DetailCta } from "@/components/shared/detail-cta";
-import { CrewBand } from "@/sections/hire/crew-band";
+import { ServiceDetailPage } from "@/sections/services/service-detail";
+import { getIndustryArticles } from "@/lib/industry-dossiers";
 
 /**
  * Service chapters - one route per service from the catalogue. Rich,
@@ -64,6 +57,14 @@ export default async function ServicePage({
     .filter((s): s is NonNullable<typeof s> => Boolean(s))
     .map((s) => ({ label: s.title, hint: s.tagline.replace(/\.$/, ""), href: `/services/${s.slug}` }));
 
+  // Publication authority: "Reading:" links render only for articles that are
+  // actually Published in the managed insights collection. Absent, invalid or
+  // unpublished slugs are dropped rather than linked as if they existed.
+  const publishedSlugs = new Set((await getIndustryArticles()).map((a) => a.slug));
+  const verifiedWork = (detail.relatedWork ?? []).filter(
+    (w) => !w.href.startsWith("/insights/") || publishedSlugs.has(w.href.slice("/insights/".length).replace(/\/+$/, "")),
+  );
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -74,7 +75,6 @@ export default async function ServicePage({
         description: detail.metaDescription,
         provider: { "@id": absoluteUrl("/#organization") },
         url: absoluteUrl(`/services/${detail.slug}`),
-        areaServed: INDUSTRIES_ATLAS.map((i) => i.title).slice(0, 3),
       },
       {
         "@type": "BreadcrumbList",
@@ -102,20 +102,7 @@ export default async function ServicePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <ServiceDetailHero detail={detail} />
-      <ServiceOverview detail={detail} />
-      <ServiceDeliverables detail={detail} />
-      <ServiceProcess detail={detail} />
-      <ServiceFaqs detail={detail} />
-      <ServiceCrossLinks industries={industries} services={services} />
-      <CrewBand variant={detail.slug} />
-
-      <DetailCta
-        headingId="service-cta-heading"
-        heading={`Need ${detail.title.toLowerCase()} that ships?`}
-        lead="Tell us the problem and the constraints. We'll come back with an approach, a staged plan and an honest number, within days."
-        location={`service-${detail.slug}-cta`}
-      />
+      <ServiceDetailPage detail={detail} industries={industries} services={services} work={verifiedWork} />
     </>
   );
 }

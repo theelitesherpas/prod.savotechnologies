@@ -23,9 +23,6 @@ datasource db {
 /// Inbound project enquiries and phone callback requests (single inbox).
 model ProjectEnquiry {
   id          String   @id @default(cuid())
-  /// Public-facing enquiry reference (SAVO-XXXXXXXX) shown on the
-  /// thank-you page — crypto-random, never the row id or a sequence.
-  reference   String?  @unique
   name        String
   email       String?
   company     String?
@@ -42,6 +39,8 @@ model ProjectEnquiry {
   interviewDate DateTime? @map("interview_date")
   meetingLink  String?   @map("meeting_link")
   interviewer  String?   @map("interviewer")
+  /// Reference code preserved from production career applications.
+  reference   String?  @unique
   emailReplies EmailReply[] @relation("EmailReplies")
   /// new | in_progress | closed | archived (app-level enum, see lib/enquiry-status.ts)
   status      String   @default("new")

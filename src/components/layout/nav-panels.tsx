@@ -1,232 +1,109 @@
 "use client";
 
 import Link from "next/link";
-import { useLayoutEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import type { NavFeature, NavLink, NavItem } from "@/constants/navigation";
-import { cn } from "@/lib/utils";
+import { AI_LINKS, SERVICE_LINKS, HIRE_LINKS, INDUSTRY_LINKS } from "@/constants/navigation";
+import styles from "./nav-panels.module.css";
+import { AiGlyph } from "@/sections/ai/ai-art";
 
 /**
- * The mega-drawer: ONE persistent shell under the full header; category
- * content transitions inside it. Opening plays a single drawer-in
- * motion; switching AI → Services → Hire → Industries never closes the
- * shell, the active panel staggers in and the drawer height eases to
- * fit. Editorial layout: indexed link column(s) left, contextual
- * feature panel right, hairline rules and generous air throughout.
+ * THESIS: A useful capability catalogue, not a wall of indistinguishable links.
+ * OWN-WORLD: Inherit Savo black/white/red, Outfit headings and Inter navigation.
+ * STORY: Choose a discipline, understand its scope, follow the right destination.
+ * FIRST VIEWPORT: Editorial introduction, two link columns, light feature rail;
+ * one anchored action bar. Mobile drills into one category without losing Back.
+ * FORM: Scoped navigation replacement inside the approved identity; no seed or
+ * comp tournament. One 220ms drawer entrance, no stagger or animated height.
+ * FINISH: Bounded captures, preserved-route checks and documented inline review.
  */
 
-/* Square-node mini diagrams: the house motif, one per category. */
-function FeatureArt({ variant }: { variant: number }) {
-  const art = [
-    // agent: core + satellites
-    <g key="a" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <rect x="26" y="26" width="8" height="8" className="fill-accent" stroke="none" />
-      <path d="M30 12v10M30 38v10M12 30h10M38 30h10" />
-      <rect x="26" y="9" width="8" height="8" />
-      <rect x="26" y="43" width="8" height="8" />
-      <rect x="9" y="26" width="8" height="8" />
-      <rect x="43" y="26" width="8" height="8" />
-    </g>,
-    // estimator: sliders
-    <g key="b" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <path d="M14 18h32M14 30h32M14 42h32" />
-      <rect x="24" y="13" width="8" height="8" className="fill-accent" stroke="none" />
-      <rect x="14" y="26" width="8" height="8" />
-      <rect x="34" y="38" width="8" height="8" />
-    </g>,
-    // team: two nodes linked
-    <g key="c" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <rect x="10" y="22" width="12" height="12" />
-      <rect x="38" y="22" width="12" height="12" className="fill-accent" stroke="none" />
-      <path d="M22 28h16" />
-      <path d="M16 22v-8h28v8M30 14v8" />
-    </g>,
-    // sectors: quadrant grid
-    <g key="d" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <rect x="12" y="12" width="16" height="16" />
-      <rect x="32" y="12" width="16" height="16" className="fill-accent" stroke="none" />
-      <rect x="12" y="32" width="16" height="16" />
-      <rect x="32" y="32" width="16" height="16" />
-    </g>,
-  ];
-  return (
-    <svg viewBox="0 0 60 60" aria-hidden="true" className="h-10 w-10 shrink-0 text-foreground/60">
-      {art[variant % art.length]}
-    </svg>
-  );
-}
-
-const ArrowIcon = ({ className }: { className?: string }) => (
-  <svg
-    aria-hidden="true"
-    viewBox="0 0 14 14"
-    className={cn("h-3 w-3 shrink-0", className)}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-  >
-    <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
-  </svg>
-);
-
-/* Eyebrow labels: small, understated, one per category. */
-const EYEBROWS: Record<string, string> = {
-  AI: "AI & Intelligence",
-  Services: "Services",
-  "Hire Developers": "Build Your Team",
-  Industries: "Industries",
+export const NAV_INTROS: Record<string, string> = {
+  AI: "Find the right kind of AI work: a focused agent, a connected workflow, a product feature or a plan for what comes next.",
+  Services: "From the first design decision to the systems behind your product. Find the discipline your project needs.",
+  "Hire Developers": "Bring the right engineering skills into your team. Explore roles around the work you need to get done.",
+  Industries: "Different industries work in different ways. Explore products and systems shaped around your sector.",
 };
 
-/** One indexed editorial link row: number, name, descriptor, arrow on hover. */
-function DrawerLink({ link, delay, onNavigate }: { link: NavLink; delay: number; onNavigate?: () => void }) {
-  return (
-    <li className="mega-row" style={{ animationDelay: `${delay}ms` }}>
-      <Link
-        href={link.href}
-        onClick={onNavigate}
-        className="group/drawer-link relative flex items-center gap-4 px-3 py-2.5"
-      >
-        {/* the sweep: a soft surface fill that washes in from the left */}
-        <span
-          aria-hidden="true"
-          className="absolute inset-0 origin-left scale-x-0 bg-surface-2/80 transition-transform duration-[280ms] ease-[var(--ease-out-expo)] group-hover/drawer-link:scale-x-100"
-        />
-        <span className="relative min-w-0 flex-1 truncate text-[0.9375rem] font-semibold leading-snug text-foreground/75 transition-colors duration-200 group-hover/drawer-link:text-foreground">
-          {link.label}
-          {link.pro ? (
-            <span className="t-label ml-2 rounded-[2px] border border-accent/40 px-1.5 py-0.5 align-middle text-accent-strong">PRO</span>
-          ) : null}
-        </span>
-        <ArrowIcon className="relative -translate-x-1.5 text-accent opacity-0 transition-all duration-[280ms] ease-[var(--ease-out-expo)] group-hover/drawer-link:translate-x-0 group-hover/drawer-link:opacity-100" />
-      </Link>
-    </li>
-  );
+const canonical = (href: string) => href.replace(/\/$/, "");
+const descriptions = new Map([...AI_LINKS, ...SERVICE_LINKS, ...HIRE_LINKS, ...INDUSTRY_LINKS].map(link => [canonical(link.href), link.desc]));
+
+export function MenuArrow({ back = false }: { back?: boolean }) {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={back ? { transform: "rotate(180deg)" } : undefined}><path d="M4 12h15m-6-6 6 6-6 6" /></svg>;
 }
 
-/** The contextual feature panel: eyebrow, motif, proposition, one CTA. */
-function DrawerFeature({ feature, variant, delay, onNavigate }: { feature: NavFeature; variant: number; delay: number; onNavigate?: () => void }) {
-  return (
-    <div
-      className="mega-row flex h-full flex-col border-l border-border bg-surface-2/40 p-7"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className="flex items-start justify-between gap-5">
-        <p className="t-label pt-1.5 uppercase tracking-[0.14em] text-accent-strong">
-          {feature.eyebrow ?? "Featured"}
-        </p>
-        <FeatureArt variant={variant} />
-      </div>
-      <p className="t-h4 mt-4 max-w-[24ch] leading-snug text-foreground">{feature.title}</p>
-      <p className="t-sm mt-3 max-w-[36ch] leading-relaxed text-muted">{feature.copy}</p>
-      <Link
-        href={feature.href}
-        onClick={onNavigate}
-        className="group/btn t-sm mt-auto inline-flex items-center gap-2 pt-5 font-semibold text-accent transition-colors hover:text-accent-hover"
-      >
-        {feature.cta}
-        <ArrowIcon className="transition-transform duration-300 group-hover/btn:translate-x-[3px]" />
-      </Link>
-    </div>
-  );
+export function MenuChevron() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="m9 5 7 7-7 7" /></svg>;
+}
+
+function MenuGlyph({ href }: { href: string }) {
+  if (/^\/(?:ai-agents|ai\/)/.test(href)) return <AiGlyph kind={href} size={22} />;
+  const paths = /mobile/.test(href) ? <><rect x="7" y="3" width="10" height="18" rx="2" /><path d="M10 17h4" /></> : /ai|machine-learning/.test(href) ? <><rect x="7" y="7" width="10" height="10" rx="2" /><path d="M9 3v4m6-4v4M9 17v4m6-4v4M3 9h4m-4 6h4m10-6h4m-4 6h4M10 10h4v4h-4z" /></> : /cloud|devops/.test(href) ? <><path d="M7 17H6a4 4 0 0 1-1-7.8 6 6 0 0 1 11.7-1.6A4.7 4.7 0 0 1 18 17h-1M12 13v8m-3-5 3-3 3 3" /></> : /design/.test(href) ? <><path d="m5 19 1-5L17 3l4 4-11 11-5 1Zm9-13 4 4M3 21h18" /></> : /data|analytics/.test(href) ? <><path d="M4 4v16h16M8 16V9m5 7V6m5 10v-5" /></> : /hire/.test(href) ? <><circle cx="9" cy="8" r="3" /><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m2 9v-2a5 5 0 0 0-2-4" /></> : /healthcare/.test(href) ? <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z" /> : /fintech/.test(href) ? <><path d="m3 8 9-5 9 5H3Zm0 13h18M5 11v7m7-7v7m7-7v7" /></> : /industries/.test(href) ? <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></> : /marketing/.test(href) ? <><path d="m4 14 5-5 4 3 7-8M15 4h5v5M4 20h16" /></> : <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18m-12 4-2 2 2 2m6-4 2 2-2 2" /></>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round">{paths}</svg>;
+}
+
+export function NavigationLink({ link, onNavigate, mobile = false }: { link: NavLink; onNavigate: () => void; mobile?: boolean }) {
+  const pathname = usePathname();
+  const current = canonical(pathname) === canonical(link.href);
+  const desc = link.desc || descriptions.get(canonical(link.href));
+  return <li className={styles.linkItem}>
+    <Link href={link.href} onClick={onNavigate} aria-current={current ? "page" : undefined} className={`${styles.link} ${mobile ? styles.mobileLink : ""}`}>
+      <span className={styles.glyph}><MenuGlyph href={link.href} /></span>
+      <span className={styles.linkText}><span className={styles.linkName}>{link.label}{link.pro ? <span className={styles.pro}>PRO</span> : null}</span>{desc ? <span className={styles.description}>{desc}</span> : null}</span>
+      <span className={styles.linkArrow}><MenuArrow /></span>
+    </Link>
+  </li>;
+}
+
+function FeatureDiagram({ label }: { label: string }) {
+  return <svg className={styles.featureArt} aria-hidden="true" viewBox="0 0 240 104" fill="none" stroke="currentColor" strokeWidth="1.2">
+    {label === "AI" ? <><path d="M62 47h24m68 0h24" /><rect x="3" y="26" width="59" height="42" rx="5" /><rect x="86" y="26" width="68" height="42" rx="5" /><rect x="178" y="26" width="59" height="42" rx="5" /><g fill="currentColor" stroke="none" style={{fontFamily:"var(--font-sans)",fontSize:10}}><text x="32" y="50" textAnchor="middle">Sources</text><text x="120" y="50" textAnchor="middle">Prepare</text><text x="207" y="50" textAnchor="middle">Review</text></g><path d="m110 85 6 6 13-13" className={styles.diagramAccent}/></> : label === "Hire Developers" ? <><path d="M47 67h146m-73-35v35" /><rect x="94" y="8" width="52" height="24" rx="4" /><rect x="21" y="67" width="52" height="24" rx="4" /><rect x="94" y="67" width="52" height="24" rx="4" /><rect x="167" y="67" width="52" height="24" rx="4" /><path d="M34 79h25m48 0h26m47 0h26" className={styles.diagramAccent} /></> : label === "Industries" ? <><path d="M24 82h192M41 82V39h43v43m28 0V18h43v64m27 0V49h23v33" /><path d="M52 51h21m-21 12h21m50-32h21m-21 14h21m-21 14h21" className={styles.diagramAccent} /></> : <><rect x="24" y="16" width="136" height="75" rx="5" /><path d="M24 32h136m-121 13h59m-59 12h42m-42 12h51" /><rect x="120" y="47" width="31" height="27" rx="2" className={styles.diagramAccent} /><rect x="178" y="30" width="37" height="61" rx="5" /><path d="M189 81h14" className={styles.diagramAccent} /></>}
+  </svg>;
+}
+
+export function NavigationFeature({ feature, label, onNavigate }: { feature: NavFeature; label: string; onNavigate: () => void }) {
+  return <aside className={styles.feature}>
+    <FeatureDiagram label={label} />
+    <h3>{feature.title}</h3>
+    <p>{feature.copy}</p>
+    <Link href={feature.href} onClick={onNavigate} className={styles.featureLink}>{feature.cta}<MenuArrow /></Link>
+  </aside>;
+}
+
+export function AiNavigationLinks({ links, onNavigate, mobile = false }: { links: NavLink[]; onNavigate: (link: NavLink) => void; mobile?: boolean }) {
+  const planning = links.filter(link => /\/(?:consulting|machine-learning)\/?$/.test(link.href));
+  const building = links.filter(link => !planning.includes(link));
+  return <div className={`${styles.aiGroups} ${mobile ? styles.aiMobileGroups : ""}`}>
+    {[{title:"Build & connect",links:building},{title:"Plan & analyse",links:planning}].filter(group => group.links.length).map(group => <section key={group.title} aria-label={group.title}><h3>{group.title}</h3><ul>{group.links.map(link => <NavigationLink key={link.href} link={link} mobile={mobile} onNavigate={() => onNavigate(link)} />)}</ul></section>)}
+  </div>;
 }
 
 type MegaItem = NavItem & { children: NavLink[] };
-
-export function MegaDrawer({
-  items,
-  active,
-  panelIdOf,
-  onNavigate,
-  onMouseEnter,
-  onMouseLeave,
-}: {
-  items: MegaItem[];
-  active: string | null;
-  panelIdOf: (label: string) => string;
-  onNavigate: () => void;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
+export function MegaDrawer({ items, active, panelIdOf, onNavigate, onProject, onDismiss, onMouseEnter, onMouseLeave }: {
+  items: MegaItem[]; active: string | null; panelIdOf: (label: string) => string;
+  onNavigate: () => void; onProject: () => void; onDismiss: () => void;
+  onMouseEnter: () => void; onMouseLeave: () => void;
 }) {
-  const contentRef = useRef<HTMLDivElement | null>(null);
-  const [height, setHeight] = useState<number | null>(null);
-
-  /* Ease the shell height between categories: measure the active panel. */
-  useLayoutEffect(() => {
-    const measure = () => {
-      if (contentRef.current) setHeight(contentRef.current.offsetHeight);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (contentRef.current) ro.observe(contentRef.current);
-    window.addEventListener("resize", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [active]);
-
-  const activeItem = items.find((i) => i.label === active) ?? null;
-  const variant = activeItem ? items.findIndex((i) => i.label === active) : 0;
-
-  return (
-    <div
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={cn(
-        "chapter-ink absolute left-1/2 top-full hidden w-[min(calc(100%-2.5rem),78rem)] -translate-x-1/2 border border-border bg-background shadow-[0_24px_60px_rgb(10_10_14/0.28)]",
-        active ? "drawer-in lg:block" : "lg:hidden",
-      )}
-    >
-      {/* Height-eased viewport: the shell stays open while panels swap */}
-      <div
-        className="overflow-hidden transition-[height] duration-[280ms] ease-[var(--ease-out-expo)]"
-        style={height !== null ? { height } : undefined}
-      >
-        {activeItem ? (
-          <div
-            key={activeItem.label}
-            ref={contentRef}
-            id={panelIdOf(activeItem.label)}
-            role="region"
-            aria-label={activeItem.label}
-          >
-            <div className="shell grid gap-8 py-7 lg:grid-cols-12">
-              {/* Links */}
-              <div className="lg:col-span-8">
-                <p className="t-label mb-4 flex items-center gap-3 uppercase tracking-[0.14em] text-muted">
-                  <span aria-hidden="true" className="h-1.5 w-1.5 bg-accent" />
-                  {EYEBROWS[activeItem.label] ?? activeItem.label}
-                </p>
-                <ul
-                  className={cn(
-                    activeItem.children.length > 3 && "grid grid-cols-2 gap-x-8",
-                  )}
-                >
-                  {activeItem.children.map((link, i) => (
-                    <DrawerLink key={link.href} link={link} delay={48 + i * 24} onNavigate={onNavigate} />
-                  ))}
-                </ul>
-                {activeItem.href && activeItem.label !== "AI" ? (
-                  <Link
-                    href={activeItem.href}
-                    onClick={onNavigate}
-                    className="group/all t-label mega-row mt-2 inline-flex items-center gap-2 border-t border-border pt-3 uppercase tracking-[0.12em] text-muted transition-colors hover:text-accent"
-                    style={{ animationDelay: `${48 + activeItem.children.length * 24}ms` }}
-                  >
-                    All {activeItem.label}
-                    <ArrowIcon className="transition-transform duration-300 group-hover/all:translate-x-[3px]" />
-                  </Link>
-                ) : null}
-              </div>
-              {/* Feature */}
-              {activeItem.feature ? (
-                <div className="lg:col-span-4">
-                  <DrawerFeature feature={activeItem.feature} variant={variant} delay={140} onNavigate={onNavigate} />
-                </div>
-              ) : null}
-            </div>
+  const item = items.find(i => i.label === active);
+  if (!item) return null;
+  return <>
+    <button type="button" className={styles.backdrop} tabIndex={-1} aria-label="Dismiss navigation" onClick={onNavigate} />
+    <div className={styles.mega} data-mega-drawer onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+      <section id={panelIdOf(item.label)} className={styles.panel} role="region" aria-labelledby={`${panelIdOf(item.label)}-title`}>
+        <div className={styles.catalogue}>
+          <div className={styles.intro}>
+            <h2 id={`${panelIdOf(item.label)}-title`}>{item.label}</h2>
+            <p>{NAV_INTROS[item.label] || `Explore ${item.label.toLowerCase()} and find the right starting point.`}</p>
+            {item.href ? <Link href={item.href} onClick={onNavigate} className={styles.overview}>All {item.label}<MenuArrow /></Link> : null}
           </div>
-        ) : null}
+          {item.label === "AI" ? <AiNavigationLinks links={item.children} onNavigate={onNavigate} /> : <ul className={styles.links} key={item.label}>{item.children.map(link => <NavigationLink key={link.href} link={link} onNavigate={onNavigate} />)}</ul>}
+          {item.feature ? <NavigationFeature feature={item.feature} label={item.label} onNavigate={onNavigate} /> : null}
+        </div>
+      </section>
+      <div className={styles.toolbar}>
+        <p>Not sure where to start?</p><Link href="/start-a-project" onClick={onProject} className={styles.help}>Talk through your project<MenuArrow /></Link>
+        <button type="button" className={styles.close} onClick={onDismiss} aria-label={`Close ${item.label} menu`}><span>Close</span><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="m6 6 12 12M6 18 18 6" /></svg></button>
       </div>
     </div>
-  );
+  </>;
 }

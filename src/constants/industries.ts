@@ -44,7 +44,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
       "Privacy by Design",
       "Audit Trails",
     ],
-    href: "/industries/healthcare/",
+    href: "/industries/healthcare",
   },
   {
     id: "fintech",
@@ -61,7 +61,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
       "Fraud Signals",
       "Ledger Integrations",
     ],
-    href: "/industries/fintech/",
+    href: "/industries/fintech",
   },
   {
     id: "ecommerce",
@@ -78,7 +78,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
       "Inventory Sync",
       "Marketplaces",
     ],
-    href: "/industries/ecommerce/",
+    href: "/industries/ecommerce",
   },
   {
     id: "logistics",
@@ -95,7 +95,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
       "Carrier Integrations",
       "Live Dashboards",
     ],
-    href: "/industries/logistics/",
+    href: "/industries/logistics",
   },
   {
     id: "real-estate",
@@ -112,7 +112,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
       "Lead Routing",
       "Agent Portals",
     ],
-    href: "/industries/real-estate/",
+    href: "/industries/real-estate",
   },
   {
     id: "education",
@@ -129,7 +129,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
       "Progress Analytics",
       "Mobile Learning",
     ],
-    href: "/industries/education/",
+    href: "/industries/education",
   },
   {
     id: "travel",
@@ -146,7 +146,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
       "Dynamic Pricing",
       "Review Systems",
     ],
-    href: "/industries/travel/",
+    href: "/industries/travel",
   },
   {
     id: "manufacturing",
@@ -163,7 +163,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
       "ERP Integration",
       "Worker Applications",
     ],
-    href: "/industries/manufacturing/",
+    href: "/industries/manufacturing",
   },
   {
     id: "government",
@@ -180,7 +180,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
       "Document Workflows",
       "Open Data",
     ],
-    href: "/industries/government/",
+    href: "/industries/government",
   },
   {
     id: "energy",
@@ -197,7 +197,7 @@ export const INDUSTRIES_ATLAS: Industry[] = [
       "Reporting Systems",
       "Customer Portals",
     ],
-    href: "/industries/energy/",
+    href: "/industries/energy",
   },
 ];
 

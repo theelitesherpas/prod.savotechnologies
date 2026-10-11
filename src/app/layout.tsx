@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Manrope, Source_Serif_4, Fragment_Mono } from "next/font/google";
 import { SITE } from "@/constants/site";
 import { openGraphFor } from "@/lib/seo";
@@ -30,7 +31,7 @@ const fragment = Fragment_Mono({
 
 const HOME_TITLE = "Savo Technologies | Web, Mobile, AI & Software Development Company";
 const HOME_DESCRIPTION =
-  "Savo Technologies is an Indore based software development company in India providing website development, web applications, mobile app development, AI development, SaaS and custom software solutions for clients across India and worldwide.";
+  "Savo Technologies is a software development company headquartered in Indore, India with a head office in Switzerland, providing website development, web applications, mobile app development, AI development, SaaS and custom software solutions for clients across India, Switzerland, Europe and worldwide.";
 
 /**
  * Root metadata. Route groups (site)/ and admin/ extend or override this
@@ -118,7 +119,9 @@ export default function RootLayout({
       <body className="bg-background font-sans text-foreground antialiased">
         {/* Design contract, survives the production build; see DESIGN.md */}
         <div hidden dangerouslySetInnerHTML={{ __html: designContract }} />
-        <script dangerouslySetInnerHTML={{ __html: jsMarker }} />
+        <Script id="js-marker" strategy="afterInteractive">
+          {jsMarker}
+        </Script>
 
         {gaId ? (
           /* Analytics loads on the FIRST USER INTERACTION (scroll, tap,
@@ -126,8 +129,9 @@ export default function RootLayout({
              initial render path and PSI's measurement window, while every
              real engaged session still records its page_view. gtag()
              queues through dataLayer until the script arrives. */
-          <script
+          <Script
             id="ga4-interaction"
+            strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `(function(){var W=window,L="dataLayer",armed=false,t;function load(){if(armed)return;armed=true;clearTimeout(t);W[L]=W[L]||[];function g(){W[L].push(arguments)}g("js",new Date());g("config","${gaId}");var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=${gaId}";document.head.appendChild(s);}["scroll","mousedown","keydown","touchstart","wheel"].forEach(function(e){W.addEventListener(e,load,{once:true,passive:true})});t=setTimeout(load,10000);})();`,
             }}

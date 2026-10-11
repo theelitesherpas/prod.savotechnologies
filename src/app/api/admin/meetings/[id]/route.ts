@@ -1,6 +1,7 @@
 import { apiOk, apiError, isJsonRequest, readJsonBody } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getAdminUser } from "@/lib/auth";
+import { canAccess } from "@/lib/permissions";
 import {
   confirmMeeting,
   sendInvitation,
@@ -14,10 +15,11 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET /api/admin/meetings/[id] — full detail. */
+/** GET /api/admin/meetings/[id] - full detail. */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAdminUser();
   if (!user) return apiError("Not authorized.", 401);
+  if (!canAccess(user, "clients")) return apiError("Not authorized.", 403);
   if (!prisma) return apiError("Database unavailable.", 503);
   const { id } = await params;
 
@@ -52,16 +54,18 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   });
 }
 
-/** PUT /api/admin/meetings/[id] — actions: send, confirm, reschedule, complete, cancel, regenerate_link, extend, notes, edit. */
+/** PUT /api/admin/meetings/[id] - actions: send, confirm, reschedule, complete, cancel, regenerate_link, extend, notes, edit. */
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAdminUser();
   if (!user) return apiError("Not authorized.", 401);
+  if (!canAccess(user, "clients")) return apiError("Not authorized.", 403);
   if (!isJsonRequest(req)) return apiError("Unsupported format.", 415);
   if (!prisma) return apiError("Database unavailable.", 503);
 
   const { id } = await params;
   const body = await readJsonBody(req);
   if (!body.ok) return apiError("Invalid request.", 400);
+  if (!body.data || typeof body.data !== "object" || Array.isArray(body.data)) return apiError("Invalid request.", 400);
   const d = body.data as Record<string, unknown>;
 
   switch (d.action) {
@@ -70,7 +74,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       if (!existing) return apiError("Meeting not found.", 404);
 
       const data: Record<string, unknown> = {};
-      // Only update fields that were provided — reference and token stay the same
+      // Only update fields that were provided - reference and token stay the same
       if (typeof d.clientName === "string" && d.clientName.trim().length >= 2) data.clientName = d.clientName.trim().slice(0, 120);
       if (typeof d.clientCompany === "string") data.clientCompany = d.clientCompany.slice(0, 160);
       if (typeof d.clientPhone === "string") data.clientPhone = d.clientPhone.slice(0, 32) || null;
@@ -144,6 +148,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       return apiOk({});
     }
     case "permanent_delete": {
+      if (user.role !== "admin") return apiError("Not authorized.", 403);
       // Hard delete: removes the meeting and all related records permanently
       await prisma.meeting.delete({ where: { id } });
       return apiOk({ permanentlyDeleted: true });
@@ -153,12 +158,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-/** DELETE /api/admin/meetings/[id] — soft-delete: moves meeting to trash.
+/** DELETE /api/admin/meetings/[id] - soft-delete: moves meeting to trash.
  *  The scheduling link shows "no longer available" to the client.
  *  Use PUT action "restore" to bring it back, or "permanent_delete" to remove forever. */
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAdminUser();
   if (!user) return apiError("Not authorized.", 401);
+  if (!canAccess(user, "clients")) return apiError("Not authorized.", 403);
   if (!prisma) return apiError("Database unavailable.", 503);
 
   const { id } = await params;

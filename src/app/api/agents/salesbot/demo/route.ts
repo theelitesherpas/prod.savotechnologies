@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { randomBytes } from "node:crypto";
 import { rateLimit } from "@/lib/rate-limit";
-import { clientIp } from "@/lib/api";
-import { enforceCaptcha } from "@/lib/captcha";
+import { clientIp, readJsonBody } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { newSession, step, type SalesbotSession } from "@/lib/salesbot";
 
@@ -21,7 +20,6 @@ export const dynamic = "force-dynamic";
 const bodySchema = z.object({
   sessionId: z.string().regex(/^[a-zA-Z0-9_-]{6,64}$/).nullish(),
   message: z.string().trim().min(1).max(1000),
-  captchaToken: z.string().optional(),
 });
 
 const SESSION_TTL = 30 * 60 * 1000;
@@ -34,7 +32,7 @@ globalForBot.__salesbotSessions = sessions;
 function gc() {
   const now = Date.now();
   for (const [id, s] of sessions) {
-    if (now - s.updatedAt > SESSION_TTL) sessions.delete(id);
+    if (now - s.updatedAt >= SESSION_TTL || now - s.createdAt >= SESSION_TTL) sessions.delete(id);
   }
   if (sessions.size > MAX_SESSIONS) {
     const oldest = [...sessions.entries()].sort((a, b) => a[1].updatedAt - b[1].updatedAt).slice(0, sessions.size - MAX_SESSIONS);
@@ -50,7 +48,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Demo limit reached - take a breath and try again in a few minutes." }, { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } });
     }
 
-    const parsed = bodySchema.safeParse(await req.json().catch(() => ({})));
+    const body = await readJsonBody(req);
+    const parsed = bodySchema.safeParse(body.ok ? body.data : null);
     if (!parsed.success) {
       return NextResponse.json({ ok: false, error: "Invalid request." }, { status: 400 });
     }
@@ -60,17 +59,9 @@ export async function POST(req: Request) {
     let id = parsed.data.sessionId ?? undefined;
     let session = id ? sessions.get(id) : undefined;
     if (!session) {
-      // Always-on captcha for session creation: a bot can never start a
-      // demo. Established sessions continue under the rate limit.
-      const cap = await enforceCaptcha(ip, parsed.data.captchaToken);
-      if (!cap.ok) {
-        if ("captchaRequired" in cap) {
-          return NextResponse.json(
-            { ok: false, error: "Please complete the human verification and try again.", captchaRequired: true },
-            { status: 400 },
-          );
-        }
-        return NextResponse.json({ ok: false, error: cap.error }, { status: 400 });
+      if (sessions.size >= MAX_SESSIONS) {
+        const oldest = [...sessions.entries()].sort((a, b) => a[1].updatedAt - b[1].updatedAt)[0];
+        if (oldest) sessions.delete(oldest[0]);
       }
       id = randomBytes(9).toString("base64url");
       session = newSession(id);
@@ -83,6 +74,9 @@ export async function POST(req: Request) {
     session.slots = result.slots;
     session.turns += 1;
     session.transcript.push({ role: "user", text: parsed.data.message }, { role: "bot", text: result.reply });
+    // The engine uses slots/turn counts, not old transcript text. Bound private
+    // in-memory history without changing the browser's displayed conversation.
+    if (session.transcript.length > 40) session.transcript.splice(0, session.transcript.length - 40);
     session.updatedAt = Date.now();
 
     logger.info("salesbot.demo_turn", { stage: result.nextStage, intent: result.intent, score: result.leadScore });

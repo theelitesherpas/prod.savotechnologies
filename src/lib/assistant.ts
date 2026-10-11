@@ -56,7 +56,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     ],
     links: [
       { label: "AI & intelligent systems", href: "/ai-agents" },
-      { label: "Start an AI project", href: "/start" },
+      { label: "Start an AI project", href: "/start-a-project" },
     ],
   },
   {
@@ -68,7 +68,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Corporate platforms, marketing sites, customer portals, headless storefronts and full web applications, engineered on Next.js, React and TypeScript for speed, search and conversion.",
       "Every build ships with the growth layer in place: technical SEO, structured data and analytics.",
     ],
-    links: [{ label: "Web development", href: "/services/web-development/" }],
+    links: [{ label: "Web development", href: "/services/web-development" }],
   },
   {
     id: "mobile",
@@ -79,7 +79,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "iOS and Android products that feel native and hold up in daily use: Flutter, React Native or fully native, chosen by the problem rather than by habit.",
       "Payments, maps, notifications, offline-first data and full API integrations are standard parts of our mobile work.",
     ],
-    links: [{ label: "Mobile app development", href: "/services/mobile-apps/" }],
+    links: [{ label: "Mobile app development", href: "/services/mobile-app-development" }],
   },
   {
     id: "design",
@@ -90,7 +90,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Research, information architecture, interface systems and prototypes that make complex products obvious, judged by what users accomplish, never by decoration.",
       "Design and engineering sit in one team here, so design decisions are made with implementation in mind.",
     ],
-    links: [{ label: "Product & experience design", href: "/services/ui-ux/" }],
+    links: [{ label: "Product & experience design", href: "/services/ui-ux-design" }],
   },
   {
     id: "hire",
@@ -115,7 +115,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Rough ranges to plan with: business websites $1.5k to $4k, e-commerce stores $3k to $5k, mobile apps $5k to $15k, SaaS MVPs $8k to $25k, AI agents $2k to $10k, and smaller fixes or landing pages from $500.",
       "Share what you're building and a senior consultant replies within one business day with a realistic fixed-scope, fixed-price proposal, no discovery paywall.",
     ],
-    links: [{ label: "Start a project", href: "/start" }],
+    links: [{ label: "Start a project", href: "/start-a-project" }],
   },
   {
     id: "start",
@@ -147,7 +147,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     paragraphs: [
       "The agreed price never moves mid-scope. New ideas go into a follow-up scope with its own fixed price, agreed before work starts, in writing.",
     ],
-    links: [{ label: "Start a project", href: "/start" }],
+    links: [{ label: "Start a project", href: "/start-a-project" }],
   },
 
   /* ------------------------------ Company ----------------------------- */
@@ -184,8 +184,8 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Can I see your work or case studies?",
     keywords: ["work", "portfolio", "case", "study", "studies", "projects", "clients", "references", "examples", "proof", "results"],
     paragraphs: [
-      "The case-study dossier is organized by discipline, web, mobile, AI, software, design and growth, and entries publish only with verified outcomes, which is why most still read 'in preparation'.",
-      "Need proof sooner? Ask directly and we will walk you through relevant engagements under NDA, with the numbers clients allow us to share.",
+      "The case-study dossier is organized by discipline, web, mobile, AI, software, design and growth, filterable by industry, technology and platform. Entries publish only with verified outcomes, which is why most still read 'in preparation'.",
+      "Flagship entries document the full engineering story: situation, complexity, decisions, architecture, quality and outcomes. Need proof sooner? Ask directly and we will walk you through relevant engagements under NDA.",
     ],
     links: [
       { label: "Case studies", href: "/case-studies" },
@@ -200,7 +200,10 @@ export const KNOWLEDGE: AssistantEntry[] = [
     paragraphs: [
       "Chosen for the problem, not the fashion: Next.js, React and TypeScript on the web; Flutter and React Native on mobile; Node.js and Python behind; PostgreSQL, Redis and vector search underneath; LLMs, RAG and agent tooling for AI; AWS, Vercel, Cloudflare and Docker to run it.",
     ],
-    links: [{ label: "Technology", href: "/#technology" }],
+    links: [
+      { label: "Technology & architecture", href: "/technology" },
+      { label: "AI agents", href: "/ai-agents" },
+    ],
   },
 
   /* ------------------------- Working together ------------------------ */
@@ -208,7 +211,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     id: "industries",
     category: "Services",
     question: "Which industries do you serve?",
-    keywords: ["industry", "industries", "sector", "sectors", "vertical", "verticals", "domain", "domains", "healthcare", "fintech", "banking", "logistics", "real estate", "education", "edtech", "travel", "manufacturing", "government", "energy", "retail"],
+    keywords: ["industry", "industries", "sector", "sectors", "vertical", "verticals", "domain", "domains", "serve", "which industries", "what industries", "industries do you", "industries do you serve", "industries served"],
     paragraphs: [
       "Ten industry practices with tailored playbooks: Healthcare, FinTech & Banking, Ecommerce & Retail, Logistics & Supply Chain, Real Estate, Education & EdTech, Travel & Hospitality, Manufacturing & 4.0, Government, and Energy & Utilities.",
       "Each practice page explains how Savo works inside that sector's constraints and workflows.",
@@ -244,6 +247,10 @@ export const KNOWLEDGE: AssistantEntry[] = [
     paragraphs: [
       "Yes, NDAs are signed before any project detail is shared, standard practice on every engagement.",
       "What we build for you is yours: code, designs and documentation transfer to you on payment, and confidential material never leaves the agreed circle.",
+    ],
+    links: [
+      { label: "Trust & security", href: "/trust" },
+      { label: "Ownership questions", href: "/enterprise#vendor-review" },
     ],
   },
   {
@@ -378,7 +385,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Prefer to type first? Send the problem and constraints and we'll reply within one business day.",
     ],
     links: [
-      { label: "Book a call", href: "/start" },
+      { label: "Book a call", href: "/start-a-project" },
       { label: "Contact us", href: "/contact" },
     ],
   },
@@ -389,7 +396,7 @@ export const KNOWLEDGE: AssistantEntry[] = [
     keywords: ["contact", "email", "phone number", "call you", "reach you", "whatsapp", "email address", "phone no", "number"],
     paragraphs: [
       "Email hello@savotechnologies.com, main line +91 75029 01234 (HR: +91 78988 52345), WhatsApp from the site, or the live chat right here.",
-      "A senior consultant replies within one business day, and this chat can connect you to the team live.",
+      "Choose a topic on the Contact page and send a message, or use the direct email, phone and WhatsApp links. For job applications, use Careers. Response timing depends on the enquiry and availability.",
     ],
     links: [{ label: "Contact page", href: "/contact" }],
   },
@@ -411,13 +418,184 @@ export const KNOWLEDGE: AssistantEntry[] = [
     question: "Are you hiring?",
     keywords: ["hiring", "job", "jobs", "career", "careers", "vacancy", "openings", "positions", "apply", "role", "internship", "intern", "fresher"],
     paragraphs: [
-      "We hire engineers and designers who are curious, ship weekly and check their ego in, office-first in Indore with hybrid options, INR salaries.",
-      "Applications get an engineer-read review and a personal reply within two business days. Four steps to a written offer: application review, technical conversation, meet the team, written offer.",
+      "Visit Careers to see current published openings, or send a general application with your skills and the work you want to do.",
+      "The hiring process depends on the role. HR can answer questions about the steps, location and working arrangements.",
     ],
     links: [
       { label: "Open roles", href: "/careers" },
-      { label: "Apply now", href: "/careers/apply/" },
+      { label: "Apply now", href: "/careers/apply" },
     ],
+  },
+
+  /* ── Project discovery (master spec Part 83): industry questions surface
+     what Savo builds in the sector + honest case-study status + paths. ── */
+  {
+    id: "realestate-work",
+    category: "Services",
+    question: "Have you built something for real estate?",
+    keywords: ["real estate", "for real estate", "in real estate", "real estate app", "real estate website", "real estate platform", "real estate project", "real estate work", "property", "properties", "realty", "listing", "listings", "property portal", "property platform", "property management", "broker", "brokerage", "construction", "developer project"],
+    paragraphs: [
+      "Real estate is one of our detailed industry practices: listing platforms with faceted and map search, unit inventory kept live, lead routing into CRM with response in minutes, channel partner management, payment schedules, buyer portals and construction updates.",
+      "Verified engagements publish in the case-study dossier as clients approve them, until then we can walk you through relevant work under NDA.",
+    ],
+    links: [
+      { label: "Real estate practice", href: "/industries/real-estate" },
+      { label: "Case studies", href: "/case-studies" },
+      { label: "Discuss a property platform", href: "/start-a-project" },
+    ],
+  },
+  {
+    id: "healthcare-work",
+    category: "Services",
+    question: "Have you built something for healthcare?",
+    keywords: ["healthcare", "health", "patient", "clinic", "hospital", "telehealth", "telemedicine", "medical", "hipaa"],
+    paragraphs: [
+      "Patient portals, telehealth workflows, records integration and privacy-first clinical support tools, engineered where audit trails and role-scoped access are the baseline.",
+      "Verified engagements publish as approved; relevant work can be discussed under NDA.",
+    ],
+    links: [
+      { label: "Healthcare practice", href: "/industries/healthcare" },
+      { label: "Case studies", href: "/case-studies" },
+    ],
+  },
+  {
+    id: "fintech-work",
+    category: "Services",
+    question: "Have you built something for fintech?",
+    keywords: ["fintech", "finance", "financial", "banking", "payments", "payment", "lending", "wallet", "ledger", "kyc"],
+    paragraphs: [
+      "Payments flows, ledgers with double-entry discipline, KYC onboarding, reconciliation and the access controls financial systems demand, reliability treated as the product.",
+      "Verified engagements publish as approved; relevant work can be discussed under NDA.",
+    ],
+    links: [
+      { label: "FinTech practice", href: "/industries/fintech" },
+      { label: "Case studies", href: "/case-studies" },
+    ],
+  },
+  {
+    id: "ecommerce-work",
+    category: "Services",
+    question: "Have you built ecommerce stores?",
+    keywords: ["ecommerce", "e-commerce", "online store", "shop", "shopping", "cart", "checkout", "store", "storefront", "retail platform", "sell online", "commerce platform", "ecommerce store", "ecommerce website"],
+    paragraphs: [
+      "Storefronts and full commerce platforms: faceted search, headless content, checkout tuned per market, inventory and fulfilment sync, and analytics that connect the funnel to revenue.",
+      "Verified engagements publish as approved; relevant work can be discussed under NDA.",
+    ],
+    links: [
+      { label: "Ecommerce practice", href: "/industries/ecommerce" },
+      { label: "Case studies", href: "/case-studies" },
+    ],
+  },
+  {
+    id: "logistics-work",
+    category: "Services",
+    question: "Have you built logistics software?",
+    keywords: ["logistics", "supply chain", "fleet", "delivery", "dispatch", "tracking", "shipment", "transport", "pod", "proof of delivery", "warehouse"],
+    paragraphs: [
+      "Offline-first driver apps with proof of delivery, dispatch boards, warehouse flows and track-and-trace portals, built for the network edge where the goods actually move.",
+      "Verified engagements publish as approved; relevant work can be discussed under NDA.",
+    ],
+    links: [
+      { label: "Logistics practice", href: "/industries/logistics" },
+      { label: "Mobile development", href: "/services/mobile-app-development" },
+    ],
+  },
+  {
+    id: "education-work",
+    category: "Services",
+    question: "Have you built education products?",
+    keywords: ["education", "edtech", "e-learning", "learning", "course", "courses", "lms", "student", "school", "college", "training platform"],
+    paragraphs: [
+      "Learning platforms with cohorts, assessments, progress tracking and institution operations, designed for the two customers every edtech product serves: the learner and the institution.",
+      "Verified engagements publish as approved; relevant work can be discussed under NDA.",
+    ],
+    links: [
+      { label: "Education practice", href: "/industries/education" },
+      { label: "Case studies", href: "/case-studies" },
+    ],
+  },
+  {
+    id: "travel-work",
+    category: "Services",
+    question: "Have you built travel platforms?",
+    keywords: ["travel", "booking", "hotel", "hotels", "tour", "ticket", "airline", "trip", "hospitality", "reservation"],
+    paragraphs: [
+      "Booking flows, supplier aggregation, itinerary management and disruption handling, the operational side of travel that decides whether the trip, and the platform, hold together.",
+      "Verified engagements publish as approved; relevant work can be discussed under NDA.",
+    ],
+    links: [
+      { label: "Travel practice", href: "/industries/travel" },
+      { label: "Case studies", href: "/case-studies" },
+    ],
+  },
+  {
+    id: "manufacturing-work",
+    category: "Services",
+    question: "Have you built manufacturing systems?",
+    keywords: ["manufacturing", "factory", "production", "shop floor", "mes", "iot", "machine", "plant", "traceability", "quality control"],
+    paragraphs: [
+      "Shop-floor apps, machine monitoring, quality workflows with batch traceability and maintenance systems, integrated with the ERP and MES you already run instead of replacing them.",
+      "Verified engagements publish as approved; relevant work can be discussed under NDA.",
+    ],
+    links: [
+      { label: "Manufacturing practice", href: "/industries/manufacturing" },
+      { label: "Custom software", href: "/services/custom-software-development" },
+    ],
+  },
+  {
+    id: "government-work",
+    category: "Services",
+    question: "Do you build government platforms?",
+    keywords: ["government", "public sector", "citizen", "municipal", "egov", "e-gov", "tender", "department", "ministry"],
+    paragraphs: [
+      "Citizen service portals and internal administration tools built to public-grade standards: accessibility as law, records with audit trails, and procurement-friendly documentation and handover.",
+      "Verified engagements publish as approved; relevant work can be discussed under NDA.",
+    ],
+    links: [
+      { label: "Government practice", href: "/industries/government" },
+      { label: "Trust & security", href: "/trust" },
+    ],
+  },
+  {
+    id: "energy-work",
+    category: "Services",
+    question: "Have you built energy sector software?",
+    keywords: ["energy", "solar", "power", "utility", "utilities", "grid", "meter", "plant monitoring", "oil", "gas"],
+    paragraphs: [
+      "Asset monitoring, field operations with permits and inspections, meter data and billing, built for assets in hard places and safety workflows that cannot be casual.",
+      "Verified engagements publish as approved; relevant work can be discussed under NDA.",
+    ],
+    links: [
+      { label: "Energy practice", href: "/industries/energy" },
+      { label: "Case studies", href: "/case-studies" },
+    ],
+  },
+
+  /* ── Working together: engagement models + reading (spec Part 81) ── */
+  {
+    id: "engagement-models",
+    category: "Process & pricing",
+    question: "What engagement models do you offer?",
+    keywords: ["engagement model", "engagement", "fixed scope", "dedicated team", "staff augmentation", "retainer", "monthly", "full time", "models", "ways to work", "work together"],
+    paragraphs: [
+      "Four ways to work with us: fixed scope for defined outcomes and hard budgets, a dedicated product team for products that keep evolving, a discovery engagement that produces requirements and a defensible estimate before commitment, and support & optimisation for systems already in production.",
+      "Each has honest advantages and limits, laid out on the enterprise page, and if you are not sure which fits, that is exactly what discovery answers.",
+    ],
+    links: [
+      { label: "Engagement models", href: "/enterprise" },
+      { label: "Discovery approach", href: "/enterprise#models" },
+    ],
+  },
+  {
+    id: "insights",
+    category: "Company",
+    question: "Do you publish guides or articles?",
+    keywords: ["article", "articles", "blog", "guide", "guides", "reading", "read", "insights", "research", "publish", "published", "publishing", "comparison", "compare", "flutter vs", "rag vs", "build vs buy"],
+    paragraphs: [
+      "Insights brings together practical thinking on AI, engineering, design and delivery. Start with a topic guide to explore the questions behind a product decision.",
+      "The reading library shows only published articles. If none are available, the topic guides are still there to explore.",
+    ],
+    links: [{ label: "Insights", href: "/insights" }],
   },
 ];
 
@@ -440,7 +618,7 @@ export const CONVERSATION_ENTRIES: AssistantEntry[] = [
     ],
     links: [
       { label: "What Savo builds", href: "/services" },
-      { label: "Start a project", href: "/start" },
+      { label: "Start a project", href: "/start-a-project" },
     ],
   },
   {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getAdminUser } from "@/lib/auth";
+import { requireAdminPage, canAccess, SECTIONS } from "@/lib/permissions";
 import { COLLECTION_KEYS, CONTENT_COLLECTIONS } from "@/lib/content-registry";
 import { StatTile, PageHeader, EnquiryStatusChip, Chip } from "@/components/admin/ui";
 import { AdminIcon } from "@/components/admin/icons";
@@ -108,7 +108,21 @@ function TrendChart(rows: { createdAt: Date }[]) {
 }
 
 export default async function AdminDashboard() {
-  const user = await getAdminUser();
+  const user = await requireAdminPage("/admin");
+
+  // Aggregate finance, lead and audit data is administrator-only. Editors
+  // enter their granted sections without fetching another section's data.
+  if (user.role !== "admin") {
+    return <>
+      <PageHeader title="Your workspace" description="Open a section you have permission to manage." />
+      <ul className="adm-card divide-y divide-border">
+        {SECTIONS.filter(section => canAccess(user, section.key)).map(section =>
+          <li key={section.key}><Link className="flex min-h-11 items-center px-5 py-3 font-semibold" href={`/admin/${section.key === "content" ? "content" : section.key}`}>{section.label}</Link></li>,
+        )}
+        <li><Link className="flex min-h-11 items-center px-5 py-3 font-semibold" href="/admin/my-profile">My profile</Link></li>
+      </ul>
+    </>;
+  }
 
   if (!prisma) {
     return (

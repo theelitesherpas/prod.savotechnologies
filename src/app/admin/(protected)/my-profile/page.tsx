@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { getAdminUser } from "@/lib/auth";
+import { requireAdminPage } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { leaveSummary, fmtDate, EMPLOYEE_STATUS_META } from "@/lib/employees";
 import { PageHeader, Notice, Chip, StatTile } from "@/components/admin/ui";
@@ -14,8 +13,7 @@ export const dynamic = "force-dynamic";
 /** Employee self-service - their own record, leave balance, authored content.
  *  Linked via AdminUser.employeeId; unlinked users see a notice instead. */
 export default async function MyProfilePage() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin/login");
+  const user = await requireAdminPage("/admin/my-profile");
   if (!prisma) {
     return (
       <div className="max-w-4xl">
@@ -27,7 +25,7 @@ export default async function MyProfilePage() {
 
   const adminUser = await prisma.adminUser.findUnique({
     where: { id: user.id },
-    include: {
+    select: {
       employee: { include: { leaves: { orderBy: { fromDate: "desc" } } } },
     },
   });

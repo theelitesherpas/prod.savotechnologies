@@ -1,5 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { cachePublicData } from "@/lib/public-cache";
+import { requireSection } from "@/lib/permissions";
 import { logger } from "@/lib/logger";
 import { revalidateManagedContent } from "@/lib/collections";
 import { CONTENT_COLLECTIONS, type CollectionKey, type SeedItem } from "@/lib/content-registry";
@@ -9,11 +11,10 @@ import { CASE_DISCIPLINES, CASE_DISCIPLINES_BASE, type CaseDiscipline } from "@/
 import { getCaseStudies } from "@/lib/case-studies";
 import { caseImageSrc } from "@/lib/case-img";
 import { resolveCaseImages } from "@/lib/case-study-schema";
+import { insightRichHtmlToText, sanitizeInsightRichHtml } from "@/lib/insight-rich-text";
 import type { HireRole } from "@/constants/hire";
 import type { AiService } from "@/constants/ai-services";
 import type { Agent } from "@/constants/agents";
-import { ARTICLES } from "@/constants/insights";
-import { ROLES } from "@/constants/careers";
 import { HIRE_ROLES } from "@/constants/hire";
 import { AI_SERVICES } from "@/constants/ai-services";
 import { AGENTS } from "@/constants/agents";
@@ -22,11 +23,10 @@ import { AGENTS } from "@/constants/agents";
  * Managed content data-access layer (server).
  *
  * Every collection lives in the `content_items` table with a JSONB payload
- * validated against the registry schema. When a collection's table is empty
- * (or the DB is unreachable) the constants act as the guaranteed fallback,
- * so the public site always renders - the same contract as services and
- * industries. Admin mutations call revalidateManagedContent() to
- * regenerate public pages on demand.
+ * validated against the registry schema. Publication-backed collections
+ * (including Insights and Careers) fail closed; their constants are import
+ * seeds, not public records. Other catalog getters retain their documented
+ * fallback contracts. Admin mutations call revalidateManagedContent().
  */
 
 type ItemRow = {
@@ -36,16 +36,17 @@ type ItemRow = {
   data: unknown;
   order: number;
   active: boolean;
+  contentStatus: string;
+  // Next's Data Cache serializes Prisma Date values; accept both direct-query
+  // Dates and cached ISO/string/epoch representations.
+  publishedAt: Date | string | number | null;
   updatedAt: Date;
 };
 
-/** Read a collection's rows; null means "DB unavailable or empty".
- *
- * Publication is explicit (demo content policy): public reads return only
- * rows whose content lifecycle reached "published". Rows still in
- * draft/demo/review - or seeded without a lifecycle - never render; the
- * constants fallback covers the public site instead. */
-async function readItems(collection: CollectionKey, includeInactive = false): Promise<ItemRow[] | null> {
+/** Read explicitly active Published rows. [] means empty; null means unavailable.
+ * Draft/demo/review records never enter public getters. Fallback policy is
+ * owned by each collection getter, not by this query. */
+async function queryItems(collection: CollectionKey, includeInactive = false): Promise<ItemRow[] | null> {
   if (!prisma) return null;
   try {
     return await prisma.contentItem.findMany({
@@ -53,7 +54,7 @@ async function readItems(collection: CollectionKey, includeInactive = false): Pr
         ? { collection }
         : { collection, active: true, contentStatus: "published" },
       orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
-      select: { id: true, slug: true, title: true, data: true, order: true, active: true, updatedAt: true },
+      select: { id: true, slug: true, title: true, data: true, order: true, active: true, contentStatus: true, publishedAt: true, updatedAt: true },
     });
   } catch (err) {
     logger.warn("content_items.db_unavailable", {
@@ -64,9 +65,34 @@ async function readItems(collection: CollectionKey, includeInactive = false): Pr
   }
 }
 
+const publishedReaders = new Map<CollectionKey, () => Promise<ItemRow[] | null>>();
+async function readItems(collection: CollectionKey, includeInactive = false): Promise<ItemRow[] | null> {
+  if (includeInactive) return queryItems(collection, true);
+  if (!prisma) return null;
+  let reader = publishedReaders.get(collection);
+  if (!reader) {
+    reader = cachePublicData(`content-items:${collection}`, () => queryItems(collection), [`content:${collection}`]);
+    publishedReaders.set(collection, reader);
+  }
+  return reader();
+}
+
 // ──────────────────────── Public getters ────────────────────────────
 
 const str = (v: unknown, fallback = ""): string => (typeof v === "string" ? v : fallback);
+function toIsoDate(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  let date: Date;
+  if (value instanceof Date) date = value;
+  else if (typeof value === "number") date = new Date(Math.abs(value) < 1e12 ? value * 1000 : value);
+  else if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const numeric = /^-?\d+(?:\.\d+)?$/.test(trimmed) ? Number(trimmed) : null;
+    date = new Date(numeric === null ? trimmed : Math.abs(numeric) < 1e12 ? numeric * 1000 : numeric);
+  } else return null;
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
 const num = (v: unknown, fallback = 0): number => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
 const strList = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
 const pairList = (v: unknown): { title: string; text: string }[] =>
@@ -91,50 +117,128 @@ const qaList = (v: unknown): { q: string; a: string }[] =>
       }))
     : [];
 
-/** Insights articles - index + reading pages. */
-export async function getManagedArticles(): Promise<Article[]> {
-  const rows = await readItems("insights");
-  if (!rows || rows.length === 0) return ARTICLES;
+/** Published About profiles only. Demo leadership remains a labelled preview when no real profiles are published. */
+export async function getManagedTeam(): Promise<{ name: string; role: string; photo: string; photoAlt: string; linkedinUrl?: string; email?: string }[]> {
+  const rows = await readItems("team");
+  if (!rows) return [];
+  return rows.map((row) => {
+    const data = row.data as Record<string, unknown>;
+    const photo = str(data?.photo);
+    return {
+      name: str(data?.name).trim(),
+      role: str(data?.role).trim(),
+      photo: /^data:image\/(?:jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(photo) ? photo : "",
+      photoAlt: str(data?.photoAlt).trim(),
+      linkedinUrl: str(data?.linkedinUrl).trim() || undefined,
+      email: str(data?.email).trim() || undefined,
+    };
+  }).filter((person) => person.name && person.role && person.photo && person.photoAlt);
+}
+
+/** Approved client testimonials, shared by the homepage, project brief and lead popup. */
+export async function getManagedTestimonials(): Promise<
+  { quote: string; name: string; role: string; country?: string; photo?: string; video?: string }[]
+> {
+  const rows = await readItems("testimonials");
+  if (!rows || rows.length === 0) return [];
   return rows.map((r) => {
     const d = r.data as Record<string, unknown>;
     return {
-      slug: r.slug,
-      title: r.title,
-      cat: (["AI", "Engineering", "Design", "Delivery"] as const).includes(d?.cat as Article["cat"])
-        ? (d?.cat as Article["cat"])
-        : "Engineering",
-      image: str(d?.image, "/images/architecture.webp"),
-      excerpt: str(d?.excerpt),
-      time: str(d?.time, "5 min read"),
-      date: str(d?.date),
-      body: Array.isArray(d?.body)
-        ? (d?.body as Article["body"]).filter(
-            (b) => b && (typeof b.p === "string" || typeof b.h === "string" || Array.isArray(b.li)),
-          )
-        : [],
+      quote: str(d?.quote),
+      name: str(d?.name),
+      role: str(d?.companyName).trim() || str(d?.role),
+      country: str(d?.location).trim() || str(d?.country) || undefined,
+      photo: str(d?.posterImage).trim() || str(d?.photoUrl) || undefined,
+      video: str(d?.videoUrl) || undefined,
     };
+  }).filter((t) => t.quote && t.name && t.role);
+}
+
+/** Actual Published Insights only. Legacy ARTICLES are import seeds, never a public fallback. */
+type ArticleItemRow = Pick<ItemRow, "slug" | "title" | "data" | "publishedAt">;
+
+function mapManagedArticle(r: ArticleItemRow): Article | null {
+  const d = r.data as Record<string, unknown>;
+  const image = str(d?.image).trim();
+  const legacyImageHash = /^\/api\/insight-image\?v=([a-f0-9]{64})$/i.exec(image);
+  const normalizedImage = legacyImageHash ? `/api/insight-image/${legacyImageHash[1].toLowerCase()}` : image;
+  const body: Article["body"] = Array.isArray(d?.body) ? d.body.flatMap((value: unknown): Article["body"] => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+    const block = value as Record<string, unknown>;
+    if (typeof block.html === "string") {
+      const html = sanitizeInsightRichHtml(block.html);
+      return insightRichHtmlToText(html) ? [{ html }] : [];
+    }
+    const h = str(block.h).trim(), p = str(block.p).trim(), li = strList(block.li).map(s => s.trim()).filter(Boolean);
+    return h ? [{ h }] : li.length ? [{ li }] : p ? [{ p }] : [];
+  }) : [];
+  const article: Article = {
+    slug: r.slug,
+    title: r.title.trim(),
+    industrySlugs: strList(d?.industrySlugs),
+    cat: (["AI", "Engineering", "Design", "Delivery"] as const).includes(d?.cat as Article["cat"])
+      ? (d?.cat as Article["cat"])
+      : "Engineering",
+    image: (/^\/images\/[a-zA-Z0-9_./-]+\.(?:webp|png|jpe?g|avif|svg)$/i.test(normalizedImage) && !normalizedImage.includes("..")) || /^\/api\/insight-image\/[a-f0-9]{64}$/i.test(normalizedImage) ? normalizedImage : "/images/architecture.webp",
+    imageAlt: str(d?.imageAlt).trim().slice(0, 200),
+    excerpt: str(d?.excerpt).trim(),
+    date: toIsoDate(r.publishedAt) ?? "",
+    ...(str(d?.authorName).trim() ? { authorName: str(d?.authorName).trim() } : {}),
+    body,
+  };
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(article.slug) && article.title && article.excerpt && article.body.length ? article : null;
+}
+
+export async function getManagedArticles(): Promise<Article[]> {
+  const rows = await readItems("insights");
+  if (!rows || rows.length === 0) return [];
+  return rows.flatMap((row) => {
+    const article = mapManagedArticle(row);
+    return article ? [article] : [];
   });
 }
 
-/** Careers open roles. */
+/** Read one published article for its detail/metadata route instead of loading every rich body. */
+export async function getManagedArticle(slug: string): Promise<Article | null> {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !prisma) return null;
+  const read = cachePublicData(`published-insight:${slug}`, async () => {
+    try {
+      const row = await prisma!.contentItem.findFirst({
+        where: { collection: "insights", slug, active: true, contentStatus: "published" },
+        select: { slug: true, title: true, data: true, publishedAt: true },
+      });
+      return row ? mapManagedArticle(row) : null;
+    } catch (err) {
+      logger.warn("content_items.article_detail_unavailable", {
+        message: err instanceof Error ? err.message : "unknown",
+      });
+      return null;
+    }
+  }, ["content:insights"]);
+  return read();
+}
+
+/** Careers vacancies must be explicitly published. Sample constants are never openings. */
 export async function getManagedRoles(): Promise<Role[]> {
   const rows = await readItems("careers");
-  if (!rows || rows.length === 0) return ROLES;
+  if (!rows || rows.length === 0) return [];
   return rows.map((r) => {
     const d = r.data as Record<string, unknown>;
     const cat = (["eng", "design", "ops"] as const).includes(d?.cat as Role["cat"]) ? (d?.cat as Role["cat"]) : "eng";
+    const publishedDate = toIsoDate(r.publishedAt);
     return {
       title: r.title,
       track: str(d?.track),
       cat,
       exp: str(d?.exp),
+      ...(publishedDate ? { datePosted: publishedDate.slice(0, 10) } : {}),
       band: str(d?.band),
       ctc: [num(d?.ctcMin, 12), num(d?.ctcMax, 24)] as [number, number],
       blurb: str(d?.blurb),
       duties: strList(d?.duties).filter(Boolean),
       brings: strList(d?.brings).filter(Boolean),
     };
-  });
+  }).filter(role => role.title.trim() && role.blurb.trim());
 }
 
 /**
@@ -253,12 +357,13 @@ export async function getManagedAgents(): Promise<Agent[]> {
 
 /** Full rows (including hidden) for the admin index. Null when DB unavailable. */
 export async function getAdminItems(collection: CollectionKey): Promise<ItemRow[] | null> {
+  await requireSection("content");
   return readItems(collection, true);
 }
 
 /** True when the collection has no DB rows and the site runs on defaults. */
 export async function isFallback(collection: CollectionKey): Promise<boolean> {
-  const rows = await readItems(collection);
+  const rows = await queryItems(collection);
   return !rows || rows.length === 0;
 }
 

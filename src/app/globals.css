@@ -1,7 +1,59 @@
 @import "tailwindcss";
 
 /* ============================================================
-   SAVO TECHNOLOGIES — DESIGN TOKENS v2
+   THREE-FAMILY TYPE SYSTEM (user-selected: Afacad Flux · Inter ·
+   Outfit - Belanosima removed per direction; no other families)
+   ▸ REVERT: original Manrope/SourceSerif/FragmentMono lines are
+     preserved in the comment below the @font-face block.
+   ▸ Role assignment (senior-type reasoning):
+     DISPLAY VOICE … Outfit SemiBold 600 - geometric face designed for
+       headline/display sizes (t-dxl…t-h2).
+     SUB-HEADS …… Inter SemiBold 600 - crisp UI-grade headline step
+       below display (t-h3/t-h4).
+     INTERFACE …… Inter variable (opsz auto-tunes small sizes) - body,
+       forms, buttons 400/500/600. The screen-text benchmark.
+     MEASUREMENT … Inter Medium + true tabular figures - t-label
+       eyebrows and .tnum data align in perfect columns.
+     PULL-QUOTES … Afacad Flux true italic 500 (real slnt axis).
+   ============================================================ */
+@font-face {
+  font-family: "Afacad Flux";
+  src: url("/fonts/afacad-flux/AfacadFlux-VariableFont_slnt,wght.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Afacad Flux";
+  src: url("/fonts/afacad-flux/AfacadFlux-VariableFont_slnt,wght.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-VariableFont_opsz,wght.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-Italic-VariableFont_opsz,wght.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Outfit";
+  src: url("/fonts/outfit/Outfit-VariableFont_wght.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================================
+   SAVO TECHNOLOGIES - DESIGN TOKENS v2
    World: "the engineering document, bound in leather."
    Warm paper + sand bands, blue-black ink chapters, one
    vermilion signal. Serif display (Source Serif 4) over a
@@ -30,7 +82,7 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Ink chapter — systems / engineering sections (blue-black, richer than pure black) */
+/* Ink chapter - systems / engineering sections (blue-black, richer than pure black) */
 .chapter-ink {
   --background: #101319;
   --foreground: #eef0f4;
@@ -44,13 +96,13 @@
   --on-accent: #101319;
 }
 
-/* Vermilion chapter — the final conversion moment */
+/* Vermilion chapter - the final conversion moment */
 .chapter-accent {
   --background: #e8490f;
   --foreground: #16130f;
   --surface: rgb(22 19 15 / 0.07);
   --surface-secondary: rgb(22 19 15 / 0.16);
-  /* Vermilion is a mid-luminance field — secondary text stays near-full
+  /* Vermilion is a mid-luminance field - secondary text stays near-full
      ink weight for 4.5:1; hierarchy comes from size, not tone. */
   --muted: rgb(22 19 15 / 0.95);
   --border: rgb(22 19 15 / 0.26);
@@ -75,10 +127,14 @@
   --color-warning: var(--warning);
   --color-error: var(--error);
 
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", sans-serif;
-  --font-serif: var(--font-source-serif), "Iowan Old Style", Georgia, serif;
-  --font-mono: var(--font-fragment), ui-monospace, "SF Mono", Menlo, monospace;
+  /* PRE-SWAP ORIGINAL (revert targets):
+     --font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system,
+       "Segoe UI", sans-serif;
+     --font-serif: var(--font-source-serif), "Iowan Old Style", Georgia, serif;
+     --font-mono: var(--font-fragment), ui-monospace, "SF Mono", Menlo, monospace; */
+  --font-sans: "Inter", var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Outfit", var(--font-source-serif), sans-serif;
+  --font-mono: "Inter", var(--font-fragment), monospace;
 }
 
 /* ============================================================
@@ -160,7 +216,7 @@ body {
   overflow-wrap: break-word;
 }
 
-/* Statement moments — long words hold the line on 320px */
+/* Statement moments - long words hold the line on 320px */
 .t-statement {
   font-family: var(--font-serif);
   font-size: clamp(2.4rem, 8.6vw, 5.9rem);
@@ -199,17 +255,19 @@ body {
 }
 
 .t-h3 {
+  font-family: "Inter", sans-serif; /* sub-heads: crisp UI-grade step below display */
   font-size: clamp(1.125rem, 1.5vw, 1.3rem);
   line-height: 1.3;
   letter-spacing: -0.012em;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .t-h4 {
+  font-family: "Inter", sans-serif;
   font-size: 1.03rem;
   line-height: 1.3;
   letter-spacing: -0.008em;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .t-body-lg {
@@ -232,8 +290,10 @@ body {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   line-height: 1.4;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  font-weight: 500;
+  font-feature-settings: "tnum"; /* Inter tabular figures - data labels align */
 }
 
 .t-caption {
@@ -246,8 +306,10 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Pull-quotes: Afacad Flux TRUE italic (slnt axis) - characterful
+   obliques. PRE-SWAP ORIGINAL: Source Serif italic 500. */
 .t-serif-italic {
-  font-family: var(--font-serif);
+  font-family: "Afacad Flux", "Inter", sans-serif;
   font-style: italic;
   font-weight: 500;
 }
@@ -256,7 +318,7 @@ body {
    MOTION
    ============================================================ */
 
-/* Entrance reveals — hidden only when JS is present, so SSR/no-JS
+/* Entrance reveals - hidden only when JS is present, so SSR/no-JS
    content is always visible. */
 .js .reveal {
   opacity: 0;
@@ -276,25 +338,7 @@ body {
   will-change: auto;
 }
 
-/* Doodle fills — the paint arrives just after the line that contains it
-   (same is-inview trigger as data-draw; reduced motion shows the
-   finished doodle immediately). */
-.js .doodle-fill {
-  fill-opacity: 0;
-  transition: fill-opacity 0.45s var(--ease-out-expo);
-  transition-delay: var(--draw-delay, 0.4s);
-}
-.js .is-inview .doodle-fill {
-  fill-opacity: 1;
-}
-@media (prefers-reduced-motion: reduce) {
-  .js .doodle-fill {
-    fill-opacity: 1;
-    transition: none;
-  }
-}
-
-/* Image mask reveal — the frame wipes up, the photo settles */
+/* Image mask reveal - the frame wipes up, the photo settles */
 .js .img-reveal {
   clip-path: inset(100% 0 0 0);
   transition: clip-path 1.1s var(--ease-out-expo);
@@ -310,7 +354,7 @@ body {
   transform: scale(1);
 }
 
-/* Vector line-draw — paths carry pathLength="1" */
+/* Vector line-draw - paths carry pathLength="1" */
 .js [data-draw] path,
 .js [data-draw] line,
 .js [data-draw] polyline {
@@ -372,7 +416,7 @@ body {
   }
 }
 
-/* Service workbench — panel swap entrance */
+/* Service workbench - panel swap entrance */
 @keyframes check-ring {
   from {
     stroke-dashoffset: 170;
@@ -402,7 +446,7 @@ body {
   }
 }
 
-/* Success dialog — the check draws itself once, expo-eased.
+/* Success dialog - the check draws itself once, expo-eased.
    Gated on no-preference; the global reduce kill-switch also applies. */
 @media (prefers-reduced-motion: no-preference) {
   .success-draw {
@@ -611,7 +655,7 @@ body {
   }
 }
 
-/* Route veil — soft entrance (fade + 1% scale settle), motion-gated.
+/* Route veil - soft entrance (fade + 1% scale settle), motion-gated.
    Exit uses the opacity transition on .route-veil. */
 @media (prefers-reduced-motion: no-preference) {
   .route-veil {
@@ -644,7 +688,7 @@ body {
   animation: panel-in 0.5s var(--ease-out-expo) both;
 }
 
-/* Service schematics — the one live node on each specimen plate */
+/* Service schematics - the one live node on each specimen plate */
 @keyframes schem-pulse {
   0%,
   100% {
@@ -665,7 +709,7 @@ body {
   }
 }
 
-/* The crew — playful doodle scenes on the hire pages */
+/* The crew - playful doodle scenes on the hire pages */
 @keyframes crew-wheel {
   to {
     transform: rotate(360deg);
@@ -726,7 +770,7 @@ body {
   }
 }
 
-/* Careers specimen — the rendered result builds in, element by element */
+/* Careers specimen - the rendered result builds in, element by element */
 @keyframes result-in {
   from {
     opacity: 0;
@@ -772,7 +816,7 @@ body {
    SURFACES & TEXTURES
    ============================================================ */
 
-/* Blueprint grid — faint engineering paper for technical figures */
+/* Blueprint grid - faint engineering paper for technical figures */
 .blueprint {
   background-image:
     linear-gradient(color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px),
@@ -780,7 +824,7 @@ body {
   background-size: 44px 44px;
 }
 
-/* Photography in true color — never desaturated. Hover adds a gentle
+/* Photography in true color - never desaturated. Hover adds a gentle
    lift: saturation and brightness breathe in sync with the card's scale,
    one gesture, not a reveal. The transition covers transform too, so
    Tailwind scale utilities animate together with the filter. */
@@ -813,7 +857,7 @@ body {
   text-decoration-color: currentColor;
 }
 
-/* Form fields — document style: baseline rules, no boxes */
+/* Form fields - document style: baseline rules, no boxes */
 .field {
   width: 100%;
   background: transparent;
@@ -848,7 +892,7 @@ textarea.field {
 }
 
 /* ============================================================
-   ADMIN — Operations Console (NextAdmin-style operations theme)
+   ADMIN - Operations Console (NextAdmin-style operations theme)
    Light dashboard skin on its own token scope: white rounded cards
    with soft shadows over a cool-gray canvas, pill badges, vermilion
    primary. Scoped under .chapter-admin so public tokens are untouched.
@@ -873,7 +917,7 @@ textarea.field {
   --card-shadow: 0 1px 2px rgb(16 24 40 / 0.05);
 }
 
-/* Dark operations theme — deep slate cards over a near-black slate canvas */
+/* Dark operations theme - deep slate cards over a near-black slate canvas */
 .chapter-admin-dark {
   --background: #0b0f1a;
   --foreground: #e8ebf1;
@@ -910,7 +954,7 @@ body:has(.chapter-admin-dark) {
   color: var(--muted);
 }
 
-/* Card — the standard container: white, 12px radius, hairline + soft shadow */
+/* Card - the standard container: white, 12px radius, hairline + soft shadow */
 .adm-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -949,7 +993,7 @@ body:has(.chapter-admin-dark) {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 14%, transparent);
 }
 
-/* Invalid state — set by FormGuard (aria-invalid) when a submit is
+/* Invalid state - set by FormGuard (aria-invalid) when a submit is
    blocked. Red border, red focus ring, and the field's label turns red
    via :has() so the problem is visible without reading the summary. */
 .adm-input[aria-invalid="true"],
@@ -983,13 +1027,13 @@ div:has(> .adm-select[aria-invalid="true"]) > label {
   background-repeat: no-repeat;
 }
 
-/* Mono-slug control — auto-derived from the title, editable */
+/* Mono-slug control - auto-derived from the title, editable */
 .adm-input[data-slug="auto"] {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
 }
 
-/* Table headers — typography for <th> inside admin tables. Never use
+/* Table headers - typography for <th> inside admin tables. Never use
    .adm-label on a <th>: its display:block collapses the header row
    into a column (the audit/enquiries header bug). */
 .adm-hairline-table thead th {
@@ -1065,4 +1109,127 @@ div:has(> .adm-select[aria-invalid="true"]) > label {
 .service-row:hover .service-underline,
 .service-row[data-open="true"] .service-underline {
   transform: scaleX(1);
+}
+
+/* ============================================================
+   PROJECT LEAD MODAL - motion (site easing, reduced-motion safe)
+   ============================================================ */
+@keyframes pl-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pl-modal-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pl-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes pl-modal-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(8px) scale(0.99); }
+}
+.pl-backdrop-in { animation: pl-backdrop-in 300ms var(--ease-out-expo) both; }
+.pl-modal-in { animation: pl-modal-in 380ms var(--ease-out-expo) both; }
+.pl-backdrop-out { animation: pl-backdrop-out 200ms ease-in both; }
+.pl-modal-out { animation: pl-modal-out 200ms ease-in both; }
+@keyframes pl-quote-in {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.pl-quote-in { animation: pl-quote-in 420ms var(--ease-out-expo) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-backdrop-in, .pl-modal-in, .pl-backdrop-out, .pl-modal-out, .pl-quote-in {
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
+  }
+}
+
+/* ============================================================
+   HOMEPAGE V2 (modern IT-services look) - marquee + card lifts
+   ============================================================ */
+@keyframes v2-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.v2-marquee-track {
+  animation: v2-marquee 36s linear infinite;
+}
+.v2-marquee-wrap:hover .v2-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .v2-marquee-track { animation: none; }
+}
+.v2-card {
+  transition:
+    transform 0.5s var(--ease-out-expo),
+    box-shadow 0.5s var(--ease-out-expo),
+    border-color 0.5s var(--ease-out-expo);
+}
+.v2-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 44px rgb(10 10 14 / 0.10);
+  border-color: rgb(10 10 14 / 0.16);
+}
+.v2-card-dark:hover {
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.45);
+  border-color: rgb(255 255 255 / 0.22);
+}
+
+/* ============================================================
+   REFERENCE PALETTE THEME OVERRIDES (homepage revamp)
+   aalpha-exact tokens: #FF3333 / #000 / #757575 / #F7F7F7 /
+   #E8E8E8 / #ced4da - scoped var overrides, zero structural change.
+   ============================================================ */
+.reftheme-dark {
+  --background: #000000;
+  --surface: #0a0a0a;
+  --surface-secondary: #161616;
+  --foreground: #ffffff;
+  --muted: #9aa0a6;
+  --border: rgb(255 255 255 / 0.14);
+  --accent: #FF3333;
+  --accent-hover: #ff4d4d;
+  --accent-strong: #ff4d4d;
+  --on-accent: #ffffff;
+}
+.reftheme-red {
+  --background: #FF3333;
+  --surface: rgb(0 0 0 / 0.06);
+  --surface-secondary: rgb(0 0 0 / 0.14);
+  --foreground: #000000;
+  --muted: rgb(0 0 0 / 0.74);
+  --border: rgb(0 0 0 / 0.24);
+  --accent: #000000;
+  --accent-hover: #1c1c1c;
+  --accent-strong: #000000;
+  --on-accent: #ffffff;
+}
+.reftheme-light {
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-secondary: #F7F7F7;
+  --foreground: #000000;
+  --muted: #757575;
+  --border: #E8E8E8;
+  --accent: #FF3333;
+  --accent-hover: #ff4d4d;
+  --accent-strong: #FF3333;
+  --on-accent: #ffffff;
+}
+
+@keyframes techSlideIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="techSlideIn"] { animation-duration: 1ms !important; }
+}
+
+@keyframes techPageIn {
+  from { opacity: 0; transform: translateX(32px); }
+  to { opacity: 1; transform: translateX(0); }
 }

@@ -4,35 +4,15 @@ import { FOOTER_NAV } from "@/constants/navigation";
 import { SavoLogo } from "@/components/shared/savo-logo";
 import { RegionArt } from "@/components/shared/region-art";
 import { CallbackForm } from "@/components/shared/callback-form";
-import { DialogLink } from "./dialog-link";
+import { FooterColumn } from "./footer-nav";
+import styles from "./site-footer.module.css";
 
-type FooterLink = { label: string; href: string; pro?: boolean; action?: "dialog" };
-
-function FooterColumn({ heading, links, label }: { heading: string; links: readonly FooterLink[]; label: string }) {
-  return (
-    <nav aria-label={label}>
-      <p className="t-label mb-5 text-muted">{heading}</p>
-      <ul className="space-y-2.5">
-        {links.map((link) => (
-          <li key={link.label}>
-            {"action" in link && link.action === "dialog" ? (
-              <DialogLink label={link.label} />
-            ) : (
-              <Link href={link.href} className="link-underline text-[0.875rem] text-foreground/75 transition-colors hover:text-foreground">
-                {link.label}
-                {link.pro ? (
-                  <span className="t-caption ml-1.5 rounded-[2px] border border-accent/40 px-1 py-px text-accent">PRO</span>
-                ) : null}
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-}
-
-/** Contact details come from admin-managed settings (with constant defaults). */
+/**
+ * Footer direction: a cinematic closing chapter in the homepage's existing
+ * black / warm-red world. Brand + callback lead, then a five-column directory,
+ * distinct office / market details, and an understated official Savo signature.
+ * All navigation, managed contact details, badges and callback behavior remain.
+ */
 export function SiteFooter({
   contact,
 }: {
@@ -41,137 +21,108 @@ export function SiteFooter({
   const year = new Date().getFullYear();
 
   return (
-    <footer className="chapter-ink bg-background text-foreground" aria-labelledby="footer-heading">
-      <h2 id="footer-heading" className="sr-only">
-        Site footer
-      </h2>
-
-      {/* Row 1, brand + navigation columns */}
-      <div className="shell grid gap-12 border-b border-border py-16 sm:py-20 lg:grid-cols-12 lg:gap-8">
-        <div className="lg:col-span-4 lg:pr-8">
-          <Link href="/" aria-label="Savo Technologies, home" className="inline-block text-foreground">
-            <SavoLogo className="h-12 w-auto" />
-          </Link>
-          <p className="t-sm mt-6 max-w-sm leading-relaxed text-muted">{SITE.statement}</p>
-          <p className="t-serif-italic mt-5 inline-flex items-center gap-3 text-lg text-foreground">
-            <span aria-hidden="true" className="h-2 w-2 bg-accent" />
-            {SITE.tagline}
-          </p>
-          <ul className="mt-8 flex flex-wrap gap-2" aria-label="Social media">
-            {SOCIAL_LINKS.map((s) => (
-              <li key={s.label}>
-                <a
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="t-label flex h-10 w-10 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent"
-                  aria-label={s.label}
-                >
-                  <SocialGlyph label={s.label} />
-                </a>
-              </li>
-            ))}
-          </ul>
+    <footer className={styles.footer} aria-labelledby="footer-heading">
+      <h2 id="footer-heading" className="sr-only">Site footer</h2>
+      <div className={`shell ${styles.content}`}>
+        <div className={styles.opening}>
+          <div className={styles.brand}>
+            <Link href="/" aria-label="Savo Technologies, home" className={styles.brandLink}>
+              <SavoLogo className="h-12 w-auto" />
+            </Link>
+            <p className={styles.tagline}>{SITE.tagline}</p>
+            <p className={styles.statement}>Savo Technologies brings product strategy, design and engineering together. From websites and mobile apps to AI and internal tools, we focus on the people using the product and the business behind it.</p>
+            <ul className={styles.socials} aria-label="Social media">
+              {SOCIAL_LINKS.map((s) => (
+                <li key={s.label}>
+                  <a href={s.href} target="_blank" rel="noopener noreferrer" className={styles.socialLink} aria-label={s.label}>
+                    <SocialGlyph label={s.label} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <section className={styles.callbackPanel} aria-labelledby="footer-callback-heading">
+            <h3 id="footer-callback-heading">Would you prefer a call?</h3>
+            <p className={styles.callbackCopy}>
+              Leave a number and tell us which country you’re in. We’ll get in touch to talk through what you need.
+            </p>
+            <CallbackForm />
+          </section>
         </div>
 
-        <div className="grid gap-10 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
+        <section className={styles.contactRibbon} aria-labelledby="footer-contact-heading">
+          <h3 id="footer-contact-heading">Talk to us</h3>
+          <a href={`mailto:${contact.email}`} className={styles.directContact}>
+            <MailGlyph /><span>{contact.email}</span>
+          </a>
+          <a href={`tel:${contact.phoneE164}`} className={styles.directContact}>
+            <PhoneGlyph /><span className="tnum">{contact.phone}</span>
+          </a>
+          <Link href="/portal" className={styles.portalLink}>
+            <LockGlyph />Client Login
+            <svg aria-hidden="true" viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
+            </svg>
+          </Link>
+        </section>
+
+        <div className={styles.directory}>
           <FooterColumn heading="Services" links={FOOTER_NAV.services} label="Footer services" />
           <FooterColumn heading="Industries" links={FOOTER_NAV.industries} label="Footer industries" />
           <FooterColumn heading="Company" links={FOOTER_NAV.company} label="Footer company" />
+          <FooterColumn heading="Enterprise" links={FOOTER_NAV.enterprise} label="Footer enterprise" />
           <FooterColumn heading="Quick Links" links={FOOTER_NAV.quick} label="Footer quick links" />
         </div>
-      </div>
 
-      {/* Row 2, global offices (identity vectors, address + mobile) + direct contact */}
-      <div className="shell grid gap-px border-b border-border bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {OFFICES.map((office) => (
-          <div key={office.id} className="flex flex-col bg-background p-5">
-            <RegionArt id={office.id} className="mb-4 h-9 w-14 shrink-0" />
-            <p className="t-label text-accent">{office.region}</p>
-            {office.addressLine ? (
-              <>
-                <p className="t-caption mt-2 font-medium text-foreground/90">{PRESENCE_LABEL[office.kind]}</p>
-                <p className="t-caption mt-1.5 flex-1 leading-relaxed text-muted">{office.addressLine}</p>
-              </>
-            ) : (
-              <p className="t-caption mt-2 flex-1 leading-relaxed text-muted">{office.description}</p>
-            )}
-            {office.phones && office.phones.length > 0 ? (
-              <div className="mt-3 space-y-1.5">
-                {office.phones.map((phone) => (
-                  <a
-                    key={phone.e164}
-                    href={`tel:${phone.e164}`}
-                    className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent"
-                  >
-                    <PhoneGlyph />
-                    {phone.display}
-                    {phone.label ? <span className="t-caption text-muted">({phone.label})</span> : null}
-                  </a>
-                ))}
+        <section className={styles.presence} aria-labelledby="footer-presence-heading">
+          <h3 id="footer-presence-heading" className={styles.sectionHeading}>Our global presence</h3>
+          <div className={styles.officeGrid}>
+            {OFFICES.map((office) => (
+              <div key={office.id} className={styles.office}>
+                <div className={styles.officeIdentity}>
+                  <RegionArt id={office.id} className={styles.regionArt} />
+                  <div>
+                    <h4 className={styles.regionName}>{office.region}</h4>
+                    <p className={styles.presenceKind}>{PRESENCE_LABEL[office.kind]}</p>
+                  </div>
+                </div>
+                <p className={styles.officeDetail}>{office.addressLine || office.description}</p>
+                {office.phones && office.phones.length > 0 ? (
+                  <div className={styles.officePhones}>
+                    {office.phones.map((phone) => (
+                      <a key={phone.e164} href={`tel:${phone.e164}`}>
+                        <PhoneGlyph /><span className="tnum">{phone.display}</span>
+                        {phone.label ? <span className={styles.phoneLabel}>({phone.label})</span> : null}
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-            ) : null}
+            ))}
           </div>
-        ))}
-        <div className="bg-background p-5 sm:col-span-2 lg:col-span-3 xl:col-span-6">
-          <p className="t-label text-accent">Talk to us</p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:mt-2.5 lg:gap-6">
-            <a href={`mailto:${contact.email}`} className="flex items-center gap-2 text-[0.875rem] font-medium text-foreground/85 transition-colors hover:text-accent">
-              <MailGlyph />
-              {contact.email}
-            </a>
-            <a href={`tel:${contact.phoneE164}`} className="flex items-center gap-2 text-[0.875rem] font-medium tnum text-foreground/85 transition-colors hover:text-accent">
-              <PhoneGlyph />
-              {contact.phone}
-            </a>
-            <Link href="/portal" className="flex items-center gap-2 text-[0.875rem] font-medium text-foreground/85 transition-colors hover:text-accent">
-              <LockGlyph />
-              Client Login
-            </Link>
-          </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Row 3, call back */}
-      <div className="shell grid gap-10 border-b border-border py-14 lg:grid-cols-12 lg:items-center">
-        <div className="lg:col-span-4">
-          <p className="t-h3">Prefer a call back?</p>
-          <p className="t-sm mt-3 max-w-xs text-muted">
-            Pick your country, leave your number and a senior consultant calls
-            within two business hours.
-          </p>
-        </div>
-        <div className="lg:col-span-8 min-w-0">
-          <CallbackForm />
-        </div>
-      </div>
-
-      {/* Row 4, badges + legal (extra bottom clearance for the Ask Savo bar) */}
-      <div className="shell flex flex-col gap-6 pb-24 pt-8 lg:flex-row lg:items-center lg:justify-between">
-        <ul className="flex flex-wrap gap-x-7 gap-y-3" aria-label="Engineering practices">
+        <ul className={styles.practices} aria-label="Engineering practices">
           {BADGES.map((badge) => (
-            <li key={badge} className="flex items-center gap-2 text-muted">
-              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.4">
+            <li key={badge}>
+              <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.4">
                 <path d="M10 2.2 17 5v5.2c0 4.2-2.9 6.8-7 8.3-4.1-1.5-7-4.1-7-8.3V5l7-2.8Z" />
                 <path d="m7 10 2.1 2.1L13.4 7.7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="t-caption">{badge}</span>
+              <span>{badge}</span>
             </li>
           ))}
         </ul>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <p className="t-caption tnum text-muted">
-            © {year} {SITE.legalName}. All Rights Reserved.
-          </p>
-          <ul className="flex gap-5">
+        <div className={styles.legal}>
+          <p>© {year} {SITE.legalName}. All Rights Reserved.</p>
+          <ul>
             {LEGAL_LINKS.map((l) => (
-              <li key={l.label}>
-                <Link href={l.href} className="t-caption link-underline text-muted hover:text-foreground">
-                  {l.label}
-                </Link>
-              </li>
+              <li key={l.label}><Link href={l.href}>{l.label}</Link></li>
             ))}
           </ul>
+        </div>
+        <div className={styles.signature} aria-hidden="true">
+          <SavoLogo compact />
         </div>
       </div>
     </footer>

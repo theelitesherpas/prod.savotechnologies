@@ -1,0 +1,93 @@
+.section {
+  background:#f7f7f7;
+  color:#000;
+  padding-block:clamp(56px,6.4vw,88px);
+  scroll-margin-top:calc(var(--nav-h) + 88px);
+  font-family:var(--font-sans);
+}
+.rail {
+  width:min(1280px,calc(100% - 64px));
+  margin-inline:auto;
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);
+  gap:64px;
+  align-items:center;
+}
+.copy { min-width:0; }
+.section .copy h2 {
+  max-width:24ch;
+  margin:0;
+  color:#000;
+  font-family:var(--font-serif);
+  font-size:clamp(1.7rem,3.4vw,2.7rem);
+  font-weight:500;
+  line-height:1.12;
+  letter-spacing:-.025em;
+  text-wrap:balance;
+}
+.section .copy p {
+  max-width:65ch;
+  margin:24px 0 0;
+  color:#666;
+  font-size:1rem;
+  line-height:1.75;
+}
+.copy a { color:#000; text-underline-offset:4px; }
+.actions {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-self:end;
+  width:min(100%,280px);
+  min-width:0;
+  gap:12px;
+}
+.section .actions > :is(a,button) {
+  display:inline-flex;
+  align-items:center;
+  gap:12px;
+  max-width:100%;
+  margin:0;
+  border:0;
+  border-radius:6px;
+  font-family:var(--font-sans);
+  font-size:.875rem;
+  font-weight:600;
+  line-height:1.5;
+  cursor:pointer;
+  transition:background-color 160ms ease,color 160ms ease;
+  overflow-wrap:anywhere;
+}
+.section .actions > :is(a,button):first-child {
+  justify-content:center;
+  width:100%;
+  min-height:52px;
+  padding:12px 20px;
+  background:#df2525;
+  color:#fff;
+  text-align:center;
+}
+.section .actions > :is(a,button):first-child:hover { background:#b82222; }
+.section .actions > :is(a,button):not(:first-child) {
+  justify-content:flex-start;
+  min-height:44px;
+  padding:8px 0;
+  background:transparent;
+  color:#000;
+  text-align:left;
+}
+.section .actions > :is(a,button):not(:first-child):hover { color:#b82222; }
+.section .actions svg { flex:none; width:18px; height:18px; }
+.section :is(a,button):focus-visible { outline:3px solid #b82222; outline-offset:4px; }
+.section ::selection { background:#000; color:#fff; }
+@media (max-width:899px) {
+  .rail { grid-template-columns:minmax(0,1fr); gap:32px; }
+  .actions { justify-self:start; }
+}
+@media (max-width:639px) {
+  .rail { width:calc(100% - 40px); }
+  .actions { width:100%; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .section .actions > :is(a,button) { transition:none; }
+}

@@ -54,17 +54,13 @@ export const SITE = {
 } as const;
 
 /**
- * Official Google Business Profile review link (supplied by Savo).
- * Opens Google's own review interface — the only sanctioned way we
- * invite reviews; participation is always optional.
- */
-export const GOOGLE_REVIEW_URL = "https://g.page/r/CV--6sBtIZCNEAE/review";
-
-/**
  * Social profiles - genuine, Savo-controlled company accounts, supplied by
  * Savo. Shown in the footer and referenced as `sameAs` in the Organization
  * structured data (verified profiles only, per the hard content rule).
  */
+/** Owner-configured public review destination for the optional feedback flow. */
+export const GOOGLE_REVIEW_URL = "https://g.page/r/CV--6sBtIZCNEAE/review";
+
 export const SOCIAL_LINKS = [
   { label: "LinkedIn", href: "https://www.linkedin.com/company/savotechnologies/" },
   { label: "Instagram", href: "https://www.instagram.com/savotechnologies/" },
@@ -84,8 +80,7 @@ export const SOCIAL_LINKS = [
  * only, pending Savo confirmation. Demo market cards render in demo mode;
  * production shows the verified HQ plus truthful non-specific wording.
  */
-import { IS_DEMO } from "@/lib/content-mode";
-import { HQ_PRESENCE, CH_OFFICE, VERIFIED_OFFICES, MARKET_PRESENCE } from "@/content/demo";
+import { HQ_PRESENCE, VERIFIED_OFFICES, MARKET_PRESENCE } from "@/content/demo";
 
 export type Presence = typeof HQ_PRESENCE;
 

@@ -287,6 +287,172 @@ export function AgentDeploy() {
 }
 
 /* ------------------------------------------------------------------ */
+/* How agents actually work (master spec Part 48)                      */
+/* ------------------------------------------------------------------ */
+
+const AGENT_MECHANICS: { k: string; v: string }[] = [
+  {
+    k: "Agent vs chatbot",
+    v: "A chatbot follows scripts: if the user says X, reply Y. An agent plans. Given a goal, it decides which tools to use, in what order, and checks its own work before acting. That is the difference between answering a question and completing a task.",
+  },
+  {
+    k: "Tools",
+    v: "An agent acts through tools with typed inputs and outputs: search your catalogue, read a CRM record, calculate a price, draft an email. Each tool does one thing and reports what it did.",
+  },
+  {
+    k: "Authorized actions",
+    v: "Tools that change the world (send, book, refund, delete) require explicit permission scopes. An agent can prepare an action for review, or execute it directly if you authorized exactly that, nothing more.",
+  },
+  {
+    k: "Memory",
+    v: "Working memory holds the current conversation and task state. Long-term memory stores what a user or business actually said earlier, retrieved when relevant, forgotten when not.",
+  },
+  {
+    k: "Retrieval",
+    v: "Answers are grounded in your documents, catalogue and policies through retrieval, not model imagination. When the source does not contain the answer, the agent says so instead of improvising.",
+  },
+  {
+    k: "Human approval",
+    v: "High-stakes or ambiguous actions route to a human queue with full context. The agent proposes, your team approves, and the approval itself becomes training signal.",
+  },
+  {
+    k: "Failure handling",
+    v: "Agents fail; production systems expect it. Timeouts, tool errors and low-confidence states fall back to safe behaviour: retry, escalate, or hand to a human. Silent failure is the only unacceptable outcome.",
+  },
+  {
+    k: "Evaluation",
+    v: "Every deployment ships with an evaluation set: real questions, expected behaviours, adversarial cases. Changes to prompts, models or tools are scored against it before they reach production.",
+  },
+];
+
+export function AgentMechanics() {
+  const headingId = "mechanics-heading";
+  return (
+    <Section index="Mechanics" labelledBy={headingId} className="bg-surface-2/40">
+      <SectionHeader
+        id={headingId}
+        heading="How an agent actually works."
+        lead={<>Not a demo loop. The mechanics that make an agent reliable enough to face customers.</>}
+      />
+      <Reveal>
+        <dl className="grid gap-px border border-border bg-border md:grid-cols-2">
+          {AGENT_MECHANICS.map((m) => (
+            <div key={m.k} className="bg-background p-6 sm:p-8">
+              <dt className="t-h4 font-serif">{m.k}</dt>
+              <dd className="t-sm mt-3 max-w-[54ch] leading-relaxed text-muted">{m.v}</dd>
+            </div>
+          ))}
+        </dl>
+      </Reveal>
+    </Section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Where agents are NOT useful (Parts 42 & 48 - real judgment)         */
+/* ------------------------------------------------------------------ */
+
+const NOT_USEFUL: { k: string; v: string }[] = [
+  {
+    k: "Deterministic work",
+    v: "If a workflow has fixed rules and no ambiguity, a traditional integration or script is cheaper, faster and fully predictable. Wrapping a known process in a model adds cost and failure modes for no gain.",
+  },
+  {
+    k: "Zero-tolerance domains",
+    v: "Some decisions cannot tolerate any error rate, legal or medical judgment among them. There an agent can prepare information, and a qualified human decides.",
+  },
+  {
+    k: "Thin data",
+    v: "Retrieval needs something real to retrieve. If the knowledge base is empty or stale, the agent will be confidently useless. Fix the data first.",
+  },
+  {
+    k: "Novel high-stakes actions",
+    v: "An agent should not have unrestricted access to payments, deletions or communications on day one. Scope expands as evidence accumulates, not before.",
+  },
+];
+
+export function AgentNotUseful() {
+  const headingId = "not-useful-heading";
+  return (
+    <Section index="Judgment" labelledBy={headingId}>
+      <SectionHeader
+        id={headingId}
+        heading="Where agents are not the answer."
+        lead={<>Selling agents for everything would be easier. It would also be wrong.</>}
+      />
+      <Reveal>
+        <div className="grid gap-px border border-border bg-border md:grid-cols-2 lg:grid-cols-4">
+          {NOT_USEFUL.map((n) => (
+            <div key={n.k} className="bg-background p-6">
+              <h3 className="t-h4 font-serif">{n.k}</h3>
+              <p className="t-sm mt-3 leading-relaxed text-muted">{n.v}</p>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+      <Reveal delay={120}>
+        <p className="t-sm mt-8 max-w-[70ch] text-muted">
+          A workflow automation without a model, or a plain integration, is often the better engineering answer. We
+          will tell you which one your problem actually needs.
+        </p>
+      </Reveal>
+    </Section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Production AI + related paths (Parts 47 & 103)                      */
+/* ------------------------------------------------------------------ */
+
+const PRODUCTION_AI: { k: string; v: string }[] = [
+  { k: "Grounding", v: "Answers cite your sources. Retrieved context, not model memory, is the basis of every factual response." },
+  { k: "Guardrails", v: "Input and output filters catch prompt injection, personal data leakage and off-scope answers before they reach users." },
+  { k: "Evaluation", v: "Golden datasets and adversarial cases score every prompt, model or tool change before deployment." },
+  { k: "Observability", v: "Every interaction is traceable: inputs, retrieved context, tool calls, costs and latency, in one place." },
+  { k: "Cost controls", v: "Model choice is an engineering decision per task: smallest model that passes evaluation, cached where answers repeat, budgeted per workflow." },
+  { k: "Fallbacks", v: "When the model, provider or tool fails, the system degrades to a defined safe path instead of an error page." },
+];
+
+export function ProductionAI() {
+  const headingId = "production-ai-heading";
+  return (
+    <Section index="Production" chapter="ink" labelledBy={headingId}>
+      <SectionHeader
+        id={headingId}
+        heading="Production AI, not prompt demos."
+        lead={<>What we engineer around the model. This is where AI projects succeed or quietly die.</>}
+      />
+      <Reveal>
+        <dl className="grid gap-px border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
+          {PRODUCTION_AI.map((p) => (
+            <div key={p.k} className="bg-background p-6">
+              <dt className="t-label text-muted">{p.k}</dt>
+              <dd className="t-sm mt-2.5 leading-relaxed">{p.v}</dd>
+            </div>
+          ))}
+        </dl>
+      </Reveal>
+      <Reveal delay={140}>
+        <div className="mt-10 flex flex-wrap gap-3 border-t border-border pt-8">
+          <Link href="/case-studies" className="t-label border border-border px-4 py-2.5 transition-colors hover:border-accent hover:text-accent-strong">
+            AI case studies →
+          </Link>
+          <Link href="/insights" className="t-label border border-border px-4 py-2.5 transition-colors hover:border-accent hover:text-accent-strong">
+            Published insights →
+          </Link>
+          <Link href="/ai/automation" className="t-label border border-border px-4 py-2.5 transition-colors hover:border-accent hover:text-accent-strong">
+            Workflow automation →
+          </Link>
+          <Link href="/enterprise" className="t-label border border-border px-4 py-2.5 transition-colors hover:border-accent hover:text-accent-strong">
+            For enterprise buyers →
+          </Link>
+        </div>
+      </Reveal>
+    </Section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* FAQ + crosslinks                                                    */
 /* ------------------------------------------------------------------ */
 

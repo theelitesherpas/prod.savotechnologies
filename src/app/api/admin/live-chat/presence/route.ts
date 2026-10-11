@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/admin/live-chat/presence — manual presence switch + heartbeat.
+ * POST /api/admin/live-chat/presence - manual presence switch + heartbeat.
  * { status: online | busy | away | offline }
  */
 

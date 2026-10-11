@@ -1,126 +1,25 @@
-/**
- * The Savo agent fleet - content for /ai-agents/.
- *
- * Ported from version 1 (lib/agents-data.tsx) with v6 rules: the six
- * personas are Savo's published product offering - capability claims
- * about our own agents carry over; client results and invented
- * deployments do not. Drawn as the site's own square-node schematics.
- */
-
-export type Agent = {
-  slug: string;
-  name: string;
-  short: string;
-  desc: string;
-  detail: string;
-  deliverables: string[];
-  tags: string[];
-};
-
+/** Published agent roles. Default copy describes scope, not guaranteed results.
+ * Managed content continues to take precedence through getManagedAgents(). */
+export type Agent = { slug: string; name: string; short: string; desc: string; detail: string; deliverables: string[]; tags: string[] };
 export const AGENTS: Agent[] = [
-  {
-    slug: "salesbot",
-    name: "Savo SalesBot",
-    short: "Sales",
-    desc: "Talks to every visitor the moment they arrive, answers product questions, scores intent and books meetings straight into your CRM.",
-    detail:
-      "SalesBot answers product questions from your approved knowledge base, scores intent against your ideal customer profile, and books qualified meetings directly into your reps' calendars. Unqualified traffic is nurtured instead of lost.",
-    deliverables: [
-      "Trained on your product docs, pricing and FAQs",
-      "Lead scoring against your ideal customer profile",
-      "Calendar booking with routing to the right rep",
-      "Full conversation transcripts synced to your CRM",
-    ],
-    tags: ["24/7", "CRM integration", "Lead scoring"],
-  },
-  {
-    slug: "supportagent",
-    name: "Savo SupportAgent",
-    short: "Support",
-    desc: "Absorbs the repetitive share of your ticket queue and escalates edge cases to humans with full context attached.",
-    detail:
-      "SupportAgent resolves tier 1 questions from your help center across chat, email and widget, tracks sentiment, and hands edge cases to humans with the full conversation, customer history and a suggested resolution attached.",
-    deliverables: [
-      "Tier 1 resolution across chat, email and widget",
-      "Multilingual conversations at native quality",
-      "Human handoff with summarized context",
-      "CSAT capture and weekly quality reports",
-    ],
-    tags: ["Multilingual", "Human handoff", "Ticket sync"],
-  },
-  {
-    slug: "recruitai",
-    name: "Savo RecruitAI",
-    short: "Recruiting",
-    desc: "Screens resumes, runs structured first-round chats and ranks candidates against your scorecard, bias audited.",
-    detail:
-      "RecruitAI reads every resume against your scorecard, runs structured first-round conversations, and delivers a ranked shortlist with evidence for every decision. Bias audits run on each cohort so your process stays defensible and fair.",
-    deliverables: [
-      "Resume screening against a custom scorecard",
-      "Structured async first-round interviews",
-      "Ranked shortlists with per-candidate evidence",
-      "Bias audit report for every hiring cohort",
-    ],
-    tags: ["Resume parsing", "ATS sync", "Bias audits"],
-  },
-  {
-    slug: "insightagent",
-    name: "Savo InsightAgent",
-    short: "Analytics",
-    desc: "Answers data questions in plain English, keeps live dashboards current and flags anomalies before they cost money.",
-    detail:
-      "InsightAgent sits on your warehouse and turns plain-English questions into governed SQL. Every answer cites its query, every dashboard stays live, and anomalies surface before the monthly report would have caught them.",
-    deliverables: [
-      "Plain-English queries over governed SQL",
-      "Live dashboards your team can trust",
-      "Anomaly alerts on revenue and ops metrics",
-      "Row-level security and query audit logs",
-    ],
-    tags: ["NL → SQL", "Live dashboards", "Anomaly alerts"],
-  },
-  {
-    slug: "contentagent",
-    name: "Savo ContentAgent",
-    short: "Content",
-    desc: "Drafts brand-aligned marketing copy, SEO pages and social posts in your voice, with human approval built in.",
-    detail:
-      "ContentAgent learns your brand voice from your best-performing material, then drafts landing pages, SEO articles and social campaigns that sound like you on the first pass. Nothing publishes without human approval, and every draft carries its sources.",
-    deliverables: [
-      "Brand voice model trained on your best copy",
-      "SEO-aware landing pages and articles",
-      "Multichannel social drafts on a calendar",
-      "Human approval gate with revision history",
-    ],
-    tags: ["Brand voice", "SEO aware", "Approval flows"],
-  },
-  {
-    slug: "opsagent",
-    name: "Savo OpsAgent",
-    short: "Operations",
-    desc: "Triages incidents, runs remediation runbooks and posts status updates to your channels, including at 3 a.m.",
-    detail:
-      "OpsAgent watches your stack, triages alerts by blast radius, and executes the runbooks you trust while paging a human only when it matters. It posts status updates in plain language, so incidents get handled before customers notice.",
-    deliverables: [
-      "Alert triage ranked by customer impact",
-      "Automated remediation via your runbooks",
-      "Plain-language status posts to Slack and email",
-      "Full incident timeline for every review",
-    ],
-    tags: ["Runbooks", "On-call relief", "Status posts"],
-  },
+  { slug:"salesbot", name:"Savo SalesBot", short:"Sales", desc:"Answer product questions, gather a useful brief and help your team follow up.", detail:"SalesBot connects approved product information with a guided qualification conversation. It can collect requirements, suggest relevant services and prepare a structured handoff. CRM routing and calendar actions are scoped to the systems and permissions agreed for your project.", deliverables:["Product knowledge and FAQ retrieval","Need, budget and timeline qualification","Service matching with an explanation","Structured briefs and scoped CRM/calendar integrations"], tags:["Product knowledge","Qualification","Human handoff"] },
+  { slug:"supportagent", name:"Savo SupportAgent", short:"Support", desc:"Help customers find answers and give your support team the context for the next step.", detail:"SupportAgent retrieves relevant help content, prepares responses and routes unresolved questions to your team. Channels, supported languages and ticket integrations depend on your content and support setup. Sensitive account actions can stay behind approval.", deliverables:["Help-centre retrieval and response drafting","Scoped chat, email and ticket integrations","Human handoff with conversation context","Quality review and feedback collection"], tags:["Knowledge retrieval","Ticket workflows","Escalation"] },
+  { slug:"recruitai", name:"Savo RecruitAI", short:"Recruiting", desc:"Organise applications and supporting evidence while people make the hiring decisions.", detail:"RecruitAI can extract relevant experience from applications, organise evidence against a defined role scorecard and support structured screening conversations. Your team reviews recommendations and makes hiring decisions. Fairness, privacy and employment requirements need a project-specific review.", deliverables:["Resume parsing against a defined scorecard","Structured screening support","Evidence summaries for recruiter review","Scoped ATS integration and review records"], tags:["Resume parsing","Scorecards","Recruiter review"] },
+  { slug:"insightagent", name:"Savo InsightAgent", short:"Analytics", desc:"Explore business data in plain language, with the query and its limits visible.", detail:"InsightAgent helps users ask questions over approved data sources. Query permissions, business definitions and validation govern what it can answer. Results can include the query and context for review, with monitoring or alerts added where the data supports them.", deliverables:["Natural-language questions over approved data","Query validation and source visibility","Scoped dashboards and monitoring","Access controls and query records"], tags:["Natural-language queries","Governed data","Traceable answers"] },
+  { slug:"contentagent", name:"Savo ContentAgent", short:"Content", desc:"Turn approved information into draft content your team can review and refine.", detail:"ContentAgent uses your brand guidance and source material to prepare website, article and social drafts. Reviewers can check wording, sources and channel requirements before publishing. It supports the editorial process rather than replacing factual checks or human judgment.", deliverables:["Brand guidance and source-based drafting","Website, article and social content workflows","Review gates and revision history","Scoped publishing integrations"], tags:["Brand guidance","Drafting","Editorial approval"] },
+  { slug:"opsagent", name:"Savo OpsAgent", short:"Operations", desc:"Bring alerts, runbooks and incident context into a supervised operations workflow.", detail:"OpsAgent can group alerts, retrieve runbooks and prepare incident summaries or proposed actions. Any remediation is restricted to explicitly approved tools and permissions. Human escalation, rollback and review remain part of the operating plan.", deliverables:["Alert grouping and incident context","Runbook retrieval and proposed actions","Scoped status and notification integrations","Approval, escalation and incident records"], tags:["Runbooks","Incident context","Approved actions"] },
 ];
-
-/** Deployment path - the published 2–4 week promise. */
 export const AGENT_DEPLOY_STEPS = [
-  { name: "Scope the job", text: "The workflow, data, tools and escalation rules the agent will operate within, written down first." },
-  { name: "Ground it", text: "Retrieval and integrations built over your real systems, permissions scoped to the agent's role." },
-  { name: "Guard & evaluate", text: "Guardrails, approval gates and test suites that measure quality before and after every change." },
-  { name: "Supervised live", text: "The agent starts supervised, earns autonomy with evidence, and keeps a human escalation path forever." },
+  { name:"Scope the job", text:"Define the workflow, the information it needs and the actions it is allowed to take." },
+  { name:"Connect the knowledge", text:"Prepare retrieval, integrations and access around your actual systems." },
+  { name:"Test the boundaries", text:"Evaluate useful answers, failure cases, approval steps and human handoff." },
+  { name:"Launch with supervision", text:"Start with agreed limits, review real usage and adjust the system with evidence." },
 ] as const;
-
 export const AGENT_FAQS = [
-  { q: "How fast can an agent go live?", a: "A focused first workflow typically deploys in two to four weeks: scope, ground, guard, then supervised live. Complexity of integrations is the honest variable." },
-  { q: "Where does our data live?", a: "In your infrastructure. Agents connect to your systems with scoped credentials; nothing about your data needs to leave your cloud." },
-  { q: "What stops an agent doing something wrong?", a: "Explicit permission boundaries, confidence gates, human-approval steps for sensitive actions, and full audit logs. An agent's credentials are scoped like an employee's, and revocable." },
-  { q: "Can agents work together?", a: "Yes, agents compose into workflows, with one orchestrating and others executing, each still guarded by its own rules and escalation paths." },
+  { q:"How long does an agent project take?", a:"Timing depends on the workflow, the state of your information and the integrations involved. We define the first useful scope and the evaluation work before agreeing a delivery plan." },
+  { q:"Where is our information processed?", a:"That depends on the agreed architecture and model providers. We review hosting, access, retention and provider terms with you. A private deployment may be appropriate, but data-location and confidentiality requirements need to be confirmed in the project scope." },
+  { q:"How do people stay in control?", a:"We define permitted reads and actions, approval steps, escalation rules and review records. Sensitive actions can require a person to approve them. These boundaries are tested and revised with the team that operates the agent." },
+  { q:"Can agents work together?", a:"They can be connected within a workflow, with a defined responsibility and permission boundary for each part. For a straightforward task, one agent or a rule-based automation may be a better starting point." },
+  { q:"Does every workflow need an AI agent?", a:"No. When the rules are clear and the inputs are consistent, an integration or rule-based automation may be simpler. An agent is worth considering when a task needs language understanding, retrieval or tool selection, with a suitable review path." },
+  { q:"What happens when the agent is unsure?", a:"The workflow should have an agreed fallback: ask for more information, stop an action, use a simpler route or hand over to a person. AI can still produce incorrect answers, so testing and ongoing review are part of the work." },
 ] as const;

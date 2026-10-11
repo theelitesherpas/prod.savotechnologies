@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice } from "@/components/admin/ui";
@@ -13,6 +14,7 @@ export default async function AdminEmailTemplatesPage({
 }: {
   searchParams: Promise<{ saved?: string; reset?: string; e?: string }>;
 }) {
+  await requireAdminPage("/admin/email-templates");
   const { saved, reset, e } = await searchParams;
   const overrides = prisma
     ? await prisma.emailTemplate.findMany({ select: { key: true, subject: true, body: true } })

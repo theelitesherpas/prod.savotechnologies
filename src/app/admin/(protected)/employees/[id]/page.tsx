@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -21,6 +22,7 @@ export default async function EmployeeRecordPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ created?: string; saved?: string; e?: string; leave?: string }>;
 }) {
+  await requireAdminPage("/admin/employees/[id]");
   const { id } = await params;
   const { created, saved, e, leave } = await searchParams;
   if (!prisma) notFound();

@@ -37,6 +37,9 @@ ${SITE.statement} Official site: [${base}](${base}). Full site context for agent
 - Email: ${SITE.email}
 - Phone: ${SITE.phone}
 
+## Where we work (entity facts)
+Savo Technologies is an IT services and software development company. Engineering headquarters: Indore, Madhya Pradesh, India (Savo Technologies Private Limited, operating since 2015). Head office: Granges-Marnand, Switzerland. Clients are served across Switzerland (including Zurich, Geneva, Basel, Bern and Lausanne), India, Dubai and the GCC, the United Kingdom, the United States, Australia and worldwide. Core services: website and web application development, mobile app development (iOS and Android, Flutter and React Native), custom software development, SaaS development, AI agent development and agentic systems, generative AI and RAG, business automation, UI/UX design, ecommerce development, SEO/AEO/GEO, cloud and DevOps, and data analytics.
+
 ## What we do
 - Web development: corporate sites, marketing sites, web applications, portals
 - Mobile app development: iOS, Android, Flutter, React Native
@@ -60,9 +63,15 @@ ${SITE.statement} Official site: [${base}](${base}). Full site context for agent
 - [AI systems practice](${base}/ai/ai-agents)
 - [Insights](${base}/insights): field notes on engineering, AI, design and delivery
 - [About](${base}/about)
+
+## For enterprise buyers
+- [Enterprise](${base}/enterprise): capabilities, governance, quality and engagement models for CTOs, CIOs, product leaders and procurement
+- [Trust & security](${base}/trust): NDA practice, source code ownership ("your product remains yours"), IP, access control and security practices
+- [Company profile](${base}/company-profile): printable capability profile from the canonical company facts record
+- [Technology & architecture](${base}/technology): what we use, why we use it, where each choice fits
 - [Careers](${base}/careers)
 - [Contact](${base}/contact)
-- [Start a project](${base}/start)
+- [Start a project](${base}/start-a-project)
 
 ## Services
 ${SERVICE_DETAILS.map((s) => `- [${s.title}](${base}/services/${s.slug}): ${s.tagline.replace(/\.$/, "")}`).join("\n")}

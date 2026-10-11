@@ -1,8 +1,10 @@
 import "server-only";
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { cache } from "react";
-import bcrypt from "bcryptjs";
+import { DUMMY_PASSWORD_HASH, hashPassword, verifyPassword } from "@/lib/passwords";
+import { employeeAccessAllowed } from "@/lib/employee-access";
+export { hashPassword, verifyPassword };
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
@@ -22,15 +24,9 @@ import { logger } from "@/lib/logger";
 
 export const ADMIN_COOKIE = "savo_admin";
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24h session
-/** Remembered sessions: 30 days, renewed on activity (never logged out
- *  while the admin keeps using the panel). */
+/** Fixed 30-day absolute lifetime, matching the existing remembered cookie. */
 const REMEMBER_TTL_MS = 30 * 24 * 60 * 60 * 1000;
-/** A remembered session is recognized by its ~30d initial lifetime. */
-const REMEMBER_MIN_LIFETIME_MS = 20 * 24 * 60 * 60 * 1000;
-/** Renew a remembered session once less than this remains. */
-const REMEMBER_RENEW_BELOW_MS = 15 * 24 * 60 * 60 * 1000;
 const LOGIN_LIMIT = 8; // attempts per IP per 15min
-const BCRYPT_ROUNDS = 12;
 
 export type AdminSessionUser = {
   id: string;
@@ -44,22 +40,6 @@ export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-/** bcrypt with constant-time digest comparison (timingSafeEqual). */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  try {
-    const digest = bcrypt.hashSync(password, hash.slice(0, 29) as Parameters<typeof bcrypt.hashSync>[1]);
-    const a = Buffer.from(digest);
-    const b = Buffer.from(hash);
-    return a.length === b.length && timingSafeEqual(a, b);
-  } catch {
-    return false; // malformed hash, treat as failed verification, never throw
-  }
-}
-
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, BCRYPT_ROUNDS);
-}
-
 /**
  * Attempt login. Returns the session user and sets the cookie on success.
  * Every outcome (bad email, bad password, rate limit) is logged.
@@ -70,26 +50,29 @@ export async function login(
   meta: { ip: string; userAgent?: string | null },
   remember = false,
 ): Promise<{ ok: true; user: AdminSessionUser } | { ok: false; reason: "rate_limited" | "invalid" }> {
+  if (typeof email !== "string" || email.length > 160 || typeof password !== "string" || password.length > 200) return { ok: false, reason: "invalid" };
   const normalized = email.trim().toLowerCase();
 
   if (!rateLimit(`admin-login-ip:${meta.ip}`, LOGIN_LIMIT, 15 * 60 * 1000).ok ||
-      !rateLimit(`admin-login-email:${normalized}`, LOGIN_LIMIT, 15 * 60 * 1000).ok) {
+      !rateLimit(`admin-login-email:${hashToken(normalized)}`, LOGIN_LIMIT, 15 * 60 * 1000).ok) {
     logger.warn("admin.login.rate_limited", { ipHashPrefix: hashToken(meta.ip).slice(0, 12) });
     return { ok: false, reason: "rate_limited" };
   }
 
   const user = prisma
-    ? await prisma.adminUser.findUnique({ where: { email: normalized } })
+    ? await prisma.adminUser.findUnique({ where: { email: normalized }, select: {
+        id: true, email: true, name: true, role: true, permissions: true, passwordHash: true,
+        employeeId: true, employee: { select: { status: true } },
+      } })
     : null;
 
   // Always run a bcrypt comparison to keep timing uniform for unknown emails.
-  const hash =
-    user?.passwordHash ??
-    "$2b$12$C6UzMDM.H6dfI/f/IKcEe.zZUL8bMOU9BuiKu0jvV4ZFDXJvWQaOi";
+  const hash = user?.passwordHash ?? DUMMY_PASSWORD_HASH;
   const valid = await verifyPassword(password, hash);
 
-  if (!user || !valid) {
-    logger.warn("admin.login.failed", { emailKnown: !!user });
+  if (!user || !valid || !["admin", "editor"].includes(user.role) ||
+      (user.employeeId && !employeeAccessAllowed(user.employee))) {
+    logger.warn("admin.login.failed");
     return { ok: false, reason: "invalid" };
   }
 
@@ -135,30 +118,34 @@ export async function logout(): Promise<void> {
  * `cache()` dedupes per request; returns null when unauthenticated.
  */
 export const getAdminUser = cache(async (): Promise<AdminSessionUser | null> => {
-  const store = await cookies();
-  const token = store.get(ADMIN_COOKIE)?.value;
-  if (!token || !prisma) return null;
+  const resolve = await adminSessionRevalidator();
+  return resolve();
+});
 
+/** Capture this request's credential once; each call reads CURRENT authority.
+ * Never use React's request memoization as a long-lived stream auth cache. */
+export async function adminSessionRevalidator(): Promise<() => Promise<AdminSessionUser | null>> {
+  const token = (await cookies()).get(ADMIN_COOKIE)?.value;
+  const tokenHash = token && token.length <= 256 ? hashToken(token) : null;
+  return async () => tokenHash ? resolveAdminSession(tokenHash) : null;
+}
+
+async function resolveAdminSession(tokenHash: string): Promise<AdminSessionUser | null> {
+  if (!prisma) return null;
   const session = await prisma.adminSession.findUnique({
-    where: { tokenHash: hashToken(token) },
-    include: { user: true },
+    where: { tokenHash },
+    select: {
+      id: true, expiresAt: true, createdAt: true,
+      user: { select: { id: true, email: true, name: true, role: true, permissions: true,
+        employeeId: true, employee: { select: { status: true } } } },
+    },
   });
 
-  if (!session) return null;
-  if (session.expiresAt < new Date()) {
+  if (!session || !["admin", "editor"].includes(session.user.role) ||
+      (session.user.employeeId && !employeeAccessAllowed(session.user.employee))) return null;
+  if (session.expiresAt.getTime() <= Date.now() || session.createdAt.getTime() + REMEMBER_TTL_MS <= Date.now()) {
     await prisma.adminSession.delete({ where: { id: session.id } }).catch(() => undefined);
     return null;
-  }
-
-  // Sliding renewal for remembered sessions: while the admin keeps using
-  // the panel, the 30-day window moves forward and the session never
-  // expires under them. (The cookie itself already lives 30 days.)
-  const remaining = session.expiresAt.getTime() - Date.now();
-  const lifetime = session.expiresAt.getTime() - session.createdAt.getTime();
-  if (lifetime >= REMEMBER_MIN_LIFETIME_MS && remaining < REMEMBER_RENEW_BELOW_MS) {
-    await prisma.adminSession
-      .update({ where: { id: session.id }, data: { expiresAt: new Date(Date.now() + REMEMBER_TTL_MS) } })
-      .catch(() => undefined);
   }
 
   return {
@@ -168,7 +155,7 @@ export const getAdminUser = cache(async (): Promise<AdminSessionUser | null> => 
     role: session.user.role as "admin" | "editor",
     permissions: session.user.permissions ?? [],
   };
-});
+}
 
 /** Guard for admin pages and server actions - throws when not signed in. */
 export async function requireAdmin(): Promise<AdminSessionUser> {

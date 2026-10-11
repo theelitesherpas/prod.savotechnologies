@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
+import { readBodyBytes } from "@/lib/http-body";
 
 /**
  * Standardized API responses.
@@ -17,7 +18,7 @@ export function apiError(error: string, status = 400, headers?: HeadersInit) {
 
 /** Reject mutations without a JSON content type (CSRF hardening + parser guard). */
 export function isJsonRequest(req: Request): boolean {
-  return (req.headers.get("content-type") ?? "").includes("application/json");
+  return (req.headers.get("content-type") ?? "").split(";", 1)[0].trim().toLowerCase() === "application/json";
 }
 
 /** Best-effort client IP behind our trusted reverse proxy.
@@ -45,16 +46,18 @@ export function clientIp(req: Request): string {
 }
 
 /**
- * Parse and size-limit a JSON body. Returns a discriminated result so
- * handlers stay flat and error responses stay consistent.
+ * Parse and byte-limit a JSON body while streaming. The 32KB envelope
+ * accommodates validated 4000-character UTF-8 messages plus form metadata;
+ * schema field limits still apply. Returns a discriminated result.
  */
 export async function readJsonBody(
   req: Request,
-  maxBytes = 4_000,
+  maxBytes = 32_000,
 ): Promise<{ ok: true; data: unknown } | { ok: false }> {
   try {
-    const text = await req.text();
-    if (text.length > maxBytes) return { ok: false };
+    const body = await readBodyBytes(req, maxBytes);
+    if (!body.ok) return { ok: false };
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(body.bytes);
     return { ok: true, data: JSON.parse(text) };
   } catch {
     return { ok: false };

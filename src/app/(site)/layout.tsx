@@ -3,6 +3,7 @@ import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { EnquiryProvider } from "@/components/shared/enquiry-dialog";
 import { AskSavoBar } from "@/components/shared/ask-savo-bar";
+import { ProjectModalProvider } from "@/components/shared/project-lead-modal";
 import { AnalyticsBeacon } from "@/components/shared/analytics-beacon";
 import { HEADER_NAV, type NavItem } from "@/constants/navigation";
 import { SITE, SOCIAL_LINKS } from "@/constants/site";
@@ -14,21 +15,42 @@ import {
   getManagedIndustries,
   toNavChildren,
 } from "@/lib/collections";
+import { getManagedTestimonials } from "@/lib/content-items";
+import type { LeadMetric } from "@/components/shared/project-lead-modal";
+
+
 
 /**
  * Public site chrome: skip link, header with admin-managed nav collections,
  * main landmark, footer with admin-managed contact settings, and the
  * Organization/WebSite structured data.
  *
- * Data is fetched at build time; admin mutations call
- * revalidateManagedContent() to regenerate affected pages on demand.
+ * Public CMS/site-chrome reads use a bounded tagged Data Cache; managed
+ * mutations expire it immediately through revalidateManagedContent().
  */
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const [settings, services, industries] = await Promise.all([
+  const [settings, services, industries, managedTestimonials] = await Promise.all([
     getSettings(),
     getManagedServices(),
     getManagedIndustries(),
+    getManagedTestimonials(),
   ]);
+
+  /* Conversion forms show published managed testimonials only. The homepage
+   * retains its explicitly labelled media previews; forms do not imply that
+   * unapproved demo quotes are genuine client reviews. */
+  const leadTestimonials = managedTestimonials;
+
+  /* Admin-managed verified metrics (Settings → Company impact metrics).
+   * Empty values are omitted honestly - never invented. */
+  const leadMetrics: LeadMetric[] = (
+    [
+      [settings.metrics.projectsDelivered, "Projects delivered"],
+      [settings.metrics.clientsSupported, "Clients supported"],
+      [settings.metrics.industriesServed, "Industries"],
+      [settings.metrics.marketsReached, "Markets"],
+    ] as [string, string][]
+  ).filter(([v]) => v.trim().length > 0).map(([value, label]) => ({ value, label }));
 
   // Admin-managed collections drive the Services/Industries panels.
   const nav: NavItem[] = HEADER_NAV.map((item) => {
@@ -44,7 +66,28 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   // restricted to the verified home market (demo market-presence cards are
   // visual staging content and never enter machine-readable claims; the
   // verified multi-market list is restored when Savo confirms it).
-  const AREA_SERVED_COUNTRIES = ["India", "Switzerland", "Dubai & GCC", "Australia", "United Kingdom", "United States"];
+  const AREA_SERVED_COUNTRIES = [
+    "India",
+    "Switzerland",
+    "Dubai & GCC",
+    "Australia",
+    "United Kingdom",
+    "United States",
+    /* Cities honestly served: Swiss/EU coverage from the Granges-Marnand
+       head office; the rest from the verified market presence model. */
+    "Zurich",
+    "Geneva",
+    "Basel",
+    "Lausanne",
+    "Bern",
+    "Indore",
+    "Mumbai",
+    "Delhi",
+    "Dubai",
+    "London",
+    "Sydney",
+    "New York",
+  ];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -95,6 +138,12 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           "eCommerce Development",
           "SEO",
           "Cloud & Backend Engineering",
+          "Answer Engine Optimization (AEO)",
+          "Generative Engine Optimization (GEO)",
+          "Data Analytics & Business Intelligence",
+          "Quality Assurance & Software Testing",
+          "Flutter & React Native App Development",
+          "RAG (Retrieval-Augmented Generation) Systems",
         ],
         // Offer catalog mirrors the services visible in the header panel.
         hasOfferCatalog: {
@@ -150,13 +199,15 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       {IS_DEMO ? (
         <div
           aria-hidden="true"
+          data-development-preview
           className="pointer-events-none fixed bottom-4 left-4 z-[150] flex items-center gap-2 border border-border bg-[rgb(16_19_25/0.92)] px-3 py-1.5 text-white/90 backdrop-blur-[2px]"
         >
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
-          <span className="t-label">Development Preview</span>
+          <span className="t-label"><span className="hidden sm:inline">Development </span>Preview</span>
         </div>
       ) : null}
 
+      <ProjectModalProvider testimonials={leadTestimonials} metrics={leadMetrics} enabled={settings.leadModalEnabled}>
       <SmoothScroll>
         <SiteHeader nav={nav} />
       <main id="main">{children}</main>
@@ -165,6 +216,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       />
       <AskSavoBar />
       </SmoothScroll>
+      </ProjectModalProvider>
     </EnquiryProvider>
   );
 }

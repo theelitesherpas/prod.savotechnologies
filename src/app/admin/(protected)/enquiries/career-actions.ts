@@ -5,8 +5,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { canAccess } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { sendTemplateNow } from "@/lib/mail";
+import { CAREERS_TYPES } from "@/constants/careers";
 
 /**
  * Career enquiry pipeline actions - triggered from the enquiry detail
@@ -17,9 +19,20 @@ import { sendTemplateNow } from "@/lib/mail";
 const back = (id: string, e: string): never =>
   redirect(`/admin/enquiries/${id}?e=${encodeURIComponent(e)}`);
 
+async function requireCareerAccess() {
+  const user = await requireAdmin();
+  if (!canAccess(user, "enquiries") && !canAccess(user, "hr-portal")) {
+    redirect("/admin?denied=Recruitment");
+  }
+  return user;
+}
+
 async function getEnquiry(id: string) {
   if (!prisma) return null;
-  return prisma.projectEnquiry.findUnique({ where: { id } });
+  const enquiry = await prisma.projectEnquiry.findUnique({ where: { id } });
+  // Recruitment grants must never authorize unrelated sales enquiries.
+  if (!enquiry || !CAREERS_TYPES.some(type => type === enquiry.projectType)) return null;
+  return enquiry;
 }
 
 function extractRole(data: unknown): string {
@@ -31,7 +44,7 @@ function extractRole(data: unknown): string {
 
 /** Shortlist a career candidate - sends shortlist acknowledgment email. */
 export async function shortlistEnquiryAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
+  const user = await requireCareerAccess();
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const enquiry = await getEnquiry(id);
   if (!enquiry) back(id, "Enquiry not found.");
@@ -57,7 +70,7 @@ export async function shortlistEnquiryAction(formData: FormData): Promise<void> 
 
 /** Reject a career candidate - sends rejection email. */
 export async function rejectEnquiryAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
+  const user = await requireCareerAccess();
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const enquiry = await getEnquiry(id);
   if (!enquiry) back(id, "Enquiry not found.");
@@ -92,7 +105,7 @@ const interviewSchema = z.object({
 
 /** Schedule an interview - sends the interview invitation with link. */
 export async function scheduleInterviewAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
+  const user = await requireCareerAccess();
   const parsed = interviewSchema.safeParse({
     id: formData.get("id"),
     interviewDate: formData.get("interviewDate"),
@@ -156,7 +169,7 @@ export async function scheduleInterviewAction(formData: FormData): Promise<void>
 
 /** Request documents from a shortlisted candidate. */
 export async function requestDocumentsAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
+  const user = await requireCareerAccess();
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const enquiry = await getEnquiry(id);
   if (!enquiry) back(id, "Enquiry not found.");
@@ -178,7 +191,7 @@ export async function requestDocumentsAction(formData: FormData): Promise<void> 
 
 /** Mark a candidate as hired - moves to employee creation. */
 export async function markHiredAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
+  const user = await requireCareerAccess();
   const id = z.string().min(10).max(32).parse(formData.get("id"));
   const enquiry = await getEnquiry(id);
   if (!enquiry) back(id, "Enquiry not found.");
@@ -207,8 +220,9 @@ export async function markHiredAction(formData: FormData): Promise<void> {
 
 /** Reset career status back to pipeline start. */
 export async function resetCareerStatusAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
+  const user = await requireCareerAccess();
   const id = z.string().min(10).max(32).parse(formData.get("id"));
+  if (!await getEnquiry(id)) back(id, "Enquiry not found.");
   await prisma!.projectEnquiry.update({
     where: { id },
     data: { careerStatus: null, status: "new", interviewDate: null, meetingLink: null, interviewer: null },

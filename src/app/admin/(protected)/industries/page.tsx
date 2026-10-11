@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -21,6 +22,7 @@ export default async function IndustriesPage({
 }: {
   searchParams: Promise<{ saved?: string; deleted?: string; imported?: string; e?: string }>;
 }) {
+  await requireAdminPage("/admin/industries");
   const sp = await searchParams;
   const industries = prisma
     ? await prisma.industry.findMany({ orderBy: [{ order: "asc" }, { title: "asc" }] })
@@ -30,7 +32,7 @@ export default async function IndustriesPage({
     <>
       <PageHeader
         title="Industries"
-        description="These power the header Industries panel, the homepage industries section and the /industries/ atlas. Until rows exist, the site falls back to the coded defaults."
+        description="Legacy navigation labels. Full sector pages are now managed in Industry dossiers. Once dossier rows exist, their publication controls also govern industry navigation; these legacy labels no longer override them."
         actions={
           industries.length === 0 ? (
             <form action={importDefaultIndustriesAction}>
@@ -45,6 +47,8 @@ export default async function IndustriesPage({
           ) : null
         }
       />
+
+      <p className="mb-6 t-body"><Link href="/admin/content/industry-dossiers" className="font-semibold underline underline-offset-4">Manage full industry dossiers →</Link></p>
 
       {sp.saved === "1" ? <Notice>Industry saved. Public pages regenerate on the next request.</Notice> : null}
       {sp.deleted ? <Notice>Industry deleted.</Notice> : null}

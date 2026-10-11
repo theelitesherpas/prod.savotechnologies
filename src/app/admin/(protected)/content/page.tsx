@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +13,7 @@ export const metadata: Metadata = { title: "Website content" };
  * live row count and fallback state.
  */
 export default async function ContentHubPage() {
+  await requireAdminPage("/admin/content");
   const counts = prisma
     ? await prisma.contentItem
         .groupBy({ by: ["collection"], _count: { _all: true } })
@@ -43,8 +45,7 @@ export default async function ContentHubPage() {
           Website content
         </h1>
         <p className="mt-1.5 max-w-2xl text-[0.875rem] leading-relaxed text-muted">
-          Every dynamic collection on the public site. Collections fall back to the coded
-          defaults until rows exist - import them from each collection page to start editing.
+          Every managed collection on the public site. Visibility follows each collection’s active and publication settings; import defaults where available or add an approved item.
         </p>
       </div>
 
@@ -87,7 +88,7 @@ export default async function ContentHubPage() {
                   </span>
                 ) : (
                   <span className="ml-auto rounded-full bg-warning/10 px-2 py-0.5 text-[0.6875rem] font-semibold text-warning">
-                    defaults
+                    {def.seeds().length > 0 ? "defaults" : "empty"}
                   </span>
                 )}
               </div>

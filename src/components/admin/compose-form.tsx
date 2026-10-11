@@ -5,7 +5,7 @@ import { sendCustomEmailAction, sendTemplatedEmailAction } from "@/app/admin/(pr
 import { FormGuard } from "@/components/admin/form-guard";
 import { SubmitButton } from "@/components/admin/form";
 import { TEMPLATE_REGISTRY, RECIPIENT_LABEL, CATEGORY_ORDER, CATEGORY_LABEL } from "@/lib/mail/registry";
-import { employeeVars } from "@/lib/employees";
+import { employeeVars } from "@/lib/employee-model";
 import { shell } from "@/lib/mail/templates";
 import { bodyToHtml } from "@/lib/mail/registry";
 import { cn } from "@/lib/utils";

@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { cachePublicData, PUBLIC_SITE_CHROME_CACHE_TAG } from "@/lib/public-cache";
 import { SITE } from "@/constants/site";
 
 /**
@@ -21,6 +22,8 @@ export type SiteSettings = {
     industriesServed: string;
     marketsReached: string;
   };
+  /** Project lead popup master switch (auto-triggers only; CTA opens always work). */
+  leadModalEnabled: boolean;
 };
 
 const KEYS = [
@@ -31,15 +34,21 @@ const KEYS = [
   "metric_clients",
   "metric_industries",
   "metric_markets",
+  "lead_modal_enabled",
 ] as const;
 
-export async function getSettings(): Promise<SiteSettings> {
-  const defaults: SiteSettings = {
+function defaultSettings(): SiteSettings {
+  return {
     contactEmail: SITE.email,
     contactPhone: SITE.phone,
     announcement: null,
     metrics: { projectsDelivered: "", clientsSupported: "", industriesServed: "", marketsReached: "" },
+    leadModalEnabled: true,
   };
+}
+
+async function readSettings(): Promise<SiteSettings> {
+  const defaults = defaultSettings();
   if (!prisma) return defaults;
 
   try {
@@ -58,8 +67,15 @@ export async function getSettings(): Promise<SiteSettings> {
         industriesServed: map.get("metric_industries")?.trim() ?? "",
         marketsReached: map.get("metric_markets")?.trim() ?? "",
       },
+      leadModalEnabled: map.get("lead_modal_enabled") !== "0",
     };
   } catch {
     return defaults; // never break rendering over settings
   }
+}
+
+const readCachedSettings = cachePublicData("site-settings", readSettings, [PUBLIC_SITE_CHROME_CACHE_TAG]);
+
+export function getSettings(): Promise<SiteSettings> {
+  return prisma ? readCachedSettings() : Promise.resolve(defaultSettings());
 }

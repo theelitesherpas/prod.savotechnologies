@@ -1,0 +1,240 @@
+.hero {
+  /* Reserve the 146px logo strip inside the first desktop viewport. */
+  min-height: max(620px, calc(100svh - 146px));
+  isolation: isolate;
+  background: #000;
+}
+
+.content {
+  padding-top: clamp(124px, 16svh, 176px);
+  padding-bottom: clamp(190px, 25svh, 250px);
+}
+
+.headline {
+  text-wrap: balance;
+}
+
+.atmosphere {
+  --planet-x: 0px;
+  --planet-y: 0px;
+  --cursor-x: 50%;
+  --cursor-y: 35%;
+  --sun-x: 0px;
+  --sun-y: 0px;
+  --sun-angle: 0deg;
+  --sun-mask-shift: 0%;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(ellipse 95% 65% at 50% 0%, #080a10, #020307 60%, #000);
+}
+
+/* Actual header geometry supplies these origins. Broad, low-opacity
+   washes match the reference's restraint; there are no bright cores. */
+.cornerLights {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 420px 370px at var(--hero-light-left-x, 8%) var(--hero-light-left-y, 34px), rgb(228 55 42 / 0.16), rgb(209 40 34 / 0.045) 44%, transparent 88%),
+    radial-gradient(ellipse 440px 370px at var(--hero-light-right-x, 92%) var(--hero-light-right-y, 34px), rgb(228 55 42 / 0.16), rgb(209 40 34 / 0.045) 44%, transparent 88%);
+  animation: ambience-in 1800ms 100ms both;
+}
+
+.stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: ambience-in 1600ms 150ms both;
+}
+
+.cursorLight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle 160px at var(--cursor-x) var(--cursor-y), rgb(255 51 51 / 0.018), transparent 72%);
+}
+
+/* Position the apex, not the ellipse's bottom: this stays consistent at
+   every aspect ratio. Its 170vw × 74vw body is mostly below the hero. */
+.planetMotion {
+  position: absolute;
+  top: calc(100% - clamp(150px, 20svh, 200px));
+  left: 50%;
+  width: 170vw;
+  height: 74vw;
+  transform: translate(calc(-50% + var(--planet-x)), var(--planet-y));
+}
+
+.planetSurface,
+.rim,
+.nearGlow,
+.atmosphericGlow,
+.bloom {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.planetSurface {
+  background: linear-gradient(180deg, #05060a 0%, #020305 16%, #000 35%);
+}
+
+/* Every illuminated layer follows the SAME ellipse. No rectangular
+   light strips, separate transforms, or straight rules are involved. */
+.rim,
+.nearGlow,
+.atmosphericGlow,
+.bloom {
+  /* Keep the original soft illumination exactly; shift its aperture, not its shape. */
+  mask-image: linear-gradient(90deg,
+    transparent calc(8% + var(--sun-mask-shift)),
+    rgb(0 0 0 / 0.12) calc(28% + var(--sun-mask-shift)),
+    #000 calc(48% + var(--sun-mask-shift)),
+    #000 calc(52% + var(--sun-mask-shift)),
+    rgb(0 0 0 / 0.12) calc(72% + var(--sun-mask-shift)),
+    transparent calc(92% + var(--sun-mask-shift)));
+  animation: horizon-in 1700ms 650ms both;
+}
+
+.rim {
+  border: 1.5px solid rgb(255 200 178 / 0.95);
+  box-shadow: 0 -1px 8px rgb(255 72 45 / 0.6);
+}
+
+.nearGlow {
+  border: 4px solid rgb(255 91 59 / 0.8);
+  filter: blur(4px);
+}
+
+.atmosphericGlow {
+  border: 20px solid rgb(247 57 37 / 0.5);
+  filter: blur(18px);
+}
+
+.bloom {
+  border: 36px solid rgb(225 43 30 / 0.3);
+  filter: blur(44px);
+}
+
+/* The original diffuse halo follows the actual ellipse and its tangent.
+   No solid sun disk or extra white-hot light texture is added. */
+.centerHalo {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(58vw, 940px);
+  height: 300px;
+  transform-origin: 50% 60%;
+  transform: translate(calc(-50% + var(--sun-x)), calc(-60% + var(--sun-y))) rotate(var(--sun-angle));
+  background: radial-gradient(ellipse 50% 52% at 50% 65%, rgb(255 93 59 / 0.4), rgb(255 51 51 / 0.2) 30%, rgb(227 40 30 / 0.06) 62%, transparent 100%);
+  animation: horizon-in 1800ms 650ms both;
+}
+
+/* Fade the planet naturally into the logo strip. */
+.lowerFade {
+  position: absolute;
+  inset: auto 0 0;
+  height: 56px;
+  background: linear-gradient(transparent, #000);
+}
+
+.headline,
+.description,
+.actions {
+  animation: content-in 850ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.headline { animation-delay: 250ms; }
+.description { animation-delay: 350ms; }
+.actions { animation-delay: 450ms; }
+
+@keyframes content-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ambience-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes horizon-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (min-width: 1024px) {
+  .headline > span,
+  .description > span { display: block; }
+}
+
+/* Compact laptop viewports still show the complete logo row. */
+@media (min-width: 1024px) and (max-height: 780px) {
+  .hero { min-height: calc(100svh - 146px); }
+  .content { padding-top: 124px; padding-bottom: 170px; }
+  .headline { font-size: clamp(2.6rem, 4.2vw, 3.3rem); }
+  .actions { margin-top: 32px; }
+  .planetMotion { top: calc(100% - 110px); }
+  .centerHalo { height: 220px; }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .content { padding-top: 128px; padding-bottom: 190px; }
+  .planetMotion { width: 190vw; height: 105vw; }
+}
+
+@media (max-width: 639px) {
+  .hero { min-height: calc(100svh - 134px); }
+  .content {
+    padding-top: calc(var(--nav-h) + 2.5rem);
+    padding-bottom: 170px;
+  }
+  .actions { width: min(100%, 260px); margin-inline: auto; }
+  .actions > :is(button, a) { width: 100%; justify-content: center; }
+  .planetMotion {
+    top: calc(100% - 110px);
+    width: 205vw;
+    height: 145vw;
+  }
+  .cornerLights {
+    background:
+      radial-gradient(ellipse 180px 210px at var(--hero-light-left-x, 14%) var(--hero-light-left-y, 34px), rgb(228 55 42 / 0.11), transparent 90%),
+      radial-gradient(ellipse 180px 210px at var(--hero-light-right-x, 64%) var(--hero-light-right-y, 34px), rgb(228 55 42 / 0.11), transparent 90%);
+  }
+  .centerHalo { width: 95vw; height: 190px; }
+  .atmosphericGlow { border-width: 14px; filter: blur(14px); }
+  .bloom { border-width: 24px; filter: blur(28px); }
+  .cursorLight { display: none; }
+}
+
+/* Compact phones keep the rim in the initial viewport without shrinking
+   tap targets or sacrificing the dark gap below the actions. */
+@media (max-width: 359px) {
+  .content {
+    padding-top: calc(var(--nav-h) + 1.5rem);
+    padding-bottom: 140px;
+  }
+  .headline { font-size: 1.875rem; line-height: 1.1; }
+  .description { font-size: 0.90625rem; line-height: 1.5; }
+  .actions { margin-top: 24px; gap: 12px; }
+  .actions > :is(button, a) { height: 44px; font-size: 0.875rem; }
+  .planetMotion { top: calc(100% - 75px); }
+  .centerHalo { height: 140px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cornerLights,
+  .centerHalo,
+  .stars,
+  .rim,
+  .nearGlow,
+  .atmosphericGlow,
+  .bloom,
+  .headline,
+  .description,
+  .actions {
+    animation: none;
+  }
+  .cursorLight { display: none; }
+}

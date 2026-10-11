@@ -31,17 +31,6 @@ import { SITE } from "@/constants/site";
 
 const FONT_CEILING_MS = 350;
 
-function unwrapLines(h1: HTMLHeadingElement) {
-  for (const mask of Array.from(h1.querySelectorAll(":scope > span[data-line-mask]"))) {
-    const mover = mask.firstElementChild;
-    const parent = mask.parentElement;
-    if (!mover || !parent) continue;
-    while (mover.firstChild) parent.insertBefore(mover.firstChild, mask);
-    mask.remove();
-  }
-  h1.dataset.linesSplit = "";
-}
-
 function splitLines(h1: HTMLHeadingElement): HTMLElement[] {
   const words = Array.from(h1.querySelectorAll<HTMLElement>("[data-word]"));
   if (words.length === 0) return [];

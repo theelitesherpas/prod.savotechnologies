@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/admin/live-chat/bootstrap — the inbox's single load: the
+ * GET /api/admin/live-chat/bootstrap - the inbox's single load: the
  * conversation list for a view (+ search), per-view counts, agents with
  * presence, chat settings, availability and today's operational stats.
  */

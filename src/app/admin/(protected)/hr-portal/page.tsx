@@ -1,6 +1,8 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { CAREERS_TYPES } from "@/constants/careers";
 import { PageHeader, Notice, StatTile, Chip } from "@/components/admin/ui";
 import { ConfirmAction } from "@/components/admin/confirm-dialog";
 import {
@@ -24,6 +26,7 @@ export default async function HRPortalPage({
 }: {
   searchParams: Promise<{ tab?: string; e?: string }>;
 }) {
+  await requireAdminPage("/admin/hr-portal");
   const { tab, e } = await searchParams;
   if (!prisma) {
     return (
@@ -34,9 +37,9 @@ export default async function HRPortalPage({
     );
   }
 
-  // All career enquiries (form: "careers" in data)
+  // Both the recruitment category and form marker must agree.
   const careerEnquiries = await prisma.projectEnquiry.findMany({
-    where: { data: { path: ["form"], equals: "careers" } },
+    where: { projectType: { in: [...CAREERS_TYPES] }, data: { path: ["form"], equals: "careers" } },
     orderBy: { createdAt: "desc" },
   });
 

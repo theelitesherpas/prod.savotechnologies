@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { fmtIST } from "@/lib/datetime";
@@ -30,6 +31,7 @@ export default async function BugReportsPage({
 }: {
   searchParams: Promise<{ status?: string; type?: string; e?: string }>;
 }) {
+  await requireAdminPage("/admin/bug-reports");
   const { status, type, e } = await searchParams;
   if (!prisma) {
     return (

@@ -1,0 +1,9 @@
+{
+  "file": "public/images/about/teamroom.webp",
+  "derivedFrom": "public/images/meeting.webp",
+  "derivation": "sharp grayscale, resize width 1600, webp quality 88 effort 6 (local editorial derivative, following the insights/contact precedent)",
+  "sha256": "4e86227127fc5958463890642a24e73f1f1fee45270119c62963187fdf1d4267",
+  "width": 1600,
+  "height": 1067,
+  "classification": "editorial-stock-imagery - NOT the Savo team, staff or office; rights unresolved"
+}

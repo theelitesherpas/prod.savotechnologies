@@ -12,46 +12,6 @@ export type ReportOptions = {
   context?: Record<string, unknown>;
 };
 
-/**
- * Human-submitted report (error screens) - unlike the silent beacons,
- * this carries an always-on reCAPTCHA token and reports the outcome so
- * the UI can ask the user to complete the verification.
- */
-export async function reportUserReport(opts: {
-  message: string;
-  details?: string;
-  captchaToken?: string | null;
-}): Promise<{ ok: boolean; captchaRequired?: boolean; error?: string }> {
-  try {
-    const payload = JSON.stringify({
-      type: "user_report",
-      captchaToken: opts.captchaToken ?? undefined,
-      message: opts.message,
-      details: opts.details,
-      url: window.location.href,
-      referrer: document.referrer || undefined,
-      context: {
-        screen: `${window.screen.width}x${window.screen.height}`,
-        language: navigator.language,
-        timestamp: new Date().toISOString(),
-      },
-    });
-    const res = await fetch("/api/bug-reports", {
-      method: "POST",
-      body: payload,
-      keepalive: true,
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!res.ok) {
-      const data = (await res.json().catch(() => ({}))) as { error?: string; captchaRequired?: boolean };
-      return { ok: false, error: data.error, captchaRequired: data.captchaRequired };
-    }
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "Network problem - please try again." };
-  }
-}
-
 export function reportBug(opts: ReportOptions): void {
   try {
     const payload = JSON.stringify({

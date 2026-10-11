@@ -9,7 +9,7 @@ import { useEffect, useRef, type ReactNode } from "react";
  */
 /** Minimal structural types for the globals GSAP registers as a UMD tag. */
 type GsapWindow = Window & {
-  gsap?: { ticker: { add: (cb: (time: number) => void) => void; lagSmoothing: (ms: number) => void } };
+  gsap?: { ticker: { add: (cb: (time: number) => void) => void; remove: (cb: (time: number) => void) => void; lagSmoothing: (ms: number) => void } };
   ScrollTrigger?: { update: () => void };
 };
 
@@ -19,9 +19,14 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    let Lenis: typeof import("lenis").default;
+    let disposed = false;
+    let rafId: number | null = null;
+    let gsapTicker: { add: (cb: (time: number) => void) => void; remove: (cb: (time: number) => void) => void; lagSmoothing: (ms: number) => void } | null = null;
+    let gsapTick: ((time: number) => void) | null = null;
+    let scrollUpdate: (() => void) | null = null;
+
     import("lenis").then(({ default: L }) => {
-      Lenis = L;
+      if (disposed) return;
       const lenis = new L({
         duration: 1.15,
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -32,35 +37,30 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
 
       // integrate with ScrollTrigger if GSAP is loaded
       const w = window as GsapWindow;
-      if (w.gsap) {
-        const gsap = w.gsap;
-        const ScrollTrigger = w.ScrollTrigger;
-        if (ScrollTrigger) {
-          lenis.on("scroll", ScrollTrigger.update);
-          gsap.ticker.add((time: number) => lenis.raf(time * 1000));
-          gsap.ticker.lagSmoothing(0);
-        } else {
-          function raf(time: number) {
-            lenis.raf(time);
-          }
-          requestAnimationFrame(function loop(t: number) {
-            lenis.raf(t);
-            requestAnimationFrame(loop);
-          });
-        }
+      if (w.gsap && w.ScrollTrigger) {
+        scrollUpdate = w.ScrollTrigger.update;
+        lenis.on("scroll", scrollUpdate);
+        gsapTicker = w.gsap.ticker;
+        gsapTick = (time: number) => lenis.raf(time * 1000);
+        gsapTicker.add(gsapTick);
+        gsapTicker.lagSmoothing(0);
       } else {
-        function raf(time: number) {
+        const loop = (time: number) => {
+          if (disposed) return;
           lenis.raf(time);
-        }
-        requestAnimationFrame(function loop(t: number) {
-          lenis.raf(t);
-          requestAnimationFrame(loop);
-        });
+          rafId = requestAnimationFrame(loop);
+        };
+        rafId = requestAnimationFrame(loop);
       }
     });
 
     return () => {
+      disposed = true;
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      if (gsapTicker && gsapTick) gsapTicker.remove(gsapTick);
+      if (scrollUpdate) lenisRef.current?.off("scroll", scrollUpdate);
       lenisRef.current?.destroy();
+      lenisRef.current = null;
     };
   }, []);
 

@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/api";
+import { readBodyBytes } from "@/lib/http-body";
+import { z } from "zod";
 import { publish } from "@/lib/livechat/pubsub";
 import { logger } from "@/lib/logger";
 import { timingSafeEqual } from "node:crypto";
@@ -23,15 +25,26 @@ export const dynamic = "force-dynamic";
  *   4. Check "POST the raw, full MIME message" (unchecked = parsed fields)
  *   5. Add the MX record SendGrid shows you to your DNS
  *
- * Security: requires a shared secret when EMAIL_INBOUND_SECRET is
- * configured (append `?secret=<value>` to the webhook URL in SendGrid,
- * or send it as the x-webhook-secret header); rate-limited per IP;
- * rejects payloads > 1MB; validates that the recipient is one of our
- * mailboxes. With the secret unset the endpoint keeps working but logs
- * a warning each delivery (configure it before relying on replies).
+ * Security: EMAIL_INBOUND_SECRET is required; missing configuration fails
+ * closed. Prefer x-webhook-secret; the existing query-secret contract is
+ * retained for providers that require it (redact query strings at ingress).
+ * The shared secret authenticates the provider, not the original sender.
+ * Bodies are stream-limited to 1MB and recipients must match our mailboxes.
  */
 
-const OUR_MAILBOXES = new Set(["hr@savotechnologies.com", "hello@savotechnologies.com"]);
+const OUR_MAILBOXES = new Map([
+  ["hr@savotechnologies.com", "hr@savotechnologies.com"],
+  ["hello@savotechnologies.com", "hello@savotechnologies.com"],
+  ["hr@reply.savotechnologies.com", "hr@savotechnologies.com"],
+  ["hello@reply.savotechnologies.com", "hello@savotechnologies.com"],
+]);
+const mailboxSchema = z.string().email().max(320);
+function mailbox(raw: string): string | null {
+  if (/[\r\n]/.test(raw)) return null;
+  const match = raw.trim().match(/^(?:[^<>]*<)?([^<>\s]+@[^<>\s]+)>?$/);
+  const parsed = mailboxSchema.safeParse(match?.[1]?.toLowerCase());
+  return parsed.success ? parsed.data : null;
+}
 
 function detectDept(to: string): "hr" | "hello" {
   return to.startsWith("hr@") ? "hr" : "hello";
@@ -41,10 +54,7 @@ function detectDept(to: string): "hr" | "hello" {
  *  injecting forged "client replies" into the admin inbox. */
 function webhookAuthorized(req: Request): boolean {
   const secret = process.env.EMAIL_INBOUND_SECRET;
-  if (!secret) {
-    logger.warn("email-inbound: EMAIL_INBOUND_SECRET not configured - accepting unauthenticated delivery", {});
-    return true;
-  }
+  if (!secret) return false;
   const url = new URL(req.url);
   const provided = req.headers.get("x-webhook-secret") ?? url.searchParams.get("secret") ?? "";
   const a = Buffer.from(provided);
@@ -54,6 +64,10 @@ function webhookAuthorized(req: Request): boolean {
 
 export async function POST(req: Request) {
   try {
+    if (!process.env.EMAIL_INBOUND_SECRET) {
+      logger.error("email_inbound.not_configured");
+      return new Response(null, { status: 503 });
+    }
     if (!webhookAuthorized(req)) {
       logger.warn("email-inbound: unauthorized delivery rejected", {});
       return new Response(null, { status: 401 });
@@ -61,7 +75,7 @@ export async function POST(req: Request) {
 
     const ip = clientIp(req);
     const limit = rateLimit(`email-inbound:${ip}`, 100, 60 * 60 * 1000);
-    if (!limit.ok) return new Response(null, { status: 429 });
+    if (!limit.ok) return new Response(null, { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } });
 
     if (!prisma) {
       logger.error("email-inbound: no database");
@@ -69,34 +83,49 @@ export async function POST(req: Request) {
     }
 
     // Parse as FormData (SendGrid sends multipart/form-data)
-    const fields: Record<string, string> = {};
+    const fields: Record<string, string> = Object.create(null);
     const contentType = req.headers.get("content-type") ?? "";
+    const mediaType = contentType.split(";", 1)[0].trim().toLowerCase();
+    if (!["multipart/form-data", "application/x-www-form-urlencoded", "application/json"].includes(mediaType)) {
+      return new Response(null, { status: 415 });
+    }
+    const bounded = await readBodyBytes(req, 1_000_000);
+    if (!bounded.ok) return new Response(null, { status: bounded.reason === "too_large" ? 413 : bounded.reason === "timeout" ? 408 : 400 });
 
-    if (contentType.includes("multipart/form-data") || contentType.includes("application/x-www-form-urlencoded")) {
-      const form = await req.formData();
+    if (mediaType === "multipart/form-data" || mediaType === "application/x-www-form-urlencoded") {
+      let form: FormData;
+      try {
+        form = await new Response(bounded.bytes, { headers: { "Content-Type": contentType } }).formData();
+      } catch {
+        return new Response(null, { status: 400 });
+      }
       for (const [key, value] of form.entries()) {
         if (typeof value === "string") {
           fields[key] = value.slice(0, 50000); // cap each field at 50KB
         }
       }
-    } else if (contentType.includes("application/json")) {
-      // Some services send JSON
-      const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    } else {
+      let body: unknown;
+      try {
+        body = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bounded.bytes));
+      } catch {
+        return new Response(null, { status: 400 });
+      }
+      if (!body || typeof body !== "object" || Array.isArray(body)) return new Response(null, { status: 400 });
       for (const [key, value] of Object.entries(body)) {
         if (typeof value === "string") {
           fields[key] = value.slice(0, 50000);
         }
       }
-    } else {
-      return new Response(null, { status: 415 });
     }
 
     // Extract standard email fields
     // Extract just the email address from 'Name <email@domain>' format
     const rawFrom = (fields.from ?? fields.sender ?? "").trim();
-    const emailMatch = rawFrom.match(/[<]([^<]+@[^>]+)[>]/);
-    const fromEmail = (emailMatch ? emailMatch[1] : rawFrom).trim().toLowerCase();
-    const toEmail = (fields.to ?? fields.recipient ?? "").trim().toLowerCase();
+    const fromEmail = mailbox(rawFrom);
+    const recipient = (fields.to ?? fields.recipient ?? "").split(",")
+      .map(value => mailbox(value)).map(value => value ? OUR_MAILBOXES.get(value) : undefined)
+      .find((value): value is string => !!value);
     const subject = (fields.subject ?? "(no subject)").slice(0, 500);
     let bodyText = (fields.text ?? fields["body-plain"] ?? "").slice(0, 50000);
     let bodyHtml = (fields.html ?? fields["body-html"] ?? "").slice(0, 50000) || null;
@@ -147,14 +176,10 @@ export async function POST(req: Request) {
     const nameMatch = (fields.from ?? "").match(/^(.+?)\s*<.+>$/);
     if (nameMatch) fromName = nameMatch[1].replace(/"/g, "").slice(0, 120);
 
-    // Validate: must have a sender and a recipient
-    if (!fromEmail || !fromEmail.includes("@")) {
-      logger.warn("email-inbound: no valid from", { from: fromEmail });
-      return new Response(null, { status: 200 }); // 200 so the service doesn't retry
+    if (!fromEmail || !recipient) {
+      logger.warn("email_inbound.invalid_mailbox");
+      return new Response(null, { status: 422 });
     }
-
-    // Determine dept (default to hello if recipient isn't one of ours)
-    const recipient = OUR_MAILBOXES.has(toEmail) ? toEmail : "hello@savotechnologies.com";
     const dept = detectDept(recipient);
 
     // Auto-match to an enquiry by sender email
@@ -187,21 +212,16 @@ export async function POST(req: Request) {
       email: { fromName, fromEmail, subject: subject || "(no subject)", dept },
     });
 
-    logger.info("email-inbound: stored", {
-      from: fromEmail,
-      to: recipient,
-      dept,
-      enquiryId: enquiry?.id ?? "unmatched",
-      subject: subject.slice(0, 60),
-    });
+    logger.info("email_inbound.stored", { replyId: reply.id, dept, matched: !!enquiry });
 
     return new Response(JSON.stringify({ ok: true, id: reply.id }), {
       status: 201,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (err) {
-    logger.error("email-inbound: error", { err: String(err).slice(0, 300) });
-    return new Response(null, { status: 200 }); // 200 so the service doesn't retry
+  } catch {
+    logger.error("email_inbound.store_failed");
+    // Do not acknowledge failed storage: provider retry is preferable to loss.
+    return new Response(null, { status: 503 });
   }
 }
 

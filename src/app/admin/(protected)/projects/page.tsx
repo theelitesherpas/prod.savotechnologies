@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -14,6 +15,7 @@ export default async function AdminProjectsPage({
 }: {
   searchParams: Promise<{ saved?: string; deleted?: string; e?: string; client?: string }>;
 }) {
+  await requireAdminPage("/admin/projects");
   const sp = await searchParams;
   const projects = prisma
     ? await prisma.clientProject

@@ -12,35 +12,63 @@ export type FaqItem = { q: string; a: string };
 export const HOME_FAQS: FaqItem[] = [
   {
     q: "What does Savo Technologies do?",
-    a: "Savo Technologies is a technology and digital product partner. We build websites and web applications, mobile apps for iOS and Android, custom software and SaaS platforms, AI agents and agentic systems, and we design and grow products with UI/UX design, SEO, AEO and GEO services. Strategy, design, engineering and growth under one team.",
+    a: "We help businesses plan, design, build and improve digital products. That includes websites, web applications, iOS and Android apps, custom software, SaaS products and AI systems. We also work on product design, search visibility and digital growth, so the work can continue beyond the first release.",
   },
   {
     q: "Where is Savo Technologies located?",
-    a: "Our engineering headquarters is in Indore, Madhya Pradesh, India, and our head office is in Granges-Marnand, Switzerland. We work with clients across India, Switzerland, Europe, the Middle East and beyond, with senior coverage across both Indian and European working hours.",
+    a: "Our engineering headquarters is in Indore, Madhya Pradesh, India. Our head office is in Granges-Marnand, Switzerland. We work with clients remotely and agree meeting times, communication and delivery arrangements as part of each engagement.",
   },
   {
     q: "Does Savo build AI agents and agentic systems?",
-    a: "Yes. AI agents are a core engineering capability, not an add-on: we design and build agents with tool use, retrieval-augmented generation, evaluation and guardrails, LLM applications and workflow automation that ship into production under real reliability requirements.",
+    a: "Yes. We build AI agents and applications that work with business information and approved tools. This includes document search with RAG, workflow automation, evaluation and guardrails. We start by checking the use case, the information available and which decisions should remain with a person.",
   },
   {
     q: "How does a project with Savo start?",
-    a: "You send a message or a project brief. A senior consultant replies within one business day, then we run a discovery call around your actual constraints and follow with a fixed-scope proposal. Nothing is committed before the scope, timeline and deliverables are written down.",
+    a: "Send us a short brief about what you want to build or improve. We talk through the business goal, the current situation and any constraints, then agree the next step. Before development begins, the scope, deliverables, responsibilities and proposed schedule are set out in writing.",
   },
   {
     q: "How is pricing structured?",
-    a: "After the discovery call you receive a fixed-scope proposal with the engagement priced against written deliverables, not open hourly billing. Every assumption is stated in the proposal, so the number you approve is the number that holds.",
+    a: "Pricing depends on the scope and engagement model. We discuss your requirements first, then set out the proposed work, assumptions, deliverables and costs. If the scope changes, we discuss the effect on price and schedule rather than treating the original estimate as a catch-all.",
   },
   {
     q: "What technologies does Savo work with?",
-    a: "Modern, proven stacks: Next.js, React, Node.js and PostgreSQL for web platforms; Flutter and React Native for mobile; Python for AI and data work; cloud infrastructure across AWS and integrations from payments to messaging. Technology is chosen for the problem, never for the résumé.",
+    a: "Our toolkit includes Next.js, React, Node.js and PostgreSQL for web products; Flutter and React Native for mobile; and Python for AI and data work. We choose the stack around the product, its integrations and the team that will maintain it, rather than using the same tools for every project.",
   },
   {
     q: "Does Savo provide SEO, AEO and GEO services?",
-    a: "Yes. Beyond classic SEO, we optimise for AEO (answer engines, featured snippets, voice) and GEO (generative engines, being cited by AI assistants). This site itself is built the way we build for clients: structured data, clean entities and machine-readable answers.",
+    a: "Yes. We work on technical SEO, content and search visibility, including how information is presented to answer engines and generative search systems. The work can include site structure, structured data, clear page content and measurement. Rankings and inclusion in AI answers depend on external systems and cannot be guaranteed.",
   },
   {
     q: "Can Savo work with our existing team or codebase?",
-    a: "Yes, engagements range from full product builds to embedding with existing teams. We take over existing codebases, augment in-house teams with dedicated specialists, and document everything we touch so your team stays in control.",
+    a: "Yes. We can work alongside an internal team or take on an existing product. We start by reviewing the codebase, architecture and priorities, then agree our scope and who is responsible for each part of the work. That helps avoid overlapping responsibilities and unexpected changes.",
+  },
+  {
+    q: "Does Savo develop mobile applications?",
+    a: "Yes. We design and develop iOS and Android applications using Flutter, React Native or native technologies. The choice depends on the experience you need, device features, integrations and plans for the product. The scope can cover design, development, testing and preparation for store release.",
+  },
+  {
+    q: "Does Savo develop SaaS products?",
+    a: "Yes. We work on subscription products, including account structure, billing, roles, onboarding and administration. We help you decide what the first release needs and which features can wait, while considering how the product will be operated and supported after launch.",
+  },
+  {
+    q: "Can Savo modernize existing software?",
+    a: "Yes. An existing system may need targeted improvements, a framework upgrade or a more substantial rebuild. We review what it does, which parts people depend on and where the risks are, then plan the changes. Where appropriate, we can replace parts gradually rather than rebuilding everything at once.",
+  },
+  {
+    q: "Does Savo work internationally?",
+    a: "Yes. We work with international clients from our engineering headquarters in Indore and our Swiss head office. We agree meeting times, delivery responsibilities and progress updates as part of the engagement, so both teams understand how communication will work.",
+  },
+  {
+    q: "Does Savo sign NDAs?",
+    a: "Yes. If you need an NDA, let us know before sharing sensitive information. We can agree confidentiality terms before the detailed project discussion. You do not need to include confidential documents or proprietary material in the first enquiry.",
+  },
+  {
+    q: "Who owns the source code?",
+    a: "You own the contracted work product in line with your project agreement. We set out source code access, design files, documentation and any third-party licensing upfront, so there is a clear understanding of what you will receive and how handover will work.",
+  },
+  {
+    q: "What happens after launch?",
+    a: "We agree the post-launch arrangement as part of the project. It can include maintenance, monitoring, updates and ongoing improvements, or a documented handover to your team. Support responsibilities and any continuing development should be clear before the product goes live.",
   },
 ];
 
@@ -113,5 +141,21 @@ export const SWITZERLAND_FAQS: FaqItem[] = [
   {
     q: "How do I start a project from Switzerland?",
     a: "Send a message through the contact page or start a project brief. A senior consultant replies within one business day, followed by a discovery call and a fixed-scope proposal, with an NDA on request before any details are shared.",
+  },
+  {
+    q: "Which is the best IT company in Switzerland for software development?",
+    a: "Best depends on evidence, not slogans: verifiable portfolio outcomes, a transparent process, clear code ownership and speakable references. Savo pairs a Swiss head office in Granges-Marnand with an Indore engineering headquarters operating since 2015, giving Swiss clients European-hours coverage with global delivery capacity, and every practice is published for checking.",
+  },
+  {
+    q: "Do you serve clients in Zurich, Geneva, Basel, Bern and Lausanne?",
+    a: "Yes. All of Switzerland and the wider European region is served from our Granges-Marnand head office, with senior coverage across European working hours and structured remote delivery that Swiss and EU clients rely on.",
+  },
+  {
+    q: "How much does software development cost in Switzerland?",
+    a: "Swiss-developed software carries Swiss rates; the same budget typically goes further in a hybrid setup. Savo's structure is exactly that: Swiss presence, contracts and accountability, with engineering delivered from India at a better cost-quality ratio, quoted as fixed-scope milestones.",
+  },
+  {
+    q: "Is Savo a Swiss company or an Indian company?",
+    a: "Both, honestly structured: Savo Technologies Private Limited operates its engineering headquarters in Indore, India, and its head office in Granges-Marnand, Switzerland. Clients get Swiss-accountable engagement with the capacity economics of the India HQ.",
   },
 ];

@@ -1,21 +1,22 @@
 import { Reveal } from "@/components/ui/reveal";
-import { SITE } from "@/constants/site";
 
 /** Full-width brand moment before the final CTA. */
 export function BrandStatement() {
   return (
-    <section aria-labelledby="brand-heading" className="chapter-ink bg-background text-foreground">
+    <section aria-labelledby="brand-heading" className="chapter-ink reftheme-dark bg-background text-foreground">
       <div className="shell py-14 sm:py-18 lg:py-22">
         <Reveal>
-          <p className="t-label mb-10 text-muted">Our belief</p>
-          <h2 id="brand-heading" className="t-statement max-w-[13ch]">
-            Bold ideas deserve serious technology
-            <span aria-hidden="true" className="text-accent">.</span>
+          <h2
+            id="brand-heading"
+            className="max-w-[25ch] font-serif text-[clamp(1.9rem,3.8vw,3.1rem)] font-semibold leading-[1.08] tracking-[-0.018em] text-white"
+          >
+            Technology should earn its place in your business
+            <span aria-hidden="true" className="text-[#FF3333]">.</span>
           </h2>
         </Reveal>
         <Reveal delay={160}>
-          <p className="t-serif-italic mt-12 text-[clamp(1.35rem,2.4vw,1.9rem)] text-muted">
-            {SITE.tagline}
+          <p className="mt-5 max-w-[70ch] text-[1rem] leading-[1.7] text-white/70">
+            A better product is not just more features. It should remove friction for users, make day-to-day work easier and give your team a sound foundation for what comes next.
           </p>
         </Reveal>
       </div>

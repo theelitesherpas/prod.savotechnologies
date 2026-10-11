@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,7 +11,6 @@ import { ConfirmButton } from "@/components/admin/form";
 import { DragOrderList } from "@/components/admin/drag-order-list";
 import {
   toggleItemAction,
-  moveItemAction,
   reorderItemsAction,
   deleteItemAction,
   importDefaultsAction,
@@ -21,8 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const SAVED_MESSAGES: Record<string, string> = {
-  created: "Item created and now live on the site.",
-  updated: "Changes saved and live on the site.",
+  created: "Item created. Public visibility follows its active flag and publication status.",
+  updated: "Changes saved. Public visibility follows its active flag and publication status.",
   deleted: "Item deleted.",
   imported: "Defaults imported - the collection is now editable.",
 };
@@ -34,6 +34,7 @@ export default async function CollectionPage({
   params: Promise<{ collection: string }>;
   searchParams: Promise<{ saved?: string; n?: string; e?: string }>;
 }) {
+  await requireAdminPage("/admin/content/[collection]");
   const { collection: raw } = await params;
   if (!isCollectionKey(raw)) notFound();
   const def = getCollection(raw);
@@ -42,16 +43,17 @@ export default async function CollectionPage({
   const rows = prisma ? await getAdminItems(raw) : null;
   const items = rows ?? [];
   const fallback = !rows || rows.length === 0;
-  const activeCount = items.filter((i) => i.active).length;
+  const hasSeeds = def.seeds().length > 0;
+  const activeCount = items.filter((i) => i.active && i.contentStatus === "published").length;
 
   return (
     <div>
       <PageHeader
         title={def.label}
-        description={`${def.publicNote} ${fallback ? "The site currently renders the coded defaults." : `${activeCount} of ${items.length} published.`}`}
+        description={`${def.publicNote} ${fallback ? (hasSeeds ? "The site currently renders the coded defaults." : "No published profiles are available yet.") : `${activeCount} of ${items.length} published.`}`}
         actions={
           <>
-            {fallback ? (
+            {fallback && hasSeeds ? (
               <form action={importDefaultsAction}>
                 <input type="hidden" name="collection" value={def.key} />
                 <button
@@ -85,10 +87,10 @@ export default async function CollectionPage({
       {fallback ? (
         <EmptyState
           title={`No ${def.label.toLowerCase()} in the database`}
-          message={`Until rows exist, the public site renders the coded defaults. Import them as a starting point, or add the first ${def.singular} fresh.`}
+          message={hasSeeds ? `Until rows exist, the public site renders the coded defaults. Import them as a starting point, or add the first ${def.singular} fresh.` : `There are no published team profiles yet. Add the first ${def.singular} when their details and portrait are approved.`}
           actions={
             <>
-              <form action={importDefaultsAction}>
+              {hasSeeds ? <form action={importDefaultsAction}>
                 <input type="hidden" name="collection" value={def.key} />
                 <button
                   type="submit"
@@ -97,7 +99,7 @@ export default async function CollectionPage({
                   <AdminIcon name="import" className="h-4 w-4" />
                   Import defaults
                 </button>
-              </form>
+              </form> : null}
               <Link
                 href={`/admin/content/${def.key}/new`}
                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-4 text-[0.875rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
@@ -126,7 +128,7 @@ export default async function CollectionPage({
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {item.active ? <Chip tone="success">Published</Chip> : <Chip tone="warning">Hidden</Chip>}
+                  {item.active && item.contentStatus === "published" ? <Chip tone="success">Published</Chip> : <Chip tone="warning">{item.active ? item.contentStatus : "Hidden"}</Chip>}
                   <Link
                     href={`/admin/content/${def.key}/${item.id}`}
                     className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"

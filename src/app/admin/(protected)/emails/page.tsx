@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/ui";
@@ -15,6 +16,7 @@ export default async function AdminEmailsPage({
 }: {
   searchParams: Promise<{ sent?: string; e?: string }>;
 }) {
+  await requireAdminPage("/admin/emails");
   const sp = await searchParams;
 
   const [replies, sentRows] = prisma

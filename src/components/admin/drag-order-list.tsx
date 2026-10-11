@@ -115,7 +115,7 @@ export function DragOrderList({
                 <button
                   type="button"
                   aria-label={`Reorder row ${i + 1} (drag or use arrows)`}
-                  onMouseDown={(e) => {
+                  onMouseDown={() => {
                     // Enable dragging only from the handle so text selection
                     // and form controls inside rows keep working.
                     const li = rowRefs.current.get(id);

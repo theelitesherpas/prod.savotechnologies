@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
-import { clientIp } from "@/lib/api";
-import { enforceCaptcha } from "@/lib/captcha";
+import { clientIp, readJsonBody } from "@/lib/api";
 import { logger } from "@/lib/logger";
+import { publicTelemetryUrl } from "@/lib/telemetry-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,11 +10,10 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/bug-reports - capture errors from the frontend.
  *
- * Called automatically by error boundaries and the 404 page (no captcha
- * - no human involved), and by the "report this problem" form shown to
- * users on error screens (user_report - always-on captcha). Rate-limited
- * per IP; failures are silent (reporting must never break the page
- * further), except captcha rejections which tell the user what to do.
+ * Called automatically by error boundaries and the 404 page, and by
+ * the "report this problem" form shown to users on error screens.
+ * Rate-limited per IP; failures are silent (reporting must never
+ * break the page further).
  */
 
 const TYPES = new Set(["error", "404", "api_error", "user_report"]);
@@ -26,30 +25,20 @@ export async function POST(req: Request) {
     if (!limit.ok) return new Response(null, { status: 429 });
     if (!prisma) return new Response(null, { status: 204 });
 
-    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-    if (!body) return new Response(null, { status: 204 });
+    const parsed = await readJsonBody(req, 64_000);
+    if (!parsed.ok || !parsed.data || typeof parsed.data !== "object" || Array.isArray(parsed.data)) return new Response(null, { status: 204 });
+    const body = parsed.data as Record<string, unknown>;
+
+    const publicUrl = publicTelemetryUrl(body.url);
+    // Private pages may expose account/invitation details in stacks or messages.
+    // Do not persist their report payload at all.
+    if (typeof body.url === "string" && !publicUrl) return new Response(null, { status: 204 });
 
     const type = typeof body.type === "string" && TYPES.has(body.type) ? body.type : "error";
-
-    // Always-on captcha for human reports. Automatic beacons carry no
-    // token and stay silent by design.
-    if (type === "user_report") {
-      const cap = await enforceCaptcha(ip, body.captchaToken);
-      if (!cap.ok) {
-        if ("captchaRequired" in cap) {
-          return Response.json(
-            { ok: false, error: "Please complete the human verification and try again.", captchaRequired: true },
-            { status: 400 },
-          );
-        }
-        return Response.json({ ok: false, error: cap.error }, { status: 400 });
-      }
-    }
-
     const message = typeof body.message === "string" ? body.message.slice(0, 500) : "Unknown error";
     const details = typeof body.details === "string" ? body.details.slice(0, 8000) : null;
-    const url = typeof body.url === "string" ? body.url.slice(0, 500) : null;
-    const referrer = typeof body.referrer === "string" ? body.referrer.slice(0, 500) : null;
+    const url = publicUrl?.slice(0, 500) ?? null;
+    const referrer = publicTelemetryUrl(body.referrer)?.slice(0, 500) ?? null;
     const userAgent = req.headers.get("user-agent")?.slice(0, 500) ?? null;
 
     // Context: browser, screen, timestamp
@@ -69,8 +58,8 @@ export async function POST(req: Request) {
     });
 
     return new Response(null, { status: 201 });
-  } catch (err) {
-    logger.error("bug-report: capture failed", { err: String(err).slice(0, 200) });
+  } catch {
+    logger.error("bug-report: capture failed");
     return new Response(null, { status: 204 });
   }
 }

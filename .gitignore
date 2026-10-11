@@ -20,6 +20,9 @@
 # production
 /build
 
+# Runtime-uploaded, content-addressed editorial covers
+/public/uploads/insights/
+
 # misc
 .DS_Store
 *.pem
@@ -41,5 +44,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local review artifacts
+# local review artifacts — may contain private request data or source snapshots
 /.impeccable/
+/tmp/
+/tmp-benchmark/
+/tmp-*.log
+/tmp-*.mjs
+/.vitest/

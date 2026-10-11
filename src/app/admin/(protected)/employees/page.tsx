@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -13,6 +14,7 @@ export default async function EmployeesPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string; e?: string; deleted?: string; created?: string }>;
 }) {
+  await requireAdminPage("/admin/employees");
   const { q, status, e, deleted } = await searchParams;
   if (!prisma) {
     return (

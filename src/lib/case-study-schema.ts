@@ -21,6 +21,109 @@ const attachedImageSchema = z.object({
   alt: z.string().max(200).default(""),
 });
 
+/**
+ * FLAGSHIP DOSSIER (master specification Parts 9–12).
+ *
+ * Three case-study levels (Part 14):
+ *   flagship - deep editorial + technical story (dossier present)
+ *   standard - strong business + technical overview
+ *   verified-entry - short verified portfolio entry
+ *
+ * The dossier is optional so existing records remain valid; when present,
+ * the detail page renders the full narrative below the existing overview.
+ * NDA engagements (Part 12) set `nda: true` - the renderer states
+ * "Client identity withheld under confidentiality agreement" and never
+ * invents a client name.
+ */
+export const CASE_LEVELS = ["flagship", "standard", "verified-entry"] as const;
+export type CaseLevel = (typeof CASE_LEVELS)[number];
+
+const richText = z.string().max(8_000).optional().default("");
+
+export const flagshipDossierSchema = z.object({
+  /* Project Overview - Part 10 */
+  overview: z
+    .object({
+      client: z.string().max(160).optional().default(""),
+      industry: z.string().max(160).optional().default(""),
+      country: z.string().max(120).optional().default(""),
+      engagement: z.string().max(160).optional().default(""),
+      year: z.string().max(40).optional().default(""),
+      projectType: z.string().max(160).optional().default(""),
+      status: z.string().max(80).optional().default(""),
+    })
+    .optional(),
+
+  aboutClient: richText,
+  situation: richText,
+  challenge: richText,
+  complexity: z.array(z.string().min(2).max(160)).max(12).optional().default([]),
+  discovery: richText,
+  strategy: richText,
+
+  productDesign: z
+    .object({
+      summary: richText,
+      research: z.array(z.string().max(240)).max(10).optional().default([]),
+      artifacts: z.array(z.string().max(240)).max(10).optional().default([]),
+    })
+    .optional(),
+
+  architecture: z
+    .object({
+      frontend: z.string().max(400).optional().default(""),
+      backend: z.string().max(400).optional().default(""),
+      database: z.string().max(400).optional().default(""),
+      cloud: z.string().max(400).optional().default(""),
+      authentication: z.string().max(400).optional().default(""),
+      apis: z.string().max(400).optional().default(""),
+      search: z.string().max(400).optional().default(""),
+      analytics: z.string().max(400).optional().default(""),
+      ai: z.string().max(400).optional().default(""),
+    })
+    .optional(),
+
+  engineering: richText,
+
+  technologyDecisions: z
+    .array(z.object({ choice: z.string().max(160), why: z.string().max(600) }))
+    .max(10)
+    .optional()
+    .default([]),
+
+  qualityEngineering: richText,
+  deployment: richText,
+
+  outcome: z
+    .object({
+      business: richText,
+      technical: richText,
+      operational: richText,
+      user: richText,
+    })
+    .optional(),
+
+  /** Part 11 - restrained, factual project information block. */
+  projectInfo: z
+    .object({
+      clientIdentity: z.string().max(80).optional().default(""),
+      product: z.string().max(80).optional().default(""),
+      engagement: z.string().max(80).optional().default(""),
+      caseStudyApproved: z.string().max(40).optional().default(""),
+      externalVerification: z.string().max(120).optional().default(""),
+    })
+    .optional(),
+
+  /** Part 11 - verification links (live site, store listings, reviews). */
+  verificationLinks: z
+    .array(z.object({ label: z.string().max(120), href: z.string().url().max(500) }))
+    .max(6)
+    .optional()
+    .default([]),
+});
+
+export type FlagshipDossier = z.infer<typeof flagshipDossierSchema>;
+
 export const caseStudySchema = z.object({
   /** Display title, e.g. "Meridian Commerce" (or the real client name). */
   title: z.string().min(2).max(120),
@@ -31,7 +134,11 @@ export const caseStudySchema = z.object({
   discipline: z.enum(CASE_DISCIPLINE_IDS),
   /** e.g. "Ecommerce · Web Platform · Product Engineering". */
   industry: z.string().max(160).optional().default(""),
+  /** Explicit many-to-many sector links; no inference from prose or discipline. */
+  industrySlugs: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(80)).max(20).optional(),
   summary: z.string().max(600).optional().default(""),
+  /** Optional detail-hero introduction. Empty falls back to the card summary. */
+  introduction: z.string().max(1200).optional(),
   challenge: z.string().max(4000).optional().default(""),
   solution: z.string().max(4000).optional().default(""),
   /** Capability chips - multiselected from the discipline's list. */
@@ -71,13 +178,13 @@ export const caseStudySchema = z.object({
       role: z.string().min(1).max(160),
     })
     .nullish(),
-  /** Attached visuals - one slot per rendering surface, each cropped to
-   * the exact aspect that surface shows (no distortion anywhere):
-   *   showcase (1600×700) - detail-page band + fallback for cards
-   *   cardWide  (1600×700) - featured cards (home + index)
-   *   card      (legacy)   - kept for old records, not in the admin form
+  /** Attached covers - new uploads are cropped to 16:9 for the portfolio
+   * cards and detail-page overview. Existing image dimensions remain valid.
+   *   showcase (1600×900) - detail-page band + fallback for cards
+   *   cardWide  (1600×900) - homepage and portfolio cards
+   *   card      (1280×720) - legacy standard-card slot
    * Empty slots fall back down the chain (card → cardWide → showcase),
-   * then to the generated mockup. Data URLs live inside the record JSON
+   * then to the legacy hero image. Data URLs live inside the record JSON
    * so images travel with the database everywhere. */
   images: z
     .object({
@@ -125,6 +232,13 @@ export const caseStudySchema = z.object({
     .default([]),
   /** Constants-side content status - records marked demo never render in production. */
   status: z.enum(["demo", "verified"]).optional().default("demo"),
+
+  /** Case-study level (Part 14) - defaults to standard behaviour. */
+  level: z.enum(CASE_LEVELS).optional().default("standard"),
+  /** NDA engagement (Part 12) - identity withheld, never fabricated. */
+  nda: z.boolean().optional().default(false),
+  /** Flagship dossier (Part 10) - drives the deep editorial layout. */
+  dossier: flagshipDossierSchema.optional(),
 });
 
 export type CaseStudyRecord = z.infer<typeof caseStudySchema>;
@@ -138,31 +252,31 @@ export type AttachedImageRecord = z.infer<typeof attachedImageSchema>;
 export const CASE_IMAGE_SLOTS = {
   showcase: {
     width: 1600,
-    height: 700,
+    height: 900,
     label: "Showcase",
-    where: "Detail page - the wide image band",
-    hint: "16:7",
+    where: "Detail page - the wide cover image",
+    hint: "16:9",
   },
   cardWide: {
     width: 1600,
-    height: 700,
-    label: "Featured card",
-    where: "Homepage first card + index featured cards (full-width)",
-    hint: "16:7",
+    height: 900,
+    label: "Portfolio cover",
+    where: "Homepage and case-study listing cards",
+    hint: "16:9",
   },
   card: {
     width: 1280,
-    height: 800,
+    height: 720,
     label: "Standard card",
-    where: "Homepage cards 2-3 + index half-size cards",
-    hint: "16:10",
+    where: "Standard case-study cards",
+    hint: "16:9",
   },
   dossierCard: {
     width: 1280,
-    height: 800,
-    label: "Dossier card",
-    where: "Detail page - 'More from the dossier' related cards",
-    hint: "16:10",
+    height: 720,
+    label: "Related project cover",
+    where: "Detail page - related project cards",
+    hint: "16:9",
   },
 } as const;
 

@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -42,11 +43,21 @@ const FIELD_LABELS: Record<string, string> = {
   skills: "Key skills",
   links: "Portfolio / GitHub",
   resume: "Resume link",
+  consent: "Application data processing consent",
   country: "Country",
   topic: "Topic",
 };
 
 /** Render the structured form payload as a labelled data grid. */
+function safeWebUrl(value: string): string | null {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 function FormDataPanel({ data }: { data: Record<string, unknown> }) {
   const entries = Object.entries(data).filter(([, v]) => {
     if (v === null || v === undefined || v === "") return false;
@@ -75,6 +86,12 @@ function FormDataPanel({ data }: { data: Record<string, unknown> }) {
                 </span>
               ) : typeof value === "object" ? (
                 <code className="font-mono text-[0.75rem]">{JSON.stringify(value)}</code>
+              ) : typeof value === "boolean" ? (
+                value ? "Confirmed" : "Not confirmed"
+              ) : typeof value === "string" && ["resume", "links"].includes(key) && safeWebUrl(value) ? (
+                <a href={safeWebUrl(value)!} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-accent">
+                  Open {FIELD_LABELS[key] ?? key}
+                </a>
               ) : (
                 String(value)
               )}
@@ -93,6 +110,7 @@ export default async function EnquiryDetailPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ saved?: string; confirm?: string }>;
 }) {
+  await requireAdminPage("/admin/enquiries/[id]");
   const { id } = await params;
   const { saved } = await searchParams;
   const [user, enquiry, trail, replies] = await Promise.all([
@@ -117,14 +135,12 @@ export default async function EnquiryDetailPage({
 
   // Auto-read: opening a new enquiry marks it in_progress (reduces the
   // sidebar badge count, matches email unread behaviour).
-  let currentStatus = enquiry.status;
   if (enquiry.status === "new" && prisma) {
     try {
       await prisma.projectEnquiry.update({
         where: { id },
         data: { status: "in_progress" },
       });
-      currentStatus = "in_progress";
       revalidatePath("/admin/enquiries");
       revalidatePath("/admin");
     } catch {
@@ -181,6 +197,7 @@ export default async function EnquiryDetailPage({
                 ["Budget", enquiry.budget ?? "-"],
                 ["Source", enquiry.source],
                 ["Received", fmtIST(enquiry.createdAt)],
+                ["Reference", enquiry.reference ?? "-"],
                 ["IP (hashed prefix)", enquiry.ipHash ? enquiry.ipHash.slice(0, 12) : "-"],
               ].map(([label, value]) => (
                 <div key={label} className="bg-surface px-4 py-3">

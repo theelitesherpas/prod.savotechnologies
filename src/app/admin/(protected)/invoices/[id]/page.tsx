@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -15,6 +16,7 @@ export default async function EditInvoicePage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ e?: string }>;
 }) {
+  await requireAdminPage("/admin/invoices/[id]");
   const { id } = await params;
   const { e } = await searchParams;
   if (!prisma) notFound();

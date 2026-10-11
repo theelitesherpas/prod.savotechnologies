@@ -1,3 +1,4 @@
+import { requireAdminPage, canAccess } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice } from "@/components/admin/ui";
@@ -12,18 +13,22 @@ export default async function AdminComposePage({
 }: {
   searchParams: Promise<{ sent?: string; e?: string; dept?: string; to?: string; subject?: string }>;
 }) {
-  const { sent, e } = await searchParams;
-  const dept = new URLSearchParams(
-    Object.entries(await searchParams).map(([k, v]) => [k, v ?? ""]),
-  ).get("dept");
-  const sp = await searchParams; const preTo = sp.to ?? ""; const preSubject = sp.subject ?? ""; const scoped: "hr" | "hello" | undefined = dept === "hr" || dept === "hello" ? dept : undefined;
+  const sp = await searchParams;
+  const { sent, e, dept } = sp;
+  const scopeQuery = new URLSearchParams(dept === undefined ? {} : { dept });
+  const user = await requireAdminPage(`/admin/email-compose?${scopeQuery}`);
+  const preTo = sp.to ?? "";
+  const preSubject = sp.subject ?? "";
+  const scoped: "hr" | "hello" | undefined = dept === "hr" || dept === "hello" ? dept : undefined;
   const [clients, employees] = prisma
     ? await Promise.all([
-        prisma.clientUser.findMany({ where: { active: true }, select: { email: true, name: true }, orderBy: { name: "asc" }, take: 200 }),
-        prisma.employee.findMany({
+        canAccess(user, "clients") && scoped !== "hr"
+          ? prisma.clientUser.findMany({ where: { active: true }, select: { email: true, name: true }, orderBy: { name: "asc" }, take: 200 })
+          : [],
+        canAccess(user, "employees") && scoped !== "hello" ? prisma.employee.findMany({
           orderBy: { createdAt: "desc" },
           select: { id: true, employeeCode: true, name: true, email: true, position: true, department: true, joiningDate: true, probationEnds: true, lastWorkingDay: true, ctc: true, manager: true, location: true, status: true, leaves: { select: { status: true, days: true } } },
-        }),
+        }) : [],
       ])
     : [[], []];
 

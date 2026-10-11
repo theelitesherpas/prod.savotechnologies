@@ -1,0 +1,14 @@
+{
+  "origin": "Locally authored static Savo social-preview composition; not a generated photograph or stock image",
+  "classification": "Generic scheduling editorial graphic, not a real invitation, client record, office photograph or free/busy calendar",
+  "source": "tmp/meeting-redesign/og.html",
+  "sourceAssets": ["public/images/savo-technologies-logo.svg", "public/fonts/outfit/Outfit-VariableFont_wght.ttf", "public/fonts/inter/Inter-VariableFont_opsz,wght.ttf"],
+  "method": "Authored HTML/CSS and inline calendar SVG rendered with local Chromium at 1200×630, device scale 1",
+  "prompt": "Inherit the approved Savo Outfit/Inter white/black/red/light-grey world. Use the existing official wordmark, generic scheduling title, review/status copy and a simple authored calendar symbol. Never include a client name, token, reference, date, email, phone or claimed confirmation.",
+  "dimensions": { "width": 1200, "height": 630 },
+  "sha256": "8f956ac9898e5dc0f8c6bf28d43ff7303b230731789d14dedda38d6a4bd692e8",
+  "pixelsChanged": true,
+  "rightsStatus": "New composition and vector art authored locally using existing project brand/font assets; no third-party photograph or new external asset. Underlying brand/font approvals remain the project's responsibility.",
+  "usage": "Existing /meeting/[token] Open Graph and Twitter image path; generic and static, no private invitation data",
+  "originalBackup": "tmp/meeting-redesign/meeting-og-before.png"
+}

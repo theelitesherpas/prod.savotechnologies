@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isPrivateSurface, isSensitiveResponse } from "@/lib/publication-policy";
+import { readBodyBytes } from "@/lib/http-body";
 
 /**
  * Edge middleware - cheap gates only (real authorization happens in the
@@ -6,7 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
  *
  * 1. /admin/**  - requires the session cookie to exist; otherwise redirect
  *    to /admin/login (the login page itself and static assets are exempt).
- * 2. POST /api/** - when a browser sends an Origin header it must match the
+ * 2. Unsafe /api/** methods - when a browser sends an Origin header it must match the
  *    request host (CSRF hardening alongside SameSite cookies).
  * 3. Content Signals - every public HTML response carries the W3C-track
  *    Content Signals (contentsignals.org) as a Link header, declaring that
@@ -36,7 +38,8 @@ const AGENT_LINKS = [
 ].join(", ");
 
 /** Paths that never take part in markdown negotiation or signals. */
-const NON_CONTENT = /^\/(_next\/|api\/|admin\/?|portal\/?|employee-portal\/?|unsubscribe\/?)/;
+const INDEXABLE = process.env.NEXT_PUBLIC_INDEXABLE === "true"
+  && process.env.NEXT_PUBLIC_CONTENT_MODE === "production";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -57,7 +60,10 @@ export function middleware(req: NextRequest) {
   requestHeaders.set("x-pathname", pathname + req.nextUrl.search);
 
   // ── API cross-origin guard (mutations) ─────────────────────
-  if (pathname.startsWith("/api/") && req.method === "POST") {
+  if (pathname.startsWith("/api/") && !["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+    if (req.headers.get("sec-fetch-site") === "cross-site") {
+      return NextResponse.json({ ok: false, error: "Cross-origin request rejected." }, { status: 403 });
+    }
     const origin = req.headers.get("origin");
     if (origin) {
       try {
@@ -79,7 +85,7 @@ export function middleware(req: NextRequest) {
   const accept = req.headers.get("accept") ?? "";
   if (
     req.method === "GET" &&
-    !NON_CONTENT.test(pathname) &&
+    !isPrivateSurface(pathname) &&
     accept.includes("text/markdown") &&
     !accept.includes("text/html")
   ) {
@@ -88,8 +94,16 @@ export function middleware(req: NextRequest) {
 
   // ── Content Signals on public page responses ───────────────
   const res = NextResponse.next({ request: { headers: requestHeaders } });
-  if (!NON_CONTENT.test(pathname)) {
+  if (!INDEXABLE || isPrivateSurface(pathname)) {
+    res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+  if (isSensitiveResponse(pathname)) {
+    res.headers.set("Cache-Control", "private, no-store");
+    res.headers.set("Referrer-Policy", "no-referrer");
+  }
+  if (!isPrivateSurface(pathname)) {
     const page = publicUrl(req).href;
+    res.headers.set("Vary", "Accept");
     res.headers.set("Link", `<${page}>; rel="${CONTENT_SIGNALS}", ${AGENT_LINKS.replace("{page}", page)}`);
   }
   return res;
@@ -97,13 +111,13 @@ export function middleware(req: NextRequest) {
 
 /* ───────────────────── URL helpers ─────────────────────────────── */
 
-/** Public canonical URL for the request - built from the forwarded Host
- *  (set by nginx) and proto, because Next reconstructs req.url from its
- *  own listener (http://localhost:4300) behind the reverse proxy. */
+/** Never build discovery links from client-supplied forwarded hosts or queries. */
 function publicUrl(req: NextRequest): URL {
-  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
-  const proto = req.headers.get("x-forwarded-proto")?.split(",")[0] ?? "https";
-  return new URL(`${proto}://${host}${req.nextUrl.pathname}${req.nextUrl.search}`);
+  const url = new URL(process.env.NEXT_PUBLIC_CANONICAL_ORIGIN ?? "https://savotechnologies.com");
+  url.pathname = `${req.nextUrl.basePath}${req.nextUrl.pathname}`;
+  url.search = "";
+  url.hash = "";
+  return url;
 }
 
 /* ───────────────────── Markdown rendering ─────────────────────── */
@@ -118,10 +132,14 @@ async function renderMarkdown(req: NextRequest): Promise<NextResponse> {
     const self = `http://127.0.0.1:${listener.port || "3000"}${listener.pathname}${listener.search}`;
     const page = await fetch(self, {
       headers: { accept: "text/html", "user-agent": req.headers.get("user-agent") ?? "" },
-      redirect: "follow",
+      redirect: "manual",
+      cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
     });
-    if (!page.ok) return new NextResponse(null, { status: page.status });
-    const html = await page.text();
+    if (!page.ok) return new NextResponse(null, { status: page.status, headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
+    const body = await readBodyBytes(page, 2_000_000, 5_000);
+    if (!body.ok) return new NextResponse(null, { status: 502, headers: { "Cache-Control": "no-store" } });
+    const html = new TextDecoder("utf-8", { fatal: true }).decode(body.bytes);
     const url = publicUrl(req);
     const md = htmlToMarkdown(html, url);
     if (!md) return new NextResponse(null, { status: 204 });
@@ -130,20 +148,21 @@ async function renderMarkdown(req: NextRequest): Promise<NextResponse> {
       status: 200,
       headers: {
         "Content-Type": "text/markdown; charset=utf-8",
-        "Cache-Control": "public, max-age=600, s-maxage=3600",
+        "Cache-Control": "no-store",
+        Vary: "Accept",
         "X-Robots-Tag": "noindex", // the HTML canonical remains the indexable resource
         Link: `<${url.href}>; rel="${CONTENT_SIGNALS}"`,
       },
     });
   } catch {
-    return new NextResponse(null, { status: 500 });
+    return new NextResponse(null, { status: 502, headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
   }
 }
 
 const ENTITIES: Record<string, string> = {
   "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#x27;": "'",
   "&#39;": "'", "&nbsp;": " ", "&rsquo;": "'", "&lsquo;": "'", "&ldquo;": '"',
-  "&rdquo;": '"', "&middot;": "·", "&mdash;": "—", "&ndash;": "–", "&hellip;": "…",
+  "&rdquo;": '"', "&middot;": "·", "&mdash;": " - ", "&ndash;": "–", "&hellip;": "…",
 };
 
 const decode = (s: string) =>

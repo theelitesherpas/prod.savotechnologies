@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -5,6 +6,7 @@ import { BackLink, PageHeader, Notice } from "@/components/admin/ui";
 import { CaseStudyForm } from "@/components/admin/case-study-form";
 import { caseStudySchema, type CaseStudyRecord } from "@/lib/case-study-schema";
 import { saveCaseStudyAction } from "../actions";
+import { getManagedIndustryDossiers } from "@/lib/industry-dossiers";
 
 export const metadata: Metadata = { title: "Edit case study" };
 
@@ -15,6 +17,7 @@ export default async function EditCaseStudyPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ e?: string }>;
 }) {
+  await requireAdminPage("/admin/case-studies/[id]");
   const { id } = await params;
   const { e } = await searchParams;
   if (!prisma) notFound();
@@ -22,6 +25,7 @@ export default async function EditCaseStudyPage({
   const item = await prisma.contentItem.findUnique({ where: { id } });
   if (!item || item.collection !== "case-studies") notFound();
 
+  const industryOptions = (await getManagedIndustryDossiers()).map(({ slug, title }) => ({ slug, title }));
   const parsed = caseStudySchema.safeParse(item.data ?? {});
   if (!parsed.success) {
     return (
@@ -32,7 +36,7 @@ export default async function EditCaseStudyPage({
           This record failed schema validation (it may predate the rich editor). Its data is preserved -
           re-enter the fields below once and save to migrate it.
         </Notice>
-        <CaseStudyForm action={saveCaseStudyAction} item={{ id: item.id, slug: item.slug, contentStatus: item.contentStatus, order: item.order }} />
+        <CaseStudyForm action={saveCaseStudyAction} industryOptions={industryOptions} item={{ id: item.id, slug: item.slug, contentStatus: item.contentStatus, order: item.order }} />
       </div>
     );
   }
@@ -53,6 +57,7 @@ export default async function EditCaseStudyPage({
       {e === "invalid" ? <Notice kind="alert">Check the fields - the record failed validation.</Notice> : null}
       <CaseStudyForm
         action={saveCaseStudyAction}
+        industryOptions={industryOptions}
         item={{ id: item.id, slug: item.slug, contentStatus: item.contentStatus, order: item.order, record }}
       />
     </div>

@@ -235,10 +235,7 @@ export function Mailbox({
       <div className="grid gap-4 lg:grid-cols-[190px_320px_minmax(0,1fr)]">
         {/* ── Folder rail ─────────────────────────────── */}
         <aside className="space-y-1.5" aria-label="Mail folders">
-          {([
-            ["inbox", `Inbox${unread ? ` · ${unread}` : ""}`],
-            ["sent", "Sent"],
-          ] as const).map(([key, label]) => (
+          {(["inbox", "sent"] as const).map((key) => (
             <button
               key={key}
               type="button"
@@ -665,7 +662,7 @@ function ComposePanel({
   );
 }
 
-/** Submit button with sending state — shows spinner + "Sending…" while the
+/** Submit button with sending state - shows spinner + "Sending…" while the
  *  server action runs, then the page redirects with the success notice. */
 function SendButton() {
   const { pending } = useFormStatus();

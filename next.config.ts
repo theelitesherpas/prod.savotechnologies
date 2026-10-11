@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 /**
  * Content Security Policy.
@@ -14,7 +15,7 @@ const csp = [
     isProd ? "" : " 'unsafe-eval'"
   } https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com https://static.cloudflareinsights.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "img-src 'self' data: blob: https://cdn.simpleicons.org https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com",
   "font-src 'self'",
   "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://cloudflareinsights.com https://*.cloudflareinsights.com",
   "frame-src https://www.google.com https://recaptcha.google.com",
@@ -47,12 +48,24 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Sub-path hosting (e.g. https://savotech.vercel.app/savo.v6) — set via
   // NEXT_PUBLIC_BASE_PATH at build time; undefined locally.
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH || undefined,
+  basePath: basePath || undefined,
   poweredByHeader: false,
   reactStrictMode: true,
+  // Keep the local review unobstructed; compile/runtime errors still surface.
+  devIndicators: false,
   // Case-study records carry cropped hero images (data URLs up to ~4 MB)
   // through server actions — the 1 MB default would reject them.
   images: {
+    localPatterns: [
+      { pathname: "/images/**", search: "" },
+      { pathname: "/api/insight-image/**", search: "" },
+      ...(basePath
+        ? [
+            { pathname: `${basePath}/images/**`, search: "" },
+            { pathname: `${basePath}/api/insight-image/**`, search: "" },
+          ]
+        : []),
+    ],
     // Optimized /_next/image responses are content-addressed (url+width+q)
     // and immutable for a given build - tell browsers and CDNs to keep
     // them (Cloudflare edge-caches /_next/image via a Cache Rule; the

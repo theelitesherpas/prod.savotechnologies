@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { getSettings } from "@/lib/settings";
 import { saveSettingsAction } from "./actions";
@@ -12,6 +13,7 @@ export default async function SettingsPage({
 }: {
   searchParams: Promise<{ saved?: string; e?: string }>;
 }) {
+  await requireAdminPage("/admin/settings");
   const [{ saved, e }, settings] = await Promise.all([searchParams, getSettings()]);
 
   return (
@@ -105,6 +107,27 @@ export default async function SettingsPage({
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="border-t border-border pt-5">
+          <p className="adm-label mb-4">Project lead popup</p>
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              name="leadModalEnabled"
+              defaultChecked={settings.leadModalEnabled}
+              className="mt-1 h-4 w-4"
+            />
+            <span>
+              <span className="adm-label">Enable automatic popup triggers</span>
+              <span className="t-caption mt-1 block text-muted">
+                When on, the enquiry popup appears after meaningful browsing time, page depth or exit
+                intent. Turning it off stops all automatic triggers - manual CTAs (&ldquo;Start a Similar
+                Project&rdquo; buttons) still open it. Testimonials for the popup are managed under Content
+                &rarr; Testimonials.
+              </span>
+            </span>
+          </label>
         </div>
 
         <div className="border-t border-border pt-5">

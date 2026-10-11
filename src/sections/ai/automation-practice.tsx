@@ -37,6 +37,7 @@ const TWO_KINDS = [
 
 const USE_CASES = [
   { cat: "Sales", flow: ["Lead capture", "Lead enrichment", "CRM", "Qualification", "Sales assignment", "Follow-up"] },
+  { cat: "Appointments", flow: ["Booking request", "Calendar & timezone check", "Confirmation", "Reminder sequence", "Reschedule", "No-show recovery"] },
   { cat: "Marketing", flow: ["Campaign trigger", "Audience segmentation", "Content & email", "CRM update", "Analytics"] },
   { cat: "Customer Support", flow: ["Customer request", "AI classification", "Knowledge retrieval", "Suggested response", "Human escalation", "Ticket update"] },
   { cat: "Finance", flow: ["Invoice", "Document extraction", "Validation", "Approval", "Accounting system", "Notification"] },
@@ -282,7 +283,7 @@ export function AutomationPractice({ svc }: { svc: AiService }) {
                 Every business has one flow everyone tolerates and nobody enjoys. That is usually the first one we automate.
               </p>
             </div>
-            <Link href="/start" className="group/btn t-sm mt-6 inline-flex items-center gap-2 font-semibold text-foreground transition-colors hover:text-accent">
+            <Link href="/start-a-project" className="group/btn t-sm mt-6 inline-flex items-center gap-2 font-semibold text-foreground transition-colors hover:text-accent">
               Map yours
               <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3 transition-transform duration-300 group-hover/btn:translate-x-[3px]" fill="none" stroke="currentColor" strokeWidth="1.6">
                 <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />

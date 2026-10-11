@@ -14,7 +14,6 @@
  * Promises mirror the website copy exactly; nothing is fabricated.
  */
 
-import { createHmac } from "node:crypto";
 import { SITE } from "@/constants/site";
 
 const PAPER = "#f5f4f0";
@@ -72,13 +71,8 @@ function fontsCss(): string {
   );
 }
 
-const SALT = process.env.ENQUIRY_IP_SALT || "dev-salt";
-export function unsubscribeSig(email: string): string {
-  return createHmac("sha256", SALT).update(email.toLowerCase()).digest("hex").slice(0, 32);
-}
-export function unsubscribeUrl(email: string): string {
-  return `${site("/unsubscribe")}?email=${encodeURIComponent(email)}&sig=${unsubscribeSig(email)}`;
-}
+/** Preview-safe placeholder. The server mail boundary replaces this with a signed URL. */
+export const UNSUBSCRIBE_PLACEHOLDER = `${site("/unsubscribe")}#mail-signature-required`;
 
 /* ── centered building blocks ─────────────────────────────────────── */
 
@@ -207,7 +201,7 @@ export function shell(opts: {
     <p style="margin:0;font-family:${SANS};font-size:10px;line-height:1.7;color:${FAINT};">
       © ${year} ${esc(SITE.legalName)} - Indore · Zürich<br>
       ${esc(opts.reason ?? "You are receiving this because you contacted Savo Technologies.")}
-      ${opts.unsubscribeEmail ? ` · <a href="${unsubscribeUrl(opts.unsubscribeEmail)}" style="color:${FAINT};text-decoration:underline;">Unsubscribe</a>` : ""}
+      ${opts.unsubscribeEmail ? ` · <a href="${UNSUBSCRIBE_PLACEHOLDER}" style="color:${FAINT};text-decoration:underline;">Unsubscribe</a>` : ""}
     </p>
   </td></tr>
 
@@ -222,6 +216,7 @@ const fn = (name: string) => name.split(" ")[0];
 /** Enquiry drawer / contact form / start-page brief received. */
 export function enquiryAck(name: string, projectType: string, to?: string): MailTemplate {
   return {
+    unsubscribeEmail: to,
     subject: "Enquiry received - Savo Technologies",
     html: shell({
       preheader: `Your ${projectType} enquiry is with our engineers. A senior consultant replies within one business day.`,
@@ -249,6 +244,7 @@ export function enquiryAck(name: string, projectType: string, to?: string): Mail
 /** Footer callback request. */
 export function callbackAck(name: string, country: string, to?: string): MailTemplate {
   return {
+    unsubscribeEmail: to,
     subject: "We will call you back - Savo Technologies",
     html: shell({
       preheader: "Your callback is logged. A Savo engineer calls during your local business hours.",
@@ -275,6 +271,7 @@ export function callbackAck(name: string, country: string, to?: string): MailTem
 /** Ask Savo handoff - question the assistant could not answer. */
 export function askSavoHandoffAck(question: string, to?: string): MailTemplate {
   return {
+    unsubscribeEmail: to,
     subject: "Your question is with a Savo engineer",
     html: shell({
       preheader: "The assistant does not guess - your question went to a senior consultant, who replies within one business day.",
@@ -701,27 +698,6 @@ function pitchCtas(primary: { href: string; label: string }, secondary: { href: 
   <td style="padding:0 5px;"><a href="${primary.href}" style="display:inline-block;background:${INK};color:#ffffff;font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:15px 28px;border-radius:8px;">${esc(primary.label)}&nbsp;&nbsp;→</a></td>
   <td style="padding:0 5px;"><a href="${secondary.href}" style="display:inline-block;border:2px solid ${INK};color:${INK};font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:13px 26px;border-radius:8px;">${esc(secondary.label)}</a></td>
 </tr></table>`;
-}
-
-/* Delivery stepper: numbered squares on a hairline rail. */
-function pitchStepper(steps: { n: string; title: string; line: string }[]): string {
-  const cell = (st: { n: string; title: string; line: string }, i: number) => `
-    <td width="25%" style="padding:0 5px;vertical-align:top;text-align:center;">
-      <div style="width:30px;height:30px;line-height:30px;margin:0 auto 10px;background:${i === 0 ? ACCENT : CARD};color:${i === 0 ? "#ffffff" : ACCENT};border:1px solid ${i === 0 ? ACCENT : LINE};border-radius:6px;font-family:${MONO};font-size:12px;font-weight:700;">${esc(st.n)}</div>
-      <p style="margin:0 0 4px;font-family:${SANS};font-size:12px;font-weight:800;color:${INK};">${esc(st.title)}</p>
-      <p style="margin:0;font-family:${SANS};font-size:11px;line-height:1.5;color:${MUTED};">${esc(st.line)}</p>
-    </td>`;
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0;"><tr>${steps.map(cell).join("")}</tr></table>`;
-}
-
-/* Stat strip: three quiet numbers. */
-function pitchStats(rows: { v: string; k: string }[]): string {
-  const cell = (r: { v: string; k: string }) => `
-    <td width="33.33%" style="padding:0 5px;text-align:center;">
-      <p style="margin:0;font-family:${SERIF};font-size:24px;font-weight:700;color:${INK};line-height:1.15;">${esc(r.v)}</p>
-      <p style="margin:4px 0 0;font-family:${SANS};font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${FAINT};">${esc(r.k)}</p>
-    </td>`;
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 6px;"><tr>${rows.map(cell).join("")}</tr></table>`;
 }
 
 /* Section label inside the pitch body. */

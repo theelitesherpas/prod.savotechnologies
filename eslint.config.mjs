@@ -15,6 +15,10 @@ const eslintConfig = defineConfig([
     // Local dev tooling:
     "scripts/**",
     ".impeccable/**",
+    // Generated/manual review artifacts are not application source.
+    "tmp/**",
+    "tmp-benchmark/**",
+    "tmp-*.mjs",
   ]),
 ]);
 

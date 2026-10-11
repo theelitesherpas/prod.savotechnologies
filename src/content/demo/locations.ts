@@ -93,22 +93,8 @@ export const MARKET_PRESENCE: MarketPresence[] = [
     phones: [{ display: "+971 50 974 1305", e164: "+971509741305" }],
     status: "verified",
   },
-  {
-    id: "australia",
-    region: "Australia",
-    kind: "market",
-    cityLine: "APAC Market",
-    description: "Technology and digital product services for businesses across Australia and the APAC region.",
-    status: "verified",
-  },
-  {
-    id: "united-kingdom",
-    region: "United Kingdom",
-    kind: "market",
-    cityLine: "UK Market",
-    description: "Supporting UK businesses with product design, software engineering and digital development.",
-    status: "verified",
-  },
+
+
   {
     id: "usa",
     region: "United States",

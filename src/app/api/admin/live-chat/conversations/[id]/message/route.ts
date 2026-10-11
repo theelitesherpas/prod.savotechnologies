@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/admin/live-chat/conversations/[id]/message — agent sends a
+ * POST /api/admin/live-chat/conversations/[id]/message - agent sends a
  * chat reply or an internal note, or toggles the agent typing signal.
  * { body } | { note: body } | { typing: boolean }
  */

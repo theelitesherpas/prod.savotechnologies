@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { unsubscribeSig } from "@/lib/mail/templates";
+import { unsubscribeSig } from "@/lib/mail/unsubscribe";
 import { unsubscribeAction } from "./actions";
 
 export const metadata: Metadata = {
@@ -13,35 +13,41 @@ export const metadata: Metadata = {
 export default async function UnsubscribePage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string; sig?: string; done?: string }>;
+  searchParams: Promise<{ email?: string; sig?: string; done?: string; error?: string }>;
 }) {
-  const { email, sig, done } = await searchParams;
+  const { email, sig, done, error } = await searchParams;
   const clean = email?.toLowerCase().trim() ?? "";
+  const valid = Boolean(clean && sig && sig === unsubscribeSig(clean));
 
   if (done !== undefined) {
+    const suppressed = valid && prisma
+      ? await prisma.mailSuppress.findUnique({ where: { email: clean } }).then(Boolean).catch(() => false)
+      : false;
     return (
       <main className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center px-6 text-center">
         <div className="w-full rounded-[14px] border border-line bg-white p-10 shadow-sm">
           <div className="mx-auto mb-5 h-1.5 w-10 bg-accent" />
-          <h1 className="t-h3 text-ink">You are unsubscribed.</h1>
+          <h1 className="t-h3 text-ink">{suppressed ? "You are unsubscribed." : "We couldn’t verify the unsubscribe."}</h1>
           <p className="t-body mt-3 text-muted">
-            No more automated emails from Savo Technologies to{" "}
-            <span className="font-semibold text-foreground">{clean || "this address"}</span>. Project
-            and invoice emails from your portal (if any) still arrive - those are service records.
+            {suppressed ? (
+              <>No more automated emails from Savo Technologies to{" "}
+                <span className="font-semibold text-foreground">{clean}</span>. Project and invoice emails from your portal (if any) still arrive - those are service records.</>
+            ) : (
+              <>We could not confirm that your email preference was saved. Please try the signed link again or{" "}
+                <a href="mailto:hello@savotechnologies.com" className="font-semibold text-accent">contact our team</a>.</>
+            )}
           </p>
-          <p className="t-caption mt-6 text-muted">
-            Changed your mind?{" "}
-            <a href="mailto:hello@savotechnologies.com" className="font-semibold text-accent">
-              Write to us
-            </a>{" "}
-            and we remove the block.
-          </p>
+          {suppressed ? (
+            <p className="t-caption mt-6 text-muted">
+              Changed your mind?{" "}
+              <a href="mailto:hello@savotechnologies.com" className="font-semibold text-accent">Write to us</a>{" "}
+              and we can review the preference.
+            </p>
+          ) : null}
         </div>
       </main>
     );
   }
-
-  const valid = Boolean(clean && sig && sig === unsubscribeSig(clean));
   const already =
     valid && prisma ? await prisma.mailSuppress.findUnique({ where: { email: clean } }).catch(() => null) : null;
 
@@ -60,6 +66,7 @@ export default async function UnsubscribePage({
             </>
           ) : (
             <>
+              {error === "save" ? <p className="mb-4 text-center text-[0.875rem] text-accent" role="alert">We couldn’t save your preference. Please try again.</p> : null}
               <h1 className="t-h3 text-center text-ink">Stop these emails?</h1>
               <p className="t-body mt-3 text-center text-muted">
                 Confirm and <span className="font-semibold text-foreground">{clean}</span> will not

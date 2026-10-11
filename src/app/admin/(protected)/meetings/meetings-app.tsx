@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Meetings dashboard — admin panel design language.
+ * Meetings dashboard - admin panel design language.
  * List view, create drawer, detail with client link sharing, calendar.
  */
 
@@ -78,11 +78,11 @@ function sLabel(s: string): string {
   return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 function fDate(d: string | null): string {
-  if (!d) return "—";
+  if (!d) return " - ";
   return new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 function fTime(t: string | null): string {
-  if (!t) return "—";
+  if (!t) return " - ";
   const [h, m] = t.split(":").map(Number);
   return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
 }
@@ -329,7 +329,7 @@ function LinkBanner({ link, onClose }: { link: string; onClose: () => void }) {
     <div className="mb-6 rounded-xl border-2 border-accent/40 bg-accent/[0.04] p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-[0.875rem] font-bold text-accent">✓ Meeting Created — Share this link with your client</p>
+          <p className="text-[0.875rem] font-bold text-accent">✓ Meeting Created - Share this link with your client</p>
           <div className="mt-2 flex items-center gap-2">
             <input readOnly value={link} className="w-full rounded-lg border border-accent/30 bg-white px-3 py-2.5 font-mono text-[0.8125rem] text-foreground" onFocus={(e) => e.target.select()} />
           </div>
@@ -396,7 +396,7 @@ function CreateDrawer({ onClose, onCreated, flash, me }: { onClose: () => void; 
     const json = (await res.json()) as { ok: boolean; meeting?: { token: string; reference: string }; error?: string };
     setSaving(false);
     if (json.ok && json.meeting) {
-      onCreated(`${window.location.origin}/meeting/${json.meeting.reference}`);
+      onCreated(`${window.location.origin}/meeting/${json.meeting.token}`);
       onClose();
     } else flash(json.error ?? "Failed to create.");
   };
@@ -419,7 +419,7 @@ function CreateDrawer({ onClose, onCreated, flash, me }: { onClose: () => void; 
               <div className="mb-3">
                 <label className="adm-label mb-1 block">Select existing client</label>
                 <select value={form.clientId} onChange={(e) => selectClient(e.target.value)} className="adm-select w-full">
-                  <option value="">— New client —</option>
+                  <option value=""> - New client - </option>
                   {clients.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.company}</option>)}
                 </select>
               </div>
@@ -504,10 +504,9 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
   onEdit: () => void;
 }) {
   const [internalNotes, setInternalNotes] = useState(detail.internalNotes ?? "");
-  const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const meetingLink = detail.reference ? `${typeof window !== "undefined" ? window.location.origin : ""}/meeting/${detail.reference}` : "";
+  const meetingLink = detail.tokenPlain ? `${typeof window !== "undefined" ? window.location.origin : ""}/meeting/${detail.tokenPlain}` : "";
   const waMsg = encodeURIComponent(`Hello ${detail.clientName}, as discussed, please use the link below to select your preferred date and time for our meeting:\n\n${meetingLink}`);
 
   return (
@@ -528,7 +527,7 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
         <span className={cn("rounded-full border px-3 py-1 text-[0.75rem] font-semibold", STATUS_CHIP[detail.status])}>{sLabel(detail.status)}</span>
       </div>
 
-      {/* Client scheduling link — prominent */}
+      {/* Client scheduling link - prominent */}
       {meetingLink ? (
         <div className="mb-6 rounded-2xl border-2 border-accent/40 bg-accent/[0.03] p-6 shadow-sm">
           <p className="mb-1 text-[0.875rem] font-bold text-accent">🔗 Client Scheduling Link</p>
@@ -542,8 +541,10 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
       ) : null}
 
       {/* Actions */}
-      {/* Action buttons — clear, visible, color-coded */}
+      {/* Action buttons - clear, visible, color-coded */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
+        <button onClick={onEdit} className="adm-btn-secondary h-11 px-5 text-[0.875rem] font-semibold">Edit meeting</button>
+        <button onClick={() => setShowDelete(true)} className="inline-flex h-11 items-center rounded-xl border border-red-400/60 bg-red-50 px-5 text-[0.875rem] font-semibold text-red-600 transition-colors hover:bg-red-100">Delete meeting</button>
         {detail.status === "draft" && (
           <button onClick={() => void action(detail.id, "send").then(() => flash("Invitation sent."))}
             className="inline-flex h-11 items-center gap-2 rounded-xl border border-accent bg-accent px-5 text-[0.875rem] font-bold text-white shadow-md transition-all hover:brightness-110">
@@ -587,9 +588,9 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
           <h2 className="adm-label mb-4">Client Information</h2>
           <dl className="space-y-2 text-[0.8125rem]">
             <Row k="Name" v={detail.clientName} />
-            <Row k="Company" v={detail.clientCompany || "—"} />
-            <Row k="Phone" v={detail.clientPhone ?? "—"} />
-            <Row k="Email" v={detail.clientEmail ?? "—"} />
+            <Row k="Company" v={detail.clientCompany || " - "} />
+            <Row k="Phone" v={detail.clientPhone ?? " - "} />
+            <Row k="Email" v={detail.clientEmail ?? " - "} />
           </dl>
         </section>
 
@@ -638,17 +639,6 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
         </section>
       </div>
 
-      {/* Edit drawer */}
-      {showEdit ? (
-        <EditDrawer
-          detail={detail}
-          onClose={() => setShowEdit(false)}
-          onSaved={() => { setShowEdit(false); }}
-          action={action}
-          flash={flash}
-        />
-      ) : null}
-
       {/* Delete confirmation */}
       {showDelete ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
@@ -685,126 +675,6 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
     </div>
   );
 }
-
-/* ───────────────────────── edit drawer ───────────────────────── */
-
-function EditDrawer({ detail, onClose, onSaved, action, flash }: {
-  detail: MeetingDetail;
-  onClose: () => void;
-  onSaved: () => void;
-  action: (id: string, act: string, data?: object) => Promise<{ ok?: boolean; error?: string }>;
-  flash: (m: string) => void;
-}) {
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    clientName: detail.clientName,
-    clientCompany: detail.clientCompany,
-    clientPhone: detail.clientPhone ?? "",
-    clientEmail: detail.clientEmail ?? "",
-    title: detail.title,
-    agenda: detail.agenda,
-    meetingType: detail.meetingType,
-    durationMin: detail.durationMin,
-    locationType: detail.locationType,
-    locationAddress: detail.locationAddress ?? "",
-    meetingUrl: detail.meetingUrl ?? "",
-    availableDates: detail.availableDates,
-    availableFrom: detail.availableFrom,
-    availableTo: detail.availableTo,
-    allowSuggest: detail.allowSuggest,
-    autoConfirm: detail.autoConfirm,
-  });
-
-  const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
-
-  const save = async () => {
-    if (!form.clientName.trim()) return flash("Client name is required.");
-    if (!form.title.trim()) return flash("Meeting title is required.");
-    setSaving(true);
-    const r = await action(detail.id, "edit", form);
-    setSaving(false);
-    if (r.ok) { flash("Meeting updated. Link unchanged."); onSaved(); }
-    else flash(r.error ?? "Failed to update.");
-  };
-
-  const isOnline = ["google_meet", "zoom", "teams"].includes(form.locationType);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
-      <div className="my-8 w-full max-w-2xl rounded-2xl border border-border bg-white shadow-2xl" role="dialog" aria-label="Edit Meeting">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <div>
-            <h2 className="text-[1.125rem] font-bold">Edit Meeting</h2>
-            <p className="mt-0.5 text-[0.8125rem] text-muted">Reference {detail.reference} stays the same, the scheduling link is unchanged.</p>
-          </div>
-          <button onClick={onClose} className="text-[0.8125rem] text-muted hover:text-foreground">Close</button>
-        </div>
-
-        <div className="space-y-5 p-6">
-          <fieldset className="rounded-xl border border-border p-4">
-            <legend className="px-2 text-[0.75rem] font-semibold text-muted">Client Information</legend>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div><label className="adm-label mb-1 block">Name *</label><input value={form.clientName} onChange={(e) => set("clientName", e.target.value)} className="adm-input w-full" /></div>
-              <div><label className="adm-label mb-1 block">Company</label><input value={form.clientCompany} onChange={(e) => set("clientCompany", e.target.value)} className="adm-input w-full" /></div>
-              <div><label className="adm-label mb-1 block">Phone</label><input value={form.clientPhone} onChange={(e) => set("clientPhone", e.target.value)} type="tel" className="adm-input w-full" /></div>
-              <div><label className="adm-label mb-1 block">Email</label><input value={form.clientEmail} onChange={(e) => set("clientEmail", e.target.value)} type="email" className="adm-input w-full" /></div>
-            </div>
-          </fieldset>
-
-          <fieldset className="rounded-xl border border-border p-4">
-            <legend className="px-2 text-[0.75rem] font-semibold text-muted">Meeting Details</legend>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2"><label className="adm-label mb-1 block">Title *</label><input value={form.title} onChange={(e) => set("title", e.target.value)} className="adm-input w-full" /></div>
-              <div className="sm:col-span-2"><label className="adm-label mb-1 block">Agenda</label><textarea value={form.agenda} onChange={(e) => set("agenda", e.target.value)} rows={2} className="adm-input w-full resize-none" /></div>
-              <div>
-                <label className="adm-label mb-1 block">Type</label>
-                <select value={form.meetingType} onChange={(e) => set("meetingType", e.target.value)} className="adm-select w-full">{MEETING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
-              </div>
-              <div>
-                <label className="adm-label mb-1 block">Duration</label>
-                <select value={form.durationMin} onChange={(e) => set("durationMin", Number(e.target.value))} className="adm-select w-full">{DURATIONS.map((d) => <option key={d} value={d}>{d} minutes</option>)}</select>
-              </div>
-              <div>
-                <label className="adm-label mb-1 block">Location</label>
-                <select value={form.locationType} onChange={(e) => set("locationType", e.target.value)} className="adm-select w-full">{LOCATIONS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}</select>
-              </div>
-              {isOnline ? (
-                <div><label className="adm-label mb-1 block">Meeting URL</label><input value={form.meetingUrl} onChange={(e) => set("meetingUrl", e.target.value)} className="adm-input w-full" /></div>
-              ) : form.locationType !== "phone" ? (
-                <div><label className="adm-label mb-1 block">Address</label><input value={form.locationAddress} onChange={(e) => set("locationAddress", e.target.value)} className="adm-input w-full" /></div>
-              ) : null}
-            </div>
-          </fieldset>
-
-          <fieldset className="rounded-xl border border-border p-4">
-            <legend className="px-2 text-[0.75rem] font-semibold text-muted">Available Dates & Hours</legend>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div><label className="adm-label mb-1 block">From</label><input type="time" value={form.availableFrom} onChange={(e) => set("availableFrom", e.target.value)} className="adm-input w-full" /></div>
-              <div><label className="adm-label mb-1 block">To</label><input type="time" value={form.availableTo} onChange={(e) => set("availableTo", e.target.value)} className="adm-input w-full" /></div>
-            </div>
-            <div className="mt-3">
-              <label className="adm-label mb-1 block">Available dates</label>
-              <div className="flex flex-wrap gap-2">
-                {form.availableDates.map((d) => (
-                  <button key={d} type="button" onClick={() => set("availableDates", form.availableDates.filter((x) => x !== d))} className="rounded-md border border-accent/40 bg-accent/[0.06] px-2.5 py-1 text-[0.75rem] font-medium text-accent">{fDate(d)} ✕</button>
-                ))}
-                <input type="date" onChange={(e) => { if (e.target.value && !form.availableDates.includes(e.target.value)) set("availableDates", [...form.availableDates, e.target.value].sort()); e.target.value = ""; }} className="adm-input h-8 w-36 text-[0.75rem]" />
-              </div>
-            </div>
-          </fieldset>
-
-          <div className="flex justify-end gap-2 border-t border-border pt-4">
-            <button onClick={onClose} className="adm-btn-secondary h-10 px-5">Cancel</button>
-            <button onClick={() => void save()} disabled={saving} className="inline-flex h-10 items-center gap-2 rounded-xl border border-accent bg-accent px-5 text-[0.9375rem] font-bold text-white transition-all hover:brightness-110 disabled:opacity-50">
-              {saving ? "Saving…" : "Save Changes"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 
 /* ───────────────────────── edit drawer ───────────────────────── */
 
@@ -983,7 +853,7 @@ function CalendarView({ meetings, onSelect }: { meetings: Meeting[]; onSelect: (
             <div key={day} className={cn("min-h-[5rem] bg-background p-1.5", isToday && "bg-accent/[0.04]")}>
               <p className={cn("mb-1 text-[0.6875rem] font-semibold", isToday ? "text-accent" : "text-muted")}>{day}</p>
               {dayMeetings.map((m) => (
-                <button key={m.id} onClick={() => onSelect(m.id)} className="mb-1 block w-full truncate rounded px-1.5 py-0.5 text-left text-[0.6875rem] font-medium hover:bg-accent/[0.08]" title={`${m.clientName} — ${m.title}`}>
+                <button key={m.id} onClick={() => onSelect(m.id)} className="mb-1 block w-full truncate rounded px-1.5 py-0.5 text-left text-[0.6875rem] font-medium hover:bg-accent/[0.08]" title={`${m.clientName} - ${m.title}`}>
                   {fTime(m.confirmedTime ?? m.preferredTime)} {m.clientName.split(" ")[0]}
                 </button>
               ))}

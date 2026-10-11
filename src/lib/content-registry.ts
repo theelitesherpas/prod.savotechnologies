@@ -21,6 +21,10 @@ import { CASE_DISCIPLINES } from "@/constants/case-studies";
 import { HIRE_ROLES } from "@/constants/hire";
 import { AI_SERVICES } from "@/constants/ai-services";
 import { AGENTS } from "@/constants/agents";
+import { INDUSTRY_DOSSIERS } from "@/content/industries/dossiers";
+import { INDUSTRY_LAYOUTS } from "@/content/industries/schema";
+import { ABOUT_TEAM_PHOTO_SIZE } from "@/constants/about-team";
+import { TESTIMONIAL_VIDEO_POSTER_SIZE } from "@/constants/testimonials";
 
 // ───────────────────────── Field vocabulary ─────────────────────────
 
@@ -37,6 +41,7 @@ export type FieldDef = {
   type:
     | "text"
     | "textarea"
+    | "image"
     | "number"
     | "boolean"
     | "select"
@@ -54,9 +59,18 @@ export type FieldDef = {
   options?: { value: string; label: string }[];
   /** object-list */
   fields?: ObjectListSubField[];
+  /** blocks */
+  editor?: "rich-text";
+  /** image */
+  altFieldName?: string;
+  altFieldRequired?: boolean;
+  targetWidth?: number;
+  targetHeight?: number;
   /** list / object-list row noun, e.g. "FAQ", "step". */
   itemLabel?: string;
   defaultValue?: string | number | boolean;
+  /** Retain legacy values in the item payload without presenting obsolete controls. */
+  legacy?: boolean;
 };
 
 export type SeedItem = {
@@ -71,9 +85,12 @@ export type CollectionKey =
   | "insights"
   | "careers"
   | "case-studies"
+  | "testimonials"
+  | "team"
   | "hire"
   | "ai-services"
-  | "agents";
+  | "agents"
+  | "industry-dossiers";
 
 export type CollectionDef = {
   key: CollectionKey;
@@ -103,7 +120,7 @@ const insights: CollectionDef = {
   key: "insights",
   label: "Insights articles",
   singular: "article",
-  publicNote: "The /insights/ journal - index grid and reading pages.",
+  publicNote: "The /insights/ reading library and article pages. Only active Published articles appear publicly; no sample fallback.",
   titleField: "title",
   icon: "pen",
   fields: [
@@ -113,6 +130,7 @@ const insights: CollectionDef = {
       name: "cat",
       label: "Category",
       type: "select",
+      required: true,
       width: "half",
       options: [
         { value: "AI", label: "AI" },
@@ -121,23 +139,22 @@ const insights: CollectionDef = {
         { value: "Delivery", label: "Delivery" },
       ],
     },
-    { name: "date", label: "Date shown", type: "text", width: "half", placeholder: "Feb 2026", help: "Free-form, as displayed on the card." },
-    { name: "time", label: "Reading time", type: "text", width: "half", placeholder: "9 min read" },
-    { name: "image", label: "Image path", type: "text", width: "half", placeholder: "/images/architecture.webp", help: "File under public/images/." },
+    { name: "industrySlugs", label: "Related industries", type: "list", required: true, itemLabel: "industry", options: INDUSTRY_DOSSIERS.map((industry) => ({ value: industry.slug, label: industry.title })), help: "Choose one or more industries. Published articles appear in each selected industry’s reading list." },
+    { name: "image", label: "Cover image", type: "image", required: true, width: "full", altFieldName: "imageAlt", altFieldRequired: true, help: "Crop to 1600 × 900. Large uploads are resized and compressed for fast loading." },
     { name: "excerpt", label: "Excerpt", type: "textarea", rows: 3, required: true },
     {
       name: "body",
       label: "Body",
       type: "blocks",
+      editor: "rich-text",
+      required: true,
       itemLabel: "block",
-      help: "Reading-order blocks: paragraphs, headings and bullet lists.",
+      help: "Format as you write: choose heading levels and text sizes, emphasize text, add links or build lists. Unsafe markup is removed when saved.",
     },
   ],
   newDefaults: () => ({
     cat: "Engineering",
-    time: "5 min read",
-    date: new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" }),
-    image: "/images/architecture.webp",
+    image: "",
     excerpt: "",
     body: [{ p: "" }],
   }),
@@ -150,8 +167,6 @@ const insights: CollectionDef = {
         cat: a.cat,
         image: a.image,
         excerpt: a.excerpt,
-        time: a.time,
-        date: a.date,
         body: a.body as unknown,
       },
     })),
@@ -183,7 +198,7 @@ const careers: CollectionDef = {
     { name: "band", label: "Band (display)", type: "text", width: "half", placeholder: "₹18L to ₹30L" },
     { name: "ctcMin", label: "CTC min (₹ lakh/yr)", type: "number", width: "half", help: "Feeds the JobPosting salary range." },
     { name: "ctcMax", label: "CTC max (₹ lakh/yr)", type: "number", width: "half" },
-    { name: "blurb", label: "Blurb", type: "textarea", rows: 3 },
+    { name: "blurb", label: "Blurb", type: "textarea", rows: 3, required: true },
     { name: "duties", label: "What you will do", type: "list", itemLabel: "duty" },
     { name: "brings", label: "What you bring", type: "list", itemLabel: "point" },
   ],
@@ -502,13 +517,110 @@ const agents: CollectionDef = {
 
 // ──────────────────────────── Registry ──────────────────────────────
 
+const testimonials: CollectionDef = {
+  key: "testimonials",
+  label: "Testimonial videos",
+  singular: "testimonial video",
+  publicNote:
+    "Approved client stories shown in the homepage video section and project lead popup. The player uses a 16:9 frame; crop an optional poster to 1600 × 900. Only active Published records appear publicly.",
+  titleField: "name",
+  icon: "pen",
+  fields: [
+    { name: "name", label: "Client name", type: "text", required: true, width: "half", help: "As approved for public display." },
+    { name: "companyName", label: "Company name", type: "text", required: true, width: "half", help: "Use the client-approved public company name." },
+    { name: "location", label: "Location (optional)", type: "text", width: "half", placeholder: "City, country" },
+    {
+      name: "videoUrl",
+      label: "Video URL (optional)",
+      type: "text",
+      width: "full",
+      placeholder: "https://…/testimonial.mp4",
+      help: "Use a direct, same-origin MP4 or WebM URL, for example /uploads/testimonials/client-name.mp4. The homepage player displays it in a 16:9 frame."
+    },
+    {
+      name: "posterImage",
+      label: "Video poster image (optional)",
+      type: "image",
+      width: "full",
+      targetWidth: TESTIMONIAL_VIDEO_POSTER_SIZE.width,
+      targetHeight: TESTIMONIAL_VIDEO_POSTER_SIZE.height,
+      help: "Crop to 1600 × 900 px (16:9), matching the homepage video frame. This image appears while the video loads and when no video URL is supplied.",
+    },
+    { name: "quote", label: "Approved quote", type: "textarea", rows: 4, required: true, help: "Keep the approved written quote for the project enquiry popup." },
+    { name: "role", label: "Legacy role / company", type: "text", legacy: true },
+    { name: "country", label: "Legacy country", type: "text", legacy: true },
+    { name: "photoUrl", label: "Legacy portrait URL", type: "text", legacy: true },
+  ],
+  newDefaults: () => ({ name: "", companyName: "", location: "", videoUrl: "", posterImage: "", quote: "", role: "", country: "", photoUrl: "" }),
+  seeds: () => [], // never seed: demo preview lives in code; real quotes arrive via admin only
+};
+
+const team: CollectionDef = {
+  key: "team",
+  label: "About team",
+  singular: "team member",
+  publicNote: "Published team profiles and cropped portraits shared by the About team and Contact Key people sections. Only approved, active profiles are public.",
+  titleField: "name",
+  icon: "crew",
+  fields: [
+    { name: "name", label: "Name", type: "text", required: true, width: "half" },
+    { name: "role", label: "Role", type: "text", required: true, width: "half" },
+    { name: "photo", label: "Portrait photo", type: "image", required: true, altFieldName: "photoAlt", altFieldRequired: true, targetWidth: ABOUT_TEAM_PHOTO_SIZE.width, targetHeight: ABOUT_TEAM_PHOTO_SIZE.height, help: "Crop to the existing team portrait dimensions (560 × 840 px, 2:3). The crop tool compresses the image before saving; frontend display sizing is unchanged." },
+    { name: "linkedinUrl", label: "LinkedIn profile (optional)", type: "text", width: "half", placeholder: "https://www.linkedin.com/in/…" },
+    { name: "email", label: "Public email (optional)", type: "text", width: "half", placeholder: "name@example.com", help: "Only add an address approved for public display." },
+  ],
+  newDefaults: () => ({ name: "", role: "", photo: "", photoAlt: "", linkedinUrl: "", email: "" }),
+  seeds: () => [],
+};
+
+const industryDossiers: CollectionDef = {
+  key: "industry-dossiers", label: "Industry dossiers", singular: "industry dossier", icon: "folder", titleField: "title",
+  publicNote: "Full /industries chapters. Published + active records power the index, navigation and sitemap once imported. Drafts never resurrect coded pages. Case-study associations are edited in /admin/case-studies; article associations in Insights.",
+  fields: [
+    { name: "title", label: "Industry title", type: "text", required: true, width: "half" },
+    { name: "slug", label: "Canonical industry slug", type: "slug", required: true, width: "half", help: "Changing a canonical slug requires a redirect plan. Existing links use healthcare, fintech, ecommerce, logistics, real-estate, education, travel, manufacturing, government and energy." },
+    { name: "summary", label: "Index summary", type: "textarea", rows: 2 },
+    { name: "headline", label: "Hero headline", type: "textarea", rows: 2 },
+    { name: "lead", label: "Hero explanation", type: "textarea", rows: 3 },
+    { name: "overview", label: "Business context", type: "textarea", rows: 4 },
+    { name: "metaTitle", label: "SEO title", type: "text", width: "half" },
+    { name: "metaDescription", label: "SEO description", type: "textarea", rows: 2 },
+    { name: "image", label: "Editorial image path", type: "text", width: "half", help: "Optional approved local image under /images/. This is editorial sector imagery, not proof of a delivered project." },
+    { name: "imageAlt", label: "Image description", type: "text", width: "half" },
+    { name: "layout", label: "Ecosystem topology", type: "select", options: INDUSTRY_LAYOUTS.map(value => ({ value, label: value })), help: "Topology changes the connecting paths, not the factual content." },
+    { name: "ecosystemCore", label: "Shared system label", type: "text", width: "half" },
+    { name: "ecosystemTitle", label: "Ecosystem heading", type: "text", width: "half" },
+    { name: "ecosystemNodes", label: "Ecosystem actors (4–6 to publish)", type: "object-list", itemLabel: "actor", fields: [{ name: "title", label: "Actor", type: "text" }, { name: "role", label: "Stakeholders", type: "text" }, { name: "text", label: "Responsibility", type: "textarea" }] },
+    { name: "challenges", label: "Business challenges (3–6)", type: "object-list", itemLabel: "challenge", fields: [{ name: "title", label: "Challenge", type: "text" }, { name: "text", label: "Why it matters", type: "textarea" }] },
+    { name: "solutions", label: "Solution explorer (3–8)", type: "object-list", itemLabel: "solution", fields: [{ name: "title", label: "Solution", type: "text" }, { name: "text", label: "Description", type: "textarea" }, { name: "audience", label: "Who uses it", type: "text" }, { name: "workflow", label: "Workflow (steps separated with →)", type: "text" }, { name: "objective", label: "Business objective, not an achieved result", type: "textarea" }, { name: "service", label: "Canonical service slug", type: "text" }] },
+    { name: "aiOpportunities", label: "AI opportunities (2–6)", type: "object-list", itemLabel: "opportunity", fields: [{ name: "title", label: "Opportunity", type: "text" }, { name: "text", label: "Permitted assistance", type: "textarea" }, { name: "review", label: "Human review / decision boundary", type: "textarea" }] },
+    { name: "integrations", label: "Integration categories (2–12)", type: "list", itemLabel: "integration", help: "Categories to assess, not claims of certification or partner access." },
+    { name: "technologies", label: "Engineering considerations (2–12)", type: "list", itemLabel: "consideration" },
+    { name: "safeguards", label: "Security and engineering standards (3–8)", type: "object-list", itemLabel: "standard", fields: [{ name: "title", label: "Consideration", type: "text" }, { name: "text", label: "Requirements and responsible review", type: "textarea" }] },
+    { name: "outcomes", label: "Outcome objectives (2–6)", type: "object-list", itemLabel: "objective", fields: [{ name: "title", label: "Objective", type: "text" }, { name: "text", label: "Intended improvement", type: "textarea" }, { name: "measure", label: "How it could be evaluated (no fabricated results)", type: "textarea" }] },
+    { name: "relatedServices", label: "Related canonical service slugs (2–8)", type: "list", itemLabel: "service" },
+    { name: "relatedIndustries", label: "Related industry slugs (0–6)", type: "list", itemLabel: "industry" },
+    { name: "insightSlugs", label: "Curated insight slugs (0–8)", type: "list", itemLabel: "insight", help: "Only existing active, published managed articles are included. Missing records stay absent." },
+    { name: "faqs", label: "Sector questions (4–10)", type: "object-list", itemLabel: "question", fields: [{ name: "q", label: "Question", type: "text" }, { name: "a", label: "Answer", type: "textarea" }] },
+    { name: "ctaHeading", label: "Closing heading", type: "textarea", rows: 2 },
+    { name: "ctaText", label: "Closing explanation", type: "textarea", rows: 3 },
+    { name: "featured", label: "Feature in hub opening", type: "boolean" },
+    { name: "schemaEnabled", label: "Enable visible-content structured data", type: "boolean", defaultValue: true },
+  ],
+  newDefaults: () => ({ title: "", summary: "", headline: "", lead: "", overview: "", metaTitle: "", metaDescription: "", image: "", imageAlt: "", layout: "care", ecosystemCore: "", ecosystemTitle: "", ecosystemNodes: [], challenges: [], solutions: [], aiOpportunities: [], integrations: [], technologies: [], safeguards: [], outcomes: [], relatedServices: [], relatedIndustries: [], insightSlugs: [], faqs: [], ctaHeading: "", ctaText: "", featured: false, schemaEnabled: true }),
+  seeds: () => INDUSTRY_DOSSIERS.map((d, order) => ({ slug: d.slug, title: d.title, order, data: { ...d } })),
+};
+
 export const CONTENT_COLLECTIONS: Record<CollectionKey, CollectionDef> = {
   insights,
   careers,
   "case-studies": caseStudies,
+  testimonials,
+  team,
   hire,
   "ai-services": aiServices,
   agents,
+  "industry-dossiers": industryDossiers,
 };
 
 export const COLLECTION_KEYS = Object.keys(CONTENT_COLLECTIONS) as CollectionKey[];

@@ -22,6 +22,7 @@ export function CallbackForm() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [phone, setPhone] = useState("");
+  const [captchaActivated, setCaptchaActivated] = useState(false);
   const [name, setName] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const captcha = useCaptcha();
@@ -30,10 +31,12 @@ export function CallbackForm() {
   const [touched, setTouched] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
+  const pendingRef = useRef(false);
 
   const rule = countryName ? COUNTRY_PHONE_RULES[countryName] : null;
   // Digits only, hard-capped at the selected country's maximum.
   const digits = rule ? phone.replace(/\D/g, "").slice(0, rule.max) : "";
+  const captchaGate = captchaActivated ? captcha : { ...captcha, required: false };
   const valid = !!rule && digits.length >= rule.min;
   const digitsHint = rule ? (rule.min === rule.max ? `${rule.min} digits` : `${rule.min}–${rule.max} digits`) : "";
 
@@ -69,6 +72,7 @@ export function CallbackForm() {
   }, [open]);
 
   function chooseCountry(c: string) {
+    if (pendingRef.current) return;
     setCountryName(c);
     setOpen(false);
     setPhone("");
@@ -78,17 +82,20 @@ export function CallbackForm() {
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setTouched(true);
-    if (status === "submitting") return;
+    if (pendingRef.current || status === "submitting" || status === "success") return;
     if (!rule || !valid) return;
-    setStatus("submitting");
     setCaptchaErr(null);
-    if (captchaBlocked(captcha)) {
-      setCaptchaErr("Please complete the human verification.");
+    setError("");
+    if (captchaBlocked(captchaGate)) {
+      setStatus("idle");
+      setCaptchaErr("Please complete the human verification, then request a call back again.");
       return;
     }
+    const fd = new FormData(e.currentTarget);
+    pendingRef.current = true;
+    setStatus("submitting");
     track("enquiry_form_submit", { type: "callback" });
 
-    const fd = new FormData(e.currentTarget);
     try {
       const res = await fetch(withBasePath("/api/callback"), {
         method: "POST",
@@ -98,23 +105,25 @@ export function CallbackForm() {
           country: countryName,
           phone: `${rule.dial}${digits}`,
           website: (fd.get("cb-website") as string) || "",
-          captchaToken: captcha.token,
+          captchaToken: captchaGate.token,
         }),
       });
       const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (res.ok && json.ok) {
+      if (res.ok && json.ok === true) {
         captcha.refresh();
         setStatus("success");
         track("enquiry_form_success", { type: "callback" });
       } else {
-        // A rejected token is single-use - re-arm the widget for a retry.
-        if (res.status === 400) captcha.reset();
+        captcha.reset();
         setError(json.error ?? "Could not send your request. Please try again.");
         setStatus("error");
       }
     } catch {
+      captcha.reset();
       setError("Network error, please check your connection and try again.");
       setStatus("error");
+    } finally {
+      pendingRef.current = false;
     }
   }
 
@@ -124,14 +133,14 @@ export function CallbackForm() {
         <span aria-hidden="true" className="mb-4 block h-2.5 w-2.5 bg-accent" />
         <p className="t-h4">Request received.</p>
         <p className="t-sm mt-2 text-muted">
-          A senior consultant will call {rule?.flag} {rule?.dial} {digits} within two business hours.
+          You asked for a call on {rule?.dial} {digits}. Call timing depends on availability.
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={submit} noValidate className="grid min-w-0 gap-6">
+    <form onSubmit={submit} noValidate aria-busy={status === "submitting"} className="grid min-w-0 gap-6">
       {/* ONE row: compact country dropdown ┃ number input */}
       <div className="min-w-0">
         <label htmlFor="cb-phone" className="t-label mb-1.5 block text-muted">
@@ -149,6 +158,7 @@ export function CallbackForm() {
           <div ref={menuRef} className="relative shrink-0">
             <button
               type="button"
+              disabled={status === "submitting"}
               aria-haspopup="listbox"
               aria-expanded={open}
               aria-label={countryName ?? "Select country"}
@@ -188,6 +198,7 @@ export function CallbackForm() {
                     ref={searchRef}
                     type="text"
                     role="searchbox"
+                    disabled={status === "submitting"}
                     aria-label="Search countries"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -209,6 +220,7 @@ export function CallbackForm() {
                         <li key={c} role="option" aria-selected={c === countryName}>
                           <button
                             type="button"
+                            disabled={status === "submitting"}
                             onClick={() => chooseCountry(c)}
                             className={cn(
                               "flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[0.875rem] transition-colors",
@@ -239,7 +251,7 @@ export function CallbackForm() {
             inputMode="numeric"
             autoComplete="tel-national"
             aria-label="Phone number"
-            disabled={!rule}
+            disabled={!rule || status === "submitting"}
             maxLength={rule ? rule.max + 2 : 0}
             className={cn(
               "min-w-0 flex-1 bg-transparent py-2.5 pr-1 tnum text-[0.9375rem] text-foreground placeholder:text-muted focus:outline-none",
@@ -247,7 +259,10 @@ export function CallbackForm() {
             )}
             placeholder={rule ? `${digitsHint} after ${rule.dial}` : "Select your country first"}
             value={digits}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => {
+              setPhone(e.target.value);
+              if (e.target.value) setCaptchaActivated(true);
+            }}
             aria-invalid={touched && !valid}
             aria-describedby={touched && !valid ? "cb-phone-error" : undefined}
           />
@@ -270,6 +285,7 @@ export function CallbackForm() {
           <input
             id="cb-name"
             name="cb-name"
+            disabled={status === "submitting"}
             type="text"
             inputMode="text"
             autoComplete="name"
@@ -289,7 +305,7 @@ export function CallbackForm() {
           </label>
         </div>
 
-        <CaptchaGate captcha={captcha} error={captchaErr} />
+        <CaptchaGate captcha={captchaGate} error={captchaErr} />
         <button
           type="submit"
           disabled={status === "submitting"}

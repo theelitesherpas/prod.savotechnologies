@@ -3,15 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * Always-on reCAPTCHA v2 - client half.
+ * Google reCAPTCHA v2 - client half.
  *
- * useCaptcha() asks the server whether the gate is configured
- * (secret + site key); when it is, the CaptchaGate loads Google's
- * script and renders the challenge on every form. Forms block submit
- * until the token exists and send it as `captchaToken`.
- *
- * With no site key configured the gate reports required:false and
- * forms behave exactly as before (the server also fails open).
+ * Public enquiry/application forms ask the server whether verification
+ * is configured and require a token before submission. The callback
+ * form delays rendering until a phone number is entered; portal logins
+ * retain their failed-attempt threshold. Without a site key the gate is
+ * disabled, while the server still fails closed on partial setup.
  */
 
 declare global {
@@ -66,7 +64,7 @@ function loadScript(): Promise<void> {
 }
 
 export type CaptchaState = {
-  /** Server says the gate is configured - render the challenge. */
+  /** Server says this flow requires a challenge. */
   required: boolean;
   /** Solved token - send as captchaToken with the submission. */
   token: string | null;
@@ -78,10 +76,10 @@ export type CaptchaState = {
   refresh: () => void;
 };
 
-export function useCaptcha(): CaptchaState {
+export function useCaptcha(portal?: "admin" | "employee" | "client"): CaptchaState {
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-  const checkUrl = "/api/captcha/required";
-  const [required, setRequired] = useState(false);
+  const checkUrl = portal ? `/api/captcha/required?portal=${portal}` : "/api/captcha/required";
+  const [required, setRequired] = useState(() => !portal && Boolean(siteKey));
   const [token, setToken] = useState<string | null>(null);
 
   const refresh = useCallback(() => {

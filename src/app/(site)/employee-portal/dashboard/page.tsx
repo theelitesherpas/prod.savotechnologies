@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { leaveSummary, fmtDate, EMPLOYEE_STATUS_META } from "@/lib/employees";
 import { employeeLogoutAction } from "../actions";
 import { EmployeeSignOut } from "../sign-out";
+import { employeeAccessAllowed } from "@/lib/employee-access";
 
 export const metadata: Metadata = {
   title: "My Dashboard · Employee Portal",
@@ -26,7 +27,8 @@ export default async function EmployeeDashboard() {
       employee: { include: { leaves: { orderBy: { fromDate: "desc" } }, panelUsers: { take: 1, select: { id: true } } } },
     },
   });
-  if (!session || session.expiresAt < new Date()) redirect("/employee-portal");
+  if (!session || session.expiresAt <= new Date() || !employeeAccessAllowed(session.employee) ||
+      session.employee.panelUsers.length === 0) redirect("/employee-portal");
   const employee = session.employee;
   const lv = leaveSummary(employee, employee.leaves);
   const meta = EMPLOYEE_STATUS_META[employee.status] ?? EMPLOYEE_STATUS_META.active;

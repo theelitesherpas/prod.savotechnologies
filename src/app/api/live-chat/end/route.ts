@@ -6,9 +6,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/live-chat/end — the visitor ends the conversation. The thread
+ * POST /api/live-chat/end - the visitor ends the conversation. The thread
  * closes (agent keeps the record); the widget returns to the fresh
- * Ask Savo AI / Talk to a Human choice. { token? } — without a token the
+ * Ask Savo AI / Talk to a Human choice. { token? } - without a token the
  * visitor's resumable conversation is ended.
  */
 

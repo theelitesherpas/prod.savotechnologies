@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
-import { unsubscribeSig } from "@/lib/mail/templates";
+import { prisma } from "@/lib/prisma";
+import { unsubscribeSig } from "@/lib/mail/unsubscribe";
 
 /** One-click unsubscribe endpoint - Gmail/Outlook POST here directly
  *  (List-Unsubscribe-Post: One-Click). GET redirects humans to the
@@ -21,19 +22,19 @@ function sigValid(email: string, sig: string): boolean {
 }
 
 export async function POST(req: Request): Promise<Response> {
-  const { prisma } = await import("@/lib/prisma");
   const parsed = paramsFrom(new URL(req.url));
   if (!parsed || !sigValid(parsed.email, parsed.sig)) {
     return new Response("Invalid link", { status: 400 });
   }
-  if (prisma) {
-    await prisma.mailSuppress
-      .upsert({
-        where: { email: parsed.email },
-        update: {},
-        create: { email: parsed.email, reason: "one-click" },
-      })
-      .catch(() => undefined);
+  if (!prisma) return new Response(null, { status: 503, headers: { "Cache-Control": "no-store" } });
+  try {
+    await prisma.mailSuppress.upsert({
+      where: { email: parsed.email },
+      update: {},
+      create: { email: parsed.email, reason: "one-click" },
+    });
+  } catch {
+    return new Response(null, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
   return new Response(null, {
     status: 200,

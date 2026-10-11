@@ -7,11 +7,15 @@ export const PROJECT_TYPES = [
   "Website",
   "Mobile App",
   "AI / AI Agent",
+  "AI Automation",
   "SaaS",
   "Custom Software",
+  "Product Improvement",
+  "Hire / Dedicated Team",
   "UI/UX",
   "eCommerce",
   "Digital Marketing",
+  "Not Sure Yet",
   "Other",
 ] as const;
 

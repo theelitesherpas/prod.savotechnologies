@@ -5,7 +5,7 @@ import { CaptchaGate, useCaptcha, captchaBlocked } from "@/components/shared/cap
 
 /** Client captcha for the admin login form (server component parent). */
 export function AdminLoginCaptcha() {
-  const captcha = useCaptcha();
+  const captcha = useCaptcha("admin");
   const [captchaErr] = useState<string | null>(null);
 
   // Expose the token to the parent form via a hidden input

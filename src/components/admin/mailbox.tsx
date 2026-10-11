@@ -235,10 +235,7 @@ export function Mailbox({
       <div className="grid gap-4 lg:grid-cols-[190px_320px_minmax(0,1fr)]">
         {/* ── Folder rail ─────────────────────────────── */}
         <aside className="space-y-1.5" aria-label="Mail folders">
-          {([
-            ["inbox", `Inbox${unread ? ` · ${unread}` : ""}`],
-            ["sent", "Sent"],
-          ] as const).map(([key, label]) => (
+          {(["inbox", "sent"] as const).map((key) => (
             <button
               key={key}
               type="button"

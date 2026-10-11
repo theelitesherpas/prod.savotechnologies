@@ -1,4 +1,6 @@
+import "server-only";
 import { PrismaClient } from "@prisma/client";
+import { serverEnv } from "@/lib/server-env";
 
 /**
  * Prisma singleton - avoids exhausting connections during dev hot reloads.
@@ -9,6 +11,11 @@ const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient | null 
 
 export const prisma: PrismaClient | null =
   globalForPrisma.prisma ??
-  (process.env.DATABASE_URL ? new PrismaClient({ log: ["error"] }) : null);
+  (serverEnv.DATABASE_URL ? new PrismaClient({
+    datasources: { db: { url: serverEnv.DATABASE_URL } },
+    // Raw engine errors can contain SQL parameters; callers emit safe operational events.
+    log: [],
+  }) : null);
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+// One client per process/module realm in production too. This is NOT a cross-process pool.
+if (prisma) globalForPrisma.prisma = prisma;

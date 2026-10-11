@@ -6,7 +6,7 @@ import { PageHeader, Notice, Chip, DangerZone } from "@/components/admin/ui";
 import { AdminIcon } from "@/components/admin/icons";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
-import { SECTIONS } from "@/lib/permissions";
+import { requireAdminPage, SECTIONS } from "@/lib/permissions";
 import { createUserAction, updateUserAction, deleteUserAction, updateUserEmailAction, resetUserPasswordAction } from "./actions";
 
 export const metadata: Metadata = { title: "Panel users" };
@@ -16,6 +16,7 @@ export default async function UsersPage({
 }: {
   searchParams: Promise<{ saved?: string; e?: string }>;
 }) {
+  await requireAdminPage("/admin/users");
   const user = await getAdminUser();
   if (user?.role !== "admin") redirect("/admin");
   const sp = await searchParams;

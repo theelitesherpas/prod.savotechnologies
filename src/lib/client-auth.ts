@@ -1,8 +1,9 @@
 import "server-only";
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { cache } from "react";
-import bcrypt from "bcryptjs";
+import { DUMMY_PASSWORD_HASH, hashPassword, verifyPassword } from "@/lib/passwords";
+export { hashPassword, verifyPassword };
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
@@ -24,7 +25,6 @@ import { clientIpFromHeaders } from "@/lib/api";
 export const CLIENT_COOKIE = "savo_client";
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12h workday session
 const LOGIN_LIMIT = 8; // attempts per IP / per email per 15min
-const BCRYPT_ROUNDS = 12;
 
 export type ClientSessionUser = {
   id: string;
@@ -35,21 +35,6 @@ export type ClientSessionUser = {
 
 export function hashClientToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
-}
-
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  try {
-    const digest = bcrypt.hashSync(password, hash.slice(0, 29) as Parameters<typeof bcrypt.hashSync>[1]);
-    const a = Buffer.from(digest);
-    const b = Buffer.from(hash);
-    return a.length === b.length && timingSafeEqual(a, b);
-  } catch {
-    return false;
-  }
-}
-
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, BCRYPT_ROUNDS);
 }
 
 async function requestIp(): Promise<string> {
@@ -65,23 +50,26 @@ export async function loginClient(
   email: string,
   password: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (typeof email !== "string" || email.length > 160 || typeof password !== "string" || password.length > 200) return { ok: false, error: "Email or password is incorrect." };
   const normalized = email.trim().toLowerCase();
   const ip = await requestIp();
 
   if (
     !rateLimit(`client-login-ip:${ip}`, LOGIN_LIMIT, 15 * 60 * 1000).ok ||
-    !rateLimit(`client-login-email:${normalized}`, LOGIN_LIMIT, 15 * 60 * 1000).ok
+    !rateLimit(`client-login-email:${hashClientToken(normalized)}`, LOGIN_LIMIT, 15 * 60 * 1000).ok
   ) {
     return { ok: false, error: "Too many attempts. Please try again in a few minutes." };
   }
 
   const client = prisma
-    ? await prisma.clientUser.findUnique({ where: { email: normalized } }).catch(() => null)
+    ? await prisma.clientUser.findUnique({ where: { email: normalized }, select: {
+        id: true, active: true, passwordHash: true,
+      } }).catch(() => null)
     : null;
 
-  const passwordOk = client ? await verifyPassword(password, client.passwordHash) : false;
+  const passwordOk = await verifyPassword(password, client?.passwordHash ?? DUMMY_PASSWORD_HASH);
   if (!client || !client.active || !passwordOk) {
-    logger.warn("client_auth.login_failed", { email: normalized, hasClient: Boolean(client) });
+    logger.warn("client_auth.login_failed");
     return { ok: false, error: "Email or password is incorrect." };
   }
 
@@ -104,7 +92,7 @@ export async function loginClient(
     maxAge: SESSION_TTL_MS / 1000,
   });
 
-  logger.info("client_auth.login", { email: normalized });
+  logger.info("client_auth.login", { clientId: client.id });
   return { ok: true };
 }
 
@@ -133,7 +121,7 @@ export const getClientUser = cache(async (): Promise<ClientSessionUser | null> =
         client: { select: { id: true, email: true, name: true, company: true, active: true } },
       },
     });
-    if (!row || row.expiresAt < new Date() || !row.client.active) return null;
+    if (!row || row.expiresAt <= new Date() || !row.client.active) return null;
     return {
       id: row.client.id,
       email: row.client.email,

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
-import { env } from "@/lib/env";
+import { serverEnv } from "@/lib/server-env";
 import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
 import { validatePhone, COUNTRY_PHONE_RULES } from "@/lib/phone";
 import { logger } from "@/lib/logger";
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     return apiOk();
   }
 
-  // Always-on captcha: every request must carry a verified token.
+  // Verify every callback request when Google reCAPTCHA is configured.
   const rawBody = body.data as Record<string, unknown>;
   const cap = await enforceCaptcha(ip, rawBody.captchaToken);
   if (!cap.ok) {
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
           ip === "unknown"
             ? null
             : createHash("sha256")
-                .update(`${env.ENQUIRY_IP_SALT}:${ip}`)
+                .update(`${serverEnv.ENQUIRY_IP_SALT}:${ip}`)
                 .digest("hex")
                 .slice(0, 32),
       },

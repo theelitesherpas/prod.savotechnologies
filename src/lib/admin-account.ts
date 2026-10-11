@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { sendMailNow } from "@/lib/mail";
 import { logger } from "@/lib/logger";
 import { verifyPassword } from "@/lib/auth";
+import { passwordFitsBcrypt } from "@/lib/passwords";
 
 export const accountNameSchema = z.string().trim().min(2).max(120);
 export const accountEmailSchema = z.string().trim().toLowerCase().email().max(160);
@@ -17,6 +18,7 @@ export const accountPasswordSchema = z
   .string()
   .min(10, "Use at least 10 characters.")
   .max(200)
+  .refine(passwordFitsBcrypt, "Use at most 72 UTF-8 bytes for this password.")
   .regex(/[a-zA-Z]/, "Include at least one letter.")
   .regex(/[0-9]/, "Include at least one number.");
 

@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
-import { env } from "@/lib/env";
-import { clientIp } from "@/lib/api";
+import { serverEnv } from "@/lib/server-env";
+import { clientIp, readJsonBody } from "@/lib/api";
 import { logger } from "@/lib/logger";
-import { lookupGeo } from "@/lib/geo";
+import { publicTelemetryPath, publicTelemetryUrl } from "@/lib/telemetry-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,41 +37,30 @@ export async function POST(req: Request) {
     const ua = req.headers.get("user-agent") ?? "";
     if (!ua || BOT_UA.test(ua)) return new Response(null, { status: 204 });
 
-    let body: Record<string, unknown>;
-    try {
-      body = (await req.json()) as Record<string, unknown>;
-    } catch {
-      return new Response(null, { status: 204 });
-    }
+    const parsed = await readJsonBody(req);
+    if (!parsed.ok || !parsed.data || typeof parsed.data !== "object" || Array.isArray(parsed.data)) return new Response(null, { status: 204 });
+    const body = parsed.data as Record<string, unknown>;
 
     const type = cap(body.type, 12);
     const path = cap(body.path, 300);
     if (!type || !TYPES.has(type) || !path || !path.startsWith("/")) {
       return new Response(null, { status: 204 });
     }
-    // Query strings are stripped - paths only, never PII.
-    const cleanPath = ("/" + path.split("?")[0].replace(/^\/+/, "")).slice(0, 300);
+    const publicPath = publicTelemetryPath(path);
+    if (!publicPath) return new Response(null, { status: 204 });
+    const cleanPath = publicPath.slice(0, 300);
 
     const device = cap(body.device, 10);
     const eventName = cap(body.eventName, 80);
     const referrerFull = cap(body.referrer, 500);
     // Store the referrer without its query string (may contain UPI ids /
     // emails in weird cases) - host + path is all reporting needs.
-    const referrer =
-      referrerFull && /^https?:\/\//i.test(referrerFull)
-        ? (() => {
-            try {
-              const u = new URL(referrerFull);
-              return (u.host + u.pathname).slice(0, 300);
-            } catch {
-              return null;
-            }
-          })()
-        : null;
+    const publicReferrer = publicTelemetryUrl(referrerFull);
+    const referrer = publicReferrer ? publicReferrer.replace(/^https?:\/\//, "").slice(0, 300) : null;
 
-    // Daily salted hash → uniques per day, unlinkable across days.
+    // Daily rotating pseudonym for rough uniques, NOT guaranteed anonymity or unlinkability.
     const day = new Date().toISOString().slice(0, 10);
-    const saltBase = env.ENQUIRY_IP_SALT || "dev-salt";
+    const saltBase = serverEnv.ENQUIRY_IP_SALT || "dev-salt";
     const visitorHash = createHash("sha256")
       .update(`${saltBase}:${day}:${ip}:${ua}`)
       .digest("hex")
@@ -81,8 +70,8 @@ export async function POST(req: Request) {
     const lang = cap(body.lang, 12);
     const meta = lang && /^[a-z]{2}(-[a-zA-Z]{2,4})?$/i.test(lang) ? { lang: lang.slice(0, 8) } : undefined;
 
-    // Geo lookup (cached, non-blocking on failure)
-    const geo = await lookupGeo(ip);
+    // No raw-IP third-party lookup. Geography remains unset until an approved,
+    // secure integration and accurate privacy/retention policy are established.
 
     await prisma.analyticsEvent.create({
       data: {
@@ -92,15 +81,14 @@ export async function POST(req: Request) {
         referrer,
         device: device && DEVICES.has(device) ? device : null,
         visitorHash,
-        ...(geo.country ? geo : {}),
         ...(meta ? { meta } : {}),
       },
     });
 
     return new Response(null, { status: 204 });
-  } catch (err) {
-    // Analytics must never surface errors to visitors.
-    logger.error("analytics collect failed", { err: String(err).slice(0, 200) });
+  } catch {
+    // Do not echo database errors containing private beacon fields.
+    logger.error("analytics collect failed");
     return new Response(null, { status: 204 });
   }
 }

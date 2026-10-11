@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { env } from "@/lib/env";
+import { serverEnv } from "@/lib/server-env";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,7 @@ export async function GET() {
     ok: db === "up",
     status: db,
     version: process.env.npm_package_version ?? "0.1.0",
-    env: env.NODE_ENV,
+    env: serverEnv.NODE_ENV,
     time: new Date().toISOString(),
   };
 

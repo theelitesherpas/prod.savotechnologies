@@ -12,7 +12,7 @@ export default async function PortalInvoicesPage() {
   const invoices = await prisma.invoice.findMany({
     where: { clientId: client.id, status: { notIn: ["draft"] } },
     orderBy: { issuedAt: "desc" },
-    include: { project: { select: { code: true, title: true } } },
+    include: { project: { where: { clientId: client.id }, select: { code: true, title: true } } },
   });
 
   const totals = invoices.reduce(

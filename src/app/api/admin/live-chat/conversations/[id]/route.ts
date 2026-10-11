@@ -6,7 +6,7 @@ import { getConversationById, toDetailDTO, markRead } from "@/lib/livechat/servi
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET /api/admin/live-chat/conversations/[id] — full thread + lead context. */
+/** GET /api/admin/live-chat/conversations/[id] - full thread + lead context. */
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireChatAgent();

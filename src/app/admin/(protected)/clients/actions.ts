@@ -9,6 +9,13 @@ import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { sendTemplateNow } from "@/lib/mail";
 import { hashPassword, generateClientPassword } from "@/lib/client-auth";
+import { passwordFitsBcrypt } from "@/lib/passwords";
+import { consumeClientPasswordReceipt, setClientPasswordReceipt } from "@/lib/client-password-receipt";
+
+export type ClientPasswordReceiptState =
+  | { status: "idle" }
+  | { status: "expired" }
+  | { status: "revealed"; kind: "created" | "reset"; password: string };
 
 /**
  * Client account mutations (admin). Passwords are generated server-side
@@ -39,8 +46,13 @@ export async function createClientAction(formData: FormData): Promise<void> {
   });
   if (!parsed.success) redirect(slugError("Check the fields - name and a valid email are required."));
 
-  const password = formData.get("password")?.toString().trim() || generateClientPassword();
-  if (password.length < 10) redirect(slugError("Password must be at least 10 characters."));
+  const submittedPassword = formData.get("password");
+  const password = typeof submittedPassword === "string" && submittedPassword.trim()
+    ? submittedPassword.trim()
+    : generateClientPassword();
+  if (password.length < 10 || password.length > 64 || !passwordFitsBcrypt(password)) {
+    redirect(slugError("Password must be 10–64 characters and fit the supported password limit."));
+  }
 
   try {
     const client = await prisma.clientUser.create({
@@ -57,8 +69,9 @@ export async function createClientAction(formData: FormData): Promise<void> {
     redirect(slugError("That email is already registered."));
   }
 
+  await setClientPasswordReceipt(user.id, "created", password);
   revalidatePath("/admin/clients");
-  redirect(`/admin/clients?created=1&pw=${encodeURIComponent(password)}`);
+  redirect("/admin/clients?created=1");
 }
 
 export async function updateClientAction(formData: FormData): Promise<void> {
@@ -103,13 +116,32 @@ export async function resetClientPasswordAction(formData: FormData): Promise<voi
   if (!client) redirect(slugError("Client not found."));
 
   const password = generateClientPassword();
-  await prisma.clientUser.update({ where: { id }, data: { passwordHash: await hashPassword(password) } });
-  // Revoke existing sessions on reset
-  await prisma.clientSession.deleteMany({ where: { clientId: id } }).catch(() => undefined);
+  const passwordHash = await hashPassword(password);
+  try {
+    await prisma.$transaction([
+      prisma.clientUser.update({ where: { id }, data: { passwordHash } }),
+      prisma.clientSession.deleteMany({ where: { clientId: id } }),
+    ]);
+  } catch {
+    redirect(slugError("Password reset failed; no changes were applied."));
+  }
   await audit(user.id, "client.passwordReset", "ClientUser", client.email);
   sendTemplateNow("clientPasswordReset", client.email, { name: client.name, password });
+  await setClientPasswordReceipt(user.id, "reset", password);
 
-  redirect(`/admin/clients?reset=1&pw=${encodeURIComponent(password)}`);
+  redirect("/admin/clients?reset=1");
+}
+
+export async function revealClientPasswordReceiptAction(
+  _previousState: ClientPasswordReceiptState,
+  _formData: FormData,
+): Promise<ClientPasswordReceiptState> {
+  void _previousState;
+  void _formData;
+  const user = await requireAdmin();
+  await requireSection("clients");
+  const receipt = await consumeClientPasswordReceipt(user.id);
+  return receipt ? { status: "revealed", ...receipt } : { status: "expired" };
 }
 
 export async function deleteClientAction(formData: FormData): Promise<void> {

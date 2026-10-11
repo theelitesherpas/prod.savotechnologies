@@ -1,123 +1,37 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CAREERS_EMAIL, HIRING_STEPS } from "@/constants/careers";
+import { CAREERS_EMAIL, GENERAL_APPLICATION, roleSlug, toPublicRole } from "@/constants/careers";
 import { getManagedRoles } from "@/lib/content-items";
-import { Reveal } from "@/components/ui/reveal";
+import { ClosingArrow } from "@/components/shared/closing-cta";
 import { ApplicationForm } from "@/sections/careers/application-form";
-
-/**
- * Apply - the application form with the role preselected via ?role=slug
- * (version-1 flow). Noindex: applications should enter through the
- * careers page, not search results.
- */
+import s from "@/sections/careers/careers.module.css";
 
 export const metadata: Metadata = {
-  title: "Apply",
-  description:
-    "Apply for a role at Savo Technologies. One form, ten minutes, a personal reply within two business days.",
+  title: "Apply", description: "Introduce yourself to Savo Technologies. Share your skills, experience and the work you want to do.",
   robots: { index: false, follow: false },
 };
-
-function slugify(t: string) {
-  return t.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-}
-
-export default async function CareersApplyPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ role?: string }>;
-}) {
+export default async function CareersApplyPage({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
   const { role } = await searchParams;
-  const ROLES = await getManagedRoles();
-  // Public shape only - compensation fields never reach the client payload.
-  const publicRoles = ROLES.map(({ band: _band, ctc: _ctc, ...role }) => role);
-  const match = publicRoles.find((r) => slugify(r.title) === (role ?? "").replace(/^\/|\/$/g, ""));
-  const initialRole = match?.title;
-
-  return (
-    <>
-      <section aria-labelledby="apply-heading" className="relative overflow-hidden">
-        <div className="shell pb-16 pt-[calc(var(--nav-h)+4.5rem)] sm:pb-20">
-          {/* Index rail */}
-          <div aria-hidden="true" className="mb-12 flex items-center gap-4 sm:mb-14">
-            <span className="t-label tnum text-muted">
-              <Link href="/careers" className="transition-colors hover:text-foreground">
-                Careers
-              </Link>{" "}
-             Apply
-            </span>
-            <span className="h-px flex-1 bg-border" />
-          </div>
-
-          <div className="grid items-end gap-8 lg:grid-cols-12">
-            <div className="lg:col-span-8">
-              <Reveal>
-                <h1 id="apply-heading" className="t-dl">
-                  {match ? `Apply: ${match.title}` : "Apply to join Savo."}
-                </h1>
-              </Reveal>
-              <Reveal delay={120}>
-                <p className="t-body-lg mt-6 max-w-xl text-muted">
-                  {match
-                    ? `${match.track} · ${match.exp} · Full time, office-first in Indore with hybrid options.`
-                    : "Pick the role that fits inside the form and tell us about yourself. Ten minutes, one form."}
-                </p>
-              </Reveal>
-            </div>
-          </div>
-
-          <div className="mt-14 grid gap-10 lg:grid-cols-12">
-            {/* Form */}
-            <div className="lg:col-span-7">
-              <Reveal delay={160}>
-                <div className="border border-border bg-surface p-7 sm:p-10">
-                  <ApplicationForm initialRole={initialRole} roles={publicRoles} />
-                </div>
-              </Reveal>
-            </div>
-
-            {/* Aside, process + questions */}
-            <aside className="lg:col-span-5 lg:pt-1" aria-label="Application process and contact">
-              <Reveal delay={220} className="space-y-6">
-                <div className="border border-border p-7 sm:p-8">
-                  <div className="mb-5 flex items-center gap-3">
-                    <span aria-hidden="true" className="h-2 w-2 bg-accent" />
-                    <h2 className="t-h4">What happens next</h2>
-                  </div>
-                  <ol className="divide-y divide-border border-y border-border">
-                    {HIRING_STEPS.map((step) => (
-                      <li key={step.step} className="flex gap-5 py-4 first:pt-5 last:pb-5">
-                        <span className="t-label tnum mt-1 shrink-0 text-accent">{step.step}</span>
-                        <div>
-                          <p className="t-sm font-semibold text-foreground">{step.title}</p>
-                          <p className="t-caption mt-1 leading-relaxed text-muted">{step.text}</p>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-
-                <div className="chapter-ink border border-border bg-background p-7 text-foreground sm:p-8">
-                  <div className="mb-4 flex items-center gap-3">
-                    <span aria-hidden="true" className="h-2 w-2 bg-accent" />
-                    <h2 className="t-h4">Questions first?</h2>
-                  </div>
-                  <p className="t-sm text-muted">
-                    Write to{" "}
-                    <a
-                      href={`mailto:${CAREERS_EMAIL}`}
-                      className="link-underline font-semibold text-foreground"
-                    >
-                      {CAREERS_EMAIL}
-                    </a>{" "}
-                    and a human replies, usually the same day.
-                  </p>
-                </div>
-              </Reveal>
-            </aside>
-          </div>
-        </div>
-      </section>
-    </>
-  );
+  const roles = await getManagedRoles();
+  const publicRoles = roles.map(toPublicRole);
+  const match = publicRoles.find(item => roleSlug(item.title) === (role ?? "").replace(/^\/|\/$/g, ""));
+  const initialRole = role === roleSlug(GENERAL_APPLICATION) ? GENERAL_APPLICATION : match?.title;
+  return <div className={s.page} data-careers-page="apply">
+    <section className={s.applyIntro} aria-labelledby="apply-heading"><div className={s.rail}>
+      <Link href="/careers" className={s.backLink}><ClosingArrow /> Back to careers</Link>
+      <h1 id="apply-heading">Introduce yourself.</h1>
+      <p>{match ? `Apply for ${match.title}. Tell us about your experience and what you would bring to the role.` : "Tell us about your skills and the work you want to do. A short introduction is enough."}</p>
+    </div></section>
+    <section className={s.applyBody} aria-label="Your application"><div className={s.rail}><div className={s.applyWorkspace}>
+      <div className={s.workspaceBar}><span className={s.workspaceMark} aria-hidden="true">S</span><span>Your application</span><span className={s.path}>/careers/apply</span></div>
+      <aside className={s.applySidebar} aria-label="Application guide"><div>
+        <nav aria-label="Application sections"><Link href="#your-details"><ClosingArrow /> Your details</Link><Link href="#availability"><ClosingArrow /> Skills & availability</Link><Link href="#your-work"><ClosingArrow /> Your work</Link></nav>
+        <h2>Before you send</h2><ul><li>Check your contact details.</li><li>Make shared links accessible.</li><li>Keep confidential work private.</li></ul>
+        <h2>Need a hand?</h2><p>Ask HR about the role or your application.</p><a href={`mailto:${CAREERS_EMAIL}`}>{CAREERS_EMAIL}</a>
+      </div></aside>
+      <div className={s.applyCanvas}><ApplicationForm initialRole={initialRole} roles={publicRoles} />
+        <noscript><p>JavaScript is needed to submit this form. You can also email HR at <a href={`mailto:${CAREERS_EMAIL}`}>{CAREERS_EMAIL}</a>.</p></noscript>
+      </div>
+    </div></div></section>
+  </div>;
 }

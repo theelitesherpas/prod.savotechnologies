@@ -6,7 +6,7 @@ import { CaptchaGate, useCaptcha, captchaBlocked } from "@/components/shared/cap
 import { employeeLoginAction } from "./actions";
 
 export function EmployeeLoginForm() {
-  const captcha = useCaptcha();
+  const captcha = useCaptcha("employee");
   const [captchaErr, setCaptchaErr] = useState<string | null>(null);
 
   return (

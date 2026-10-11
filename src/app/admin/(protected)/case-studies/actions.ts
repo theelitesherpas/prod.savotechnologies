@@ -87,6 +87,12 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
   if (!data.integrations || data.integrations.length === 0) missing.push("Integrations (1 min)");
   if (!data.palette || data.palette.length === 0) missing.push("Palette (1 color min)");
   if (!data.testimonial) missing.push("Client testimonial");
+  if (!data.liveUrl) missing.push("Live project URL");
+  if (!data.authorName?.trim()) missing.push("Author credit");
+  if (!data.industrySlugs?.length) missing.push("Industry associations (1 min)");
+  if (!data.keyFeatures?.length) missing.push("Key features (1 min)");
+  if (!data.services?.length) missing.push("Service capabilities (1 min)");
+  if (!data.technologies?.length) missing.push("Technology stack (1 min)");
   const downgradedToDraft = missing.length > 0 && form.data.contentStatus === "published";
   const effectiveStatus = downgradedToDraft ? "draft" : form.data.contentStatus;
   const slug = form.data.slug || slugifyCaseStudy(data.title);

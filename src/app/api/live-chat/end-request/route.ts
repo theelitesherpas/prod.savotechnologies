@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/live-chat/end-request — the visitor's answer to an agent's
+ * POST /api/live-chat/end-request - the visitor's answer to an agent's
  * "shall we end the chat?" request. { token, accept: boolean }
  */
 

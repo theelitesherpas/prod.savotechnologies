@@ -1,0 +1,120 @@
+{
+  "privacy": {
+    "heading": "Privacy Policy.",
+    "lead": "Plain language about what this website collects and why. Last reviewed at launch.",
+    "sections": [
+      {
+        "title": "Who we are",
+        "body": [
+          "Savo Technologies, operating as Savo Technologies Private Limited, maintains this website. Questions about this policy or your data can be sent to hello@savotechnologies.com."
+        ]
+      },
+      {
+        "title": "Information we collect",
+        "body": [
+          "When you submit an enquiry, project brief or callback request, we collect the details you provide: your name, email address, phone number, company and a description of your project.",
+          "Our server logs record technical request data such as IP address, browser and timestamps. IP addresses are hashed with a server-side pepper before storage and are used only for abuse prevention.",
+          "If Google Analytics is enabled, it collects standard usage metrics. You can block analytics scripts with any standard browser setting or extension."
+        ]
+      },
+      {
+        "title": "How we use information",
+        "body": [
+          "Enquiry and callback information is used solely to respond to your request and to discuss potential work. We do not sell, rent or trade personal information to third parties.",
+          "Aggregated, non-identifying statistics may be used to improve the website."
+        ]
+      },
+      {
+        "title": "Retention",
+        "body": [
+          "Enquiry records are retained only as long as needed to serve the enquiry and meet legal or business record requirements. You may request deletion of your enquiry records at any time by emailing us."
+        ]
+      },
+      {
+        "title": "Cookies",
+        "body": [
+          "This site uses only functional cookies. Editors and administrators receive a strictly necessary session cookie for authentication. No advertising or cross-site tracking cookies are set by us."
+        ]
+      },
+      {
+        "title": "Your rights",
+        "body": [
+          "You may request access to, correction of, or deletion of personal information we hold about you by writing to hello@savotechnologies.com. We respond to verified requests within a reasonable period."
+        ]
+      },
+      {
+        "title": "Security",
+        "body": [
+          "Information is transmitted over HTTPS and stored with access controls. No internet transmission is perfectly secure, but we apply the same engineering standards to this website that we apply to client systems."
+        ]
+      },
+      {
+        "title": "Changes to this policy",
+        "body": [
+          "If this policy changes, the revised version will be published on this page. Continued use of the site after changes constitutes acceptance of the updated policy."
+        ]
+      },
+      {
+        "title": "Contact",
+        "body": [
+          "Savo Technologies Private Limited, Indore, Madhya Pradesh, India. Email: hello@savotechnologies.com. Phone: +91 75029 01234."
+        ]
+      }
+    ]
+  },
+  "terms": {
+    "heading": "Terms and Conditions.",
+    "lead": "The short, honest version: this site is informational, and real projects run on signed agreements.",
+    "sections": [
+      {
+        "title": "Acceptance",
+        "body": [
+          "By using this website you agree to these terms. The site is operated by Savo Technologies Private Limited, Indore, Madhya Pradesh, India."
+        ]
+      },
+      {
+        "title": "Purpose of this website",
+        "body": [
+          "This website presents information about Savo Technologies and provides enquiry and contact forms. It is informational; nothing on it constitutes a binding offer, a quote or professional advice.",
+          "Any engagement, project or service relationship is formed only through a separate written agreement signed by both parties."
+        ]
+      },
+      {
+        "title": "Acceptable use",
+        "body": [
+          "You agree not to misuse this website: no automated scraping that degrades the service, no submitting false or abusive enquiries, and no attempts to access non-public areas without authorization."
+        ]
+      },
+      {
+        "title": "Intellectual property",
+        "body": [
+          "The design, text and code of this website are owned by Savo Technologies. Case study and portfolio descriptions remain the property of the company and its clients as applicable."
+        ]
+      },
+      {
+        "title": "No warranties",
+        "body": [
+          "The website is provided as is. We work to keep information accurate and current, but content may change and we do not warrant uninterrupted availability."
+        ]
+      },
+      {
+        "title": "Limitation of liability",
+        "body": [
+          "To the extent permitted by law, Savo Technologies is not liable for indirect or consequential losses arising from use of this website."
+        ]
+      },
+      {
+        "title": "Governing law",
+        "body": [
+          "These terms are governed by the laws of India, with jurisdiction in the courts of Indore, Madhya Pradesh. [Company to confirm before production launch.]"
+        ]
+      },
+      {
+        "title": "Contact",
+        "body": [
+          "hello@savotechnologies.com · +91 75029 01234"
+        ]
+      }
+    ]
+  }
+}

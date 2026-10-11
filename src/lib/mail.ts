@@ -1,9 +1,11 @@
+import "server-only";
+import { liveMailAllowed } from "@/lib/mail/delivery-policy";
 import nodemailer, { type Transporter } from "nodemailer";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import type { MailTemplate } from "@/lib/mail/templates";
 import { fillText, bodyToHtml, bodyToText, templateEntry } from "@/lib/mail/registry";
-import { unsubscribeUrl } from "@/lib/mail/templates";
+import { unsubscribeUrl, withSignedUnsubscribe } from "@/lib/mail/unsubscribe";
 
 /**
  * Transactional mail sender - one SMTP transport, every template.
@@ -22,8 +24,9 @@ import { unsubscribeUrl } from "@/lib/mail/templates";
  * SES, Zoho…) is an env change, not a code change.
  *
  * Contract: mail NEVER breaks the action that triggered it - sendMail
- * catches its own failures and logs them. When MAIL_HOST is unset
- * (local/dev), templates render to the log so behavior is inspectable.
+ * catches its own failures. Delivery requires MAIL_DELIVERY_MODE=live,
+ * NODE_ENV=production and production content. Off/demo/test never creates
+ * an SMTP transport; private template content is never echoed into logs.
  */
 
 const TEAM_EMAIL_DEFAULT = "hello@savotechnologies.com";
@@ -86,19 +89,41 @@ export async function sendMail(
   dept: "hello" | "hr" = "hello",
   meta?: { templateKey?: string; sentBy?: string; toName?: string },
 ): Promise<boolean> {
+  if (!liveMailAllowed()) {
+    logger.info("mail.delivery_disabled", { dept });
+    return false;
+  }
+  if (tpl.unsubscribeEmail) {
+    const email = tpl.unsubscribeEmail.toLowerCase().trim();
+    if (!prisma) {
+      logger.warn("mail.suppression_unavailable", { templateKey: meta?.templateKey ?? null });
+      return false;
+    }
+    try {
+      const suppressed = await prisma.mailSuppress.findUnique({ where: { email } });
+      if (suppressed) {
+        logger.info("mail: suppressed send skipped", { templateKey: meta?.templateKey ?? null });
+        return false;
+      }
+    } catch {
+      logger.warn("mail.suppression_check_failed", { templateKey: meta?.templateKey ?? null });
+      return false;
+    }
+  }
+  tpl = withSignedUnsubscribe(tpl);
   const wantHr = dept === "hr";
   let t = wantHr ? hrTransport() : transport();
   let from = mailFrom();
   if (wantHr && !t) {
     // HR mailbox not configured - fall back to the default mailbox.
-    logger.info("mail: hr mailbox not configured, sending via default", { to });
+    logger.info("mail: hr mailbox not configured, sending via default");
     t = transport();
   } else if (wantHr) {
     const user = process.env.MAIL_HR_USER || "hr@savotechnologies.com";
     from = `Savo Technologies <${user}>`;
   }
   if (!t) {
-    logger.info("mail: not configured, would send", { to, subject: tpl.subject, dept });
+    logger.info("mail: not configured", { dept });
     return false;
   }
   try {
@@ -122,7 +147,7 @@ export async function sendMail(
           }
         : {}),
     });
-    logger.info("mail: sent", { to, subject: tpl.subject.slice(0, 80), dept });
+    logger.info("mail: sent", { dept });
     // Sent-folder log - never blocks or fails the send itself.
     try {
       const { prisma } = await import("./prisma");
@@ -144,8 +169,8 @@ export async function sendMail(
       /* logging is best-effort */
     }
     return true;
-  } catch (err) {
-    logger.error("mail: send failed", { to, subject: tpl.subject, err: String(err).slice(0, 300) });
+  } catch {
+    logger.error("mail: send failed", { dept });
     return false;
   }
 }
@@ -186,8 +211,8 @@ export async function renderTemplate(
         unsubscribeEmail: entry.recipient === "customer" && to ? to : undefined,
       };
     }
-  } catch (err) {
-    logger.error("mail: override lookup failed, using default", { key, err: String(err).slice(0, 200) });
+  } catch {
+    logger.error("mail: override lookup failed, using default", { key });
   }
   const clean: Record<string, string> = {};
   for (const [k, v] of Object.entries(vars)) if (v !== null && v !== undefined) clean[k] = String(v);
@@ -205,19 +230,6 @@ export function sendTemplateNow(
 ): void {
   void (async () => {
     const entry = templateEntry(key);
-    // Honour one-click unsubscribes for customer-facing mail; team and
-    // portal-service mail (invoices, milestones) always delivers.
-    if (entry?.recipient === "customer" && prisma) {
-      try {
-        const suppressed = await prisma.mailSuppress.findUnique({ where: { email: to.toLowerCase() } });
-        if (suppressed) {
-          logger.info("mail: suppressed send skipped", { key, to });
-          return;
-        }
-      } catch {
-        /* suppression check is best-effort */
-      }
-    }
     const tpl = await renderTemplate(key, vars, to);
     if (tpl) await sendMail(to, tpl, entry?.dept ?? "hello");
     else logger.error("mail: unknown template key", { key });

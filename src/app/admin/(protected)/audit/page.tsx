@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { fmtISTFull } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +13,7 @@ export default async function AuditLogPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
+  await requireAdminPage("/admin/audit");
   const sp = await searchParams;
 
   if (!prisma) {

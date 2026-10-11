@@ -1,5 +1,5 @@
 /**
- * Meeting scheduling service — the complete lifecycle:
+ * Meeting scheduling service - the complete lifecycle:
  * create → send link → client picks slot → admin confirms → done.
  *
  * Security: public links use 256-bit random tokens (hash-stored),
@@ -9,7 +9,6 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { logger } from "@/lib/logger";
 import { sendMailNow } from "@/lib/mail";
 import {
   meetingInvitation,
@@ -18,11 +17,17 @@ import {
   meetingAdminNotification,
 } from "@/lib/mail/meeting-templates";
 import { publish } from "@/lib/livechat/pubsub";
+import { istClock, meetingSlots, validMeetingDate } from "@/sections/meeting/meeting-model";
 
 /* ───────────────────────── tokens & references ───────────────────────── */
 
 export function newMeetingToken(): string {
-  return randomBytes(24).toString("base64url");
+  return randomBytes(32).toString("base64url");
+}
+
+/** Public invitation access requires the full high-entropy bearer token, never a human-readable reference. */
+export function isMeetingAccessToken(token: string): boolean {
+  return /^[A-Za-z0-9_-]{32,128}$/.test(token);
 }
 
 export function hashMeetingToken(token: string): string {
@@ -191,7 +196,7 @@ export async function createMeeting(input: CreateMeetingInput): Promise<{ meetin
 
   // Auto-send branded invitation email if the client has an email.
   if (meeting.clientEmail) {
-    const link = `https://savotechnologies.com/meeting/${reference}`;
+    const link = `https://savotechnologies.com/meeting/${token}`;
     const tpl = meetingInvitation({
       clientName: meeting.clientName,
       meetingTitle: input.title,
@@ -221,10 +226,18 @@ export async function sendInvitation(meetingId: string, actorName: string): Prom
   await prisma.meeting.update({ where: { id: meetingId }, data: { status: "awaiting_client" } });
   await logActivity(meetingId, "invitation_sent", actorName);
 
+  // Older rows may not have a usable stored bearer token; rotate before issuing a new link.
+  let token = m.tokenPlain;
+  if (!isMeetingAccessToken(token) || hashMeetingToken(token) !== m.tokenHash) {
+    const regenerated = await regenerateLink(meetingId, actorName);
+    if ("error" in regenerated) return { ok: false, error: regenerated.error };
+    token = regenerated.token;
+  }
+
   // Send branded invitation email
   let emailSent = false;
   if (m.clientEmail) {
-    const link = `https://savotechnologies.com/meeting/${m.reference}`;
+    const link = `https://savotechnologies.com/meeting/${token}`;
     const tpl = meetingInvitation({
       clientName: m.clientName,
       meetingTitle: m.title,
@@ -282,12 +295,10 @@ export type PublicMeetingData = {
 
 export async function getMeetingByToken(token: string): Promise<PublicMeetingData | { error: string; expired?: boolean }> {
   if (!prisma) return { error: "Service unavailable." };
-  if (!token || token.length < 8 || token.length > 100) return { error: "Invalid link." };
+  if (!isMeetingAccessToken(token)) return { error: "Invalid link." };
 
-  // Accept the human reference (MTG-2026-XXXXX) or the raw token
-  const isRef = /^(MTG|STPL)-\d{4}-[A-F0-9]+$/i.test(token);
   const m = await prisma.meeting.findUnique({
-    where: isRef ? { reference: token.toUpperCase() } : { tokenHash: hashMeetingToken(token) },
+    where: { tokenHash: hashMeetingToken(token) },
     include: { attendees: true },
   });
   if (!m) return { error: "Meeting not found." };
@@ -300,7 +311,7 @@ export async function getMeetingByToken(token: string): Promise<PublicMeetingDat
     return { error: "This meeting request has expired.", expired: true };
   }
 
-  // Log open (throttled — only if not opened in last 5 min)
+  // Log open (throttled - only if not opened in last 5 min)
   const recentOpen = await prisma.meetingActivity.findFirst({
     where: { meetingId: m.id, type: "invitation_opened", createdAt: { gte: new Date(Date.now() - 5 * 60_000) } },
   });
@@ -359,14 +370,12 @@ export type SubmitAvailabilityInput = {
 
 export async function submitAvailability(input: SubmitAvailabilityInput): Promise<{ ok: boolean; reference?: string; error?: string }> {
   if (!prisma) return { ok: false, error: "Service unavailable." };
-  if (!input.token || !input.preferredDate || !input.preferredTime) {
+  if (!isMeetingAccessToken(input.token)) return { ok: false, error: "Invalid link." };
+  if (!input.preferredDate || !input.preferredTime) {
     return { ok: false, error: "Please select a date and time." };
   }
 
-  const isRef = /^(MTG|STPL)-\d{4}-[A-F0-9]+$/i.test(input.token);
-  const m = await prisma.meeting.findUnique({
-    where: isRef ? { reference: input.token.toUpperCase() } : { tokenHash: hashMeetingToken(input.token) },
-  });
+  const m = await prisma.meeting.findUnique({ where: { tokenHash: hashMeetingToken(input.token) } });
   if (!m) return { ok: false, error: "Meeting not found." };
 
   if (m.expiresAt && m.expiresAt < new Date()) return { ok: false, error: "This link has expired." };
@@ -379,20 +388,22 @@ export async function submitAvailability(input: SubmitAvailabilityInput): Promis
     return { ok: false, error: "Your availability has already been submitted." };
   }
 
-  // Validate date format (YYYY-MM-DD)
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.preferredDate)) {
-    return { ok: false, error: "Invalid date format." };
+  const clock = istClock();
+  if (!validMeetingDate(input.preferredDate) || input.preferredDate < clock.date) {
+    return { ok: false, error: "Choose a valid current or future date." };
   }
-  // Validate time format (HH:MM)
-  if (!/^\d{2}:\d{2}$/.test(input.preferredTime)) {
-    return { ok: false, error: "Invalid time format." };
+  if (!meetingSlots(m.availableFrom, m.availableTo, input.preferredDate, clock).includes(input.preferredTime)) {
+    return { ok: false, error: "Choose an available start time from the invitation." };
+  }
+  if (!m.allowSuggest && !(Array.isArray(m.availableDates) && m.availableDates.includes(input.preferredDate))) {
+    return { ok: false, error: "Choose a date from the invitation." };
   }
 
-  const useTransaction = await prisma.$transaction(async (tx) => {
-    // Update meeting with client response
+  const committed = await prisma.$transaction(async (tx) => {
+    // Compare-and-set status inside the transaction so simultaneous submissions cannot overwrite each other.
     const newStatus = m.autoConfirm ? "confirmed" : "availability_received";
-    const updated = await tx.meeting.update({
-      where: { id: m.id },
+    const updated = await tx.meeting.updateMany({
+      where: { id: m.id, status: { in: ["draft", "awaiting_client", "reschedule_requested"] } },
       data: {
         preferredDate: input.preferredDate,
         preferredTime: input.preferredTime,
@@ -410,6 +421,7 @@ export async function submitAvailability(input: SubmitAvailabilityInput): Promis
           : {}),
       },
     });
+    if (updated.count !== 1) return false;
 
     // Replace attendees
     if (input.additionalAttendees && input.additionalAttendees.length > 0) {
@@ -428,8 +440,9 @@ export async function submitAvailability(input: SubmitAvailabilityInput): Promis
       }
     }
 
-    return updated;
+    return true;
   });
+  if (!committed) return { ok: false, error: "Your availability has already been submitted." };
 
   await logActivity(m.id, "availability_submitted", m.clientName, {
     date: input.preferredDate,
@@ -442,7 +455,7 @@ export async function submitAvailability(input: SubmitAvailabilityInput): Promis
     type: "enquiry.new",
     enquiry: {
       name: `${m.clientName} (meeting response)`,
-      projectType: `${m.title} — ${input.preferredDate} ${input.preferredTime}`,
+      projectType: `${m.title} - ${input.preferredDate} ${input.preferredTime}`,
       source: "meeting",
     },
   });
@@ -547,10 +560,12 @@ export async function extendExpiration(meetingId: string, days: number, actorNam
   const m = await prisma.meeting.findUnique({ where: { id: meetingId } });
   if (!m) return { ok: false };
   const base = m.expiresAt && m.expiresAt > new Date() ? m.expiresAt : new Date();
+  const expiresAt = new Date(base.getTime() + days * 86400_000);
   await prisma.meeting.update({
     where: { id: meetingId },
-    data: { expiresAt: new Date(base.getTime() + days * 86400_000), status: m.status === "expired" ? "awaiting_client" : m.status },
+    data: { expiresAt, status: m.status === "expired" ? "awaiting_client" : m.status },
   });
+  await logActivity(meetingId, "expiration_extended", actorName, { days, expiresAt: expiresAt.toISOString() });
   return { ok: true };
 }
 

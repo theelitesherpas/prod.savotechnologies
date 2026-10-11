@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -18,6 +19,7 @@ export default async function EditItemPage({
   params: Promise<{ collection: string; id: string }>;
   searchParams: Promise<{ e?: string }>;
 }) {
+  await requireAdminPage("/admin/content/[collection]/[id]");
   const { collection: raw, id } = await params;
   if (!isCollectionKey(raw) || !prisma) notFound();
   const def = getCollection(raw);

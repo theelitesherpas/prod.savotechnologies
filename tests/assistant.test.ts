@@ -68,4 +68,26 @@ describe("Savo Assistant knowledge engine", () => {
   it("greeting never collides with careers", () => {
     expect(answerQuestion("hi")?.id).not.toBe("careers");
   });
+
+  /* ── Project discovery (master spec Part 83) ─────────────────────── */
+  it("answers project-discovery questions per industry", () => {
+    expect(answerQuestion("have you built something for real estate?")?.id).toBe("realestate-work");
+    expect(answerQuestion("any property portal work?")?.id).toBe("realestate-work");
+    expect(answerQuestion("do you have healthcare experience?")?.id).toBe("healthcare-work");
+    expect(answerQuestion("have you worked in fintech?")?.id).toBe("fintech-work");
+    expect(answerQuestion("any logistics or delivery software?")?.id).toBe("logistics-work");
+    expect(answerQuestion("have you built an online store")?.id).toBe("ecommerce-work");
+  });
+
+  it("answers engagement-model and insights questions", () => {
+    expect(answerQuestion("what engagement models do you offer?")?.id).toBe("engagement-models");
+    expect(answerQuestion("fixed scope or dedicated team?")?.id).toBe("engagement-models");
+    expect(answerQuestion("do you publish any guides?")?.id).toBe("insights");
+  });
+
+  it("project-discovery answers stay honest about verification", () => {
+    const re = entryById("realestate-work");
+    expect(re).toBeDefined();
+    expect(re!.paragraphs.some((p) => p.toLowerCase().includes("verified"))).toBe(true);
+  });
 });

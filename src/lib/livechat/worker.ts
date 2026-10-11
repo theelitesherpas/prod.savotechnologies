@@ -1,12 +1,12 @@
 /**
- * Live-chat background worker — the server-side heartbeat that makes the
+ * Live-chat background worker - the server-side heartbeat that makes the
  * 60-second response window real (spec §10): it runs inside the Next.js
  * server process, started once from instrumentation.ts, and never depends
  * on any browser tab being open.
  *
  * Every SWEEP_INTERVAL_MS:
- *   1. conversation sweep — response-window timeouts, visitor disconnects
- *   2. presence decay    — stale agent heartbeats demote online→away→offline
+ *   1. conversation sweep - response-window timeouts, visitor disconnects
+ *   2. presence decay - stale agent heartbeats demote online→away→offline
  *
  * Single-instance deployment: an interval per process is exactly right.
  * (Turbopack dev may load this twice; the global flag keeps one timer.)
@@ -18,7 +18,7 @@ import { PRESENCE_AWAY_MS, PRESENCE_OFFLINE_MS } from "./availability";
 
 const SWEEP_INTERVAL_MS = 5_000;
 const PRESENCE_PASS_EVERY = 6; // sweeps between presence checks (~30s)
-const globalForWorker = globalThis as unknown as { __liveChatSweep?: NodeJS.Timeout; __liveChatSweepTick?: number };
+const globalForWorker = globalThis as unknown as { __liveChatSweep?: NodeJS.Timeout; __liveChatSweepTick?: number; __liveChatSweepRunning?: boolean };
 
 async function presencePass(): Promise<void> {
   const { prisma } = await import("@/lib/prisma");
@@ -46,6 +46,8 @@ async function presencePass(): Promise<void> {
 export function startLiveChatWorker(): void {
   if (globalForWorker.__liveChatSweep) return;
   const timer = setInterval(() => {
+    if (globalForWorker.__liveChatSweepRunning) return;
+    globalForWorker.__liveChatSweepRunning = true;
     void (async () => {
       try {
         await sweepOnce();
@@ -53,6 +55,8 @@ export function startLiveChatWorker(): void {
         if (globalForWorker.__liveChatSweepTick % PRESENCE_PASS_EVERY === 0) await presencePass();
       } catch {
         // A failed pass never kills the timer.
+      } finally {
+        globalForWorker.__liveChatSweepRunning = false;
       }
     })();
   }, SWEEP_INTERVAL_MS);

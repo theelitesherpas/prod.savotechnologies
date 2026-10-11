@@ -139,7 +139,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Meeting created with client email, or admin clicks Send Invitation",
     recipient: "customer",
     dept: "hello",
-    vars: { clientName: "Uday Sharma", meetingTitle: "Project Kickoff Discussion", meetingType: "in_person", durationMin: "60", agenda: "Scope, timeline and approach", reference: "STPL-2026-8X4K2", schedulingLink: "https://savotechnologies.com/meeting/STPL-2026-8X4K2" },
+    vars: { clientName: "Uday Sharma", meetingTitle: "Project Kickoff Discussion", meetingType: "in_person", durationMin: "60", agenda: "Scope, timeline and approach", reference: "STPL-2026-8X4K2", schedulingLink: "https://savotechnologies.com/meeting/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" },
     default: (v) => meetingInvitation({ clientName: v.clientName, meetingTitle: v.meetingTitle, meetingType: v.meetingType, durationMin: Number(v.durationMin) || 60, agenda: v.agenda, reference: v.reference, schedulingLink: v.schedulingLink, to: v.__to }),
   },
   {

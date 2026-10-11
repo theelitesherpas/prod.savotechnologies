@@ -39,6 +39,22 @@ export type IndustryDetail = {
   faqs: { q: string; a: string }[];
   relatedIndustries: Industry["id"][];
   relatedServices: string[];
+
+  /* ── Part 54 standard (optional until populated per industry) ──── */
+  /** The sector's real challenges (not generic pain). */
+  challenges?: { title: string; text: string }[];
+  /** Operational workflows the sector actually runs (Part 55 depth). */
+  operations?: { title: string; items: string[] }[];
+  /** Technology this sector's systems are built on. */
+  technology?: string[];
+  /** Systems these platforms integrate with. */
+  integrations?: string[];
+  /** Sector-specific security considerations. */
+  security?: string;
+  /** Where AI genuinely applies in this sector. */
+  aiOpportunities?: { title: string; text: string }[];
+  /** Proof/reading cross-links. */
+  relatedWork?: { label: string; href: string }[];
 };
 
 export const INDUSTRY_DETAILS: IndustryDetail[] = [
@@ -82,7 +98,57 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
         { label: "Follow-up", note: "reminders · closure" },
       ],
     },
+    challenges: [
+      { title: "Privacy is the architecture", text: "Patient data carries legal weight everywhere. Consent, role-based access and audit trails are structural decisions, not compliance checkboxes added before launch." },
+      { title: "Interoperability or isolation", text: "Records live in standards-bound systems. Software that can't speak the sector's formats becomes another silo clinicians resent." },
+      { title: "Reliability is clinical", text: "A portal down during telehealth hours is a cancelled consultation. These systems are judged at their worst moment, not their average one." },
+      { title: "Users under stress", text: "Patients use these products while anxious, unwell or hurrying a parent through a form. Clarity is a safety feature." },
+    ],
+    operations: [
+      {
+        title: "Patient-facing workflows",
+        items: ["Appointment booking with queues, slots and reminders", "Telehealth sessions with waiting rooms and follow-ups", "Records and reports access with consent boundaries", "Prescription refills and medication schedules", "Bills, claims and payment history in one place"],
+      },
+      {
+        title: "Clinical & staff workflows",
+        items: ["Referral and triage routing between departments", "Care plans with tasks, milestones and handovers", "Documentation templates that fit, not fight, the chart", "Role-scoped dashboards for doctors, nurses and admin", "Shift and roster management for care teams"],
+      },
+      {
+        title: "Data & compliance workflows",
+        items: ["Consent capture, tracking and withdrawal end to end", "Audit trails on every record access and change", "Data retention and deletion per jurisdiction rules", "Interoperability through sector standards (HL7/FHIR where required)", "Backup and restore rehearsed against clinical downtime"],
+      },
+      {
+        title: "Operations intelligence",
+        items: ["No-show and utilisation analytics", "Patient satisfaction and outcome tracking", "Automated recall and preventive-care outreach", "Anonymised reporting for management and regulators"],
+      },
+    ],
+    technology: ["Next.js patient surfaces", "Node.js services", "PostgreSQL with strict access models", "Video/telehealth integration", "HL7/FHIR interfaces where required", "Encrypted storage and audit logging"],
+    integrations: ["EHR/EMR systems", "Lab information systems", "Payment gateways", "Messaging (SMS/email/WhatsApp)", "Calendar and scheduling", "Identity verification"],
+    security:
+      "Healthcare security is baseline, not feature: encryption at rest and in transit, role-based access at record level, complete audit trails, consent enforcement in the API layer, and retention handling built into the schema.",
+    aiOpportunities: [
+      { title: "Triage support", text: "Structured intake that gathers symptoms accurately and routes urgency correctly, with clinicians making every judgment call." },
+      { title: "Records summarisation", text: "Clinician-facing digests of long histories, grounded strictly in the record, citing sources, saving reading time without replacing judgment." },
+      { title: "Operations automation", text: "Recall scheduling, claims paperwork and report routing handled automatically, with humans reviewing exceptions." },
+    ],
+    relatedWork: [
+      { label: "Trust & security", href: "/trust" },
+      { label: "Custom software", href: "/services/custom-software-development" },
+      { label: "Reading: AI agents in production", href: "/insights/ai-agents-in-production" },
+    ],
     faqs: [
+    {
+      q: "How much does healthcare software development cost?",
+      a: "Cost is driven by compliance depth, integrations with records systems, and the roles that need access. A focused patient-facing module is a different budget from a full telehealth platform; discovery prices the honest scope before commitment.",
+    },
+    {
+      q: "How long does it take to build a telehealth or patient portal platform?",
+      a: "A first usable patient journey typically ships in a few months, with clinical workflows and integrations following in stages. Privacy, consent and audit requirements are designed in from the first schema, not retrofitted.",
+    },
+    {
+      q: "Can you integrate with EHR/EMR systems and HL7 or FHIR standards?",
+      a: "Yes. Interoperability is a first-class deliverable: we build interface layers to existing records, scheduling and lab systems using the sector's standards, so the new platform strengthens the ecosystem instead of adding a silo.",
+    },
       { q: "Do you build HIPAA-compliant healthcare software?", a: "We engineer to compliance requirements like HIPAA as architectural constraints, encryption, access control, audit trails and data minimisation are designed in from the start. Final compliance sign-off for your jurisdiction is owned jointly with your compliance officer, and we support the audit process with full documentation." },
       { q: "Can you integrate with our existing hospital or clinic systems?", a: "Yes. Interoperability is a first-class deliverable: we build API layers and interface with existing records, scheduling and billing systems rather than asking a clinic to replace what already works." },
       { q: "How do you handle patient data security?", a: "Least-privilege access, encryption in transit and at rest, segregated environments, and audit logging on every critical action. Security review is part of each release cycle, not a separate phase bolted on at the end." },
@@ -131,7 +197,44 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
         { label: "Reconciliation", note: "match · report" },
       ],
     },
+    challenges: [
+      { title: "Money has no rollback button", text: "In payments and ledgers, a bad write is a reconciliation incident at best. Idempotency, transactional integrity and double-entry thinking are the floor, not the ceiling." },
+      { title: "Regulation shapes the schema", text: "KYC, AML and jurisdiction rules decide what data exists, how long it lives and who may see it. Retrofitting compliance is the most expensive rewrite there is." },
+      { title: "Trust is the product", text: "Users hand over money and identity in one session. Any moment of doubt, a broken flow, an unexplained fee, an insecure-looking screen, ends the relationship." },
+      { title: "Partners and rails", text: "Banks, gateways and card networks each bring their own failures, latencies and webhooks. The system must be correct when they aren't." },
+    ],
+    operations: [
+      { title: "Onboarding & identity", items: ["KYC/KYB flows with document capture and verification", "Risk scoring and manual review queues", "Account opening with funding and activation", "Ongoing monitoring and periodic re-verification"] },
+      { title: "Payments & ledgering", items: ["Payment initiation, capture and settlement tracking", "Double-entry ledgers with immutable journal history", "Refunds, reversals and dispute handling", "Reconciliation against bank and gateway statements"] },
+      { title: "Money movement controls", items: ["Approval matrices for payouts and treasury ops", "Limits, velocity rules and freeze/hold workflows", "Audit trails on every privileged action", "Regulatory reporting extracts"] },
+      { title: "Customer operations", items: ["Account dashboards with balances and statements", "Transaction history with dispute initiation", "Notifications for every material event", "Support tooling with scoped data visibility"] },
+    ],
+    technology: ["TypeScript end to end", "Node.js services", "PostgreSQL with strict transactional discipline", "Event queues for money movement", "Idempotent API design", "Encrypted storage and secrets management"],
+    integrations: ["Payment gateways", "Banking APIs / open banking", "KYC/AML providers", "Card networks", "Messaging & notifications", "Accounting systems"],
+    security: "Financial-grade by construction: least-privilege access, encryption everywhere, immutable audit logs, idempotent writes, segregated environments and no production data in test systems, ever.",
+    aiOpportunities: [
+      { title: "Fraud & anomaly detection", text: "Transaction streams scored for patterns rules miss, with human review on the flagged tail." },
+      { title: "Document intelligence", text: "KYC documents read, validated and extracted automatically, exceptions routed to officers." },
+      { title: "Support automation", text: "Grounded agents answering balance, status and process questions, escalating anything touching money decisions." },
+    ],
+    relatedWork: [
+      { label: "Trust & security", href: "/trust" },
+      { label: "Custom software", href: "/services/custom-software-development" },
+      { label: "Enterprise", href: "/enterprise" },
+    ],
     faqs: [
+    {
+      q: "How much does fintech app development cost?",
+      a: "Financial products are priced by their rails: payment integrations, ledger correctness, KYC flows and compliance depth are the real scope drivers. We quote fixed milestones after discovery, with the riskiest pieces built and proven first.",
+    },
+    {
+      q: "How long does it take to build a fintech product?",
+      a: "A compliant MVP with one payment path and KYC typically takes a few months; full platforms with multiple rails and markets take longer and ship in stages. Reconciliation and audit trails are part of the first release, not a later phase.",
+    },
+    {
+      q: "How do you handle PCI compliance and payment security?",
+      a: "We keep card data out of your systems entirely by integrating certified payment providers, so PCI scope stays minimal. What remains in scope, access control, audit logging and idempotent money handling, is engineered to standard from day one.",
+    },
       { q: "Can you build PCI-DSS-aware payment flows?", a: "Yes, we design card-data flows so sensitive data is tokenised and scope is minimised from the first architecture decision. Where certified third-party processors handle card storage, we integrate and harden the surrounding workflows." },
       { q: "How do you ensure financial calculations are exact?", a: "Decimal-first arithmetic, ledger-style double-entry modelling and idempotent operations tested with replay scenarios. Money bugs are treated as security-class defects." },
       { q: "Do you integrate with existing core banking systems?", a: "We build integration layers over core banking APIs, card networks and payment processors, with sandboxed environments and contract tests so partner changes surface before they break production." },
@@ -180,7 +283,44 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
         { label: "Fulfilment", note: "sync · returns" },
       ],
     },
+    challenges: [
+      { title: "Conversion is engineered", text: "Every 100ms of latency and every extra checkout field has a measurable cost. Commerce platforms win in the boring details: caching, facets, and the shortest honest path to pay." },
+      { title: "Operations in the loop", text: "Inventory, fulfilment, returns and support are the product too. A storefront that ignores the warehouse just moves the queue." },
+      { title: "Peak or die", text: "Sale days decide the year. Architecture that wobbles at 5x traffic taxifies marketing spend." },
+      { title: "Data everywhere", text: "Products, prices and stock live in ERP, PIM, marketplaces and the store. One truth, many surfaces, constant sync." },
+    ],
+    operations: [
+      { title: "Storefront & discovery", items: ["Catalogue with faceted search and merchandising overrides", "Media pipelines for rich, fast product pages", "Promotions, bundles and pricing rules", "Saved carts, wishlists and back-in-stock alerts"] },
+      { title: "Checkout & payments", items: ["Guest and account checkout with minimal friction", "Payment methods per market, including wallets and COD", "Tax, shipping and duty calculation", "Order confirmation and failure recovery"] },
+      { title: "Post-purchase operations", items: ["Order routing to fulfilment and logistics partners", "Returns and exchange workflows", "Invoices, credit notes and accounting sync", "Support views with full order context"] },
+      { title: "Commerce intelligence", items: ["Funnel analytics: view to cart to purchase", "Cohort and repeat-purchase reporting", "Inventory forecasting signals", "Marketplace and ad-channel performance in one view"] },
+    ],
+    technology: ["Next.js commerce frontends", "Headless architecture", "PostgreSQL catalogue and order models", "Search with merchandising control", "Edge caching", "Node.js services"],
+    integrations: ["Payment gateways", "ERP & inventory systems", "Marketplace APIs", "Shipping & logistics", "Email/SMS marketing", "Analytics & tag managers"],
+    security: "PCI scope kept minimal by using certified payment providers, no card data touching our servers, strict access control on customer records, and fraud screening at the order edge.",
+    aiOpportunities: [
+      { title: "Search & discovery", text: "Natural-language search and recommendations tuned to conversion, evaluated against revenue, not clicks." },
+      { title: "Content at scale", text: "Product descriptions enriched and translated automatically, with human review gates before publish." },
+      { title: "Support containment", text: "Agents answering order-status and returns questions from live data, handing anything sensitive to humans." },
+    ],
+    relatedWork: [
+      { label: "Case study dossier", href: "/case-studies" },
+      { label: "Web development", href: "/services/web-development" },
+      { label: "Digital marketing", href: "/services/digital-marketing" },
+    ],
     faqs: [
+    {
+      q: "How much does ecommerce website development cost?",
+      a: "A storefront on a configured platform and a custom commerce platform are different budgets. We scope by catalogue size, integrations and checkout complexity, and quote fixed milestones so spend attaches to working revenue paths.",
+    },
+    {
+      q: "Shopify or a custom ecommerce platform: which should we choose?",
+      a: "If standard catalogue-and-checkout covers your model, a configured platform wins on speed and cost. When pricing rules, subscriptions, marketplace behaviour or deep integrations are your edge, custom pays back. We assess honestly and say which one fits.",
+    },
+    {
+      q: "How long does it take to launch an online store?",
+      a: "A focused storefront can launch in weeks; headless builds with ERP sync and custom checkout take months and ship in stages. Peak-season readiness is planned as a milestone, not discovered in November.",
+    },
       { q: "Headless commerce or a platform like Shopify?", a: "Both are legitimate. We recommend headless when differentiation, speed or complex catalogues matter, and platform-plus-integration when speed-to-market wins. The decision starts from your catalogue size, team and roadmap, not from our preference." },
       { q: "How do you improve conversion rate?", a: "By instrumenting the full funnel first, then removing friction where the data points, page speed, checkout steps, trust signals and mobile ergonomics. Optimisation is continuous and evidence-led, never a one-off redesign." },
       { q: "Can you migrate our store without losing SEO rankings?", a: "Yes, migrations preserve URL structures or ship deliberate redirect maps, keep structured data intact, and stage cutover with parity checks so search equity carries over." },
@@ -229,7 +369,44 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
         { label: "Delivered", note: "POD · invoice" },
       ],
     },
+    challenges: [
+      { title: "The field is offline", text: "Drivers, warehouses and checkpoints sit on the network's edge. Software that assumes connectivity fails exactly when the goods are moving." },
+      { title: "State is physical", text: "A shipment is a physical object with a digital shadow. When they disagree, someone's inventory, invoice or customer is wrong." },
+      { title: "Everyone needs a different view", text: "Customer, driver, dispatcher, warehouse and accounts each see the same trip differently. One data model, many altitudes." },
+      { title: "Proof is the product", text: "PODs, signatures, photos and timestamps are the legal backbone of every delivery and every invoice." },
+    ],
+    operations: [
+      { title: "Dispatch & planning", items: ["Order intake and consolidation", "Route planning with constraints and priorities", "Driver and vehicle assignment", "Exception boards for delays and failures"] },
+      { title: "In the field", items: ["Driver apps with offline-first manifests", "Proof of delivery: signature, photo, geotag", "Cash and COD handling where it applies", "Customer notifications with live status"] },
+      { title: "Warehouse & hub flows", items: ["Inbound booking and dock scheduling", "Pick, pack and dispatch with scan verification", "Cross-docking and hub transfers", "Inventory accuracy cycles"] },
+      { title: "Finance & visibility", items: ["Freight billing and detention/demurrage tracking", "Driver settlements and payout runs", "Customer portals with track-and-trace", "KPI dashboards: OTIF, cost per drop, utilisation"] },
+    ],
+    technology: ["Flutter driver apps (offline-first)", "Node.js dispatch services", "PostgreSQL with sync discipline", "Map, routing and geofencing services", "Event queues for status streams", "Photo/POD storage pipelines"],
+    integrations: ["Transport management systems", "ERP & accounting", "Customer portals and CRMs", "SMS/WhatsApp notifications", "GPS and telematics", "Marketplace and order sources"],
+    security: "Location and recipient data are personal data: scoped access per role, encrypted mobile storage, tamper-evident proof records and retention rules that respect both operations and privacy law.",
+    aiOpportunities: [
+      { title: "Route intelligence", text: "Sequencing and ETAs that learn from real traffic and dwell times, suggested to dispatchers, not forced on them." },
+      { title: "Document automation", text: "PODs, waybills and invoices read and matched automatically, exceptions to humans." },
+      { title: "Exception triage", text: "Delays and failures classified and escalated with the right context attached, before customers call." },
+    ],
+    relatedWork: [
+      { label: "Reading: Offline-first field apps", href: "/insights/offline-first-field-apps" },
+      { label: "Mobile development", href: "/services/mobile-app-development" },
+      { label: "Case study dossier", href: "/case-studies" },
+    ],
     faqs: [
+    {
+      q: "How much does logistics software development cost?",
+      a: "Scope drivers are the fleet of devices, offline depth and the number of systems to integrate: TMS, ERP, telematics. A first dispatch-and-POD loop is a common fixed-scope start that proves value in the field quickly.",
+    },
+    {
+      q: "How long does it take to build a delivery or fleet management app?",
+      a: "A driver app with offline manifests and proof of delivery typically ships in a few months, followed by warehouse and settlement modules in stages. Field conditions are designed for from day one, gloves, glare and dead zones included.",
+    },
+    {
+      q: "Can your logistics apps work offline in remote areas?",
+      a: "Yes. Offline-first is our default for field software: manifests, captures and signatures sync when connectivity returns, with conflict rules that keep records trustworthy. We publish our field-app engineering notes on Insights.",
+    },
       { q: "Can you build live tracking on top of our existing telematics?", a: "Yes, we integrate telematics, ERP and WMS data into one real-time layer rather than asking you to replace hardware or systems that already work. The tracking surface is only as good as the pipeline under it, so that is where the engineering goes." },
       { q: "How does route optimisation actually help?", a: "It reduces distance and idle time within your real constraints, time windows, vehicle types, driver shifts. The system proposes, dispatchers decide, and every run feeds back into the next plan." },
       { q: "Do your warehouse tools work on scanners and rugged devices?", a: "We build for the floor: large touch targets, offline-tolerant workflows, scanning-first interfaces and layouts that survive gloves, glare and pace. Warehouse software fails when it is designed for offices." },
@@ -278,7 +455,81 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
         { label: "Close", note: "handover · aftercare" },
       ],
     },
+    /* ── Part 55 operational depth ───────────────────────────── */
+    challenges: [
+      { title: "Inventory that lies", text: "A listing shown as available after it sold doesn't just annoy buyers, it burns the brand. Status, price and availability must be correct across the site, the portals and the sales floor at once." },
+      { title: "Speed-to-lead is the whole game", text: "Property buyers enquire with five competitors in one sitting. Response inside minutes converts; response next morning hands the deal to whoever answered first." },
+      { title: "Documents and money move together", text: "Bookings, payment schedules, agreements and handover carry strict sequences. A missing receipt or a mis-versioned agreement is a legal event, not a UX hiccup." },
+      { title: "Channel complexity", text: "Brokers, channel partners, direct sales and portals all feed the same inventory with different economics. Pricing and attribution have to hold across all of them." },
+    ],
+    operations: [
+      {
+        title: "Presentation & discovery",
+        items: [
+          "Project presentation sites for launches: narrative, masterplan, media",
+          "Property listings with faceted search, map search and location layers",
+          "Unit inventory with availability, pricing and plan variations kept live",
+          "Media pipelines: photos, video, floorplans, 360° tours",
+          "Saved searches and alerts that bring buyers back on their own schedule",
+        ],
+      },
+      {
+        title: "Enquiry to close",
+        items: [
+          "Enquiry workflows: capture, dedupe, score and acknowledge instantly",
+          "CRM integration so context travels with the lead, not in inboxes",
+          "Lead routing by territory, project and channel, with escalation timers",
+          "Channel partner management: attribution, payouts and performance views",
+          "Tour scheduling with reminders that cut no-shows",
+        ],
+      },
+      {
+        title: "Buyer progression",
+        items: [
+          "Payment schedules: milestones, dues, receipts and overdue visibility",
+          "Customer portals: booking status, documents, demands and statements",
+          "Construction updates: stage-wise progress with dated evidence",
+          "Document access: agreements, allotments and handovers, versioned and audited",
+          "Post-sale service requests that keep the relationship after the keys",
+        ],
+      },
+      {
+        title: "Operation intelligence",
+        items: [
+          "Analytics: source to site visit to booking, the funnel that matters",
+          "Inventory heatmaps: what moves, at what price, in how many days",
+          "Automation: portal sync, routine follow-ups, availability updates",
+          "Fraud and duplicate lead checks before they pollute the pipeline",
+        ],
+      },
+    ],
+    technology: ["Next.js storefronts", "Map & geo services", "Search infrastructure (faceted + geo)", "PostgreSQL with inventory models", "Media pipelines", "Node.js services"],
+    integrations: ["Listing portals", "CRMs (native and custom)", "Payment gateways", "Messaging (WhatsApp/SMS/email)", "Document & e-sign", "Telephony/missed-call", "Analytics"],
+    security:
+      "Buyer data is financial-grade: identity documents, payment records and agreements demand access control per role, encrypted storage, complete audit trails and retention rules that match the jurisdiction.",
+    aiOpportunities: [
+      { title: "Lead qualification", text: "Enquiries enriched and scored on intent signals, with the first response drafted and routed while the buyer is still warm." },
+      { title: "Listing intelligence", text: "Automatic tagging, description drafting and duplicate detection that keep inventory clean as it scales." },
+      { title: "Buyer assistant", text: "A grounded agent answering availability, pricing and process questions from live inventory, handing to a human agent for the decision moments." },
+    ],
+    relatedWork: [
+      { label: "Case study dossier", href: "/case-studies" },
+      { label: "Web development", href: "/services/web-development" },
+      { label: "AI agent development", href: "/services/ai-agent-development" },
+    ],
     faqs: [
+    {
+      q: "How much does a real estate portal cost to build?",
+      a: "Portal cost follows inventory size, map and search depth, CRM integrations and the buyer-facing portal features. A launch platform for one project is a different budget from a multi-city marketplace; discovery prices your actual model.",
+    },
+    {
+      q: "How long does real estate website development take?",
+      a: "A project presentation site with live inventory ships in weeks; full portals with CRM routing, payment schedules and buyer accounts take months, delivered in stages. Speed-to-lead features come first because they pay back first.",
+    },
+    {
+      q: "Can you integrate the portal with our CRM and listing platforms?",
+      a: "Yes: enquiries land in your CRM with full context, and inventory syncs two-way with the listing portals you sell through. One edit updates every surface, so availability never lies.",
+    },
       { q: "Can you build a property portal like the major listing sites?", a: "We build listing platforms with the features that matter at your scale, from faceted and map search to fresh inventory, agent tools and portal sync, shaped to your market rather than cloned from a generic portal." },
       { q: "How do virtual tours work in your builds?", a: "We integrate 360° media, video and floorplans into listing pages with scheduling attached, so fascination converts into a booked viewing instead of a bounce." },
       { q: "Do you integrate with CRMs agents already use?", a: "Yes, enquiry flows land in your existing CRM with full context, and where none exists we shape a pipeline that mirrors how your team actually sells." },
@@ -327,7 +578,44 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
         { label: "Certify", note: "credentials · records" },
       ],
     },
+    challenges: [
+      { title: "Two customers, one product", text: "Students experience the learning; institutions pay for the outcomes. The platform must serve both without shortchanging either." },
+      { title: "Engagement is the metric", text: "Completion, not enrolment, is the hard part. Design that loses learners in week two fails regardless of features." },
+      { title: "Content is heavy", text: "Video, assessments and materials strain performance and cost. Delivery must scale on a school's budget." },
+      { title: "Assessment integrity", text: "Grading carries trust. Fair workflows, verifiable records and anti-cheating measures are the product's spine." },
+    ],
+    operations: [
+      { title: "Learning delivery", items: ["Course structures with cohorts and self-paced paths", "Video, reading and interactive content delivery", "Assignments with deadlines and grading workflows", "Progress tracking visible to learner and mentor"] },
+      { title: "Institution operations", items: ["Admissions and enrolment flows", "Batch, term and timetable management", "Faculty roles and workload views", "Certificates and verifiable records"] },
+      { title: "Assessment & feedback", items: ["Quizzes and exams with question banks", "Plagiarism and integrity checks", "Rubric-based evaluation", "Result publication and appeals"] },
+      { title: "Engagement intelligence", items: ["At-risk learner flags from behaviour signals", "Content effectiveness analytics", "Attendance and participation tracking", "Outcome reporting for institutions"] },
+    ],
+    technology: ["Next.js learning platforms", "Video streaming and CDN delivery", "PostgreSQL with cohort models", "Node.js services", "Adaptive assessment engines", "Accessibility-first UI"],
+    integrations: ["Student information systems", "Payment gateways for fees", "Video platforms", "Identity/SSO for institutions", "Messaging and announcements", "Analytics"],
+    security: "Student data, especially minors', demands consent-aware handling, role-scoped visibility for guardians and faculty, and regional education-privacy compliance built into the data model.",
+    aiOpportunities: [
+      { title: "Adaptive practice", text: "Question difficulty and sequence adjusting to the learner, grounded in proven learning science." },
+      { title: "Grading assistance", text: "Objective sections auto-scored, subjective drafts pre-graded with faculty making final calls." },
+      { title: "Mentoring support", text: "Grounded assistants answering syllabus and process questions, escalating wellbeing signals to humans immediately." },
+    ],
+    relatedWork: [
+      { label: "Case study dossier", href: "/case-studies" },
+      { label: "UI/UX design", href: "/services/ui-ux-design" },
+      { label: "Product engineering", href: "/services/product-engineering" },
+    ],
     faqs: [
+    {
+      q: "How much does an LMS or e-learning platform cost?",
+      a: "Cost follows the learning model: self-paced content, live cohorts, assessments and certification each add scope, and video delivery shapes infrastructure. We quote a fixed first milestone that proves learning outcomes early.",
+    },
+    {
+      q: "How long does it take to build an e-learning platform?",
+      a: "A course delivery MVP typically ships in a few months; institution-grade systems with batches, fees and certifications take longer, in stages. Completion, not enrolment, is the metric we design for.",
+    },
+    {
+      q: "Do you build online examination and proctoring features?",
+      a: "Yes: question banks, timed attempts, integrity checks and results with appeals. Assessment workflows are engineered for fairness and auditability, with faculty controlling every judgment call.",
+    },
       { q: "Can you build a platform that works on low-end devices?", a: "That is the default assumption. We design for mid-range Android phones and intermittent connectivity with adaptive streaming, local progress caching and resumable sessions, then let better hardware enjoy the same flow faster." },
       { q: "How do you handle exam integrity online?", a: "Layered tooling: timed sessions, question randomisation, plagiarism checks and proctoring integrations where required, proportionate to what is being certified." },
       { q: "Do you integrate with student information systems?", a: "We integrate enrolment, gradebook and roster data with existing SIS/LMS systems so the new platform strengthens the record of learning instead of forking it." },
@@ -376,7 +664,44 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
         { label: "Return", note: "loyalty · rebooking" },
       ],
     },
+    challenges: [
+      { title: "Inventory that expires", text: "An unsold room-night or seat tonight is worth nothing tomorrow. Pricing, availability and speed decide revenue." },
+      { title: "Search converts or dies", text: "Travellers compare five tabs. Slow, vague or cluttered discovery loses the booking before the experience begins." },
+      { title: "The trip is multi-system", text: "Flights, stays, transfers and activities each live in different supplier systems. The platform's job is coherence across them." },
+      { title: "Disruption is normal", text: "Cancellations, delays and changes are routine, not edge cases. Rebooking flows and communication make or break trust." },
+    ],
+    operations: [
+      { title: "Discovery & booking", items: ["Search with dates, occupancy and flexible filters", "Rate and availability aggregation from suppliers", "Booking flows with holds, timeouts and confirmations", "Dynamic pricing and promo rules"] },
+      { title: "Trip management", items: ["Vouchers, tickets and itinerary delivery", " Modifications, cancellations and refund workflows", "Supplier confirmation and reconciliation", "Traveller communication at every stage"] },
+      { title: "Supplier & inventory", items: ["Contracted allotments and free-sale inventory", "Channel manager sync in both directions", "Commission and markup engines", "Supplier payment cycles"] },
+      { title: "Experience intelligence", items: ["Search-to-booking funnels by segment", "Cancellation and no-show analytics", "Review capture and service recovery", "Repeat traveller identification and win-back"] },
+    ],
+    technology: ["Next.js booking surfaces", "Caching layers for availability search", "PostgreSQL reservation models", "Supplier API adapters", "Message queues for confirmations", "Node.js services"],
+    integrations: ["GDS and supplier APIs", "Payment gateways", "Channel managers", "Review platforms", "Messaging (email/SMS/WhatsApp)", "Loyalty systems"],
+    security: "Passports, payment details and itineraries are high-value data: encryption throughout, scoped access, fraud screening on bookings, and PCI handled via certified providers.",
+    aiOpportunities: [
+      { title: "Discovery assistance", text: "Natural-language trip planning that narrows real inventory, not a chatbot dreaming of hotels." },
+      { title: "Dynamic offers", text: "Bundles and upgrades tuned to demand and traveller profile, within revenue rules." },
+      { title: "Disruption automation", text: "Rebooking options prepared and offered the moment a supplier change lands, humans handling judgment cases." },
+    ],
+    relatedWork: [
+      { label: "Web development", href: "/services/web-development" },
+      { label: "Mobile development", href: "/services/mobile-app-development" },
+      { label: "Case study dossier", href: "/case-studies" },
+    ],
     faqs: [
+    {
+      q: "How much does travel website or booking platform development cost?",
+      a: "Budget follows the supply side: how many supplier APIs, how dynamic the pricing, and the modification and refund complexity. A direct-booking site for one operator costs far less than a multi-supplier marketplace, and discovery prices the difference honestly.",
+    },
+    {
+      q: "How long does it take to build a booking platform?",
+      a: "A first bookable flow with confirmation and vouchers typically ships in a few months; full supplier aggregation and disruption handling follow in stages. The cancellation path is designed as carefully as the happy path.",
+    },
+    {
+      q: "Can you integrate GDS, channel managers and supplier APIs?",
+      a: "Yes. We build typed adapter layers over the supplier systems you sell from, with queue-based sync that absorbs their outages without breaking your checkout. Availability shown is availability real.",
+    },
       { q: "Can you build a booking engine that doesn't redirect guests?", a: "Yes, direct booking on your own domain, with live availability and payment capture. Keeping the flow on-site protects margin and the guest relationship at the same time." },
       { q: "How do you keep rates consistent across channels?", a: "Channel management sits at the centre: one inventory and rate source, synchronised to OTAs and direct sales, with conflict rules that prevent oversells before they reach the front desk." },
       { q: "Do you build for tours and activities, not just stays?", a: "We build booking for experiences too, with availability calendars, group sizes, guides and waivers: the same engineering with different inventory." },
@@ -425,7 +750,44 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
         { label: "Act", note: "work orders · loop" },
       ],
     },
+    challenges: [
+      { title: "The shop floor is the network edge", text: "Machines, operators and inspectors work where Wi-Fi dies. Data capture must survive reality, not the demo room." },
+      { title: "Systems that don't talk", text: "ERP, MES, quality and maintenance each hold part of the truth. Integration, not replacement, is usually the win." },
+      { title: "Traceability is contractual", text: "Batch, lot and serial genealogy answers to customers and regulators. Gaps become recalls." },
+      { title: "Downtime is money", text: "Every minute of an unplanned stop has a number. The software's job is visibility before it is beauty." },
+    ],
+    operations: [
+      { title: "Production operations", items: ["Work orders and production scheduling", "Machine and line monitoring (IoT/SCADA bridges)", "Downtime tracking with reason codes", "Operator logbooks and shift handovers"] },
+      { title: "Quality workflows", items: ["In-process inspections with tolerances", "Non-conformance reports and CAPA tracking", "Batch and lot traceability end to end", "COA and quality document generation"] },
+      { title: "Maintenance & assets", items: ["Preventive maintenance calendars", "Breakdown workflows with spare consumption", "Asset history and OEE views", "Spare parts inventory tracking"] },
+      { title: "Planning intelligence", items: ["OEE and bottleneck analytics", "Energy and consumption monitoring", "Supplier quality scorecards", "Cost-per-unit visibility"] },
+    ],
+    technology: ["Flutter shop-floor apps (offline-first)", "Node.js integration services", "PostgreSQL with traceability models", "IIoT gateways and MQTT", "ERP/MES connectors", "Time-series monitoring"],
+    integrations: ["ERP systems", "MES/SCADA", "IoT sensors and gateways", "Weighbridges and test equipment", "Supplier portals", "Accounting"],
+    security: "OT and IT security handled as one surface: segmented networks, scoped device identities, signed firmware paths where applicable, and audit trails that satisfy customer audits.",
+    aiOpportunities: [
+      { title: "Predictive maintenance", text: "Sensor patterns flagging failures before they stop the line, with maintenance reviewing the calls." },
+      { title: "Visual quality inspection", text: "Camera-based defect detection on defined defect classes, humans handling ambiguity." },
+      { title: "Production planning assist", text: "Schedule suggestions absorbing real constraints, planners approving before anything shifts." },
+    ],
+    relatedWork: [
+      { label: "Reading: Offline-first field apps", href: "/insights/offline-first-field-apps" },
+      { label: "Custom software", href: "/services/custom-software-development" },
+      { label: "Data & analytics", href: "/services/data-analytics" },
+    ],
     faqs: [
+    {
+      q: "How much does manufacturing software cost?",
+      a: "Scope follows the shop floor: machines to monitor, traceability depth, and the ERP/MES systems to integrate with. A line-monitoring and quality workflow pilot is a common fixed-scope first step.",
+    },
+    {
+      q: "How long does MES or IoT implementation take?",
+      a: "A monitored line with dashboards and alerts typically comes live in a few months; plant-wide rollouts proceed line by line. Integration with the ERP you already run is the plan, replacement is not.",
+    },
+    {
+      q: "Can you connect our existing ERP and shop-floor machines?",
+      a: "Yes, through IIoT gateways and MES/SCADA bridges, with edge handling for the network's dead zones. The data model unifies batch traceability across both worlds.",
+    },
       { q: "Do we need new machines to get started?", a: "Usually not. Most equipment exposes states through PLCs or gateways; we start by instrumenting what you already have and extend sensing only where the data gap justifies it." },
       { q: "How does predictive maintenance actually work here?", a: "Baseline behaviour is learned per machine, deviations are flagged with context, and maintenance orders are raised with evidence attached. It is about catching the slow drift early, not crystal-ball prediction." },
       { q: "Can you integrate with our existing ERP?", a: "Yes, integration is the point. Consumption, output and orders sync with your planning system so the floor picture and the business picture are the same picture." },
@@ -474,7 +836,44 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
         { label: "Fulfil", note: "delivery · record" },
       ],
     },
+    challenges: [
+      { title: "Public trust, public scrutiny", text: "Government systems fail in public. Accessibility, uptime and transparency are legal requirements, not aspirations." },
+      { title: "Scale with seasons", text: "Deadlines (filings, admissions, grants) create thundering herds. Systems must be sized for the peak, cheap at the trough." },
+      { title: "Inclusion is law", text: "Every citizen is a user: languages, literacy, devices, assistive tech. WCAG is the floor, not the goal." },
+      { title: "Procurement and longevity", text: "Public projects outlive vendors. Open standards, documentation and clean handover are constitutional, not courteous." },
+    ],
+    operations: [
+      { title: "Citizen services", items: ["Application and registration workflows with status tracking", "Document upload, verification and correction loops", "Payments and fee reconciliation", "Grievance and RTI-style request handling"] },
+      { title: "Internal administration", items: ["Case routing between departments with SLAs", "Approval chains with delegation rules", "Notices, circulars and public communication", "Role-based dashboards for officers"] },
+      { title: "Data & records", items: ["Verified record issuance with audit trails", "Retention and archival per policy", "Inter-departmental data sharing with consent boundaries", "Management information and compliance reporting"] },
+      { title: "Transparency operations", items: ["Public dashboards and disclosures", "Service-level performance publication", "Feedback and satisfaction capture", "Audit-ready logging on every state change"] },
+    ],
+    technology: ["Next.js citizen portals (WCAG-first)", "Node.js services", "PostgreSQL with records discipline", "SMS/email gateways for reach", "Regional language support", "Rigid audit logging"],
+    integrations: ["Identity and verification systems", "Payment gateways", "Departmental databases", "DigiLocker-style document systems where applicable", "Notification gateways", "GIS platforms"],
+    security: "Citizen data at public-trust grade: strict role scoping, complete audit trails, encryption everywhere, segregation of environments and adversarial testing before citizen exposure.",
+    aiOpportunities: [
+      { title: "Citizen assistance", text: "Grounded assistants answering scheme, status and process questions in plain language, with human escalation built in." },
+      { title: "Document processing", text: "Applications and attachments read, validated and routed automatically, officers deciding outcomes." },
+      { title: "Service analytics", text: "Bottleneck detection across departments so service levels improve by evidence." },
+    ],
+    relatedWork: [
+      { label: "Trust & security", href: "/trust" },
+      { label: "Reading: WCAG AA in practice", href: "/insights/wcag-aa-in-practice" },
+      { label: "Enterprise", href: "/enterprise" },
+    ],
     faqs: [
+    {
+      q: "How much does government software development cost?",
+      a: "Public platforms are scoped by citizen volume peaks, accessibility obligations and department integrations. Procurement-friendly fixed milestones with documentation are standard, and discovery prices the scope before tender commitments.",
+    },
+    {
+      q: "How long does an e-governance platform take to build?",
+      a: "A citizen service with applications, status tracking and payments typically ships in months; department-wide workflows follow in phases. Accessibility and audit readiness are launch requirements, not enhancements.",
+    },
+    {
+      q: "Do you build WCAG-accessible and audit-ready systems?",
+      a: "Yes: WCAG-aligned interfaces as the floor, complete audit trails on state changes, and documentation that survives vendor transitions. We publish our accessibility practice notes on Insights.",
+    },
       { q: "How do you ensure accessibility compliance?", a: "Accessibility is engineered into the component layer, from semantics, contrast and keyboard paths to screen-reader behaviour, and verified with assistive technologies during the build, not in a remediation sprint after launch." },
       { q: "Can you deliver in multiple languages?", a: "Yes. Multilingual delivery is architectural: content, interface and documents are structured for translation, and right-to-left layouts are supported where the jurisdiction needs them." },
       { q: "Do you work within public procurement processes?", a: "We are used to structured procurement: scoped documentation, staged deliverables and evidence trails written for review. The paperwork is treated as part of the engineering." },
@@ -523,7 +922,44 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
         { label: "Serve", note: "portal · support" },
       ],
     },
+    challenges: [
+      { title: "Assets in hard places", text: "Plants, pipelines, solar fields and meters sit beyond comfortable networks. Monitoring must assume thin pipes and long nights." },
+      { title: "Safety is non-negotiable", text: "Permits, isolation procedures and incident records carry lives and licences. Workflow discipline is the product." },
+      { title: "Data volume, decision latency", text: "Thousands of signals per minute against a handful of decisions per day. The platform must compress honestly." },
+      { title: "Commercial complexity", text: "Tariffs, PPAs, UOMs and settlement rules make billing its own engineering discipline." },
+    ],
+    operations: [
+      { title: "Asset monitoring", items: ["SCADA/IoT ingestion with historian storage", "Threshold alerting with acknowledgement trails", "Asset health scores and degradation trends", "Energy production and availability dashboards"] },
+      { title: "Field operations", items: ["Work permits with isolation and clearance steps", "Inspection checklists with photo evidence (offline-capable)", "Fault reporting to resolution workflows", "Crew scheduling and site access logs"] },
+      { title: "Commercial operations", items: ["Meter data collection and validation (MDM)", "Billing by tariff, PPA and consumption", "Settlement and reconciliation statements", "Customer portals with usage visibility"] },
+      { title: "Compliance intelligence", items: ["Statutory inspection calendars", "Incident and near-miss registers", "Emission and sustainability reporting", "Regulator-ready audit extracts"] },
+    ],
+    technology: ["Time-series ingestion and storage", "Flutter field apps (offline-first)", "Node.js services", "PostgreSQL commercial models", "Alerting and rules engines", "GIS and asset registries"],
+    integrations: ["SCADA and IoT gateways", "Meter data systems", "ERP and billing", "Weather and forecast feeds", "Workforce management", "GIS platforms"],
+    security: "Critical-infrastructure discipline: network segmentation between OT and IT, signed firmware paths, role-scoped control actions, and incident-response runbooks tested rather than filed.",
+    aiOpportunities: [
+      { title: "Predictive asset health", text: "Degradation flagged weeks early from sensor patterns, maintenance planning the response." },
+      { title: "Generation and load forecasting", text: "Forecast models tuned per site, feeding dispatch and settlement with confidence bands." },
+      { title: "Field document automation", text: "Permits and inspection paperwork read, checked and filed automatically, engineers approving safety steps." },
+    ],
+    relatedWork: [
+      { label: "Data & analytics", href: "/services/data-analytics" },
+      { label: "Cloud & DevOps", href: "/services/cloud-devops" },
+      { label: "Reading: Offline-first field apps", href: "/insights/offline-first-field-apps" },
+    ],
     faqs: [
+    {
+      q: "How much does energy sector software cost?",
+      a: "Cost follows asset count, telemetry volume and commercial complexity like tariffs and settlement. A monitored-asset pilot with alerting is the common fixed-scope entry that proves value before plant-wide rollout.",
+    },
+    {
+      q: "How long does an energy monitoring platform take to build?",
+      a: "Ingestion plus dashboards and alerts for a first site typically ships in a few months; multi-site scale and billing follow in stages. Safety workflows like permits get the longest runway because they must.",
+    },
+    {
+      q: "Can you integrate with SCADA, smart meters and IoT sensors?",
+      a: "Yes: time-series ingestion from SCADA and IoT gateways, MDM validation for meters, and GIS for asset registers. OT/IT segmentation is respected by design, not by exception.",
+    },
       { q: "Can field apps really work without connectivity?", a: "Yes, offline-first design keeps jobs, forms and evidence capture working in dead zones, then reconciles safely when the signal returns. Conflict handling is engineered, not hoped for." },
       { q: "How do you handle billing accuracy?", a: "Metering data is validated at ingestion, tariff logic is explicit and versioned, and every statement is reproducible from its inputs. A bill a customer cannot understand is treated as a defect." },
       { q: "Do you integrate with legacy asset systems?", a: "That is the daily reality of the sector. We build integration layers over decades-old formats and historian systems, meeting the data where it lives." },

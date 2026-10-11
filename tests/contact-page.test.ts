@@ -1,0 +1,51 @@
+import * as React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { readFileSync } from "node:fs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+const { settings, managedTeam } = vi.hoisted(() => ({ settings: vi.fn(), managedTeam: vi.fn() }));
+vi.mock("../src/lib/content-items", () => ({ getManagedTeam: managedTeam }));
+vi.mock("../src/lib/settings", () => ({ getSettings: settings }));
+vi.mock("next/link", () => ({ default: ({ children, ...props }: React.ComponentProps<"a">) => React.createElement("a", props, children) }));
+vi.mock("next/image", () => ({ default: ({ fill, sizes, unoptimized, ...props }: React.ComponentProps<"img"> & { fill?: boolean; unoptimized?: boolean }) => { void fill; void sizes; void unoptimized; return React.createElement("img", props); } }));
+vi.mock("../src/components/shared/captcha", () => ({ useCaptcha: () => ({ required: false, token: null, refresh: vi.fn() }), CaptchaGate: () => null, captchaBlocked: () => false }));
+import ContactPage, { metadata } from "../src/app/(site)/contact/page";
+import { ContactForm } from "../src/sections/contact/contact-form";
+import { CONTACT_QUESTIONS, TOPIC_GUIDANCE, contactAttribution } from "../src/sections/contact/contact-content";
+import { CONTACT_TOPICS, enquirySchema } from "../src/schemas/enquiry";
+const render = (el: React.ReactElement) => renderToStaticMarkup(el);
+const defaultSettings = { contactEmail: "managed@example.com", contactPhone: "+91 75029 01234" };
+
+describe("Contact correspondence studio", () => {
+ beforeEach(() => { settings.mockResolvedValue(defaultSettings); managedTeam.mockResolvedValue([]); });
+ it("shares the published About team under Key people, retaining name/contact-before-role order", async () => {
+   managedTeam.mockResolvedValue([{ name: "Contact Test Person", role: "CEO & Co-Founder", photo: "data:image/webp;base64,AAAA", photoAlt: "Contact test portrait", linkedinUrl: "https://www.linkedin.com/in/contact-test", email: "person@example.com" }]);
+   const html = render(await ContactPage());
+   expect(managedTeam).toHaveBeenCalled();
+   expect(html).toContain('id="team-heading">Key people</h2>');
+   expect(html).toContain('alt="Contact test portrait"');
+   expect(html).toContain('href="mailto:person@example.com"');
+   expect(html).toContain('href="https://www.linkedin.com/in/contact-test"');
+   expect(html.indexOf('id="channels"')).toBeLessThan(html.indexOf('id="team"'));
+   expect(html.indexOf('id="team"')).toBeLessThan(html.indexOf('id="faq"'));
+   expect(html.indexOf('<h3><a ')).toBeLessThan(html.indexOf('CEO &amp; Co-Founder'));
+   expect(html).toMatch(/<h3><a [^>]*href="https:\/\/www.linkedin.com\/in\/contact-test"[^>]*target="_blank"[^>]*>Contact Test Person<\/a><\/h3>/);
+   expect(html).not.toContain('data-demo-content="true"');
+ });
+ it("keeps an honest Key people empty state without invented profiles", async () => {
+   const html = render(await ContactPage());
+   expect(html).toContain('id="team-heading">Key people</h2>');
+   expect(html).toContain("Meet your project team.");
+ });
+ it("keeps canonical, dynamic managed settings and truthful metadata", async () => { expect(metadata.alternates).toEqual({ canonical: "/contact" }); expect(metadata.description).not.toMatch(/business day|24h|consultant/); const html=render(await ContactPage()); expect(html).toContain('data-contact-page="correspondence-studio"'); expect(html).toContain('href="mailto:managed@example.com"'); expect(settings).toHaveBeenCalled(); });
+ it("renders one complete message form before direct channels and FAQ", async () => { const html=render(await ContactPage()); expect((html.match(/<form/g)??[])).toHaveLength(1); expect(html.indexOf('id="send"')).toBeLessThan(html.indexOf('id="channels"')); expect(html.indexOf('id="channels"')).toBeLessThan(html.indexOf('id="faq"')); expect(html).toContain("Tell us a little."); });
+ it("does not render the invented demo team or unsupported service/privacy promises", async () => { const html=render(await ContactPage()); for(const claim of ["Aarav Mehta", "Priya Nair", "Rohan Desai", "within one business day", "no discovery paywalls", "never leave", "NDA on request", "instant estimator", "Chat with us instantly"]) expect(html.toLowerCase()).not.toContain(claim.toLowerCase()); });
+ it("exposes actual channels, verified physical offices and real Careers recovery", async () => { const html=render(await ContactPage()); expect(html).toContain("tel:+917502901234"); expect(html).toContain("https://wa.me/917502901234"); expect(html).toContain("139 PU4"); expect(html).toContain("Rue de la Fruiterie 13"); expect(html).toContain('href="/careers"'); expect(html).toContain("mailto:hr@savotechnologies.com"); });
+ it("keeps optional qualification and guards submission until hydration with an email alternative", () => { const html=render(React.createElement(ContactForm,{email:defaultSettings.contactEmail})); expect((html.match(/type="radio"/g)??[])).toHaveLength(5); expect(html).toContain('name="projectType"'); expect(html).toContain('<details'); expect(html).toContain('name="budget"'); expect(html).toContain('name="website"'); expect(html).toMatch(/type="submit" disabled=""/); expect(html).toContain("enable JavaScript"); expect(html).toContain('href="mailto:managed@example.com"'); });
+ it("matches required names/email/message and authoritative limits", () => { const html=render(React.createElement(ContactForm,{email:defaultSettings.contactEmail})); expect(html).toMatch(/id="ct-name"[^>]+required=""[^>]+maxLength="80"/); expect(html).toMatch(/id="ct-email"[^>]+required=""[^>]+maxLength="120"/); expect(html).toMatch(/id="ct-message"[^>]+required=""[^>]+maxLength="4000"/); expect(html).toContain("At least 20 characters."); expect(enquirySchema.safeParse({name:"Reader",email:"reader@example.com",projectType:"Careers",message:"A general question about a role."}).success).toBe(true); });
+ it("keeps schema questions identical to visible native disclosures", async () => { const html=render(await ContactPage()); const graph=JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1])["@graph"]; expect(graph.map((n:{"@type":string})=>n["@type"])).toEqual(["ContactPage","BreadcrumbList","FAQPage"]); expect(graph[2].mainEntity.map((q:{name:string})=>q.name)).toEqual(CONTACT_QUESTIONS.map(q=>q.q)); for(const q of CONTACT_QUESTIONS) expect(html).toContain(q.q); });
+ it("escapes managed settings in JSON-LD", async () => { settings.mockResolvedValue({...defaultSettings,contactEmail:'test</script><script>alert(1)</script>'}); const html=render(await ContactPage()); expect(html).toContain('test\\u003c/script>'); expect(html).not.toContain('<script>alert(1)</script>'); });
+ it("gives each accepted topic its own useful guidance", () => { expect(Object.keys(TOPIC_GUIDANCE)).toEqual([...CONTACT_TOPICS]); for(const topic of CONTACT_TOPICS) { expect(TOPIC_GUIDANCE[topic].hint.length).toBeGreaterThan(20); expect(TOPIC_GUIDANCE[topic].placeholder.length).toBeGreaterThan(20); } });
+ it("preserves first-touch attribution without copying arbitrary/private fields", () => { expect(contactAttribution(JSON.stringify({page:"/ai-agents",utm_campaign:"launch",referrer:"r".repeat(400),secret:"private",utm_source:42}))).toEqual({landingPage:"/ai-agents",utm_campaign:"launch",referrer:"r".repeat(300)}); expect(contactAttribution("bad JSON")).toEqual({}); expect(contactAttribution("[]")).toEqual({}); expect(contactAttribution(null)).toEqual({}); });
+ it("retains API/analytics/CAPTCHA/focus/phone/search/no-JS contracts in the actual component", () => { const source=readFileSync("src/sections/contact/contact-form.tsx","utf8"); for(const contract of ['withBasePath("/api/enquiries")','source: "contact"','form: "contact", topic','captchaToken: captcha.token','enquiry_form_start','enquiry_form_submit','enquiry_form_success','enquiry_form_error','focusError(json.fieldErrors)','noticeRef.current?.focus()','getAttribute("role") === "searchbox"','event.preventDefault()','optionalRef.current.open = true']) expect(source).toContain(contract); expect(source.indexOf('enquirySchema.safeParse')).toBeLessThan(source.indexOf('captchaBlocked(captcha)')); });
+ it("uses approved grey close, responsive composition and static reduced motion", async () => { const html=render(await ContactPage()); expect(html).toContain("data-closing-cta"); const css=readFileSync("src/sections/contact/contact.module.css","utf8"); expect(css).toContain("#f7f7f7"); expect(css).toContain("prefers-reduced-motion:reduce"); expect(css).toContain("animation:none!important"); expect(css).not.toMatch(/rotate\([^)]+deg\)|infinite|linear-gradient/); });
+});

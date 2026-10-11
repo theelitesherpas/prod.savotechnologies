@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCollection, isCollectionKey, toFormDef } from "@/lib/content-registry";
@@ -16,6 +17,7 @@ export default async function NewItemPage({
   params: Promise<{ collection: string }>;
   searchParams: Promise<{ e?: string }>;
 }) {
+  await requireAdminPage("/admin/content/[collection]/new");
   const { collection: raw } = await params;
   if (!isCollectionKey(raw)) notFound();
   const def = getCollection(raw);
@@ -25,7 +27,7 @@ export default async function NewItemPage({
     <div className="max-w-4xl">
       <PageHeader
         title={`New ${def.singular}`}
-        description={`Add a ${def.singular} to ${def.label.toLowerCase()} - it goes live on the site the moment you create it.`}
+        description={`Add a ${def.singular} to ${def.label.toLowerCase()}. New items start as drafts; set Lifecycle to Published to make them visible on the public site.`}
       />
       {e === "invalid" ? <Notice kind="alert">Check the fields - a required value is missing or invalid.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That slug is already in use. Choose another.</Notice> : null}

@@ -39,7 +39,7 @@ describe("enquirySchema", () => {
     expect(r.success).toBe(false);
   });
 
-  /* Contact page additions — topics and optional phone */
+  /* Contact page additions - topics and optional phone */
 
   it("accepts every contact topic as a project type", () => {
     for (const topic of ["New project", "Hire a team", "Support", "Careers", "Something else"]) {
@@ -58,7 +58,7 @@ describe("enquirySchema", () => {
     expect(enquirySchema.safeParse({ ...valid, phone: "call me maybe" }).success).toBe(false);
   });
 
-  /* Careers additions — role titles as project types */
+  /* Careers additions - role titles as project types */
 
   it("accepts every open role title and the general application", () => {
     const titles = [

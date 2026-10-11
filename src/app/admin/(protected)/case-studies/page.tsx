@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -32,6 +33,7 @@ export default async function AdminCaseStudiesPage({
 }: {
   searchParams: Promise<{ saved?: string; e?: string; n?: string }>;
 }) {
+  await requireAdminPage("/admin/case-studies");
   const sp = await searchParams;
 
   const rows = prisma

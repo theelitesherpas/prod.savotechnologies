@@ -1,13 +1,14 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import {
   CAREERS_EMAIL,
+  HIRING_STEPS,
+  careerProjectType,
   CTC_OPTIONS,
   EXPERIENCE_OPTIONS,
   GENERAL_APPLICATION,
   NOTICE_OPTIONS,
-  SKILLS,
   roleSlug,
   type PublicRole,
 } from "@/constants/careers";
@@ -20,13 +21,16 @@ import {
   type EnquiryInput,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
-import { redirectToThankYou } from "@/lib/thank-you";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { PhoneField } from "@/components/shared/phone-field";
 import { SuccessDialog, type SuccessStep } from "@/components/shared/success-dialog";
 import { cn, withBasePath } from "@/lib/utils";
+import { CareerSkillPicker } from "./skill-picker";
+import { careerApplicationSchema, careerApplicationErrors, type CareerApplicationErrors } from "@/schemas/career-application";
+import s from "./careers.module.css";
 
 type Status = "idle" | "submitting" | "success" | "error";
+const subscribe = () => () => {};
 
 /**
  * Careers application (version-1 fields, v6 idiom). Posts to the shared
@@ -35,27 +39,11 @@ type Status = "idle" | "submitting" | "success" | "error";
  * Details the inbox schema has no column for (city, skills, links…) are
  * composed into the message, exactly like version 1.
  */
-/** Condensed from HIRING_STEPS - the same process, trimmed for the
- *  confirmation moment. Faithful to the careers page copy. */
-const NEXT_STEPS: SuccessStep[] = [
-  {
-    step: "01",
-    title: "Two business days",
-    text: "Every application read, a personal reply - yes or no, you hear back.",
-  },
-  {
-    step: "02",
-    title: "Technical conversation",
-    text: "A conversation with our team about your experience and the role.",
-  },
-  {
-    step: "03",
-    title: "Meet the team",
-    text: "A wider conversation with the people you would work with.",
-  },
-];
+/** Same possible stages as the careers page, without a response-time promise. */
+const NEXT_STEPS: SuccessStep[] = HIRING_STEPS.slice(0, 3);
 
 export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: string; roles: PublicRole[] }) {
+  const enhanced = useSyncExternalStore(subscribe, () => true, () => false);
   const roles: readonly string[] = [...ROLES.map((r) => r.title), GENERAL_APPLICATION];
   const [role, setRole] = useState<string>(
     initialRole && roles.includes(initialRole) ? initialRole : (ROLES[0]?.title ?? GENERAL_APPLICATION),
@@ -66,7 +54,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
   const [errors, setErrors] = useState<EnquiryFieldErrors>({});
   const [phone, setPhone] = useState("");
   const [phoneOk, setPhoneOk] = useState(true);
-  const [localErrors, setLocalErrors] = useState<{ city?: string; consent?: string }>({});
+  const [localErrors, setLocalErrors] = useState<CareerApplicationErrors>({});
+  const [skillUpdate, setSkillUpdate] = useState("");
   const [serverMessage, setServerMessage] = useState("");
   const [confirmation, setConfirmation] = useState<{ name: string; email: string } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -81,9 +70,27 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
     track("enquiry_form_start", { form: "careers" });
   }
 
-  function toggleSkill(s: string) {
+  function updateSkills(next: string[]) {
+    setSkills(next);
+    if (next.length) {
+      setLocalErrors(current => ({ ...current, skills: undefined }));
+      setSkillUpdate("");
+    }
+  }
+
+  function changeRole(next: string) {
+    setRole(next);
+    setSkills([]);
+    setSkillUpdate(skills.length ? "Your skill selections were cleared for the new role. Choose the skills that fit this application." : "");
+    setLocalErrors(current => ({ ...current, skills: undefined, role: undefined }));
     onStarted();
-    setSkills((list) => (list.includes(s) ? list.filter((x) => x !== s) : [...list, s]));
+  }
+
+  function focusField(name: string) {
+    const field = formRef.current?.querySelector<HTMLElement>(name === "phone" ? "#cr-phone" : name === "skills" ? "#cr-skill-options button, #cr-other-skill" : `[name="${name}"]`);
+    const disclosure = field?.closest("details");
+    if (disclosure) disclosure.open = true;
+    field?.focus();
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -95,25 +102,21 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
       setErrors({ phone: "Check the phone number - it does not match the selected country's format." });
       return;
     }
-    if (captchaBlocked(captcha)) {
-      setCaptchaErr("Please complete the human verification.");
-      return;
-    }
-
     const data = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
 
-    // Local checks the shared schema doesn't know about
-    const local: { city?: string; consent?: string } = {};
-    if (!data.city?.trim()) local.city = "Your current city helps with logistics.";
+    // Same career-only requirements are enforced by the shared API.
+    const qualification = careerApplicationSchema.safeParse({ form: "careers", role, city: data.city, skills, experience: data.experience, notice: data.notice, consent: data.consent === "on" });
+    const local: CareerApplicationErrors = qualification.success ? {} : careerApplicationErrors(qualification.error);
     if (!data.consent) local.consent = "Please confirm we may process your application.";
     setLocalErrors(local);
 
     // Compose the message: note first, then a structured details block
     const details = [
+      `Role: ${role}`,
       `City: ${data.city?.trim() ?? ""}`,
-      `Experience: ${data.experience}`,
-      `Notice: ${data.notice}`,
-      `Expected CTC: ${data.ctc}`,
+      data.experience ? `Experience: ${data.experience}` : "",
+      data.notice ? `Start availability: ${data.notice}` : "",
+      data.ctc ? `Expected CTC: ${data.ctc}` : "",
       skills.length ? `Skills: ${skills.join(", ")}` : "",
       data.links?.trim() ? `Portfolio / GitHub: ${data.links.trim()}` : "",
       data.resume?.trim() ? `Resume: ${data.resume.trim()}` : "",
@@ -127,21 +130,25 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
       email: data.email,
       phone: data.phone ?? "",
       company: data.company ?? "",
-      projectType: role,
+      projectType: careerProjectType(role),
       message,
       website: data.website ?? "",
     });
     if (!parsed.success) {
       setErrors(flattenFieldErrors(parsed.error));
       const firstKey = Object.keys(parsed.error.flatten().fieldErrors).find((k) => k !== "message");
-      formRef.current?.querySelector<HTMLElement>(firstKey ? `[name="${firstKey}"]` : "[name=notes]")?.focus();
-      return;
-    }
-    if (Object.keys(local).length) {
-      formRef.current?.querySelector<HTMLElement>("[name=city]")?.focus();
+      focusField(firstKey ?? "notes");
       return;
     }
     setErrors({});
+    if (Object.keys(local).length) {
+      focusField(Object.keys(local)[0]);
+      return;
+    }
+    if (captchaBlocked(captcha)) {
+      setCaptchaErr("Please complete the human verification.");
+      return;
+    }
     setStatus("submitting");
     track("enquiry_form_submit", { form: "careers", role });
 
@@ -163,6 +170,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
             expectedCtc: data.ctc ?? "",
             skills,
             links: data.links?.trim() ?? "",
+            consent: data.consent === "on",
             resume: data.resume?.trim() ?? "",
           },
         }),
@@ -170,28 +178,36 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         error?: string;
-        reference?: string;
         fieldErrors?: EnquiryFieldErrors;
+        careerFieldErrors?: CareerApplicationErrors;
       };
       if (res.ok && json.ok) {
         setStatus("success");
-        captcha.refresh();
-        track("enquiry_form_success", { form: "careers", role });
-        // Server-confirmed receipt → the shared thank-you page (which
-        // carries the careers next steps). Without a reference the
-        // SuccessDialog flow below remains the durable fallback.
-        if (redirectToThankYou(json.reference)) return;
         setConfirmation({ name: data.name ?? "", email: data.email ?? "" });
         setDialogOpen(true);
+        captcha.refresh();
+        track("enquiry_form_success", { form: "careers", role });
+        return;
+      }
+      if (res.status === 400 && json.careerFieldErrors) {
+        setLocalErrors(json.careerFieldErrors);
+        const firstField = Object.keys(json.careerFieldErrors).find(key => ["city", "skills", "experience", "notice", "consent"].includes(key));
+        if (firstField) {
+          setStatus("idle");
+          focusField(firstField);
+        } else {
+          setServerMessage(json.error ?? "Please check your skills and availability, then try again.");
+          setStatus("error");
+          focusField("role");
+        }
         return;
       }
       if (res.status === 400 && json.fieldErrors) {
         setErrors(json.fieldErrors);
         setStatus("idle");
+        focusField(Object.keys(json.fieldErrors)[0] === "message" ? "notes" : (Object.keys(json.fieldErrors)[0] ?? "name"));
         return;
       }
-      // A rejected token is single-use - re-arm the widget for a retry.
-      if (res.status === 400) captcha.reset();
       setServerMessage(
         json.error ?? "Something went wrong sending your application. Please try again in a moment.",
       );
@@ -212,6 +228,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
     setLocalErrors({});
     setServerMessage("");
     setSkills([]);
+    setSkillUpdate("");
     setPhone("");
     startedRef.current = false;
   }
@@ -229,9 +246,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           steps={NEXT_STEPS}
           contactEmail={CAREERS_EMAIL}
         >
-          Thank you{firstName !== "there" ? `, ${firstName}` : ""}. Our hiring team reads
-          every application personally - you will hear back within two business days,
-          whatever the outcome.
+          Thank you{firstName !== "there" ? `, ${firstName}` : ""}. Your application has
+          been submitted to Savo. The next steps depend on the role and the fit.
         </SuccessDialog>
 
         {/* Durable confirmation - stays after the dialog closes */}
@@ -239,10 +255,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           <span aria-hidden="true" className="mb-6 block h-3 w-3 bg-accent" />
           <p className="t-h3 mb-3">Application received.</p>
           <p className="t-body text-muted">
-            Thank you{firstName !== "there" ? ", " + firstName : ""}. Our hiring team reads every
-            application and replies personally within two business days. A confirmation is on its
-            way to <span className="font-mono text-foreground">{confirmation.email}</span>. If it
-            is urgent, write to{" "}
+            Thank you{firstName !== "there" ? ", " + firstName : ""}. Your application was submitted
+            using <span className="text-foreground">{confirmation.email}</span>. For questions, write to{" "}
             <a href={`mailto:${CAREERS_EMAIL}`} className="link-underline text-foreground">
               {CAREERS_EMAIL}
             </a>
@@ -261,35 +275,20 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-7">
+    <form ref={formRef} onSubmit={handleSubmit} noValidate className={s.applicationForm}>
+      <p>Fields marked * are required. Your resume and work links are optional.</p>
       {/* Role */}
       <fieldset>
         <legend className="t-label mb-3 block text-muted">Role</legend>
-        <div className="flex flex-wrap gap-2">
-          {roles.map((r) => (
-            <button
-              key={r}
-              type="button"
-              aria-pressed={role === r}
-              onClick={() => {
-                setRole(r);
-                onStarted();
-              }}
-              className={cn(
-                "t-sm rounded-[2px] border px-4 py-2.5 font-semibold transition-colors duration-300 ease-[var(--ease-out-expo)]",
-                role === r
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border text-muted hover:border-foreground/40 hover:text-foreground",
-              )}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
+        <label htmlFor="cr-role" className="sr-only">Role</label>
+        <select id="cr-role" name="role" className={s.roleSelect} value={role} disabled={status === "submitting"} onChange={e => changeRole(e.target.value)}>
+          {roles.map(r => <option key={r} value={r}>{r}</option>)}
+        </select>
       </fieldset>
 
+      <h3 id="your-details">Your details</h3>
       <div className="grid gap-x-8 gap-y-7 sm:grid-cols-2">
-        <Field label="Full name" name="name" errors={errors} onFocus={onStarted} autoComplete="name" placeholder="Aarav Sharma" />
+        <Field label="Full name" name="name" errors={errors} onFocus={onStarted} autoComplete="name" placeholder="Your full name" />
         <Field
           label="Email"
           name="email"
@@ -299,7 +298,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           autoComplete="email"
           placeholder="you@email.com"
         />
-        <PhoneField value={phone} onChange={setPhone} error={errors.phone} onValidity={setPhoneOk} onFocus={onStarted} />
+        <div className={s.phoneEntry}><label htmlFor="cr-phone" className="t-label mb-1 block">Phone (optional)</label><PhoneField id="cr-phone" value={phone} onChange={setPhone} error={errors.phone} onValidity={setPhoneOk} onFocus={onStarted} /></div>
         <Field
           label="Current city"
           name="city"
@@ -308,49 +307,22 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           autoComplete="address-level2"
           placeholder="Indore"
         />
-        <div className="sm:col-span-2">
-          <Field
-            label="Current employer"
-            name="company"
-            errors={errors}
-            onFocus={onStarted}
-            autoComplete="organization"
-            placeholder="Where you work today (optional)"
-            required={false}
-          />
-        </div>
       </div>
 
-      {/* Skills */}
-      <fieldset>
-        <legend className="t-label mb-3 block text-muted">Key skills</legend>
-        <div className="flex flex-wrap gap-2">
-          {SKILLS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              aria-pressed={skills.includes(s)}
-              onClick={() => toggleSkill(s)}
-              className={cn(
-                "t-caption rounded-[2px] border px-3 py-1.5 font-semibold transition-colors duration-300 ease-[var(--ease-out-expo)]",
-                skills.includes(s)
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border text-muted hover:border-foreground/40 hover:text-foreground",
-              )}
-            >
-              {s}
-            </button>
-          ))}
+      <section id="availability" className={s.qualifications} aria-labelledby="availability-heading">
+        <h3 id="availability-heading">Skills & availability</h3>
+        {skillUpdate && <p role="status">{skillUpdate}</p>}
+        <CareerSkillPicker key={role} role={role} skills={skills} onChange={updateSkills} error={localErrors.skills} onStarted={onStarted} />
+        <div className="grid gap-x-8 gap-y-7 sm:grid-cols-2">
+          <SelectField label="Experience" name="experience" options={EXPERIENCE_OPTIONS} defaultValue="" placeholder="Choose your experience" required error={localErrors.experience} onFocus={onStarted} onChange={() => setLocalErrors(current => ({ ...current, experience: undefined }))} />
+          <SelectField label="When can you start?" name="notice" options={NOTICE_OPTIONS} defaultValue="" placeholder="Choose your availability" required error={localErrors.notice} onFocus={onStarted} onChange={() => setLocalErrors(current => ({ ...current, notice: undefined }))} />
         </div>
-      </fieldset>
-
-      {/* Context selects */}
-      <div className="grid gap-x-8 gap-y-7 sm:grid-cols-3">
-        <SelectField label="Experience" name="experience" options={EXPERIENCE_OPTIONS} defaultValue="1 to 3 years" onFocus={onStarted} />
-        <SelectField label="Notice period" name="notice" options={NOTICE_OPTIONS} defaultValue="30 days" onFocus={onStarted} />
-        <SelectField label="Expected CTC" name="ctc" options={CTC_OPTIONS} defaultValue="Open to discussion" onFocus={onStarted} />
-      </div>
-
+        <div className="grid gap-x-8 gap-y-7 sm:grid-cols-2">
+          <Field label="Current employer (optional)" name="company" errors={errors} onFocus={onStarted} autoComplete="organization" placeholder="Company name" required={false} />
+          <div><SelectField label="Expected annual CTC (optional)" name="ctc" options={CTC_OPTIONS} defaultValue="" onFocus={onStarted} /><p className={s.payHelp}>Total annual pay in INR. L means lakh.</p></div>
+        </div>
+      </section>
+      <h3 id="your-work">Your work</h3>
       <div className="grid gap-x-8 gap-y-7 sm:grid-cols-2">
         <Field
           label="Portfolio / GitHub"
@@ -358,7 +330,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           type="url"
           errors={errors}
           onFocus={onStarted}
-          placeholder="github.com/you (optional)"
+          placeholder="Link to your work (optional)"
           required={false}
         />
         <Field
@@ -390,16 +362,19 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
             name="consent"
             type="checkbox"
             aria-invalid={!!localErrors.consent}
+            aria-required="true"
+            aria-describedby={localErrors.consent ? "cr-consent-error" : "cr-consent-text"}
+            onChange={e => { if (e.currentTarget.checked) setLocalErrors(current => ({ ...current, consent: undefined })); }}
             onFocus={onStarted}
-            className="mt-1 h-4 w-4 shrink-0 cursor-pointer appearance-none border border-border bg-transparent transition-colors checked:border-accent checked:bg-accent"
+            className="mt-1 h-4 w-4 shrink-0 cursor-pointer"
           />
-          <span className={cn("t-sm text-muted", localErrors.consent && "text-error")}>
+          <span className={cn("t-sm text-muted", localErrors.consent && "text-error")} id="cr-consent-text">
             I agree that Savo Technologies may process my application data for
             this hiring process.
           </span>
         </label>
         {localErrors.consent ? (
-          <p role="alert" className="t-caption mt-1.5 text-error">
+          <p id="cr-consent-error" role="alert" className="t-caption mt-1.5 text-error">
             {localErrors.consent}
           </p>
         ) : null}
@@ -423,8 +398,8 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
         <CaptchaGate captcha={captcha} error={captchaErr} />
         <button
           type="submit"
-          disabled={status === "submitting"}
-          className="group/btn inline-flex h-[3.25rem] items-center justify-center gap-2.5 rounded-[2px] bg-foreground px-7 text-base font-semibold tracking-[-0.01em] text-background transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-accent hover:text-on-accent disabled:pointer-events-none disabled:opacity-50"
+          disabled={status === "submitting" || !enhanced}
+          className={`${s.submit} group/btn inline-flex items-center justify-center gap-2.5 font-semibold transition-colors disabled:pointer-events-none`}
         >
           {status === "submitting" ? "Sending…" : "Submit application"}
           <svg
@@ -439,8 +414,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           </svg>
         </button>
         <p className="t-caption max-w-xs text-muted">
-          Read by our hiring team, personal reply within two business days.
-          Your application stays with Savo Technologies.
+          Sending this form submits your application to Savo Technologies.
         </p>
       </div>
     </form>
@@ -503,6 +477,7 @@ function Field({
             onFocus={onFocus}
             onInput={(e) => setLen(e.currentTarget.value.length)}
             rows={4}
+            aria-required={required}
             maxLength={max}
           />
           <p className="t-caption tnum mt-1 text-right text-muted">
@@ -514,6 +489,7 @@ function Field({
           id={id}
           name={name}
           type={type}
+          aria-required={required}
           inputMode={inputMode}
           className="field"
           placeholder={placeholder}
@@ -539,21 +515,30 @@ function SelectField({
   options,
   defaultValue,
   onFocus,
+  onChange,
+  required = false,
+  error,
+  placeholder = "Select if relevant",
 }: {
   label: string;
   name: string;
   options: readonly string[];
   defaultValue: string;
   onFocus: () => void;
+  onChange?: () => void;
+  required?: boolean;
+  error?: string;
+  placeholder?: string;
 }) {
   const id = `cr-${name}`;
   return (
     <div>
       <label htmlFor={id} className="t-label mb-1 block text-muted">
-        {label}
+        {label}{required && <span aria-hidden="true" className="text-accent"> *</span>}
       </label>
       <div className="relative">
-        <select id={id} name={name} className="field pr-8" defaultValue={defaultValue} onFocus={onFocus}>
+        <select id={id} name={name} className="field pr-8" defaultValue={defaultValue} required={required} aria-required={required} aria-invalid={!!error} aria-describedby={error ? `${id}-error` : undefined} onFocus={onFocus} onChange={onChange}>
+          <option value="">{placeholder}</option>
           {options.map((o) => (
             <option key={o} value={o}>
               {o}
@@ -571,6 +556,7 @@ function SelectField({
           <path d="M2 4l4 4 4-4" />
         </svg>
       </div>
+      {error && <p id={`${id}-error`} role="alert" className="t-caption mt-1.5 text-error">{error}</p>}
     </div>
   );
 }

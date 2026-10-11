@@ -6,7 +6,9 @@ import Link from "next/link";
 import { AdminIcon } from "./icons";
 import { FormGuard } from "./form-guard";
 import { fmtIST } from "@/lib/datetime";
-import { cn } from "@/lib/utils";
+import { cn, withBasePath } from "@/lib/utils";
+import { ImageCropField, type AttachedImage } from "./image-crop-field";
+import { RichArticleEditor } from "./rich-article-editor";
 import type { CollectionFormDef, FieldDef, ObjectListSubField } from "@/lib/content-registry";
 
 /**
@@ -152,7 +154,9 @@ function AddRowButton({ label, onClick }: { label: string; onClick: () => void }
 
 /** Editor for string lists (chips, duties, deliverables…). */
 function ListEditor({ def, value }: { def: FieldDef; value: string[] }) {
-  const [items, setItems] = useState<string[]>(value.length ? value : [""]);
+  const [items, setItems] = useState<string[]>(() =>
+    def.options?.length ? value.filter((item) => def.options!.some((option) => option.value === item)) : value.length ? value : [""],
+  );
   const move = (i: number, dir: -1 | 1) =>
     setItems((prev) => {
       const next = [...prev];
@@ -160,6 +164,43 @@ function ListEditor({ def, value }: { def: FieldDef; value: string[] }) {
       [next[i], next[j]] = [next[j], next[i]];
       return next;
     });
+
+  if (def.options?.length) {
+    const selected = def.options.filter((option) => items.includes(option.value));
+    return (
+      <div className="space-y-2.5">
+        <input type="hidden" name={def.name} value={JSON.stringify(selected.map((option) => option.value))} />
+        <details className="group">
+          <summary id="industrySlugs-selector" className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-border bg-background px-3.5 text-[0.8125rem] font-medium text-foreground/80 hover:border-foreground/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
+            <span>{selected.length ? `Choose industries · ${selected.length} selected` : "Choose industries"}</span>
+            <AdminIcon name="down" className="h-3.5 w-3.5 text-muted transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="mt-2 grid gap-1 rounded-lg border border-border bg-background p-2 sm:grid-cols-2">
+            {def.options.map((option) => (
+              <label key={option.value} className="flex min-h-10 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-[0.8125rem] text-foreground/80 hover:bg-[var(--surface)]">
+                <input
+                  type="checkbox"
+                  checked={items.includes(option.value)}
+                  onChange={(e) => setItems((prev) => e.target.checked ? [...prev, option.value] : prev.filter((item) => item !== option.value))}
+                  className="h-4 w-4 accent-[var(--accent)]"
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
+        </details>
+        {selected.length ? (
+          <ul aria-label="Selected industries" className="flex flex-wrap gap-1.5">
+            {selected.map((option) => (
+              <li key={option.value} className="rounded-full border border-border bg-[var(--surface)] px-2.5 py-1 text-[0.75rem] text-foreground/75">
+                {option.label}
+              </li>
+            ))}
+          </ul>
+        ) : <p className="t-caption text-muted">No industry selected.</p>}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -359,6 +400,7 @@ function BlocksEditor({ def, value }: { def: FieldDef; value: Block[] }) {
                 }
                 placeholder={kind === "li" ? "One bullet per line" : undefined}
                 className="adm-textarea"
+                required={def.required}
                 aria-label={`Block ${i + 1} content`}
               />
             </li>
@@ -402,6 +444,7 @@ function SlugField({
           id={id}
           type="text"
           value={slug}
+          required={def.required}
           onChange={(e) => setManualSlug(e.target.value)}
           data-slug={manualSlug ? "manual" : "auto"}
           placeholder="auto-derived-from-title"
@@ -417,6 +460,64 @@ function SlugField({
           Auto
         </button>
       </div>
+    </div>
+  );
+}
+
+function EditorialImageField({ def, value, altValue }: { def: FieldDef; value: unknown; altValue: unknown }) {
+  const initial = typeof value === "string" ? value : "";
+  const initialAlt = typeof altValue === "string" ? altValue : "";
+  const [currentPath, setCurrentPath] = useState(initial.startsWith("data:image/") ? "" : initial);
+  const [alt, setAlt] = useState(initialAlt);
+  const [attached, setAttached] = useState<AttachedImage | null>(() =>
+    initial.startsWith("data:image/")
+      ? { dataUrl: initial, width: def.targetWidth ?? 1600, height: def.targetHeight ?? 900, alt: initialAlt }
+      : null,
+  );
+
+  return (
+    <div className="sm:col-span-2 space-y-3">
+      <input type="hidden" name={def.name} value={attached?.dataUrl ?? currentPath} />
+      {currentPath ? (
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-[var(--surface)] p-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={withBasePath(currentPath)} alt={`Current ${def.label.toLowerCase()}`} className="h-16 w-28 rounded-[2px] border border-border object-cover" />
+          <p className="t-caption text-muted">Current image · choose a new one below to replace it.</p>
+        </div>
+      ) : null}
+      {def.altFieldName ? (
+        <label className="block" htmlFor={`${def.name}-alt`}>
+          <span className="adm-label mb-1.5 block">Image description{def.altFieldRequired ? <span aria-hidden="true" className="ml-1 text-accent">*</span> : " (optional)"}</span>
+          <input
+            id={`${def.name}-alt`}
+            type="text"
+            name={def.altFieldName}
+            value={attached?.alt ?? alt}
+            onChange={(e) => {
+              setAlt(e.target.value);
+              setAttached((prev) => prev ? { ...prev, alt: e.target.value } : prev);
+            }}
+            required={def.altFieldRequired}
+            maxLength={200}
+            className="adm-input w-full"
+            placeholder="Describe the image for screen readers"
+          />
+        </label>
+      ) : null}
+      <ImageCropField
+        label={def.label}
+        hint={def.help}
+        fieldId={def.required ? `${def.name}-field` : undefined}
+        required={def.required}
+        targetWidth={def.targetWidth ?? 1600}
+        targetHeight={def.targetHeight ?? 900}
+        value={attached}
+        showAltText={false}
+        onChange={(next) => {
+          setAttached(next ? { ...next, alt } : null);
+          setCurrentPath("");
+        }}
+      />
     </div>
   );
 }
@@ -453,10 +554,13 @@ function FieldBlock({
   const id = useId();
   const half = def.width === "half";
 
+  if (def.legacy) {
+    return <input type="hidden" name={def.name} value={typeof data[def.name] === "string" ? data[def.name] as string : ""} />;
+  }
   if (def.type === "list") {
     return (
       <div className={half ? "sm:col-span-1" : "sm:col-span-2"}>
-        <span className="adm-label mb-2 block">{def.label}</span>
+        <span className="adm-label mb-2 block">{def.label}{def.required ? <span aria-hidden="true" className="ml-1 text-accent">*</span> : null}</span>
         <ListEditor def={def} value={Array.isArray(data[def.name]) ? (data[def.name] as string[]) : []} />
         {def.help ? <p className="t-caption mt-1.5 text-muted">{def.help}</p> : null}
       </div>
@@ -465,7 +569,7 @@ function FieldBlock({
   if (def.type === "object-list") {
     return (
       <div className={half ? "sm:col-span-1" : "sm:col-span-2"}>
-        <span className="adm-label mb-2 block">{def.label}</span>
+        <span className="adm-label mb-2 block">{def.label}{def.required ? <span aria-hidden="true" className="ml-1 text-accent">*</span> : null}</span>
         <ObjectListEditor
           def={def}
           value={Array.isArray(data[def.name]) ? (data[def.name] as Record<string, string>[]) : []}
@@ -474,11 +578,16 @@ function FieldBlock({
       </div>
     );
   }
+  if (def.type === "image") {
+    return <EditorialImageField def={def} value={data[def.name]} altValue={def.altFieldName ? data[def.altFieldName] : ""} />;
+  }
   if (def.type === "blocks") {
     return (
       <div className={half ? "sm:col-span-1" : "sm:col-span-2"}>
-        <span className="adm-label mb-2 block">{def.label}</span>
-        <BlocksEditor def={def} value={Array.isArray(data[def.name]) ? (data[def.name] as Block[]) : []} />
+        <span className="adm-label mb-2 block">{def.label}{def.required ? <span aria-hidden="true" className="ml-1 text-accent">*</span> : null}</span>
+        {def.editor === "rich-text"
+          ? <RichArticleEditor name={def.name} value={Array.isArray(data[def.name]) ? (data[def.name] as Block[]) : []} required={def.required} />
+          : <BlocksEditor def={def} value={Array.isArray(data[def.name]) ? (data[def.name] as Block[]) : []} />}
         {def.help ? <p className="t-caption mt-1.5 text-muted">{def.help}</p> : null}
       </div>
     );
@@ -486,7 +595,7 @@ function FieldBlock({
   if (def.type === "slug") {
     return (
       <div>
-        <span className="adm-label mb-1.5 block">{def.label}</span>
+        <span className="adm-label mb-1.5 block">{def.label}{def.required ? <span aria-hidden="true" className="ml-1 text-accent">*</span> : null}</span>
         <SlugField def={def} value={itemSlug ?? ""} titleValue={titleValue} />
         {def.help ? <p className="t-caption mt-1.5 text-muted">{def.help}</p> : null}
       </div>
@@ -558,6 +667,29 @@ function FieldBlock({
  * server action (create or update); meta fields (id, order, active) are
  * included automatically.
  */
+function validateInsightForm(form: HTMLFormElement) {
+  const problems: { anchor: string; message: string }[] = [];
+  const image = form.elements.namedItem("image");
+  if (!(image instanceof HTMLInputElement) || !image.value) {
+    problems.push({ anchor: "insight-image-field", message: "Choose and crop a cover image." });
+  }
+  const industries = form.elements.namedItem("industrySlugs");
+  let selected: unknown = [];
+  try {
+    selected = industries instanceof HTMLInputElement ? JSON.parse(industries.value) : [];
+  } catch {
+    selected = [];
+  }
+  if (!Array.isArray(selected) || selected.length === 0) {
+    problems.push({ anchor: "industrySlugs-selector", message: "Select at least one related industry." });
+  }
+  const body = form.querySelector<HTMLElement>("[data-insight-rich-editor]");
+  if (!body?.innerText.trim()) {
+    problems.push({ anchor: "insight-body-field", message: "Add article text before saving." });
+  }
+  return problems;
+}
+
 export function CollectionForm({
   def,
   action,
@@ -576,7 +708,7 @@ export function CollectionForm({
   const data = item?.data ?? def.defaults;
 
   return (
-    <FormGuard action={action} className="min-w-0">
+    <FormGuard action={action} validate={def.key === "insights" ? validateInsightForm : undefined} className="min-w-0">
       {item ? <input type="hidden" name="id" value={item.id} /> : null}
       <input type="hidden" name="collection" value={def.key} />
 

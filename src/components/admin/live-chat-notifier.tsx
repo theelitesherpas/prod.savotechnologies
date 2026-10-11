@@ -181,6 +181,7 @@ export function LiveChatNotifier() {
       }
     };
 
+    es.addEventListener("ready", onCounts as EventListener);
     es.addEventListener("conversation.new", onNewConversation as EventListener);
     es.addEventListener("message.new", onMessage as EventListener);
     es.addEventListener("counts.changed", onCounts as EventListener);

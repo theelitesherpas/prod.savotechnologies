@@ -47,7 +47,28 @@ export type AnalyticsEvent =
   | "ask_savo_mode_human"
   | "ask_savo_live_request"
   | "ask_savo_live_accepted"
-  | "ask_savo_chat_ended";
+  | "ask_savo_chat_ended"
+  /* Master spec Part 89 - case study engagement */
+  | "case_study_viewed"
+  | "case_study_completed"
+  | "case_filter"
+  | "case_study_open"
+  | "industry_slider_open"
+  | "industry_slider_select"
+  /* Project lead modal (premium enquiry popup) */
+  | "lead_modal_eligible"
+  | "lead_modal_open"
+  | "lead_modal_auto_open"
+  | "lead_modal_cta_open"
+  | "lead_modal_exit_open"
+  | "lead_modal_close"
+  | "lead_form_start"
+  | "lead_form_service_select"
+  | "lead_form_submit"
+  | "lead_form_success"
+  | "lead_form_error"
+  | "lead_schedule_click"
+  | "lead_whatsapp_optin";
 
 type DataLayer = Record<string, unknown>[];
 

@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -13,6 +14,7 @@ export const dynamic = "force-dynamic";
 /** Create an employee - the next STPL0300IN-style ID is reserved and the
  *  welcome email (ID, joining details, leave policy) sends automatically. */
 export default async function NewEmployeePage() {
+  await requireAdminPage("/admin/employees/new");
   const code = prisma ? await nextEmployeeCode() : "STPL00001";
   const today = new Date().toISOString().slice(0, 10);
 

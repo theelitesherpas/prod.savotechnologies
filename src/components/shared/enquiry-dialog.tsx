@@ -21,7 +21,6 @@ import {
   type EnquiryInput,
 } from "@/schemas/enquiry";
 import { track } from "@/lib/analytics";
-import { redirectToThankYou } from "@/lib/thank-you";
 import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 import { cn, withBasePath } from "@/lib/utils";
 
@@ -161,7 +160,10 @@ function EnquiryDrawer({
             : "translate-y-full sm:translate-y-0 sm:translate-x-full",
         )}
       >
-        <div className="shell flex-1 overflow-y-auto px-5 py-8 sm:px-10 sm:py-10">
+        {/* data-lenis-prevent: Lenis hijacks wheel events page-wide; without
+            it the locked page swallows scrolling and the lower form fields
+            (budget, message, submit) are unreachable on small screens. */}
+        <div data-lenis-prevent className="shell flex-1 overflow-y-auto overscroll-contain [touch-action:pan-y] px-5 py-8 sm:px-10 sm:py-10">
           <div className="mb-8 flex items-start justify-between gap-6">
             <div>
               <p className="t-label mb-3 text-muted">
@@ -238,16 +240,12 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         error?: string;
-        reference?: string;
         fieldErrors?: EnquiryFieldErrors;
       };
       if (res.ok && json.ok) {
         setStatus("success");
         track("enquiry_form_success");
         captcha.refresh();
-        // Server-confirmed receipt → the shared thank-you page. The
-        // drawer's inline receipt stays as the no-reference fallback.
-        if (redirectToThankYou(json.reference)) return;
         return;
       }
       if (res.status === 400 && json.fieldErrors) {
@@ -255,8 +253,6 @@ function EnquiryForm({ onStarted, initialMessage }: { onStarted: () => void; ini
         setStatus("idle");
         return;
       }
-      // A rejected token is single-use - re-arm the widget for a retry.
-      if (res.status === 400) captcha.reset();
       setServerMessage(
         json.error ??
           "Something went wrong sending your enquiry. Please try again in a moment.",

@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { useCaptcha, CaptchaGate, captchaBlocked } from "@/components/shared/captcha";
 
 /**
  * SalesBot live demo - a conversational console plus the agent's live
@@ -58,51 +57,36 @@ export function SalesbotDemo() {
   const [busy, setBusy] = useState(false);
   const [started, setStarted] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
-
-  /* Always-on captcha: starting a demo session needs a solved challenge;
-     established sessions continue under the rate limit. */
-  const captcha = useCaptcha();
-  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
+  const messageId = useId();
+  const request = useRef<AbortController | null>(null);
+  const requestId = useRef(0);
 
   useEffect(() => {
-    logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
+    logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: window.matchMedia("(prefers-reduced-motion:reduce)").matches ? "instant" : "smooth" });
   }, [turns, busy]);
+  useEffect(() => () => { requestId.current += 1; request.current?.abort(); }, []);
 
   const send = async (raw: string) => {
     const message = raw.trim();
     if (!message || busy) return;
-    const needsCaptcha = !state.sessionId;
-    if (needsCaptcha && captchaBlocked(captcha)) {
-      setCaptchaErr("Please complete the human verification first.");
-      return;
-    }
     setBusy(true);
     setStarted(true);
-    setCaptchaErr(null);
     setTurns((t) => [...t, { role: "user", text: message }]);
     setInput("");
+    const current = ++requestId.current;
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
     try {
       const res = await fetch("/api/agents/salesbot/demo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...(state.sessionId ? { sessionId: state.sessionId } : {}),
-          ...(needsCaptcha ? { captchaToken: captcha.token } : {}),
-          message,
-        }),
+        signal: controller.signal,
+        body: JSON.stringify({ ...(state.sessionId ? { sessionId: state.sessionId } : {}), message }),
       });
       const data = await res.json();
-      if (!data.ok) {
-        if (data.captchaRequired) {
-          setCaptchaErr(data.error || "Please complete the human verification and try again.");
-          captcha.reset();
-          setTurns((t) => t.slice(0, -1)); // take the blocked turn back
-        } else throw new Error(data.error || "The demo could not process that - try again.");
-        return;
-      }
-      // The token was consumed by this verification - re-arm the gate.
-      if (needsCaptcha) captcha.reset();
-      await new Promise((r) => setTimeout(r, 320 + Math.random() * 280));
+      if (!data.ok) throw new Error(data.error || "The demo could not process that - try again.");
+      if (current !== requestId.current) return;
       setTurns((t) => [...t, { role: "bot", text: data.reply }]);
       setState({
         sessionId: data.sessionId,
@@ -115,24 +99,29 @@ export function SalesbotDemo() {
         brief: data.brief ?? null,
       });
     } catch (err) {
+      if (controller.signal.aborted || current !== requestId.current) return;
       const msg = err instanceof Error && err.message && !err.message.startsWith("Unexpected") ? err.message : null;
       setTurns((t) => [
         ...t,
-        { role: "bot", text: msg ?? "Something slipped on the wire - try that again in a moment." },
+        { role: "bot", text: msg ?? "The demo could not connect. Please try sending your message again." },
       ]);
     } finally {
-      setBusy(false);
+      if (current === requestId.current) setBusy(false);
     }
   };
 
   const restart = () => {
-    setTurns([{ role: "bot", text: "Session cleared. What are you looking to build or solve?" }]);
+    requestId.current += 1;
+    request.current?.abort();
+    setBusy(false);
+    setInput("");
+    setTurns([{ role: "bot", text: "New conversation. What are you looking to build or solve?" }]);
     setState(INITIAL);
     setStarted(false);
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-12">
+    <div data-salesbot-demo className="grid gap-6 lg:grid-cols-12">
       {/* ── Conversation console ─────────────────────────── */}
       <div className="lg:col-span-7">
         <div className="flex h-[34rem] flex-col overflow-hidden rounded-[2px] border border-border bg-background">
@@ -157,7 +146,7 @@ export function SalesbotDemo() {
             </button>
           </div>
 
-          <div ref={logRef} className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5" aria-live="polite">
+          <div ref={logRef} className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5" role="log" aria-label="SalesBot conversation" aria-live="polite" aria-relevant="additions" aria-busy={busy}>
             {turns.map((t, i) => (
               <div key={i} className={cn("flex", t.role === "user" ? "justify-end" : "justify-start")}>
                 <div
@@ -174,7 +163,7 @@ export function SalesbotDemo() {
             ))}
             {busy ? (
               <div className="flex justify-start">
-                <div className="flex items-center gap-1.5 rounded-[4px] border border-border bg-surface px-3.5 py-3">
+                <div role="status" aria-label="Preparing a reply" className="flex items-center gap-1.5 rounded-[4px] border border-border bg-surface px-3.5 py-3">
                   {[0, 1, 2].map((d) => (
                     <span key={d} className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" style={{ animationDelay: `${d * 160}ms` }} />
                   ))}
@@ -198,12 +187,6 @@ export function SalesbotDemo() {
             </div>
           ) : null}
 
-          {captcha.required && !state.sessionId ? (
-            <div className="border-t border-border px-4 py-2">
-              <CaptchaGate captcha={captcha} error={captchaErr} />
-            </div>
-          ) : null}
-
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -211,18 +194,19 @@ export function SalesbotDemo() {
             }}
             className="flex gap-2 border-t border-border p-3"
           >
-            <input
+            <div className="min-w-0 flex-1"><label htmlFor={messageId} className="mb-2 block text-xs font-medium text-foreground">Your message</label><input
+              id={messageId}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Describe what you're building, or ask about pricing, process, tech…"
               aria-label="Message SalesBot"
               maxLength={1000}
-              className="h-11 flex-1 rounded-lg border border-border bg-surface px-3.5 text-[0.875rem] text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
-            />
+              className="h-11 w-full rounded-lg border border-border bg-surface px-3.5 text-[0.875rem] text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
+            /></div>
             <button
               type="submit"
               disabled={busy || !input.trim()}
-              className="inline-flex h-11 items-center gap-2 rounded-lg bg-accent px-4 text-[0.8438rem] font-bold text-on-accent transition-colors hover:bg-accent-hover disabled:pointer-events-none disabled:opacity-50"
+              className="inline-flex h-11 self-end items-center gap-2 rounded-lg bg-accent px-4 text-[0.8438rem] font-bold text-on-accent transition-colors hover:bg-accent-hover disabled:pointer-events-none disabled:opacity-50"
             >
               Send
               <svg viewBox="0 0 14 14" aria-hidden="true" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -248,8 +232,8 @@ export function SalesbotDemo() {
                   <span className="flex items-center gap-2">
                     <span className="h-1.5 w-24 overflow-hidden rounded-full bg-border">
                       <span
-                        className={cn("block h-full rounded-full transition-all duration-500", state.score >= 70 ? "bg-error" : state.score >= 40 ? "bg-warning" : "bg-muted")}
-                        style={{ width: `${state.score}%` }}
+                        className={cn("block h-full w-full origin-left rounded-full transition-transform duration-300", state.score >= 70 ? "bg-error" : state.score >= 40 ? "bg-warning" : "bg-muted")}
+                        style={{ transform: `scaleX(${state.score / 100})` }}
                       />
                     </span>
                     <span className="tnum font-mono text-[0.75rem] text-muted">{state.score}/100 · {state.label}</span>
@@ -308,7 +292,7 @@ export function SalesbotDemo() {
               <p className="t-caption mt-3 border-t border-border pt-3 text-muted">{state.brief.summary}</p>
               <div className="mt-4 flex flex-wrap gap-2.5">
                 <Link
-                  href="/start"
+                  href="/start-a-project"
                   className="inline-flex h-10 items-center rounded-lg bg-foreground px-4 text-[0.8438rem] font-bold text-background transition-colors hover:bg-accent hover:text-on-accent"
                 >
                   Hand off to a consultant →

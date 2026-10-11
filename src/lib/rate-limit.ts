@@ -1,65 +1,70 @@
-/**
- * In-memory sliding-window rate limiter.
- * Sufficient for a single-instance deployment; swap for Upstash/Redis
- * (same interface) when the platform scales horizontally.
- */
-
-type Bucket = { hits: number[] };
-
-// Global singleton: survives Turbopack module isolation between
-// server actions and API routes (same pattern as the Prisma client).
-const globalForRate = globalThis as unknown as { __rateBuckets?: Map<string, Bucket> };
-const buckets = globalForRate.__rateBuckets ?? new Map<string, Bucket>();
-globalForRate.__rateBuckets = buckets;
-const MAX_BUCKETS = 5_000;
-
-export type RateLimitResult = {
-  ok: boolean;
-  remaining: number;
-  retryAfterSeconds: number;
+/** Process-local sliding windows. NOT a distributed/ingress abuse defence. */
+type Bucket = { hits: number[]; windowMs: number };
+export const RATE_LIMIT_CAPACITY = 5_000;
+const MAX_HITS = 1_000;
+const MAX_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const globalForRate = globalThis as unknown as {
+  __savoRateLimiterV2?: { buckets: Map<string, Bucket>; nextSweep: number };
 };
+const state = globalForRate.__savoRateLimiterV2 ?? { buckets: new Map<string, Bucket>(), nextSweep: 0 };
+globalForRate.__savoRateLimiterV2 = state;
 
-export function rateLimit(
-  key: string,
-  limit = 5,
-  windowMs = 60 * 60 * 1000,
-): RateLimitResult {
+export type RateLimitResult = { ok: boolean; remaining: number; retryAfterSeconds: number };
+const denied = (retryAfterSeconds = 1): RateLimitResult => ({ ok: false, remaining: 0, retryAfterSeconds });
+const validKey = (key: string) => typeof key === "string" && key.length > 0 && key.length <= 512;
+const validWindow = (windowMs: number) => Number.isSafeInteger(windowMs) && windowMs > 0 && windowMs <= MAX_WINDOW_MS;
+
+function prune(bucket: Bucket, now: number): void {
+  bucket.hits = bucket.hits.filter(t => now - t < bucket.windowMs);
+}
+
+function sweep(now: number): void {
+  if (now < state.nextSweep) return;
+  state.nextSweep = now + 1_000;
+  for (const [key, bucket] of state.buckets) {
+    prune(bucket, now); // each bucket's own window, not the incoming request's
+    if (!bucket.hits.length) state.buckets.delete(key);
+  }
+}
+
+export function rateLimit(key: string, limit = 5, windowMs = 60 * 60 * 1000): RateLimitResult {
+  if (!validKey(key) || !validWindow(windowMs) || !Number.isSafeInteger(limit) || limit < 1 || limit > MAX_HITS) return denied();
   const now = Date.now();
-  const bucket = buckets.get(key) ?? { hits: [] };
-
-  // Evict hits outside the window
-  bucket.hits = bucket.hits.filter((t) => now - t < windowMs);
-
+  let bucket = state.buckets.get(key);
+  if (bucket) {
+    // Policy is internal, not request-controlled. Fail closed on conflicting policies.
+    if (bucket.windowMs !== windowMs) return denied();
+    prune(bucket, now);
+  } else {
+    if (state.buckets.size >= RATE_LIMIT_CAPACITY) sweep(now);
+    // Do not evict active authentication buckets (that would reset their protection).
+    if (state.buckets.size >= RATE_LIMIT_CAPACITY) return denied();
+    bucket = { hits: [], windowMs };
+    state.buckets.set(key, bucket);
+  }
   if (bucket.hits.length >= limit) {
-    const oldest = bucket.hits[0];
-    buckets.set(key, bucket);
-    return {
-      ok: false,
-      remaining: 0,
-      retryAfterSeconds: Math.ceil((windowMs - (now - oldest)) / 1000),
-    };
+    return denied(Math.max(1, Math.ceil((bucket.hits[0] + windowMs - now) / 1_000)));
   }
-
   bucket.hits.push(now);
-  buckets.set(key, bucket);
-
-  // Opportunistic cleanup to bound memory
-  if (buckets.size > MAX_BUCKETS) {
-    for (const [k, b] of buckets) {
-      if (b.hits.every((t) => now - t >= windowMs)) buckets.delete(k);
-      if (buckets.size <= MAX_BUCKETS) break;
-    }
-  }
-
   return { ok: true, remaining: limit - bucket.hits.length, retryAfterSeconds: 0 };
 }
 
-/** Read-only: how many hits a key has inside its window, without
- *  registering a new one - powers the progressive captcha gate
- *  (first N submissions free, then verify). */
+/** Read without recording; saturation fails closed for progressive CAPTCHA gates. */
 export function rateCount(key: string, windowMs: number): number {
+  if (!validKey(key) || !validWindow(windowMs)) return MAX_HITS;
   const now = Date.now();
-  const bucket = buckets.get(key);
-  if (!bucket) return 0;
-  return bucket.hits.filter((t) => now - t < windowMs).length;
+  const bucket = state.buckets.get(key);
+  if (!bucket) {
+    if (state.buckets.size >= RATE_LIMIT_CAPACITY) sweep(now);
+    return state.buckets.size >= RATE_LIMIT_CAPACITY ? MAX_HITS : 0;
+  }
+  if (bucket.windowMs !== windowMs) return MAX_HITS;
+  prune(bucket, now);
+  if (!bucket.hits.length) state.buckets.delete(key);
+  return bucket.hits.length;
+}
+
+/** Explicit reset of ONE trusted application key, e.g. after successful login. */
+export function clearRateLimit(key: string): void {
+  state.buckets.delete(key);
 }
