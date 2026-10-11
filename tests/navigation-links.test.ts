@@ -20,8 +20,8 @@ describe("Navigation connectivity contract", () => {
   const footerHrefs = Object.values(FOOTER_NAV).flatMap(links => links.map(l => l.href));
   const everyInternalHref = [...hrefs(allNavLinks), ...topLevel, ...featureHrefs, ...footerHrefs].filter(h => h.startsWith("/"));
 
-  it("groups company pages under Who we are without moving the Services menu", () => {
-    const company = HEADER_NAV.find(item => item.label === "Who we are");
+  it("groups company pages under Who We Are without moving the Services menu", () => {
+    const company = HEADER_NAV.find(item => item.label === "Who We Are");
     expect(company?.children).toEqual([
       { label: "About Us", href: "/about", desc: expect.any(String) },
       { label: "Services", href: "/services", desc: expect.any(String) },

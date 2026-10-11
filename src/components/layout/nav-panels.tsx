@@ -23,7 +23,7 @@ export const NAV_INTROS: Record<string, string> = {
   Services: "From the first design decision to the systems behind your product. Find the discipline your project needs.",
   "Hire Developers": "Bring the right engineering skills into your team. Explore roles around the work you need to get done.",
   Industries: "Different industries work in different ways. Explore products and systems shaped around your sector.",
-  "Who we are": "Get to know Savo: the people behind the work, the services we offer and how to start a conversation.",
+  "Who We Are": "Get to know Savo: the people behind the work, the services we offer and how to start a conversation.",
 };
 
 const canonical = (href: string) => href.replace(/\/$/, "");

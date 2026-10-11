@@ -92,7 +92,7 @@ export const WHO_WE_ARE_LINKS: NavLink[] = [
 
 export const HEADER_NAV: NavItem[] = [
   {
-    label: "Who we are",
+    label: "Who We Are",
     mega: true,
     children: WHO_WE_ARE_LINKS,
     feature: {

@@ -5,8 +5,8 @@ import { activeNavigationLabel } from "@/lib/navigation-active";
 describe("Header route ownership", () => {
   it.each([
     ["/", null],
-    ["/about", "Who we are"],
-    ["/enterprise", "Who we are"],
+    ["/about", "Who We Are"],
+    ["/enterprise", "Who We Are"],
     ["/services", "Services"],
     ["/services/web-development", "Services"],
     ["/services/mobile-app-development/", "Services"],
