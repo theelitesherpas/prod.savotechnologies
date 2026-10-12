@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       ...openGraphFor({ title: `${d.metaTitle} | Savo Technologies`, description: d.metaDescription, url: `/industries/${d.slug}` }),
       // Editorial assets and future CMS choices have different source ratios.
       // Let crawlers read the actual dimensions instead of asserting a fixed crop.
-      ...(d.image ? { images: [{ url: d.image }] } : {}),
+      ...(d.image ? { images: [{ url: d.image, alt: `${d.title} | Savo Technologies` }] } : {}),
     },
   };
 }

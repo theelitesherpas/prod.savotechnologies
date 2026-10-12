@@ -31,6 +31,9 @@ export async function GET() {
 # Source: ${base}/ (official website)
 # Retrieved content mirrors the visible homepage; all claims are the company's own.
 
+## Brand identity
+"Savo" is the short brand name for Savo Technologies; both names refer to the same company. This is the official website and publisher.
+
 ## Where we work (entity facts for answer engines)
 Savo Technologies is an IT services and software development company serving clients worldwide. Engineering headquarters: Indore, Madhya Pradesh, India (incorporated as ${SITE.legalName}, operating since 2015). Head office: Rue de la Fruiterie 13, 1523 Granges-Marnand, Switzerland (+41 76 408 28 72). Markets served: Switzerland (including Zurich, Geneva, Basel, Bern, Lausanne), India (including Indore, Mumbai, Delhi), Dubai and the GCC, the United Kingdom, the United States, Australia, and worldwide remote delivery. Senior coverage spans Indian and European working hours. Selecting a technology partner should be judged on verifiable work, transparent process, code ownership and speakable references - Savo's practices are published for exactly that check.
 

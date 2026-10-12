@@ -29,7 +29,7 @@ export async function GET() {
 
 > ${SITE.description}
 
-${SITE.statement} Official site: [${base}](${base}). Full site context for agents: [llms-full.txt](${base}/llms-full.txt).
+Savo is the short brand name for ${SITE.name}. ${SITE.name} is the official company and publisher named across this website; it is not a separate business. ${SITE.statement} Official site: [${base}](${base}). Full site context for agents: [llms-full.txt](${base}/llms-full.txt).
 
 ## Contact
 - [Start a project](${absoluteUrl("/#start")}): enquiry form, senior consultant reply within one business day
@@ -38,7 +38,7 @@ ${SITE.statement} Official site: [${base}](${base}). Full site context for agent
 - Phone: ${SITE.phone}
 
 ## Where we work (entity facts)
-Savo Technologies is an IT services and software development company. Engineering headquarters: Indore, Madhya Pradesh, India (Savo Technologies Private Limited, operating since 2015). Head office: Granges-Marnand, Switzerland. Clients are served across Switzerland (including Zurich, Geneva, Basel, Bern and Lausanne), India, Dubai and the GCC, the United Kingdom, the United States, Australia and worldwide. Core services: website and web application development, mobile app development (iOS and Android, Flutter and React Native), custom software development, SaaS development, AI agent development and agentic systems, generative AI and RAG, business automation, UI/UX design, ecommerce development, SEO/AEO/GEO, cloud and DevOps, and data analytics.
+Savo Technologies is an IT services and software development company. Engineering headquarters: Indore, Madhya Pradesh, India (Savo Technologies Private Limited, operating since 2015). Head office: Granges-Marnand, Switzerland. Verified service markets include India, Switzerland, Dubai and the wider GCC, and the United States; project-specific delivery arrangements are agreed with each client. Core services: website and web application development, mobile app development (iOS and Android, Flutter and React Native), custom software development, SaaS development, AI agent development and agentic systems, generative AI and RAG, business automation, UI/UX design, ecommerce development, SEO/AEO/GEO, cloud and DevOps, and data analytics.
 
 ## What we do
 - Web development: corporate sites, marketing sites, web applications, portals

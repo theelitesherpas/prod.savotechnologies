@@ -24,7 +24,7 @@ export const SITE = {
   legalNameShort: "Savo Technologies Pvt Ltd",
   tagline: "Bold Brands. Built by Savo.",
   description:
-    "Savo Technologies is a software development company in Indore, India, building websites, web applications, mobile apps, custom software and AI systems for clients across India and worldwide.",
+    "Savo Technologies builds websites, mobile apps, AI solutions and agents, business automation, custom software and SaaS products for ambitious businesses.",
   positioning: "Independent digital product & technology company · Indore, India",
   /** Version-1 company statement (ported from /newdesign). */
   statement:

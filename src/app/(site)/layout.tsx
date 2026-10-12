@@ -63,10 +63,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   // One canonical entity graph: Organization (Savo Technologies = Savo =
   // Savo Technologies Private Limited = Savo Technologies Pvt Ltd) and the
   // WebSite it publishes. Every page references these @ids - no duplicate
-  // entities. Structured data stays factual in BOTH modes: areaServed is
-  // restricted to the verified home market (demo market-presence cards are
-  // visual staging content and never enter machine-readable claims; the
-  // verified multi-market list is restored when Savo confirms it).
+  // entities. Structured data stays factual in BOTH modes: areaServed uses
+  // only verified presence records; demo-only market cards never add claims.
   const AREA_SERVED_COUNTRIES = [
     "India",
     "Switzerland",
@@ -97,7 +95,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         "@type": "Organization",
         "@id": absoluteUrl("/#organization"),
         name: SITE.name,
-        alternateName: [SITE.shortName, SITE.legalNameShort],
+        alternateName: [SITE.shortName, SITE.legalName, SITE.legalNameShort],
+        disambiguatingDescription: "The official Savo Technologies: an IT and digital product engineering company headquartered in Indore, India, with its official website at savotechnologies.com.",
         legalName: SITE.legalName,
         url: absoluteUrl("/"),
         logo: absoluteUrl("/images/savo-technologies-logo.svg"),
@@ -161,7 +160,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         "@id": absoluteUrl("/#website"),
         url: absoluteUrl("/"),
         name: SITE.name,
-        alternateName: [SITE.shortName, SITE.legalName, SITE.legalNameShort, "savotechnologies.com"],
+        alternateName: SITE.shortName,
         description: SITE.description,
         publisher: { "@id": absoluteUrl("/#organization") },
         inLanguage: "en",

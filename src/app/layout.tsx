@@ -3,7 +3,7 @@ import Script from "next/script";
 import { Manrope, Source_Serif_4, Fragment_Mono } from "next/font/google";
 import { SITE } from "@/constants/site";
 import { openGraphFor } from "@/lib/seo";
-import { canonicalOrigin, INDEXABLE, env } from "@/lib/env";
+import { absoluteUrl, canonicalOrigin, INDEXABLE, env } from "@/lib/env";
 import { IS_DEMO } from "@/lib/content-mode";
 import { RouteLoader } from "@/components/ui/route-loader";
 import "./globals.css";
@@ -29,9 +29,8 @@ const fragment = Fragment_Mono({
   display: "swap",
 });
 
-const HOME_TITLE = "Savo Technologies | Web, Mobile, AI & Software Development Company";
-const HOME_DESCRIPTION =
-  "Savo Technologies is a software development company headquartered in Indore, India with a head office in Switzerland, providing website development, web applications, mobile app development, AI development, SaaS and custom software solutions for clients across India, Switzerland, Europe and worldwide.";
+const HOME_TITLE = "Savo Technologies | Web, Mobile & AI Development Company";
+const HOME_DESCRIPTION = SITE.description;
 
 /**
  * Root metadata. Route groups (site)/ and admin/ extend or override this
@@ -46,17 +45,15 @@ export const metadata: Metadata = {
   },
   description: HOME_DESCRIPTION,
   applicationName: SITE.name,
-  alternates: { canonical: "/" },
+  alternates: { canonical: absoluteUrl("/") },
   openGraph: openGraphFor({
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,
-    url: "/",
+    url: absoluteUrl("/"),
   }),
-  twitter: {
-    card: "summary_large_image",
-    title: HOME_TITLE,
-    description: HOME_DESCRIPTION,
-  },
+  // Page-specific Open Graph metadata supplies the title, description and
+  // thumbnail. X/Twitter falls back to those OG values when absent here.
+  twitter: { card: "summary_large_image" },
   robots: INDEXABLE && !IS_DEMO
     ? {
         index: true,

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!article) return { title: "Article not found", robots: { index: false, follow: false } };
   return {
     title: article.title, description: article.excerpt, alternates: { canonical: `/insights/${article.slug}` },
-    openGraph: { ...openGraphFor({ title: `${article.title} | Savo Technologies`, description: article.excerpt, url: `/insights/${article.slug}` }), images: [{ url: withBasePath(article.image) }], type: "article", ...(article.date ? { publishedTime: article.date } : {}) },
+    openGraph: { ...openGraphFor({ title: `${article.title} | Savo Technologies`, description: article.excerpt, url: `/insights/${article.slug}` }), images: [{ url: withBasePath(article.image), alt: `${article.title} | Savo Technologies` }], type: "article", ...(article.date ? { publishedTime: article.date } : {}) },
   };
 }
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {

@@ -16,7 +16,7 @@ export function BrandStatement() {
         </Reveal>
         <Reveal delay={160}>
           <p className="mt-5 max-w-[70ch] text-[1rem] leading-[1.7] text-white/70">
-            A better product is not just more features. It should remove friction for users, make day-to-day work easier and give your team a sound foundation for what comes next.
+            Savo Technologies—Savo for short—believes a better product is not just more features. It should remove friction for users, make day-to-day work easier and give your team a sound foundation for what comes next.
           </p>
         </Reveal>
       </div>
