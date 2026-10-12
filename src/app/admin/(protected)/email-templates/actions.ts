@@ -132,7 +132,7 @@ export async function sendCustomEmailAction(formData: FormData): Promise<void> {
     d.to,
     {
       subject: d.subject,
-      html: shell({ preheader: d.subject.slice(0, 120), heading: "", bodyHtml: bodyToHtml(d.body) }),
+      html: shell({ preheader: d.subject.slice(0, 120), heading: d.subject, bodyHtml: bodyToHtml(d.body), dept }),
       text: bodyToText(d.body),
     },
     dept,

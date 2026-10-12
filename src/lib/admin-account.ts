@@ -8,6 +8,8 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { sendMailNow } from "@/lib/mail";
+import { shell, p, spec, highlight } from "@/lib/mail/templates";
+import { escapeMailHtml } from "@/lib/mail/design";
 import { logger } from "@/lib/logger";
 import { verifyPassword } from "@/lib/auth";
 import { passwordFitsBcrypt } from "@/lib/passwords";
@@ -65,11 +67,21 @@ export async function propagateAdminName(userId: string, oldName: string, newNam
 
 /** Email-change notification to both addresses (fire-and-forget). */
 export function notifyEmailChanged(name: string, oldEmail: string, newEmail: string): void {
-  const build = (to: string, which: "old" | "new") => ({
+  const build = (which: "old" | "new") => ({
     subject: "Your Savo admin sign-in email was changed",
     text: `Hello ${name},\n\nThe sign-in email for your Savo admin account was changed ${which === "old" ? `from ${oldEmail} to ${newEmail}` : `to ${newEmail} (this address)`}. The change was made by an administrator from the panel.\n\nIf this wasn't expected, contact your administrator immediately.\n\nSavo Technologies`,
-    html: `<div style="font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.6"><p>Hello ${name},</p><p>The sign-in email for your <strong>Savo admin</strong> account was changed ${which === "old" ? `from <strong>${oldEmail}</strong> to <strong>${newEmail}</strong>` : `to <strong>${newEmail}</strong> (this address)`}.</p><p>If this wasn't expected, contact your administrator immediately.</p><p>Savo Technologies</p></div>`,
+    html: shell({
+      preheader: "The sign-in email for your Savo admin account was changed.",
+      heading: "Your sign-in email was changed.",
+      bodyHtml: [
+        p(`Hello ${escapeMailHtml(name)},`),
+        p(`The sign-in email for your <strong>Savo admin</strong> account was changed ${which === "old" ? `from <strong>${escapeMailHtml(oldEmail)}</strong> to <strong>${escapeMailHtml(newEmail)}</strong>` : `to <strong>${escapeMailHtml(newEmail)}</strong> (this address)`}.`),
+        spec([["Previous email", oldEmail], ["New email", newEmail]]),
+        highlight("If this wasn't expected, contact your administrator immediately."),
+      ].join(""),
+      reason: "Account security notification from Savo Technologies.",
+    }),
   });
-  sendMailNow(oldEmail, build(oldEmail, "old"));
-  sendMailNow(newEmail, build(newEmail, "new"));
+  sendMailNow(oldEmail, build("old"));
+  sendMailNow(newEmail, build("new"));
 }

@@ -1,34 +1,15 @@
-/**
- * Transactional email templates - every automated action on the site.
- *
- * DESIGN - the modern SaaS transactional standard, in Savo's voice:
- *   centered wordmark, centered greeting, statement headings and
- *   buttons on the center axis; details as quiet stacked pairs rather
- *   than ledgers; one generous serif amount where money matters; a
- *   small centered colophon. Brand fonts (Source Serif 4 · Manrope ·
- *   Fragment Mono) self-hosted with graceful fallbacks for clients
- *   that strip webfonts (Gmail → Georgia/system/mono).
- *
- * Email-client reality: tables + inline styles, 600px, PNG wordmark,
- * plain-text twin per template, preheader, dark-mode-safe neutrals.
- * Promises mirror the website copy exactly; nothing is fabricated.
- */
+/** Transactional defaults: copy and variables are independent of the shared
+ *  v7 correspondence design, which also wraps HR, meetings and overrides. */
+import {
+  shell, lead, p, spec, highlight, prose, site, DISPLAY, SANS, MONO,
+  escapeMailHtml as esc, MAIL_COLORS,
+} from "@/lib/mail/design";
+export {
+  shell, lead, p, spec, highlight, prose, site, DISPLAY, SERIF, SANS, MONO,
+  UNSUBSCRIBE_PLACEHOLDER,
+} from "@/lib/mail/design";
 
-import { SITE } from "@/constants/site";
-
-const PAPER = "#f5f4f0";
-const SOFT = "#faf4ee";
-const INK = "#14161c";
-const BODY = "#33363c";
-const MUTED = "#6a6e75";
-const FAINT = "#9a9ea4";
-const ACCENT = "#d9480f";
-const LINE = "#e3e1da";
-const CARD = "#ffffff";
-
-export const SERIF = "'Source Serif 4', Georgia, 'Times New Roman', Times, serif";
-export const SANS = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-export const MONO = "'Fragment Mono', 'SFMono-Regular', Menlo, Consolas, 'Courier New', monospace";
+const { ink: INK, muted: MUTED, faint: FAINT, accent: ACCENT, line: LINE, card: CARD } = MAIL_COLORS;
 
 export type MailTemplate = {
   subject: string;
@@ -38,175 +19,12 @@ export type MailTemplate = {
   unsubscribeEmail?: string;
 };
 
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-export const site = (path = "/") => `https://savotechnologies.com${path}`;
-
-function origin(): string {
-  return (
-    typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_SITE_URL || "https://savotechnologies.com"
-  ).replace(/\/$/, "");
-}
-const logoUrl = () => `${origin()}/images/email/logo.png`;
-
-/** Self-hosted brand fonts - CORS-open like fonts.gstatic so capable
- *  clients (and sandboxed previews) render the real faces; everyone
- *  else falls to the native stacks in the font constants. */
-function fontsCss(): string {
-  const f = (family: string, file: string, weight: string, style = "normal") =>
-    `@font-face{font-family:'${family}';font-style:${style};font-weight:${weight};src:url('${origin()}/fonts/${file}') format('woff2');}`;
-  return (
-    f("Source Serif 4", "source-serif-4-400.woff2", "400") +
-    f("Source Serif 4", "source-serif-4-400-italic.woff2", "400", "italic") +
-    f("Source Serif 4", "source-serif-4-600.woff2", "600") +
-    f("Source Serif 4", "source-serif-4-700.woff2", "700") +
-    f("Manrope", "manrope-400.woff2", "400") +
-    f("Manrope", "manrope-500.woff2", "500") +
-    f("Manrope", "manrope-700.woff2", "700") +
-    f("Manrope", "manrope-800.woff2", "800") +
-    f("Fragment Mono", "fragment-mono-400.woff2", "400")
-  );
-}
-
-/** Preview-safe placeholder. The server mail boundary replaces this with a signed URL. */
-export const UNSUBSCRIBE_PLACEHOLDER = `${site("/unsubscribe")}#mail-signature-required`;
-
-/* ── centered building blocks ─────────────────────────────────────── */
-
-export const p = (s: string, last = false) =>
-  `<p style="margin:${last ? "0" : "0 0 16px"};font-family:${SERIF};font-size:15.5px;line-height:1.7;color:${BODY};text-align:center;">${s}</p>`;
-export const lead = (s: string) =>
-  `<p style="margin:0 0 20px;font-family:${SERIF};font-size:16px;line-height:1.7;color:${BODY};text-align:center;">${s}</p>`;
-
-/** Centered eyebrow - the vermilion square mark, then the label. */
-const eyebrow = (t: string) =>
-  `<p style="margin:0 0 16px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};text-align:center;"><span style="display:inline-block;width:7px;height:7px;background:${ACCENT};margin-right:9px;vertical-align:1px;"></span>${esc(t)}</p>`;
-
-const h1 = (t: string) =>
-  `<h1 style="margin:0 0 16px;font-family:${SERIF};font-size:26px;line-height:1.3;letter-spacing:-0.012em;font-weight:700;color:${INK};text-align:center;">${esc(t)}</h1>`;
-
-/** Details as quiet stacked pairs - label above value, both centered. */
-export function spec(rows: [string, string | undefined][], opts?: { big?: number }): string {
-  const items = rows.filter(([, v]) => v !== undefined && v !== "");
-  if (!items.length) return "";
-  return `<div style="margin:22px 0;">${items
-    .map(([k, v], i) => {
-      const big = opts?.big === i;
-      return `<div style="${i > 0 ? "margin-top:14px;" : ""}text-align:center;">
-  <div style="font-family:${SANS};font-size:10.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${FAINT};">${esc(k)}</div>
-  <div style="margin-top:3px;font-family:${big ? SERIF : SANS};font-size:${big ? "30px" : "14.5px"};font-weight:${big ? 700 : 600};color:${big ? ACCENT : INK};line-height:1.3;">${esc(v ?? "-")}</div>
-</div>`;
-    })
-    .join("")}</div>`;
-}
-
-/** One-line mono meta strip (invoice numbers, dates). */
+/** Actual invoice/project context, without the old ornamental mono strip. */
 const meta = (parts: string[]) =>
-  `<p style="margin:18px 0 0;font-family:${MONO};font-size:11px;letter-spacing:0.06em;color:${FAINT};text-align:center;">${parts.map(esc).join("&ensp;·&ensp;")}</p>`;
+  `<p style="margin:18px 0;font-family:${SANS};font-size:12px;line-height:1.8;color:${FAINT};text-align:left;overflow-wrap:anywhere;">${parts.map(esc).join("&ensp;·&ensp;")}</p>`;
 
-/** Soft centered note panel. */
-export function highlight(html: string): string {
-  return `<div style="margin:24px 0;padding:16px 22px;background:${SOFT};border-radius:10px;font-family:${SERIF};font-size:14.5px;line-height:1.65;color:${INK};text-align:center;">${html}</div>`;
-}
-
-/** Centered correspondence quote. */
 function quote(text: string): string {
-  return `<div style="margin:24px 0;padding:0 26px;font-family:${SERIF};font-style:italic;font-size:16px;line-height:1.65;color:${INK};text-align:center;">${esc(text)}</div>`;
-}
-
-/** Reading block for longer content - left-aligned inside the centered layout. */
-export function prose(text: string): string {
-  return `<div style="margin:22px 0;padding:16px 20px;background:${PAPER};border-radius:10px;font-family:${SERIF};font-size:14.5px;line-height:1.7;color:${BODY};white-space:pre-line;text-align:left;">${esc(text)}</div>`;
-}
-
-const CTA = (href: string, label: string, sub?: string) => `
-<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:28px auto 4px;"><tr><td align="center">
-<a href="${href}" style="display:inline-block;background:${INK};color:#ffffff;font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:15px 32px;border-radius:8px;">${esc(label)}&nbsp;&nbsp;→</a>
-${sub ? `</td></tr><tr><td align="center" style="padding:11px 0 0;font-family:${SANS};font-size:12px;color:${MUTED};">${esc(sub)}` : ""}
-</td></tr></table>`;
-
-const signOff = (
-  closing: string,
-  signature?: { name: string; title: string; company?: string; tagline?: string },
-) => `
-<div style="margin-top:30px;text-align:center;">
-  <p style="margin:0;font-family:${SERIF};font-style:italic;font-size:14.5px;color:${BODY};">${esc(closing)}</p>
-  ${
-    signature
-      ? `<p style="margin:7px 0 0;font-family:${SERIF};font-size:16px;font-weight:700;color:${INK};">${esc(signature.name)}</p>
-         <p style="margin:2px 0 0;font-family:${SANS};font-size:11.5px;font-weight:700;color:${MUTED};">${esc(signature.title)}</p>
-         ${signature.company ? `<p style="margin:2px 0 0;font-family:${SANS};font-size:11px;font-weight:600;color:${FAINT};">${esc(signature.company)}</p>` : ""}
-         ${signature.tagline ? `<p style="margin:7px 0 0;font-family:${MONO};font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${ACCENT};">${esc(signature.tagline)}</p>` : ""}`
-      : `<p style="margin:5px 0 0;font-family:${SERIF};font-size:14.5px;font-weight:700;color:${INK};">The Savo team</p>
-         <p style="margin:3px 0 0;font-family:${SANS};font-size:10.5px;font-weight:600;color:${FAINT};">Reply to this email to reach our team</p>`
-  }
-</div>`;
-
-/** Brand shell shared by every template (also wraps admin overrides). */
-export function shell(opts: {
-  preheader: string;
-  eyebrowText?: string;
-  ref?: string;
-  heading: string;
-  bodyHtml: string;
-  cta?: { href: string; label: string; sub?: string };
-  closing?: string;
-  reason?: string;
-  unsubscribeEmail?: string;
-  /** Personal signature (name/title/tagline) - replaces the default
-   *  'The Savo team' sign-off for individually written pitches. */
-  signature?: { name: string; title: string; company?: string; tagline?: string };
-  /** Department: "hr" switches footer contact to hr@ and the HR phone. */
-  dept?: "hello" | "hr";
-}): string {
-  const isHr = opts.dept === "hr";
-  const contactEmail = isHr ? "hr@savotechnologies.com" : "hello@savotechnologies.com";
-  const contactPhone = isHr ? "+91 78988 52345" : "+91 75029 01234";
-  const contactPhoneE164 = isHr ? "+917898852345" : "+917502901234";
-  const year = new Date().getFullYear();
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${fontsCss()}</style></head>
-<body style="margin:0;padding:0;background:${PAPER};font-family:${SERIF};-webkit-font-smoothing:antialiased;">
-<div style="display:none;font-size:1px;color:${PAPER};max-height:0;overflow:hidden;opacity:0;">${esc(opts.preheader)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAPER};"><tr><td align="center" style="padding:36px 14px;">
-<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
-
-  <!-- Card -->
-  <tr><td style="background:${CARD};border:1px solid ${LINE};border-radius:12px;">
-    <!-- Wordmark -->
-    <div style="padding:32px 40px 0;text-align:center;">
-      <img src="${logoUrl()}" width="84" alt="Savo Technologies" style="display:block;width:84px;height:auto;border:0;margin:0 auto;">
-    </div>
-    <!-- Body -->
-    <div style="padding:30px 40px 40px;">
-      ${opts.eyebrowText ? eyebrow(opts.eyebrowText) : ""}
-      ${opts.heading ? h1(opts.heading) : ""}
-      ${opts.bodyHtml}
-      ${opts.cta ? CTA(opts.cta.href, opts.cta.label, opts.cta.sub) : ""}
-      ${signOff(opts.closing ?? "Kind regards,", opts.signature)}
-    </div>
-  </td></tr>
-
-  <!-- Colophon -->
-  <tr><td style="padding:24px 12px 6px;text-align:center;">
-    <p style="margin:0 0 12px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:${INK};">Savo Technologies</p>
-    <p style="margin:0 0 10px;font-family:${SANS};font-size:11.5px;color:${MUTED};">
-      <a href="${site("/")}" style="color:${MUTED};text-decoration:none;">savotechnologies.com</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.linkedin.com/company/savotechnologies/" style="color:${MUTED};text-decoration:none;">LinkedIn</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.instagram.com/savotechnologies/" style="color:${MUTED};text-decoration:none;">Instagram</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.facebook.com/savotechnologies" style="color:${MUTED};text-decoration:none;">Facebook</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://www.youtube.com/@savotechnologies" style="color:${MUTED};text-decoration:none;">YouTube</a>
-    </p>
-    <p style="margin:0 0 10px;font-family:${SANS};font-size:11.5px;color:${MUTED};">
-      <a href="mailto:${contactEmail}" style="color:${MUTED};text-decoration:none;">${contactEmail}</a><span style="color:${LINE};margin:0 8px;">·</span><a href="tel:${contactPhoneE164}" style="color:${MUTED};text-decoration:none;">${contactPhone}</a><span style="color:${LINE};margin:0 8px;">·</span><a href="https://wa.me/${contactPhoneE164.replace("+", "")}" style="color:${MUTED};text-decoration:none;">WhatsApp</a>
-    </p>
-    <p style="margin:0;font-family:${SANS};font-size:10px;line-height:1.7;color:${FAINT};">
-      © ${year} ${esc(SITE.legalName)} - Indore · Zürich<br>
-      ${esc(opts.reason ?? "You are receiving this because you contacted Savo Technologies.")}
-      ${opts.unsubscribeEmail ? ` · <a href="${UNSUBSCRIBE_PLACEHOLDER}" style="color:${FAINT};text-decoration:underline;">Unsubscribe</a>` : ""}
-    </p>
-  </td></tr>
-
-</table>
-</td></tr></table></body></html>`;
+  return highlight(`<span style="font-style:italic;">${esc(text).replace(/\r?\n/g, "<br>")}</span>`);
 }
 
 const fn = (name: string) => name.split(" ")[0];
@@ -311,6 +129,7 @@ export function applicationAck(name: string, role: string): MailTemplate {
       ].join(""),
       cta: { href: site("/careers"), label: "View our hiring process", sub: "Our complete hiring process is published." },
       closing: "Kind regards,",
+      dept: "hr",
       reason: "You are receiving this because you applied to Savo Technologies.",
     }),
     text: `${fn(name).toUpperCase()}, YOUR APPLICATION IS IN\n\nYou applied for ${role}. Our hiring team reads every application and replies personally within two business days.\n\n1. Application review - within two business days\n2. Technical conversation\n3. Meet the team\n4. Written offer\n\nHow we hire: ${site("/careers")}\n\nSpeak soon,\nThe Savo team`,
@@ -547,6 +366,7 @@ export function teamApplication(d: {
       ].join(""),
       cta: { href: site("/admin/enquiries"), label: "Open the inbox" },
       closing: "Regards,",
+      dept: "hr",
       reason: "Internal HR notification.",
     }),
     text: `NEW APPLICATION\n\n${d.name} · ${d.email}\nRole: ${d.role}\nExperience: ${d.experience ?? "-"}\nLinks: ${d.links ?? "-"}\n\n${d.message}\n\nPersonal reply promised within two business days.\n${site("/admin/enquiries")}\n\nGood hiring,\nThe Savo team`,
@@ -600,29 +420,20 @@ export function teamAskSavo(d: { email: string; question: string }): MailTemplat
 
 /* ══════════════ CLIENT PITCH ══════════════ */
 
-/* Infographic band: dark specimen strip, the blueprint-plate voice. */
+/* Website-like dark brand passage, with readable sentence-case type. */
 function pitchBand(label: string, href?: string): string {
-  const text = `<span style="display:inline-block;width:8px;height:8px;background:${ACCENT};margin-right:10px;vertical-align:1px;"></span><span style="font-family:${MONO};font-size:11px;letter-spacing:0.28em;color:#eef0f4;text-transform:uppercase;">${esc(label)}</span>`;
-  return `<div style="margin:26px 0 22px;background:${INK};border-radius:10px;padding:20px 26px;text-align:center;">
-  ${href ? `<a href="${href}" style="text-decoration:none;">${text}</a>` : text}
-</div>`;
+  const text = `<span style="font-family:${DISPLAY};font-size:25px;line-height:1.3;font-weight:500;color:#ffffff;">${esc(label)}</span>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#000000" style="margin:28px 0;background:#000000;table-layout:fixed;"><tr><td style="padding:24px;text-align:left;">${href ? `<a href="${esc(href)}" style="text-decoration:none;color:#ffffff;">${text}</a>` : text}</td></tr></table>`;
 }
 
-/* Capability grid: service cards with drawn icons, three per row. */
+/* Open capability rows, two across; each becomes a readable phone row. */
 function pitchGrid(items: { icon: string; title: string; line: string }[]): string {
   const cell = (it: { icon: string; title: string; line: string }) => `
-      <td width="33.33%" style="padding:5px;vertical-align:top;">
-        <div style="border:1px solid ${LINE};border-radius:10px;padding:14px 10px;text-align:center;">
-          <div style="height:34px;margin:0 0 8px;font-size:0;line-height:0;">${it.icon}</div>
-          <p style="margin:0 0 5px;font-family:${SANS};font-size:12px;font-weight:800;color:${INK};letter-spacing:0.02em;">${esc(it.title)}</p>
-          <p style="margin:0;font-family:${SANS};font-size:11px;line-height:1.5;color:${MUTED};">${esc(it.line)}</p>
-        </div>
-      </td>`;
+<td class="mail-pitch-cell" width="50%" valign="top" style="width:50%;padding:16px 12px 16px 0;vertical-align:top;border-bottom:1px solid ${LINE};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;"><tr><td width="42" valign="top" style="width:42px;padding:2px 10px 0 0;">${it.icon}</td><td valign="top"><p style="margin:0 0 6px;font-family:${DISPLAY};font-size:18px;font-weight:500;line-height:1.3;color:${INK};">${esc(it.title)}</p><p style="margin:0;font-family:${SANS};font-size:13px;line-height:1.7;color:${MUTED};">${esc(it.line)}</p></td></tr></table></td>`;
   const rows: string[] = [];
-  for (let i = 0; i < items.length; i += 3) {
-    rows.push(`<tr>${items.slice(i, i + 3).map(cell).join("")}</tr>`);
-  }
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0;table-layout:fixed;">${rows.join("")}</table>`;
+  for (let i = 0; i < items.length; i += 2) rows.push(`<tr>${items.slice(i, i + 2).map(cell).join("")}</tr>`);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0;table-layout:fixed;">${rows.join("")}</table>`;
 }
 
 /* ── Drawn icons: flow-layout CSS only (no absolute, no images) ── */
@@ -692,17 +503,14 @@ const iconChart = () =>
   <div style="height:2px;background:${ACCENT};margin-top:2px;border-radius:1px;"></div>
 </div>`;
 
-/* Dual CTA: primary action + secondary, side by side, email-safe. */
+/* Native actions, stacked on phones and still usable without head CSS. */
 function pitchCtas(primary: { href: string; label: string }, secondary: { href: string; label: string }): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:26px auto 8px;"><tr>
-  <td style="padding:0 5px;"><a href="${primary.href}" style="display:inline-block;background:${INK};color:#ffffff;font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:15px 28px;border-radius:8px;">${esc(primary.label)}&nbsp;&nbsp;→</a></td>
-  <td style="padding:0 5px;"><a href="${secondary.href}" style="display:inline-block;border:2px solid ${INK};color:${INK};font-family:${SANS};font-size:14px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:13px 26px;border-radius:8px;">${esc(secondary.label)}</a></td>
-</tr></table>`;
+  const action = (link: { href: string; label: string }, primaryAction: boolean) => `<a href="${esc(link.href)}" class="mail-button" style="display:block;padding:14px 16px;background:${primaryAction ? ACCENT : CARD};border:1px solid ${primaryAction ? ACCENT : LINE};border-radius:6px;color:${primaryAction ? CARD : INK};font-family:${SANS};font-size:14px;font-weight:600;line-height:20px;text-align:center;text-decoration:none;">${esc(link.label)}${primaryAction ? "&nbsp;&nbsp;&rarr;" : ""}</a>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0 0;table-layout:fixed;"><tr><td class="mail-dual-cell" width="50%" style="padding:0 12px 0 0;" valign="top">${action(primary, true)}</td><td class="mail-dual-cell" width="50%" valign="top">${action(secondary, false)}</td></tr></table>`;
 }
 
-/* Section label inside the pitch body. */
 const pitchLabel = (t: string) =>
-  `<p style="margin:24px 0 10px;font-family:${SANS};font-size:10.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};text-align:center;"><span style="display:inline-block;width:7px;height:7px;background:${ACCENT};margin-right:9px;vertical-align:1px;"></span>${esc(t)}</p>`;
+  `<h2 style="margin:28px 0 8px;font-family:${DISPLAY};font-size:24px;font-weight:500;line-height:1.25;color:${INK};text-align:left;">${esc(t)}</h2>`;
 
 /** Savo Build What's Next - the client pitch, composed manually from
  *  the email centre. Team voice, short and warm: an introduction, the
@@ -722,7 +530,7 @@ export function buildWhatsNext(v: {
     html: shell({
       preheader: "A short note from the Savo team: what we build, and an invitation to a few minutes of conversation.",
       eyebrowText: "A note from the Savo team",
-      heading: `A few ideas for ${esc(v.company)}.`,
+      heading: `A few ideas for ${v.company}.`,
       bodyHtml: [
         lead(`Hi ${esc(first)},<br><br>we came across <strong style="color:${INK};">${esc(v.company)}</strong> and wanted to introduce ourselves. Savo Technologies designs and builds modern websites, digital products, mobile applications, custom software and AI-powered solutions for businesses that want their online presence to work harder.`),
         pitchBand("Savo Build What's Next", site("/")),

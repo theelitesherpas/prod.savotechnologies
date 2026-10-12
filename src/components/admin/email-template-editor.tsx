@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { TEMPLATE_REGISTRY, RECIPIENT_LABEL, CATEGORY_ORDER, CATEGORY_LABEL, fillText, bodyToHtml, type TemplateEntry, type TemplateCategory } from "@/lib/mail/registry";
+import { TEMPLATE_REGISTRY, RECIPIENT_LABEL, CATEGORY_ORDER, CATEGORY_LABEL, fillText, renderBodyHtml, type TemplateEntry, type TemplateCategory } from "@/lib/mail/registry";
 import { shell } from "@/lib/mail/templates";
 import { saveTemplateAction, resetTemplateAction } from "@/app/admin/(protected)/email-templates/actions";
 import { FormGuard } from "@/components/admin/form-guard";
@@ -59,8 +59,8 @@ export function EmailTemplateEditor({ overrides }: { overrides: Override[] }) {
 
   // Live preview of the override (sample values), wrapped in the shell.
   const overrideHtml = useMemo(() => {
-    const html = bodyToHtml(fillText(body, entry.vars));
-    return shell({ preheader: fillText(subject, entry.vars).slice(0, 120), heading: "", bodyHtml: html });
+    const html = renderBodyHtml(body, entry.vars);
+    return shell({ preheader: fillText(subject, entry.vars).slice(0, 120), heading: fillText(subject, entry.vars), bodyHtml: html, dept: entry.dept });
   }, [body, subject, entry]);
 
   return (
@@ -160,7 +160,7 @@ export function EmailTemplateEditor({ overrides }: { overrides: Override[] }) {
                 title={`${entry.label} preview`}
                 sandbox=""
                 srcDoc={override ? overrideHtml : defaultTpl.html}
-                className="h-[560px] w-full border-0 bg-[#f5f4f0]"
+                className="h-[680px] w-full border-0 bg-[#f7f7f7]"
               />
             </div>
             <p className="t-caption mt-2 text-muted">
@@ -224,7 +224,7 @@ export function EmailTemplateEditor({ overrides }: { overrides: Override[] }) {
                   title={`${entry.label} live preview`}
                   sandbox=""
                   srcDoc={overrideHtml}
-                  className="h-64 w-full border-0 bg-[#f5f4f0]"
+                  className="h-64 w-full border-0 bg-[#f7f7f7]"
                 />
               </div>
             </div>

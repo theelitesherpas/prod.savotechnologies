@@ -57,6 +57,7 @@ import {
   meetingAvailabilityReceived,
   meetingConfirmed,
   meetingAdminNotification,
+  meetingRescheduleRequest,
 } from "@/lib/mail/meeting-templates";
 
 export type TemplateRecipient = "customer" | "team" | "hr" | "client" | "candidate" | "employee" | "external" | "prospect";
@@ -171,6 +172,16 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     dept: "hello",
     vars: { clientName: "Uday Sharma", clientCompany: "Pratham Real Estate", meetingTitle: "Project Kickoff Discussion", date: "Thursday, 15 October 2026", time: "3:30 PM", reference: "STPL-2026-8X4K2" },
     default: (v) => meetingAdminNotification({ clientName: v.clientName, clientCompany: v.clientCompany, meetingTitle: v.meetingTitle, date: v.date, time: v.time, reference: v.reference }),
+  },
+  {
+    key: "meetingRescheduleRequest",
+    category: "meetings",
+    label: "Meeting reschedule request",
+    fires: "Available to compose when a meeting needs a new date and time",
+    recipient: "customer",
+    dept: "hello",
+    vars: { clientName: "Uday Sharma", meetingTitle: "Project Kickoff Discussion", previousDate: "Thursday, 15 October 2026", previousTime: "3:30 PM", reference: "STPL-2026-8X4K2", schedulingLink: "https://savotechnologies.com/meeting/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", reason: "We need to move the discussion to a different time." },
+    default: (v) => meetingRescheduleRequest({ clientName: v.clientName, meetingTitle: v.meetingTitle, previousDate: v.previousDate, previousTime: v.previousTime, reference: v.reference, schedulingLink: v.schedulingLink, reason: v.reason, to: v.__to }),
   },
   {
     key: "callbackAck",
@@ -597,15 +608,23 @@ export function fillText(template: string, vars: Record<string, string | number 
 
 const looksLikeHtml = (s: string) => /<\/?(p|div|br|strong|em|a|ul|ol|li|h[1-6]|table|tr|td|blockquote)\b/i.test(s);
 
-/** Admin body → safe HTML: plain text is line-broken and escaped, HTML
- *  passes through (admins are trusted; variable values stay escaped). */
+const textBodyToHtml = (body: string) => body.trim()
+  .split(/\n{2,}/)
+  .map(para => `<p style="margin:0 0 14px;">${esc(para).replace(/\n/g, "<br>")}</p>`)
+  .join("");
+
+/** Admin body → safe HTML: plain text is line-broken and escaped; trusted
+ *  admin markup passes through. Placeholder values are escaped separately. */
 export function bodyToHtml(body: string): string {
   const t = body.trim();
-  if (looksLikeHtml(t)) return t;
-  return t
-    .split(/\n{2,}/)
-    .map((para) => `<p style="margin:0 0 14px;">${esc(para).replace(/\n/g, "<br>")}</p>`)
-    .join("");
+  return looksLikeHtml(t) ? t : textBodyToHtml(t);
+}
+
+/** Decide markup from the stored body, never from substituted variables.
+ *  Plain bodies retain multiline values; HTML bodies escape each value. */
+export function renderBodyHtml(body: string, vars: Record<string, string | number | null | undefined>): string {
+  const t = body.trim();
+  return looksLikeHtml(t) ? fill(t, vars) : textBodyToHtml(fillText(t, vars));
 }
 
 /** Rough plain-text twin of an override body (tags stripped). */

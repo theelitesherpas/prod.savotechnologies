@@ -4,7 +4,7 @@ import nodemailer, { type Transporter } from "nodemailer";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import type { MailTemplate } from "@/lib/mail/templates";
-import { fillText, bodyToHtml, bodyToText, templateEntry } from "@/lib/mail/registry";
+import { fillText, renderBodyHtml, bodyToText, templateEntry } from "@/lib/mail/registry";
 import { unsubscribeUrl, withSignedUnsubscribe } from "@/lib/mail/unsubscribe";
 
 /**
@@ -194,13 +194,13 @@ export async function renderTemplate(
     const override = prisma ? await prisma.emailTemplate.findUnique({ where: { key } }) : null;
     if (override) {
       const { shell } = await import("@/lib/mail/templates");
-      const html = bodyToHtml(fillText(override.body, vars));
+      const html = renderBodyHtml(override.body, vars);
       const subject = fillText(override.subject, vars);
       return {
         subject,
         html: shell({
           preheader: subject.slice(0, 120),
-          heading: "",
+          heading: subject,
           bodyHtml: html,
           ...(entry.dept === "hr" ? { dept: "hr" as const } : {}),
           ...(entry.recipient === "customer" && to

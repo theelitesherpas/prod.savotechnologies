@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { answerQuestion } from "@/lib/assistant";
 import { sendMailNow, teamEmail } from "@/lib/mail";
+import { shell, lead as mailLead, spec, p, site } from "@/lib/mail/templates";
 import { publish, publishConversationEvent } from "./pubsub";
 import { wantsHuman } from "./handoff";
 import { buildAiSummary } from "./summary";
@@ -533,9 +534,17 @@ async function notifyAgents(
     "",
     "Open the Live Chat inbox in the admin panel to respond.",
   ].join("\n");
-  const html = `<div style="font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.6"><h2 style="margin:0 0 8px">${subject}</h2><p>${
-    lead.offline ? "A visitor left a live-chat request while the team was offline." : "A visitor is <strong>waiting for a live chat right now</strong>."
-  }</p><p>${rows.map(([k, v]) => `<strong>${k}:</strong> ${v}`).join("<br/>")}</p><p>Open the <strong>Live Chat</strong> inbox in the admin panel to respond.</p></div>`;
+  const html = shell({
+    preheader: lead.offline ? "A visitor left a live-chat request while the team was offline." : "A visitor is waiting for a live chat right now.",
+    heading: subject,
+    bodyHtml: [
+      mailLead(lead.offline ? "A visitor left a live-chat request while the team was offline." : "A visitor is <strong>waiting for a live chat right now</strong>."),
+      spec(rows),
+      p("Open the <strong>Live Chat</strong> inbox in the admin panel to respond.", true),
+    ].join(""),
+    cta: { href: site("/admin/live-chat"), label: "Open Live Chat" },
+    reason: "Internal live-chat notification.",
+  });
   sendMailNow(teamEmail(), { subject, text, html });
 }
 

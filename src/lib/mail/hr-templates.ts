@@ -3,7 +3,7 @@
  *
  * Recruitment → offers & onboarding → employment lifecycle. Professional
  * business register, same letterhead system as the site templates:
- * salutation, substantive paragraphs, a quiet centered summary block
+ * salutation, substantive paragraphs, readable paired record rows
  * carrying the specifics, formal closing. Every value arrives as a
  * placeholder variable, so HR customises each send through the admin
  * email centre (or the tested defaults go out as-is).
@@ -47,7 +47,7 @@ export function interviewInvite(vars: Record<string, string>): MailTemplate {
           ["Mode", v(vars, "mode", "Google Meet / Microsoft Teams")],
           ["Interviewer", v(vars, "interviewer")],
         ]),
-        highlight(`<strong>Joining link:</strong> <a href="${v(vars, "meetingLink", "#")}" style="color:#d9480f;">${v(vars, "meetingLink", "- link will be shared -")}</a>`),
+        highlight(`<strong>Joining link:</strong> <a href="${v(vars, "meetingLink", "#")}" style="color:#b82222;text-decoration:underline;">${v(vars, "meetingLink", "- link will be shared -")}</a>`),
         p(`Please join the meeting a few minutes early and ensure a stable internet connection. Should the proposed time be inconvenient, reply to this email and we will gladly reschedule.`, true),
       ].join(""),
       closing: "Kind regards,",

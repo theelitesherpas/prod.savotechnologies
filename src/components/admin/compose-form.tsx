@@ -79,11 +79,11 @@ export function ComposeForm({
   };
   const previewHtml = useMemo(() => {
     if (mode === "blank") {
-      return shell({ preheader: subject.slice(0, 120), heading: "", bodyHtml: bodyToHtml(body || "…") });
+      return shell({ preheader: subject.slice(0, 120), heading: subject, bodyHtml: bodyToHtml(body || "…"), dept });
     }
     const effective = { ...entry.vars, ...vars };
     return entry.default(effective).html;
-  }, [mode, entry, vars, subject, body]);
+  }, [mode, entry, vars, subject, body, dept]);
 
   return (
     <div className="space-y-4">
@@ -258,7 +258,7 @@ export function ComposeForm({
             </button>
             {showPreview ? (
               <div className="mt-3 overflow-hidden rounded-lg border border-border">
-                <iframe title="Compose preview" sandbox="" srcDoc={previewHtml} className="h-96 w-full border-0 bg-[#f5f4f0]" />
+                <iframe title="Compose preview" sandbox="" srcDoc={previewHtml} className="h-96 w-full border-0 bg-[#f7f7f7]" />
               </div>
             ) : null}
           </div>
@@ -325,7 +325,7 @@ export function ComposeForm({
             </button>
             {showPreview ? (
               <div className="mt-3 overflow-hidden rounded-lg border border-border">
-                <iframe title="Compose preview" sandbox="" srcDoc={previewHtml} className="h-80 w-full border-0 bg-[#f5f4f0]" />
+                <iframe title="Compose preview" sandbox="" srcDoc={previewHtml} className="h-80 w-full border-0 bg-[#f7f7f7]" />
               </div>
             ) : null}
           </div>

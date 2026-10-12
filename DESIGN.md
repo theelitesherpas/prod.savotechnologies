@@ -187,6 +187,68 @@ commercial, contact or availability claims. Root inherited metadata, demo/
 dev overlays, closed-inert capture paint and existing Next development timing
 diagnostics are not new design-system tokens or production guarantees.
 
+## Current v7 Email correspondence override
+
+Scope: `src/lib/mail/design.ts`, client/HR templates, saved/custom email shells,
+account-security and live-chat notifications, and their admin/local previews.
+This inherits the current website identity; it does not replace the legacy
+project-level frontmatter or the other surface overrides.
+
+### Overview
+
+**The Correspondence Rule.** An email is a readable letter with one clear next
+step, not a miniature website. Show the actual department, greeting, facts and
+signature before decorative brand material.
+
+### Colors
+
+White letter/header, black title passage, pale-grey canvas and fact rows, dark
+footer. Red identifies the department and primary action: the email CTA uses
+`#df2525` for readable white text; the department label uses `#b82222` on white.
+Do not carry the old warm-paper, gold, lavender or serif styling into emails.
+
+### Typography
+
+Outfit headings with Inter body, both backed by Arial/Helvetica. Standard
+headings are 32px/1.2 at weight 500, changing to 28px/1.2 below 480px; body is
+16px/1.75 (introductory text 1.8) and supporting text 13–14px. Web fonts use `font-display:swap`; Outlook
+gets explicit Arial fallbacks. Native-font email clients remain first-class.
+
+### Layout
+
+**The Inbox Rule.** Use a fluid, table-based canvas capped at 600px with critical
+styles inline and an Outlook ghost table. Desktop letter padding is 32px;
+phone padding is 20px. Detail labels/values stack below 480px. Long values wrap
+without horizontal scrolling. Preheaders are present but visually hidden.
+
+### Elevation & Depth
+
+Flat correspondence: hierarchy comes from type, whitespace and tonal passages,
+not shadows or stacked application cards. No animation in delivered HTML.
+
+### Shapes
+
+The letter is square-edged. Fact panels and red action tables have quiet 6px
+corners; Outlook may render square corners without losing clarity or padding.
+
+### Components
+
+Shared helpers own the logo header, title, paragraphs, fact rows, red ≥44px
+link CTA, department-specific signature and footer. Reuse the existing wordmark
+and self-hosted fonts; no new raster assets. HR letters show HR contact details;
+client correspondence shows the client contact. Admin compose, saved overrides
+and mailbox replies inherit the same shell. The development-only sample gallery
+has department/template controls and desktop/320px/plain-text views; it is not
+a sending interface and is unavailable in production.
+
+### Do's and Don'ts
+
+- **Do** retain subjects, plain-text twins, placeholders and delivery-policy gates.
+- **Do** check narrow screens, long values and stripped stylesheet fallbacks.
+- **Don't** imply that browser previews certify real Outlook/Gmail rendering.
+- **Don't** replace unsubscribe placeholders with invented or unsigned live URLs.
+- **Don't** promote legacy optional template sublabels into a general eyebrow rule.
+
 ## Current v7 Meeting invitation override
 
 This scoped override governs `/meeting/[token]` only. It inherits the approved

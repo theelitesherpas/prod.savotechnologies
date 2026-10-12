@@ -476,11 +476,11 @@ function ComposePanel({
   /* Live preview - the exact email that will be sent (same machinery as
      the compose page: registry default with the current variables). */
   const previewHtml = useMemo(() => {
-    if (isCustom) return shell({ preheader: subject.slice(0, 120), heading: "", bodyHtml: bodyToHtml(body || "…") });
+    if (isCustom) return shell({ preheader: subject.slice(0, 120), heading: subject, bodyHtml: bodyToHtml(body || "…"), dept });
     const reg = TEMPLATE_REGISTRY.find((t) => t.key === templateKey);
     if (!reg) return "";
     return reg.default({ ...reg.vars, ...vars }).html;
-  }, [isCustom, templateKey, vars, subject, body]);
+  }, [isCustom, templateKey, vars, subject, body, dept]);
 
   const switchTemplate = (key: string) => {
     setTemplateKey(key);
@@ -647,7 +647,7 @@ function ComposePanel({
         </button>
         {showPreview ? (
           <div className="border-t border-border p-2">
-            <iframe title="Compose preview" sandbox="" srcDoc={previewHtml} className="h-96 w-full rounded-md border-0 bg-[#f5f4f0]" />
+            <iframe title="Compose preview" sandbox="" srcDoc={previewHtml} className="h-96 w-full rounded-md border-0 bg-[#f7f7f7]" />
           </div>
         ) : null}
       </div>
