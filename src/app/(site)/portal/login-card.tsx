@@ -2,96 +2,133 @@
 
 import { clientLoginAction } from "@/app/portal/actions";
 import { FormGuard } from "@/components/admin/form-guard";
-import { CaptchaGate, useCaptcha, captchaBlocked } from "@/components/shared/captcha";
+import {
+  CaptchaGate,
+  useCaptcha,
+  captchaBlocked,
+  type CaptchaState,
+} from "@/components/shared/captcha";
+import { PortalIcon } from "@/components/portal/workspace-ui";
+import styles from "@/components/portal/portal.module.css";
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 
-/**
- * Portal sign-in card - embedded in the /portal hero (right column).
- * Compact: email + password + submit, inline error from ?e=, link for
- * clients who need their credentials re-issued.
- */
-export function PortalLoginCard({ error }: { error?: string }) {
-  const captcha = useCaptcha("client");
-  const [captchaErr, setCaptchaErr] = useState<string | null>(null);
+function SignInFields({
+  captcha,
+  captchaError,
+}: {
+  captcha: CaptchaState;
+  captchaError: string | null;
+}) {
+  const { pending } = useFormStatus();
+  const [visible, setVisible] = useState(false);
   return (
-    <div className="relative border border-border bg-surface p-8 sm:p-10">
-      <div className="flex items-center justify-between">
-        <p className="t-label text-muted">Client sign-in</p>
-        <span aria-hidden="true" className="flex gap-1.5">
-          <span className="h-1.5 w-1.5 bg-accent schem-pulse" />
-          <span className="h-1.5 w-1.5 bg-border" />
-          <span className="h-1.5 w-1.5 bg-border" />
-        </span>
+    <>
+      <div className={styles.loginField}>
+        <label htmlFor="pt-email">Email address</label>
+        <input
+          id="pt-email"
+          name="email"
+          type="email"
+          inputMode="email"
+          autoComplete="username"
+          required
+          maxLength={120}
+          spellCheck={false}
+          autoCapitalize="none"
+          disabled={pending}
+        />
       </div>
-
-      <h2 className="t-h4 mt-6">Your project, live.</h2>
-      <p className="t-caption mt-2 text-muted">
-        Status, milestones, deliverables and payments - the same view our delivery leads use.
-      </p>
-
-      {error ? (
-        <p role="alert" className="t-caption mt-5 border-l-2 border-accent bg-[rgb(232_73_15/0.08)] px-3.5 py-2.5 text-foreground/90">
-          {error}
-        </p>
-      ) : null}
-
-      <FormGuard action={clientLoginAction} validate={() => {
-        setCaptchaErr(null);
-        if (captchaBlocked(captcha)) {
-          setCaptchaErr("Please complete the verification.");
-          return [{ anchor: "pt-email", message: "Please complete the verification." }];
-        }
-        return [];
-      }} className="mt-6 space-y-4">
-        <div>
-          <label htmlFor="pt-email" className="t-label mb-1.5 block text-muted">
-            Email
-          </label>
-          <input
-            id="pt-email"
-            name="email"
-            type="email"
-            inputMode="email"
-            autoComplete="username"
-            required
-            maxLength={120}
-            spellCheck={false}
-            className="field"
-          />
-        </div>
-        <div>
-          <label htmlFor="pt-password" className="t-label mb-1.5 block text-muted">
-            Password
-          </label>
+      <div className={styles.loginField}>
+        <label htmlFor="pt-password">Password</label>
+        <div className={styles.passwordWrap}>
           <input
             id="pt-password"
             name="password"
-            type="password"
+            type={visible ? "text" : "password"}
             autoComplete="current-password"
             required
             maxLength={128}
-            className="field"
+            disabled={pending}
           />
+          <button
+            className={styles.passwordToggle}
+            type="button"
+            aria-label={visible ? "Hide password" : "Show password"}
+            aria-controls="pt-password"
+            onClick={() => setVisible(!visible)}
+            disabled={pending}
+          >
+            <PortalIcon name={visible ? "eye-off" : "eye"} />
+          </button>
         </div>
-        <CaptchaGate captcha={captcha} error={captchaErr} />
-        <button
-          type="submit"
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[2px] bg-foreground px-5 text-[0.875rem] font-semibold text-background transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-accent hover:text-on-accent"
-        >
-          Sign in to the portal
-          <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
-          </svg>
-        </button>
-              {captcha.token ? <input type="hidden" name="captchaToken" value={captcha.token} /> : null}
-      </FormGuard>
-
-      <p className="t-caption mt-5 text-muted">
-        First time here or locked out?{" "}
-        <a href="mailto:hello@savotechnologies.com" className="text-foreground underline-offset-4 hover:text-accent hover:underline">
-          hello@savotechnologies.com
-        </a>
+      </div>
+      <CaptchaGate captcha={captcha} error={captchaError} />
+      {captcha.token ? (
+        <input type="hidden" name="captchaToken" value={captcha.token} />
+      ) : null}
+      <button className={styles.primary} type="submit" disabled={pending}>
+        {pending ? "Signing in…" : "Sign in to your workspace"}
+        <PortalIcon name="arrow" />
+      </button>
+      <span className="sr-only" role="status">
+        {pending ? "Signing in. Please wait." : ""}
+      </span>
+    </>
+  );
+}
+export function PortalLoginCard({ error }: { error?: string }) {
+  const captcha = useCaptcha("client");
+  const [captchaError, setCaptchaError] = useState<string | null>(null);
+  const message =
+    error === "invalid"
+      ? "Enter a valid email address and your password, then try again."
+      : error;
+  return (
+    <section className={styles.loginCard} aria-labelledby="portal-signin">
+      <h2 id="portal-signin">Welcome back.</h2>
+      <p>
+        Sign in with the email address and password provided by your Savo team.
       </p>
-    </div>
+      {message ? (
+        <div role="alert" className={styles.loginError}>
+          {message}
+        </div>
+      ) : null}
+      <FormGuard
+        action={clientLoginAction}
+        summaryHeading="Check your sign-in details"
+        className={styles.loginForm}
+        validate={() => {
+          setCaptchaError(null);
+          if (captchaBlocked(captcha)) {
+            setCaptchaError(
+              "Please complete the human verification before signing in.",
+            );
+            return [
+              {
+                anchor: "pt-email",
+                message:
+                  "Please complete the human verification before signing in.",
+              },
+            ];
+          }
+          return [];
+        }}
+      >
+        <SignInFields captcha={captcha} captchaError={captchaError} />
+      </FormGuard>
+      <div className={styles.loginHelp}>
+        <h3>Need access or help signing in?</h3>
+        <p>
+          Your account is provided by the Savo team. If you haven’t received
+          your credentials or can’t sign in, contact us for help.
+        </p>
+        <a href="mailto:hello@savotechnologies.com">
+          hello@savotechnologies.com
+          <PortalIcon name="arrow" />
+        </a>
+      </div>
+    </section>
   );
 }

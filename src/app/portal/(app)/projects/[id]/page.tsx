@@ -1,129 +1,164 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getClientUser } from "@/lib/client-auth";
-import { ProgressRail, StatusChip, MilestoneChip, InvoiceStatusChip, money } from "@/components/portal/ui";
+import {
+  EmptyState,
+  PortalIcon,
+  PortalProgress,
+  PortalStatus,
+  InvoiceTable,
+  dateLabel,
+  progressValue,
+} from "@/components/portal/workspace-ui";
+import { invoiceRecord } from "@/components/portal/records";
+import styles from "@/components/portal/portal.module.css";
 
-/** One project: status, milestones, delivery log, related payments. */
-export default async function PortalProjectPage({ params }: { params: Promise<{ id: string }> }) {
+export const metadata: Metadata = { title: "Project details" };
+export default async function PortalProjectPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const client = await getClientUser();
-  if (!client) redirect("/portal");
-  if (!prisma) redirect("/portal");
-
+  if (!client || !prisma) redirect("/portal");
   const { id } = await params;
   const project = await prisma.clientProject.findFirst({
     where: { id, clientId: client.id },
     include: {
       milestones: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] },
       updates: { orderBy: { createdAt: "desc" }, take: 12 },
-      invoices: { where: { clientId: client.id, status: { notIn: ["draft"] } }, orderBy: { issuedAt: "desc" } },
+      invoices: {
+        where: { clientId: client.id, status: { notIn: ["draft"] } },
+        orderBy: { issuedAt: "desc" },
+      },
     },
   });
   if (!project) notFound();
-
-  const fmt = (d: Date | null) =>
-    d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null;
-
   return (
-    <div className="shell space-y-14 py-12 sm:py-16">
-      {/* Header */}
-      <header>
-        <Link href="/portal/projects" className="t-caption text-muted transition-colors hover:text-foreground">
-          ← All projects
-        </Link>
-        <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="t-label tnum text-accent">{project.code}</p>
-            <h1 className="t-h2 mt-3">{project.title}</h1>
-          </div>
-          <StatusChip status={project.status} />
+    <div className={styles.content}>
+      <Link href="/portal/projects" className={styles.textLink}>
+        <PortalIcon name="back" />
+        All projects
+      </Link>
+      <header className={styles.projectHero}>
+        <div className={styles.projectTitleRow}>
+          <span className={styles.code}>{project.code}</span>
+          <PortalStatus status={project.status} />
         </div>
-        {project.summary ? <p className="t-body mt-5 max-w-2xl text-muted">{project.summary}</p> : null}
-        <div className="mt-8">
-          <ProgressRail value={project.progress} />
-          <div className="mt-3 flex flex-wrap justify-between gap-3">
-            <p className="t-caption tnum text-muted">{project.progress}% complete</p>
-            <p className="t-caption tnum text-muted">
-              {fmt(project.startDate) ? `Started ${fmt(project.startDate)}` : ""}
-              {project.dueDate ? ` · Due ${fmt(project.dueDate)}` : ""}
-            </p>
-          </div>
+        <div className={styles.pageHeader}>
+          <h1>{project.title}</h1>
+          {project.summary ? <p>{project.summary}</p> : null}
+        </div>
+        <PortalProgress
+          value={project.progress}
+          label={`${project.title} progress`}
+        />
+        <div className={styles.progressMeta}>
+          <span>{progressValue(project.progress)}% complete</span>
+          <span>
+            {project.startDate
+              ? `Started ${dateLabel(project.startDate)} · `
+              : ""}
+            {project.dueDate
+              ? `Due ${dateLabel(project.dueDate)}`
+              : "Due date not set"}
+          </span>
         </div>
       </header>
-
-      <div className="grid gap-12 lg:grid-cols-12">
-        {/* Milestones */}
-        <section aria-labelledby="pr-milestones" className="lg:col-span-7">
-          <h2 id="pr-milestones" className="t-h3 mb-6">Milestones</h2>
-          {project.milestones.length === 0 ? (
-            <p className="t-sm border border-border bg-surface p-6 text-muted">Milestones publish as the plan firms up.</p>
-          ) : (
-            <ol className="divide-y divide-border border border-border bg-surface">
-              {project.milestones.map((m) => (
-                <li key={m.id} className="flex items-center justify-between gap-4 p-5">
-                  <div className="flex min-w-0 items-center gap-4">
-                    <span
-                      aria-hidden="true"
-                      className={`h-2 w-2 shrink-0 ${m.status === "done" ? "bg-[rgb(30_122_63)]" : m.status === "in_progress" ? "bg-accent" : "bg-muted/40"}`}
+      <div className={styles.projectDetailGrid}>
+        <section
+          className={`${styles.panel} ${styles.section}`}
+          aria-labelledby="project-milestones"
+        >
+          <div className={styles.sectionHead}>
+            <h2 id="project-milestones">Milestones</h2>
+          </div>
+          {project.milestones.length ? (
+            <ol className={styles.milestones}>
+              {project.milestones.map((milestone) => (
+                <li key={milestone.id}>
+                  <div className={styles.milestoneTitle}>
+                    <PortalIcon
+                      name={milestone.status === "done" ? "check" : "clock"}
                     />
-                    <div className="min-w-0">
-                      <p className={`t-sm font-medium ${m.status === "pending" ? "text-muted" : "text-foreground"}`}>{m.title}</p>
-                      {m.dueDate ? (
-                        <p className="t-caption mt-0.5 text-muted">Due {fmt(m.dueDate)}</p>
+                    <div>
+                      <strong>{milestone.title}</strong>
+                      {milestone.dueDate ? (
+                        <p>Due {dateLabel(milestone.dueDate)}</p>
                       ) : null}
                     </div>
                   </div>
-                  <MilestoneChip status={m.status} />
+                  <PortalStatus status={milestone.status} />
                 </li>
               ))}
             </ol>
+          ) : (
+            <EmptyState title="The plan is taking shape." icon="clock">
+              Your delivery lead will publish milestones here when the project
+              plan is ready.
+            </EmptyState>
           )}
         </section>
-
-        {/* Delivery log */}
-        <section aria-labelledby="pr-log" className="lg:col-span-5">
-          <h2 id="pr-log" className="t-h3 mb-6">Delivery log</h2>
-          {project.updates.length === 0 ? (
-            <p className="t-sm border border-border bg-surface p-6 text-muted">No updates posted yet.</p>
-          ) : (
-            <ol className="relative space-y-7 border-l border-border pl-6">
-              {project.updates.map((u) => (
-                <li key={u.id} className="relative">
-                  <span aria-hidden="true" className="absolute -left-[27px] top-[7px] h-2 w-2 bg-accent" />
-                  <p className="t-sm font-semibold">{u.title}</p>
-                  {u.body ? <p className="t-caption mt-1.5 leading-relaxed text-muted">{u.body}</p> : null}
-                  <p className="t-caption mt-1.5 text-muted/70">{fmt(u.createdAt)}</p>
+        <section
+          className={`${styles.panel} ${styles.section}`}
+          aria-labelledby="project-delivery"
+        >
+          <div className={styles.sectionHead}>
+            <h2 id="project-delivery">Delivery updates</h2>
+          </div>
+          {project.updates.length ? (
+            <ol className={styles.timeline}>
+              {project.updates.map((update) => (
+                <li key={update.id}>
+                  <strong>{update.title}</strong>
+                  {update.body ? <p>{update.body}</p> : null}
+                  <time dateTime={update.createdAt.toISOString()}>
+                    {dateLabel(update.createdAt)}
+                  </time>
                 </li>
               ))}
             </ol>
+          ) : (
+            <EmptyState title="No updates posted yet." icon="message">
+              Project notes and delivery updates will appear here as your team
+              shares them.
+            </EmptyState>
           )}
         </section>
       </div>
-
-      {/* Related payments */}
-      {project.invoices.length > 0 ? (
-        <section aria-labelledby="pr-payments">
-          <h2 id="pr-payments" className="t-h3 mb-6">Payments for this project</h2>
-          <ul className="divide-y divide-border border border-border bg-surface">
-            {project.invoices.map((inv) => (
-              <li key={inv.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
-                <div>
-                  <p className="t-sm font-semibold tnum">{inv.number}</p>
-                  <p className="t-caption mt-1 text-muted">
-                    Issued {fmt(inv.issuedAt)}
-                    {inv.dueDate ? ` · due ${fmt(inv.dueDate)}` : ""}
-                    {inv.paidAt ? ` · paid ${fmt(inv.paidAt)}` : ""}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <p className="t-sm font-semibold tnum">{money(inv.amount, inv.currency)}</p>
-                  <InvoiceStatusChip status={inv.status} />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <section className={styles.section} aria-labelledby="project-invoices">
+        <div className={styles.sectionHead}>
+          <h2 id="project-invoices">Project invoices</h2>
+          <Link href="/portal/invoices" className={styles.textLink}>
+            All invoices
+            <PortalIcon name="arrow" />
+          </Link>
+        </div>
+        {project.invoices.length ? (
+          <InvoiceTable
+            caption={`Invoices for ${project.title}`}
+            invoices={project.invoices.map((invoice) =>
+              invoiceRecord({
+                ...invoice,
+                project: { code: project.code, title: project.title },
+              }),
+            )}
+          />
+        ) : (
+          <EmptyState title="No invoices for this project." icon="invoice">
+            Issued invoices linked to this project will appear here.
+          </EmptyState>
+        )}
+      </section>
+      <div className={styles.helpStrip}>
+        <p>Need context on a milestone or delivery update?</p>
+        <a href="mailto:hello@savotechnologies.com" className={styles.textLink}>
+          Contact your team
+          <PortalIcon name="arrow" />
+        </a>
+      </div>
     </div>
   );
 }

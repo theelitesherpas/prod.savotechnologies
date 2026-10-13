@@ -87,6 +87,7 @@ export function FormGuard({
   className,
   validate,
   onValidSubmit,
+  summaryHeading = "There is a problem - the form was not saved",
 }: {
   action: (formData: FormData) => Promise<void>;
   children: ReactNode;
@@ -95,6 +96,8 @@ export function FormGuard({
   validate?: (form: HTMLFormElement) => GuardProblem[];
   /** Runs after every check passes, before the action is allowed through. */
   onValidSubmit?: () => void;
+  /** Task-specific wording; other forms retain their existing default. */
+  summaryHeading?: string;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [problems, setProblems] = useState<GuardProblem[]>([]);
@@ -203,7 +206,7 @@ export function FormGuard({
               <path d="M8 4.8v4" />
               <circle cx="8" cy="11.2" r="0.2" fill="currentColor" />
             </svg>
-            There is a problem - the form was not saved
+            {summaryHeading}
           </p>
           <ul className="space-y-1">
             {problems.map((p, i) => (

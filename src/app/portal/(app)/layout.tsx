@@ -3,78 +3,104 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SavoLogo } from "@/components/shared/savo-logo";
 import { getClientUser } from "@/lib/client-auth";
+import { WorkspaceNav, SignOutButton } from "@/components/portal/workspace-nav";
+import { PortalIcon } from "@/components/portal/workspace-ui";
+import styles from "@/components/portal/portal.module.css";
 import { clientLogoutAction } from "../actions";
 
-/**
- * Authenticated portal chrome: slim header (logo, client identity,
- * sign-out) over the dashboard pages. Every child page can rely on an
- * authenticated client - this layout enforces it.
- */
-
+/** Savo client workspace — Operate, owner-pinned current website identity.
+ * Persistent dark wayfinding beside white/gray records; no promotional UI.
+ * Client scope is still enforced here AND independently at every leaf. */
 export const metadata: Metadata = {
   title: { default: "Client Portal", template: "%s · Savo Client Portal" },
   robots: { index: false, follow: false },
 };
-
-export default async function PortalLayout({ children }: { children: React.ReactNode }) {
+const contract = `<!-- SAVO CLIENT WORKSPACE
+THESIS: A task-first extension of the current Savo website, not a marketing teaser.
+OWN-WORLD: Outfit headings, Inter controls/data; black rail, white panels, gray canvas, red actions.
+STORY: Sign in, locate a project, follow delivery, review invoices, contact the team.
+FIRST VIEWPORT: Persistent navigation, named account, clear heading, real summaries and current records. Mobile reflows the rail above the task.
+FORM: Established owner-pinned website identity; familiar Operate composition, scoped to the client journey.
+FINISH: Functional and responsive evidence recorded in the portal surface brief. No fictional capabilities or client records.
+-->`;
+export default async function PortalLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const client = await getClientUser();
   if (!client) redirect("/portal");
-
+  const initials = client.name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <header className="border-b border-border">
-        <div className="shell flex h-16 items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <Link href="/portal/dashboard" aria-label="Client portal home">
-              <SavoLogo className="h-8 w-auto text-foreground" />
-            </Link>
-            <span className="hidden h-5 w-px bg-border sm:block" aria-hidden="true" />
-            <p className="t-label hidden text-muted sm:block">Client Portal</p>
-          </div>
-          <div className="flex items-center gap-5">
-            <p className="t-caption hidden text-muted sm:block">
-              {client.name}
-              {client.company ? <span className="text-muted/60"> · {client.company}</span> : null}
-            </p>
-            <form action={clientLogoutAction}>
-              <button
-                type="submit"
-                className="t-sm font-medium text-muted transition-colors hover:text-accent"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
+    <div className={`${styles.theme} ${styles.shell}`}>
+      <div hidden dangerouslySetInnerHTML={{ __html: contract }} />
+      <a
+        href="#portal-main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-white focus:p-3 focus:text-black"
+      >
+        Skip to workspace
+      </a>
+      <aside className={styles.sidebar}>
+        <Link
+          className={styles.brand}
+          href="/portal/dashboard"
+          aria-label="Savo client portal home"
+        >
+          <SavoLogo />
+        </Link>
+        <p className={styles.workspaceName}>Client workspace</p>
+        <WorkspaceNav />
+        <div className={styles.sidebarBottom}>
+          <p>Your delivery team is still a conversation away.</p>
+          <a href="mailto:hello@savotechnologies.com">
+            Contact the team
+            <PortalIcon name="arrow" />
+          </a>
+          <Link href="/">
+            Visit Savo website
+            <PortalIcon name="arrow" />
+          </Link>
         </div>
-        <nav aria-label="Portal" className="shell flex gap-7 border-t border-border">
-          {[
-            { href: "/portal/dashboard", label: "Overview" },
-            { href: "/portal/projects", label: "Projects" },
-            { href: "/portal/invoices", label: "Payments" },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="t-sm -mb-px border-b-2 border-transparent py-3 font-medium text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
-
-      <main className="flex-1">{children}</main>
-
-      <footer className="border-t border-border py-6">
-        <div className="shell flex flex-wrap items-center justify-between gap-3">
-          <p className="t-caption text-muted">
+      </aside>
+      <div className={styles.workspace}>
+        <header className={styles.topbar}>
+          <div className={styles.identity}>
+            <span className={styles.avatar} aria-hidden="true">
+              {initials}
+            </span>
+            <div>
+              <p className={styles.identityName}>{client.name}</p>
+              {client.company ? (
+                <p className={styles.identityCompany}>{client.company}</p>
+              ) : null}
+            </div>
+          </div>
+          <form action={clientLogoutAction}>
+            <SignOutButton />
+          </form>
+        </header>
+        <main id="portal-main" className={styles.main}>
+          {children}
+        </main>
+        <footer className={styles.footer}>
+          <span>
             © {new Date().getFullYear()} Savo Technologies Private Limited
-          </p>
-          <p className="t-caption text-muted">
-            Need help? <a href="mailto:hello@savotechnologies.com" className="text-foreground underline-offset-4 hover:text-accent hover:underline">hello@savotechnologies.com</a>
-          </p>
-        </div>
-      </footer>
+          </span>
+          <div>
+            <a href="mailto:hello@savotechnologies.com">
+              Need help? Contact the team
+            </a>
+            <span aria-hidden="true"> · </span>
+            <Link href="/privacy-policy">Privacy</Link>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

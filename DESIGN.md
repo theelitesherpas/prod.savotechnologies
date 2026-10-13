@@ -110,6 +110,93 @@ components:
 
 # SAVO Technologies — Design System (v2)
 
+## Current v7 Client portal override
+
+This scoped extension governs `/portal`, `/portal/dashboard`,
+`/portal/projects`, `/portal/projects/[id]` and `/portal/invoices`, including
+loading, error, unavailable-project and empty states. Its implementation
+source is `src/components/portal/portal.module.css`. It takes precedence over
+legacy paper/ink/frontmatter guidance for these routes only. Preserve all
+other scopes, admin UI and the existing authentication/CAPTCHA contracts;
+this is not a global identity or missing-sidecar refresh.
+
+### Overview
+
+The client workspace extends the current Savo website: task-first and
+restrained, using Outfit/Inter, white/soft-gray surfaces, black wayfinding
+and red actions. Project and billing information are the content, not
+promotional claims or decorative proof.
+
+### Colors
+
+The local CSS defines canvas `#f7f7f7`, foreground/rail `#111`, panels `#fff`,
+secondary surfaces `#eee`, muted text `#626262`, borders `#dedede`, action
+red `#df2525` and hover/error `#b82222`. Supporting state colors accompany
+explicit text labels; never communicate payment/project state through color
+alone. Controls use stronger borders than quiet panel separators.
+
+### Typography
+
+Outfit supplies medium-weight page/section/project headings. Inter supplies
+body text, labels, controls and records; inherit the site's metric-adjusted
+font stacks. Page headings step from 36px desktop to 30px compact. Normal
+record text is 13–15px; public entrance inputs remain 16px to avoid mobile
+focus zoom. Dates and amounts use tabular numerals. Long titles, references
+and company names wrap; body introduction measure stays at 65ch.
+
+### Layout
+
+Authenticated desktop uses a 244px dark rail, white account bar and a
+1240px maximum task container with 40px padding. At 1100px the rail/padding
+compact; at 900px navigation becomes a visible horizontal top rail. Metrics
+reflow from four columns to two, and project/detail panels stack on phones.
+At 700px invoice tables become labeled record rows without dropping fields.
+Keep all three primary routes visible rather than hiding them in a drawer.
+
+The public entrance retains the site's header/footer and 1344px rail. A
+black context panel sits beside the white sign-in form on desktop. On phones
+the form comes first, then project context. Do not trigger automatic sales
+prompts during the portal journey.
+
+### Elevation & Depth
+
+Depth is predominantly tonal and bordered, not decorative shadows. Hover
+and focus communicate interaction; loading uses an understated surface
+pulse. Respect reduced-motion preferences and keep records visible at rest.
+
+### Shapes
+
+Use lightly rounded, bordered panels (8px), an entrance container (10px),
+controls (5px) and navigation items (6px). Status labels are compact tags,
+not large promotional pills. Native fields/selects preserve familiar behavior.
+
+### Components
+
+- **Wayfinding:** shared `WorkspaceNav` supplies `aria-current`; the shell
+  exposes a skip link, named account, sign-out and real team contact.
+- **Sign-in:** visible labels, password-manager autocomplete, show/hide
+  password, pending/disabled feedback, task-specific validation summary,
+  progressive CAPTCHA and human recovery. Preserve server-side validation.
+- **Records:** reuse `ProjectCard`, `PortalStatus`, `PortalProgress` and
+  `InvoiceTable`; desktop tables retain semantics on narrow labeled rows.
+- **Browsers:** project/invoice search and native status filters provide
+  live result counts, clear-filters recovery and honest empty states.
+- **Billing:** retain original currencies, summarize each separately and
+  exclude draft/cancelled invoices from balances. No fictional pay/download.
+- **Recovery:** preserve readable loading, retry/home recovery, and scoped
+  project-unavailable UI. Foreign project IDs must not reveal ownership.
+
+### Do's and Don'ts
+
+- **Do** preserve independent client ownership checks at every server page
+  and serialize only required client-visible fields into interactive lists.
+- **Do** maintain visible keyboard focus, textual status and 44px-or-larger
+  primary action targets. Keep the real task usable at 320px.
+- **Don't** add invented client activity, contracts, downloads, support
+  messaging, payment functionality or response-time promises.
+- **Don't** apply these local workspace components/styles to legacy admin
+  pages or rewrite unrelated shared website chrome.
+
 ## Current v7 Not-found recovery override
 
 This scoped override governs `src/app/not-found.tsx`, including unmatched root
