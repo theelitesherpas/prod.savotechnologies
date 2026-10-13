@@ -4,6 +4,7 @@ import { money } from "./ui";
 import styles from "./portal.module.css";
 
 export type PortalIconName =
+  | "shield"
   | "overview"
   | "projects"
   | "invoice"
@@ -16,6 +17,12 @@ export type PortalIconName =
   | "eye"
   | "eye-off";
 const paths: Record<PortalIconName, ReactNode> = {
+  shield: (
+    <>
+      <path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z" />
+      <path d="m8 12 3 3 5-6" />
+    </>
+  ),
   overview: (
     <>
       <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -111,6 +118,9 @@ export function progressValue(value: number) {
   return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
 }
 const states: Record<string, { label: string; tone: string }> = {
+  approved: { label: "Approved", tone: styles.success },
+  rejected: { label: "Rejected", tone: styles.working },
+  published: { label: "Published", tone: styles.success },
   planning: { label: "Planning", tone: styles.neutral },
   in_progress: { label: "In progress", tone: styles.working },
   review: { label: "In review", tone: styles.attention },

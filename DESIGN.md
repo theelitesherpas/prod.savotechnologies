@@ -110,22 +110,24 @@ components:
 
 # SAVO Technologies — Design System (v2)
 
-## Current v7 Client portal override
+## Current v7 Portal access and workspace override
 
-This scoped extension governs `/portal`, `/portal/dashboard`,
-`/portal/projects`, `/portal/projects/[id]` and `/portal/invoices`, including
-loading, error, unavailable-project and empty states. Its implementation
-source is `src/components/portal/portal.module.css`. It takes precedence over
-legacy paper/ink/frontmatter guidance for these routes only. Preserve all
-other scopes, admin UI and the existing authentication/CAPTCHA contracts;
-this is not a global identity or missing-sidecar refresh.
+This scoped extension governs `/portal`, its dashboard/projects/invoices,
+`/employee-portal` and its employee dashboard. Implementation sources are
+`src/components/portal/portal.module.css`, `entrance.module.css`, `entrance.tsx`
+and `site-chrome.tsx`. It takes precedence over legacy paper/ink/frontmatter
+for these routes only. Preserve other website scopes, admin UI, session and
+ownership contracts. Client/employee CAPTCHA is explicitly strengthened to
+mandatory first-attempt verification; admin retains its existing policy.
+This is not a global identity or missing-sidecar refresh.
 
 ### Overview
 
-The client workspace extends the current Savo website: task-first and
-restrained, using Outfit/Inter, white/soft-gray surfaces, black wayfinding
-and red actions. Project and billing information are the content, not
-promotional claims or decorative proof.
+Portal access and workspaces extend the current Savo website: Outfit/Inter,
+white/soft-gray task surfaces, strong black editorial/welcome regions and
+clear red actions/active navigation. Existing monochrome desk imagery gives
+the entrances a human editorial character; it is illustrative, not proof of
+Savo's office or staff. Real client/employee records remain the product.
 
 ### Colors
 
@@ -139,7 +141,9 @@ alone. Controls use stronger borders than quiet panel separators.
 
 Outfit supplies medium-weight page/section/project headings. Inter supplies
 body text, labels, controls and records; inherit the site's metric-adjusted
-font stacks. Page headings step from 36px desktop to 30px compact. Normal
+font stacks. Page headings step from 44px desktop to 30px compact. Entrance
+story headings use 56px desktop and 40px phone; sign-in headings use 32px.
+Normal
 record text is 13–15px; public entrance inputs remain 16px to avoid mobile
 focus zoom. Dates and amounts use tabular numerals. Long titles, references
 and company names wrap; body introduction measure stays at 65ch.
@@ -153,15 +157,23 @@ reflow from four columns to two, and project/detail panels stack on phones.
 At 700px invoice tables become labeled record rows without dropping fields.
 Keep all three primary routes visible rather than hiding them in a drawer.
 
-The public entrance retains the site's header/footer and 1344px rail. A
-black context panel sits beside the white sign-in form on desktop. On phones
-the form comes first, then project context. Do not trigger automatic sales
-prompts during the portal journey.
+Public access uses focused logo/back-to-website chrome and a compact legal/
+help footer, not the marketing navigation/footer. The 1240px gateway pairs
+black editorial copy and an actual desk image with a white sign-in side.
+Phones place the form first. The form fills its column; its inline-size
+container must not shrink to zero. Client/employee switching is explicit.
+Use Google's native compact widget below 304px available width; normal
+widgets stay contained when a solved form is subsequently resized.
+
+Portal routes never mount sales-form providers or the sales assistant;
+other site routes preserve the original provider hierarchy. Employee records
+use the shared task/container vocabulary, not the client sidebar.
 
 ### Elevation & Depth
 
-Depth is predominantly tonal and bordered, not decorative shadows. Hover
-and focus communicate interaction; loading uses an understated surface
+Depth is predominantly tonal and bordered, not decorative shadows. Dark
+welcome/project headers and the primary billing summary create hierarchy.
+Hover and focus communicate interaction; loading uses an understated surface
 pulse. Respect reduced-motion preferences and keep records visible at rest.
 
 ### Shapes
@@ -176,7 +188,14 @@ not large promotional pills. Native fields/selects preserve familiar behavior.
   exposes a skip link, named account, sign-out and real team contact.
 - **Sign-in:** visible labels, password-manager autocomplete, show/hide
   password, pending/disabled feedback, task-specific validation summary,
-  progressive CAPTCHA and human recovery. Preserve server-side validation.
+  mandatory first-attempt CAPTCHA and human recovery. Missing/forged tokens
+  are rejected before credential work; unavailable configuration/status fails
+  closed. Verification errors focus the verification group, not a valid email.
+  Preserve server-side validation. Google's test keys are local-only preview
+  tools; a live release requires a real v2 checkbox key pair.
+- **Employee records:** preserve session expiration, employment-status and
+  linked-panel-user gates. Render only the employee's employment/leave and
+  authored content; the admin shortcut retains independent admin permissions.
 - **Records:** reuse `ProjectCard`, `PortalStatus`, `PortalProgress` and
   `InvoiceTable`; desktop tables retain semantics on narrow labeled rows.
 - **Browsers:** project/invoice search and native status filters provide

@@ -67,5 +67,6 @@ describe("employee lifecycle",()=>{
  it.each([employee("exited"),employee("active",false),employee("unknown")])("denies existing revoked dashboard before authored queries",async e=>{
   m.employeeSession.mockResolvedValue({expiresAt:new Date(Date.now()+10000),employee:e});const {default:Dashboard}=await import("@/app/(site)/employee-portal/dashboard/page");await expect(Dashboard()).rejects.toThrow("REDIRECT:/employee-portal");expect(m.content).not.toHaveBeenCalled();
  });
- it("preserves valid employee dashboard",async()=>{m.employeeSession.mockResolvedValue({expiresAt:new Date(Date.now()+10000),employee:employee()});const {default:Dashboard}=await import("@/app/(site)/employee-portal/dashboard/page");expect((await Dashboard()).type).toBe("main");expect(m.content).toHaveBeenCalled();});
+ it("preserves valid employee dashboard",async()=>{m.employeeSession.mockResolvedValue({expiresAt:new Date(Date.now()+10000),employee:employee()});const {default:Dashboard}=await import("@/app/(site)/employee-portal/dashboard/page");expect((await Dashboard()).type).toBe("div"); // The site layout supplies the sole main landmark.
+  expect(m.content).toHaveBeenCalledWith(expect.objectContaining({where:{authorId:"emp"}}));});
 });

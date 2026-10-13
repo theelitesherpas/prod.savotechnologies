@@ -20,13 +20,20 @@ assert(
   localHosts.has(new URL(process.env.DATABASE_URL).hostname),
   "Only a local database may receive fixtures",
 );
+assert(
+  process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ===
+    "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" &&
+    process.env.RECAPTCHA_SECRET_KEY ===
+      "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe",
+  "Automated CAPTCHA checks require Google's official local-only test pair; never a real challenge",
+);
 const prisma = new PrismaClient();
 const key = `portal-review-${randomBytes(5).toString("hex")}`;
 const password = randomBytes(18).toString("base64url");
 const owners = [];
 const checks = [];
 const browserErrors = [];
-const dir = ".impeccable/review/portal";
+const dir = ".impeccable/review/portal-v2";
 await mkdir(dir, { recursive: true });
 const browser = await chromium.launch();
 const ok = (condition, label) => {
@@ -235,13 +242,16 @@ try {
     new URL(page.url()).pathname === "/portal",
     "anonymous dashboard redirects",
   );
-  for (const width of [1440, 768, 390, 320]) {
+  for (const width of process.env.REUSE_ENTRANCE_CAPTURES
+    ? [1440]
+    : [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: width < 700 ? 900 : 1000 });
     await visit(page, "/portal");
     await geometry(page, `sign-in/${width}`);
-    await capture(page, `${dir}/signin-${width}.png`);
+    if (!process.env.REUSE_ENTRANCE_CAPTURES)
+      await capture(page, `${dir}/signin-${width}.png`);
     ok(
-      await page.getByRole("heading", { name: "Welcome back." }).isVisible(),
+      await page.getByRole("heading", { name: "Client sign in." }).isVisible(),
       `sign-in/${width}: primary task visible`,
     );
     ok(
@@ -285,10 +295,42 @@ try {
     "hide password works",
   );
   await page.getByRole("button", { name: "Sign in to your workspace" }).click();
+  await page
+    .getByRole("alert")
+    .filter({ hasText: "Check your sign-in details" })
+    .waitFor();
+  ok(
+    new URL(page.url()).pathname === "/portal",
+    "first sign-in is blocked without human verification",
+  );
+  await page
+    .getByRole("button", {
+      name: "Please complete the human verification before signing in.",
+    })
+    .click();
+  ok(
+    await page
+      .locator("#pt-captcha")
+      .evaluate((el) => el === document.activeElement),
+    "verification error focuses the verification group",
+  );
+  await page
+    .locator("#pt-captcha")
+    .frameLocator('iframe[title="reCAPTCHA"]')
+    .getByRole("checkbox")
+    .click();
+  await page
+    .locator('input[name="captchaToken"]')
+    .waitFor({ state: "attached" });
+  ok(
+    Boolean(await page.locator('input[name="captchaToken"]').inputValue()),
+    "official Google test widget returns a token",
+  );
+  await page.getByRole("button", { name: "Sign in to your workspace" }).click();
   await page.waitForURL("**/portal/dashboard", { timeout: 60000 });
   ok(
     new URL(page.url()).pathname === "/portal/dashboard",
-    "real local sign-in redirects to overview",
+    "real local sign-in with Google test verification redirects to overview",
   );
   const routes = [
     { path: "/portal/dashboard", name: "dashboard" },
@@ -409,8 +451,8 @@ try {
   );
   ok(
     await nojsPage
-      .getByRole("region", { name: "Welcome back." })
-      .getByRole("link", { name: "hello@savotechnologies.com", exact: true })
+      .getByRole("region", { name: "Client sign in." })
+      .getByRole("link", { name: "Contact the team", exact: true })
       .isVisible(),
     "no-JS human recovery available",
   );

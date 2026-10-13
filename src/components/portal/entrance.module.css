@@ -1,0 +1,270 @@
+:global(body):has(.header) {
+  background: #f7f7f7;
+}
+.page {
+  padding: 24px 32px 32px;
+  min-height: calc(100dvh - 160px);
+  display: grid;
+  align-content: center;
+}
+.gateway {
+  width: min(100%, 1240px);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 1.08fr 1fr;
+  background: #fff;
+  border: 1px solid #dedede;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.story {
+  min-width: 0;
+  background: #111;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.storyCopy {
+  padding: 44px 48px 32px;
+}
+.story h2 {
+  font-family: var(--font-outfit);
+  font-size: 3.5rem;
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.storyCopy > p {
+  margin-top: 22px;
+  max-width: 42ch;
+  color: #bdbdbd;
+  font-size: 15px;
+  line-height: 1.85;
+}
+.features {
+  list-style: none;
+  padding: 0;
+  margin: 26px 0 0;
+}
+.features li {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 0;
+  border-top: 1px solid #333;
+  font-size: 13px;
+  color: #eee;
+}
+.features svg {
+  width: 18px;
+  height: 18px;
+  color: #bdbdbd;
+}
+.image {
+  position: relative;
+  min-height: 225px;
+  flex: 1;
+  overflow: hidden;
+}
+.image img {
+  object-fit: cover;
+  object-position: center 54%;
+}
+.imageCaption {
+  position: absolute;
+  bottom: 18px;
+  left: 24px;
+  background: #111;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.formSide {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.switcher {
+  display: flex;
+  border-bottom: 1px solid #eee;
+  margin: 24px 40px 0;
+  gap: 28px;
+}
+.switcher a {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  color: #626262;
+  font-size: 13px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.switcher a[aria-current="page"] {
+  color: #111;
+  border-color: #df2525;
+}
+.switcher a:hover {
+  color: #b82222;
+}
+.accessNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 10px;
+  margin: auto 40px 24px;
+  padding-top: 18px;
+  border-top: 1px solid #eee;
+  color: #626262;
+  font-size: 11px;
+}
+.accessNote svg {
+  width: 15px;
+  height: 15px;
+}
+.accessNote a {
+  margin-left: auto;
+  padding-block: 12px;
+  color: #111;
+}
+.accessNote a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: min(100%, 1304px);
+  margin-inline: auto;
+  min-height: 88px;
+  padding: 18px 32px;
+  color: #111;
+  font-family: var(--font-inter);
+}
+.logo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.logo svg {
+  width: 90px;
+  height: auto;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: #626262;
+  font-size: 12px;
+}
+.back svg {
+  width: 17px;
+  height: 17px;
+}
+.back:hover {
+  color: #111;
+}
+.footer {
+  font-family: var(--font-inter);
+  padding: 16px 32px 24px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 1304px);
+  margin-inline: auto;
+  color: #626262;
+  font-size: 11px;
+}
+.footer div {
+  display: flex;
+  gap: 24px;
+}
+.footer a {
+  color: #626262;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.footer a:hover {
+  color: #111;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.header :is(a, button):focus-visible,
+.footer a:focus-visible {
+  outline: 2px solid #df2525;
+  outline-offset: 4px;
+}
+@media (max-width: 1000px) {
+  .storyCopy {
+    padding: 36px 30px 26px;
+  }
+  .story h2 {
+    font-size: 2.75rem;
+  }
+  .switcher {
+    margin-inline: 30px;
+    gap: 22px;
+  }
+  .accessNote {
+    margin-inline: 30px;
+  }
+}
+@media (max-width: 700px) {
+  .page {
+    padding: 8px 20px 24px;
+  }
+  .gateway {
+    display: flex;
+    flex-direction: column;
+  }
+  .formSide {
+    order: 0;
+  }
+  .story {
+    order: 1;
+  }
+  .storyCopy {
+    padding: 32px 28px 24px;
+  }
+  .story h2 {
+    font-size: 2.5rem;
+  }
+  .storyCopy > p {
+    font-size: 14px;
+  }
+  .image {
+    min-height: 190px;
+  }
+  .imageCaption {
+    left: 20px;
+    bottom: 14px;
+  }
+  .switcher {
+    margin: 14px 20px 0;
+    gap: 24px;
+  }
+  .switcher a {
+    font-size: 12px;
+  }
+  .accessNote {
+    margin-inline: 20px;
+    margin-bottom: 18px;
+  }
+  .header {
+    min-height: 76px;
+    padding: 14px 20px;
+  }
+  .logo svg {
+    width: 78px;
+  }
+  .footer {
+    padding: 8px 20px 20px;
+  }
+}

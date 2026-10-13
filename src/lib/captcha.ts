@@ -14,7 +14,12 @@ export function captchaConfiguration(): "off" | "ready" | "invalid" {
 }
 export function recordLoginFailure(portal: string, ip: string): void { rateLimit(loginFailKey(portal, ip), 20, LOGIN_WINDOW); }
 export function clearLoginFailures(portal: string, ip: string): void { clearRateLimit(loginFailKey(portal, ip)); }
-export function loginCaptchaRequired(portal: string, ip: string): boolean { return rateCount(loginFailKey(portal, ip), LOGIN_WINDOW) >= LOGIN_FREE; }
+/** Client and employee access always require verification; admin retains its
+ * existing failed-attempt policy. Enforcement is independent of the UI. */
+export function loginCaptchaRequired(portal: string, ip: string): boolean {
+  return portal === "client" || portal === "employee" ||
+    rateCount(loginFailKey(portal, ip), LOGIN_WINDOW) >= LOGIN_FREE;
+}
 
 export type CaptchaCheck =
   | { ok: true }
@@ -49,6 +54,10 @@ async function verify(required: boolean, token: unknown): Promise<CaptchaCheck> 
 }
 
 export async function enforceLoginCaptcha(portal: string, ip: string, token: unknown): Promise<CaptchaCheck> {
+  if ((portal === "client" || portal === "employee") && captchaConfiguration() === "off") {
+    logger.error("captcha.portal_configuration_missing");
+    return { ok: false, error: "Verification is temporarily unavailable. Please contact your Savo team for help." };
+  }
   return verify(loginCaptchaRequired(portal, ip), token);
 }
 export async function enforceCaptcha(_ip: string, token: unknown): Promise<CaptchaCheck> {
@@ -56,7 +65,7 @@ export async function enforceCaptcha(_ip: string, token: unknown): Promise<Captc
   return verify(true, token);
 }
 export function requiredForRequest(): boolean {
-  // Public forms display the challenge on every submission flow; portal
-  // logins retain their separate failed-attempt threshold.
+  // Public forms remain optional when unconfigured. Client/employee logins
+  // have a separate mandatory policy; admin retains its attempt threshold.
   return captchaConfiguration() !== "off";
 }

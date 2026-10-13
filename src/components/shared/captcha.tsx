@@ -7,9 +7,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *
  * Public enquiry/application forms ask the server whether verification
  * is configured and require a token before submission. The callback
- * form delays rendering until a phone number is entered; portal logins
- * retain their failed-attempt threshold. Without a site key the gate is
- * disabled, while the server still fails closed on partial setup.
+ * form delays rendering until a phone number is entered. Client/employee
+ * sign-ins require verification from the first attempt and fail closed if
+ * unavailable. Admin retains its failed-attempt threshold.
  */
 
 declare global {
@@ -21,7 +21,9 @@ declare global {
           sitekey: string;
           callback: (t: string) => void;
           "expired-callback": () => void;
+          "error-callback"?: () => void;
           theme?: "light" | "dark";
+          size?: "normal" | "compact";
         },
       ) => number;
       reset: (id?: number) => void;
@@ -55,7 +57,8 @@ function loadScript(): Promise<void> {
     window.__onRecaptchaLoaded = () => resolve();
     const s = document.createElement("script");
     s.id = SCRIPT_ID;
-    s.src = "https://www.google.com/recaptcha/api.js?onload=__onRecaptchaLoaded&render=explicit&hl=en";
+    s.src =
+      "https://www.google.com/recaptcha/api.js?onload=__onRecaptchaLoaded&render=explicit&hl=en";
     s.async = true;
     s.defer = true;
     s.onerror = () => reject(new Error("reCAPTCHA script failed to load"));
@@ -66,6 +69,8 @@ function loadScript(): Promise<void> {
 export type CaptchaState = {
   /** Server says this flow requires a challenge. */
   required: boolean;
+  /** Mandatory access cannot continue while configuration/status is unavailable. */
+  unavailable?: boolean;
   /** Solved token - send as captchaToken with the submission. */
   token: string | null;
   /** Receive a solved token (used by the gate). */
@@ -76,19 +81,47 @@ export type CaptchaState = {
   refresh: () => void;
 };
 
-export function useCaptcha(portal?: "admin" | "employee" | "client"): CaptchaState {
+export function useCaptcha(
+  portal?: "admin" | "employee" | "client",
+): CaptchaState {
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-  const checkUrl = portal ? `/api/captcha/required?portal=${portal}` : "/api/captcha/required";
-  const [required, setRequired] = useState(() => !portal && Boolean(siteKey));
+  const checkUrl = portal
+    ? `/api/captcha/required?portal=${portal}`
+    : "/api/captcha/required";
+  const mandatory = portal === "client" || portal === "employee";
+  const [required, setRequired] = useState(
+    () => mandatory || (!portal && Boolean(siteKey)),
+  );
+  const [unavailable, setUnavailable] = useState(() => mandatory && !siteKey);
   const [token, setToken] = useState<string | null>(null);
 
+  const apply = useCallback(
+    (d: {
+      required?: boolean;
+      configured?: boolean;
+      unavailable?: boolean;
+    }) => {
+      setRequired(mandatory || (Boolean(d.required) && Boolean(siteKey)));
+      setUnavailable(
+        mandatory &&
+          (!siteKey || d.configured === false || Boolean(d.unavailable)),
+      );
+    },
+    [mandatory, siteKey],
+  );
   const refresh = useCallback(() => {
     setToken(null);
     fetch(checkUrl, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d: { required?: boolean }) => setRequired(Boolean(d.required) && Boolean(siteKey)))
-      .catch(() => setRequired(false));
-  }, [checkUrl, siteKey]);
+      .then((r) => {
+        if (!r.ok) throw new Error("Verification status unavailable");
+        return r.json();
+      })
+      .then(apply)
+      .catch(() => {
+        setRequired(mandatory);
+        setUnavailable(mandatory);
+      });
+  }, [apply, checkUrl, mandatory]);
 
   const reset = useCallback(() => {
     setToken(null);
@@ -99,29 +132,51 @@ export function useCaptcha(portal?: "admin" | "employee" | "client"): CaptchaSta
   useEffect(() => {
     let alive = true;
     fetch(checkUrl, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d: { required?: boolean }) => {
-        if (alive) setRequired(Boolean(d.required) && Boolean(siteKey));
+      .then((r) => {
+        if (!r.ok) throw new Error("Verification status unavailable");
+        return r.json();
       })
-      .catch(() => undefined);
+      .then((d) => {
+        if (alive) apply(d);
+      })
+      .catch(() => {
+        if (alive && mandatory) setUnavailable(true);
+      });
     return () => {
       alive = false;
     };
-  }, [checkUrl, siteKey]);
+  }, [apply, checkUrl, mandatory]);
 
-  return { required, token, setToken, reset, refresh };
+  return { required, unavailable, token, setToken, reset, refresh };
 }
 
 /** The challenge box - render inside any form; invisible unless required. */
-export function CaptchaGate({ captcha, error }: { captcha: CaptchaState; error?: string | null }) {
+export function CaptchaGate({
+  captcha,
+  error,
+  id,
+}: {
+  captcha: CaptchaState;
+  error?: string | null;
+  id?: string;
+}) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const widgetId = useRef<number | null>(null);
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-  const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "failed">(
+    "loading",
+  );
+  const [expired, setExpired] = useState(false);
 
   // Render the widget once the gate is required and the box is mounted.
   useEffect(() => {
-    if (!captcha.required || !siteKey || widgetId.current !== null) return;
+    if (
+      !captcha.required ||
+      captcha.unavailable ||
+      !siteKey ||
+      widgetId.current !== null
+    )
+      return;
     let cancelled = false;
     setStatus("loading");
     loadScript()
@@ -138,10 +193,23 @@ export function CaptchaGate({ captcha, error }: { captcha: CaptchaState; error?:
             if (attempts >= 20) setStatus("failed");
             return;
           }
+          const size = id && el.clientWidth < 304 ? "compact" : "normal";
+          el.dataset.recaptchaSize = size;
           widgetId.current = window.grecaptcha.render(el, {
             sitekey: siteKey,
-            callback: (t) => captcha.setToken(t),
-            "expired-callback": () => captcha.setToken(null),
+            size,
+            callback: (t) => {
+              setExpired(false);
+              captcha.setToken(t);
+            },
+            "expired-callback": () => {
+              setExpired(true);
+              captcha.setToken(null);
+            },
+            "error-callback": () => {
+              setStatus("failed");
+              captcha.setToken(null);
+            },
             theme: "light",
           });
           setStatus("ready");
@@ -155,14 +223,25 @@ export function CaptchaGate({ captcha, error }: { captcha: CaptchaState; error?:
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [captcha.required, siteKey]);
+  }, [captcha.required, captcha.unavailable, siteKey]);
 
+  if (captcha.unavailable)
+    return (
+      <p role="alert" className="t-caption text-error">
+        Human verification is temporarily unavailable. Please refresh the page
+        or contact your Savo team for help.
+      </p>
+    );
   if (!captcha.required) return null;
 
   return (
     <div>
+      <p className="mb-2 text-[0.8125rem] font-medium">Human verification</p>
       <div
         ref={elRef}
+        id={id}
+        role="group"
+        tabIndex={-1}
         className="min-h-[78px] py-1"
         aria-label="Human verification"
         data-recaptcha-widget={siteKey ? "loaded" : "no-key"}
@@ -175,9 +254,9 @@ export function CaptchaGate({ captcha, error }: { captcha: CaptchaState; error?:
           Verification could not load - please refresh the page.
         </p>
       ) : null}
-      {error ? (
+      {error || expired ? (
         <p role="alert" className="t-caption mt-1.5 text-error">
-          {error}
+          {error || "Verification expired. Please complete it again."}
         </p>
       ) : null}
     </div>
@@ -186,5 +265,5 @@ export function CaptchaGate({ captcha, error }: { captcha: CaptchaState; error?:
 
 /** Validation helper for submit handlers. */
 export function captchaBlocked(captcha: CaptchaState): boolean {
-  return captcha.required && !captcha.token;
+  return Boolean(captcha.unavailable) || (captcha.required && !captcha.token);
 }

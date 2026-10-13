@@ -73,12 +73,14 @@ export default async function PortalDashboard() {
   ];
   return (
     <div className={styles.content}>
-      <header className={styles.pageHeader}>
-        <h1>Welcome back, {client.name.trim().split(/\s+/)[0]}.</h1>
-        <p>
-          See where your projects stand, what’s changed and which invoices need
-          your attention.
-        </p>
+      <header className={`${styles.pageHeader} ${styles.workspaceHero}`}>
+        <div>
+          <h1>Welcome back, {client.name.trim().split(/\s+/)[0]}.</h1>
+          <p>See where your projects stand, what’s changed and which invoices need your attention.</p>
+        </div>
+        <Link href="/portal/projects" className={styles.workspaceAction}>
+          View your projects <PortalIcon name="arrow" />
+        </Link>
       </header>
       <dl className={styles.metrics}>
         {metrics.map((m) => (

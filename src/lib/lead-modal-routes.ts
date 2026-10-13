@@ -1,6 +1,6 @@
 import { withBasePath } from "@/lib/utils";
 
-const AUTO_MODAL_EXCLUDED_ROUTES = ["/about", "/careers", "/contact", "/portal"].map(withBasePath);
+const AUTO_MODAL_EXCLUDED_ROUTES = ["/about", "/careers", "/contact", "/portal", "/employee-portal"].map(withBasePath);
 
 /** Suppress automatic lead prompts during contact, application and client sign-in tasks. Manual CTAs remain available. */
 export function isAutomaticProjectLeadModalExcludedPath(pathname: string): boolean {

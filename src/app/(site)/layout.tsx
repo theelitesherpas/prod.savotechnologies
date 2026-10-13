@@ -1,9 +1,8 @@
 import { SiteHeader } from "@/components/layout/site-header";
+import { PortalSiteHeader, PortalSiteFooter, PortalMarketingBoundary, SiteInteractionProviders } from "@/components/portal/site-chrome";
 import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { EnquiryProvider } from "@/components/shared/enquiry-dialog";
 import { AskSavoBar } from "@/components/shared/ask-savo-bar";
-import { ProjectModalProvider } from "@/components/shared/project-lead-modal";
 import { AnalyticsBeacon } from "@/components/shared/analytics-beacon";
 import { SiteImageGuard } from "@/components/shared/image-guard";
 import { HEADER_NAV, type NavItem } from "@/constants/navigation";
@@ -169,7 +168,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <EnquiryProvider>
+    <SiteInteractionProviders testimonials={leadTestimonials} metrics={leadMetrics} enabled={settings.leadModalEnabled}>
       <AnalyticsBeacon />
       <a
         href="#main"
@@ -207,17 +206,15 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         </div>
       ) : null}
 
-      <ProjectModalProvider testimonials={leadTestimonials} metrics={leadMetrics} enabled={settings.leadModalEnabled}>
       <SmoothScroll>
-        <SiteHeader nav={nav} />
+        <PortalSiteHeader><SiteHeader nav={nav} /></PortalSiteHeader>
       <main id="main">{children}</main>
-      <SiteFooter
-        contact={{ email: settings.contactEmail, phone: settings.contactPhone, phoneE164: SITE.phoneE164 }}
-      />
-      <AskSavoBar />
+      <PortalSiteFooter>
+        <SiteFooter contact={{ email: settings.contactEmail, phone: settings.contactPhone, phoneE164: SITE.phoneE164 }} />
+      </PortalSiteFooter>
+      <PortalMarketingBoundary><AskSavoBar /></PortalMarketingBoundary>
       <SiteImageGuard />
       </SmoothScroll>
-      </ProjectModalProvider>
-    </EnquiryProvider>
+    </SiteInteractionProviders>
   );
 }

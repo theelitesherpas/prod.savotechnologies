@@ -23,7 +23,7 @@ export async function clientLoginAction(formData: FormData): Promise<void> {
   const hdrs = await headers();
   const ip = clientIpFromHeaders(hdrs);
 
-  // Progressive captcha: after 2 failed attempts, verify before processing.
+  // Mandatory human verification before processing credentials, including the first attempt.
   const cap = await enforceLoginCaptcha("client", ip, formData.get("captchaToken"));
   if (!cap.ok) {
     if ("captchaRequired" in cap) {
