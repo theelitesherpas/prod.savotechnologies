@@ -37,9 +37,9 @@ function origin(): string {
 
 function emailCss(): string {
   return `
-@font-face{font-family:Outfit;font-style:normal;font-weight:100 900;font-display:swap;src:url('${origin()}/fonts/outfit/Outfit-VariableFont_wght.ttf') format('truetype');}
-@font-face{font-family:Inter;font-style:normal;font-weight:100 900;font-display:swap;src:url('${origin()}/fonts/inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');}
-@font-face{font-family:Inter;font-style:italic;font-weight:100 900;font-display:swap;src:url('${origin()}/fonts/inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');}
+@font-face{font-family:Outfit;font-style:normal;font-weight:100 900;font-display:swap;src:url('${origin()}/fonts/outfit/Outfit-Variable.dc1f873e.latin.woff2') format('woff2');}
+@font-face{font-family:Inter;font-style:normal;font-weight:100 900;font-display:swap;src:url('${origin()}/fonts/inter/Inter-Variable.163f2f69.latin.woff2') format('woff2');}
+@font-face{font-family:Inter;font-style:italic;font-weight:100 900;font-display:swap;src:url('${origin()}/fonts/inter/Inter-Italic-Variable.0e543362.latin.woff2') format('woff2');}
 body{margin:0!important;padding:0!important;}table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;}td{word-wrap:break-word;}img{border:0;outline:none;text-decoration:none;}a{color:#b82222;}p{margin:0 0 16px;}h2,h3{font-family:${DISPLAY};color:#000000;font-weight:500;}::selection{background:#000000;color:#ffffff;}
 a:focus-visible{outline:3px solid #b82222;outline-offset:3px;}.mail-footer a:focus-visible{outline-color:#ff6b6b;}
 @media only screen and (max-width:480px){.mail-outer{padding:12px 0!important;}.mail-header,.mail-hero,.mail-body,.mail-footer{padding-left:20px!important;padding-right:20px!important;}.mail-title{font-size:28px!important;line-height:1.2!important;}.mail-spec-label,.mail-spec-value{display:block!important;width:auto!important;}.mail-spec-label{padding-bottom:3px!important;border-bottom:0!important;}.mail-spec-value{padding-top:0!important;}.mail-pitch-cell{display:block!important;width:100%!important;padding:12px 0!important;}.mail-dual-cell{display:block!important;width:100%!important;padding:0 0 12px!important;}.mail-button-table{width:100%!important;}.mail-button{display:block!important;text-align:center!important;}.mail-header-note{font-size:12px!important;}.mail-note{padding:16px!important;}}

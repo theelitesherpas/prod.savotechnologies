@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Manrope, Source_Serif_4, Fragment_Mono } from "next/font/google";
+import { Fragment_Mono } from "next/font/google";
 import { SITE } from "@/constants/site";
 import { openGraphFor } from "@/lib/seo";
 import { absoluteUrl, canonicalOrigin, INDEXABLE, env } from "@/lib/env";
@@ -8,26 +8,28 @@ import { IS_DEMO } from "@/lib/content-mode";
 import { RouteLoader } from "@/components/ui/route-loader";
 import "./globals.css";
 
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-  display: "swap",
-});
-
-const sourceSerif = Source_Serif_4({
-  subsets: ["latin"],
-  variable: "--font-source-serif",
-  style: ["normal", "italic"],
-  axes: ["opsz"],
-  display: "swap",
-});
-
+/* Fragment Mono stays a next/font instance: it backs only the hero
+   orbit canvas and the growth diagram labels (direct --font-fragment
+   references), loading on demand. The three system families (Inter,
+   Outfit, Afacad Flux) are self-hosted WOFF2 via globals.css and
+   preloaded below - see the type-system comment there. */
 const fragment = Fragment_Mono({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-fragment",
   display: "swap",
 });
+
+/* Sub-path hosting (e.g. vercel demo) - preloads must respect it. */
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
+/** Above-the-fold brand faces, downloaded before CSS discovery so the
+ *  first paint already uses them (no fallback-font flash). Inter italic
+ *  and Afacad Flux (pull-quotes, below the fold) load on demand. */
+const fontPreloads = [
+  `${basePath}/fonts/inter/Inter-Variable.163f2f69.latin.woff2`,
+  `${basePath}/fonts/outfit/Outfit-Variable.dc1f873e.latin.woff2`,
+];
 
 const HOME_TITLE = "Savo Technologies | Web, Mobile & AI Development Company";
 const HOME_DESCRIPTION = SITE.description;
@@ -82,8 +84,8 @@ const designContract = `<!--
   engineering dossier bound in leather, a technology partner's document,
   not an agency pitch.
   OWN-WORLD: Warm paper and sand bands, blue-black ink chapters, one vermilion
-  signal; hairline rules, blueprint grids, square-node motif; Source Serif 4
-  display voice over Manrope UI voice, Fragment Mono for measurement; true-color
+  signal; hairline rules, blueprint grids, square-node motif; Outfit display
+  voice over Inter UI voice, Fragment Mono for measurement; true-color
   photography inside the document's ink.
   STORY: Visitor learns what SAVO builds (web, mobile, software, AI, design,
   growth), why it differs from an agency, that AI is serious engineering, and
@@ -112,8 +114,20 @@ export default function RootLayout({
   const gaId = env.NEXT_PUBLIC_GA_ID;
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${manrope.variable} ${sourceSerif.variable} ${fragment.variable}`}>
+    <html lang="en" suppressHydrationWarning className={fragment.variable}>
       <body className="bg-background font-sans text-foreground antialiased">
+        {/* Brand fonts enter the critical path ahead of stylesheet
+            discovery; crossorigin is required for font preloads. */}
+        {fontPreloads.map((href) => (
+          <link
+            key={href}
+            rel="preload"
+            href={href}
+            as="font"
+            type="font/woff2"
+            crossOrigin="anonymous"
+          />
+        ))}
         {/* Design contract, survives the production build; see DESIGN.md */}
         <div hidden dangerouslySetInnerHTML={{ __html: designContract }} />
         <Script id="js-marker" strategy="afterInteractive">

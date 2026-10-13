@@ -51,7 +51,7 @@ function ConvergenceDiagram() {
             y={n.y + 4}
             textAnchor="end"
             className="fill-foreground"
-            style={{ font: "600 15px var(--font-manrope)" }}
+            style={{ font: "600 15px var(--font-inter)" }}
           >
             {n.label}
           </text>
@@ -65,7 +65,7 @@ function ConvergenceDiagram() {
           x="1000"
           y="134"
           className="fill-foreground"
-          style={{ font: "700 16px var(--font-manrope)" }}
+          style={{ font: "700 16px var(--font-inter)" }}
         >
           Your product
         </text>

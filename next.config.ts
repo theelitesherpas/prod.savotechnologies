@@ -110,9 +110,14 @@ const nextConfig: NextConfig = {
       { source: "/:path*", headers: securityHeaders },
       // Brand fonts for email @font-face — CORS-open like fonts.gstatic,
       // so sandboxed preview iframes (and any client) can load them.
+      // Filenames are content-hashed (see public/fonts), so they cache
+      // immutably like next/font's _next/static/media assets.
       {
         source: "/fonts/:path*",
-        headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
       },
     ];
   },

@@ -2,9 +2,7 @@
 
 /* ============================================================
    THREE-FAMILY TYPE SYSTEM (user-selected: Afacad Flux · Inter ·
-   Outfit - Belanosima removed per direction; no other families)
-   ▸ REVERT: original Manrope/SourceSerif/FragmentMono lines are
-     preserved in the comment below the @font-face block.
+   Outfit - no other families)
    ▸ Role assignment (senior-type reasoning):
      DISPLAY VOICE … Outfit SemiBold 600 - geometric face designed for
        headline/display sizes (t-dxl…t-h2).
@@ -15,49 +13,88 @@
      MEASUREMENT … Inter Medium + true tabular figures - t-label
        eyebrows and .tnum data align in perfect columns.
      PULL-QUOTES … Afacad Flux true italic 500 (real slnt axis).
+   ▸ LOADING: latin-subset WOFF2 (variable axes intact) + the two
+     above-the-fold faces preloaded in app/layout.tsx, so first paint
+     uses the real fonts. While any face is still in flight the
+     *-Fallback faces render Arial at identical metrics (capsize
+     formula from next/font), so the swap window can neither flash a
+     foreign typeface nor shift layout.
    ============================================================ */
 @font-face {
-  font-family: "Afacad Flux";
-  src: url("/fonts/afacad-flux/AfacadFlux-VariableFont_slnt,wght.ttf") format("truetype-variations");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Afacad Flux";
-  src: url("/fonts/afacad-flux/AfacadFlux-VariableFont_slnt,wght.ttf") format("truetype-variations");
-  font-weight: 100 900;
-  font-style: italic;
-  font-display: swap;
-}
-@font-face {
   font-family: "Inter";
-  src: url("/fonts/inter/Inter-VariableFont_opsz,wght.ttf") format("truetype-variations");
+  src: url("/fonts/inter/Inter-Variable.163f2f69.latin.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Inter";
-  src: url("/fonts/inter/Inter-Italic-VariableFont_opsz,wght.ttf") format("truetype-variations");
+  src: url("/fonts/inter/Inter-Italic-Variable.0e543362.latin.woff2") format("woff2");
   font-weight: 100 900;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
   font-family: "Outfit";
-  src: url("/fonts/outfit/Outfit-VariableFont_wght.ttf") format("truetype-variations");
+  src: url("/fonts/outfit/Outfit-Variable.dc1f873e.latin.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
+}
+@font-face {
+  font-family: "Afacad Flux";
+  src: url("/fonts/afacad-flux/AfacadFlux-Variable.8ea4c8bc.latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Afacad Flux";
+  src: url("/fonts/afacad-flux/AfacadFlux-Variable.8ea4c8bc.latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Metric-compatible Arial fallbacks (same advance widths and vertical
+   metrics as the real faces) for the rare sub-preload window. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+  size-adjust: 107.12%;
+}
+@font-face {
+  font-family: "Outfit Fallback";
+  src: local("Arial");
+  ascent-override: 100.18%;
+  descent-override: 26.05%;
+  line-gap-override: 0%;
+  size-adjust: 99.82%;
+}
+@font-face {
+  font-family: "Afacad Flux Fallback";
+  src: local("Arial");
+  ascent-override: 111.84%;
+  descent-override: 37.28%;
+  line-gap-override: 0%;
+  size-adjust: 89.41%;
+}
+
+:root {
+  --font-inter: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-outfit: "Outfit", "Outfit Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-afacad: "Afacad Flux", "Afacad Flux Fallback", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* ============================================================
    SAVO TECHNOLOGIES - DESIGN TOKENS v2
    World: "the engineering document, bound in leather."
    Warm paper + sand bands, blue-black ink chapters, one
-   vermilion signal. Serif display (Source Serif 4) over a
-   professional sans (Manrope); Fragment Mono for measurement.
+   vermilion signal. Outfit display voice over Inter interface voice
+   (see the three-family type system at the top of this file).
    ============================================================ */
 
 :root {
@@ -127,14 +164,9 @@
   --color-warning: var(--warning);
   --color-error: var(--error);
 
-  /* PRE-SWAP ORIGINAL (revert targets):
-     --font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system,
-       "Segoe UI", sans-serif;
-     --font-serif: var(--font-source-serif), "Iowan Old Style", Georgia, serif;
-     --font-mono: var(--font-fragment), ui-monospace, "SF Mono", Menlo, monospace; */
-  --font-sans: "Inter", var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Outfit", var(--font-source-serif), sans-serif;
-  --font-mono: "Inter", var(--font-fragment), monospace;
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-outfit);
+  --font-mono: "Inter", "Inter Fallback", ui-monospace, monospace;
 }
 
 /* ============================================================
@@ -255,7 +287,7 @@ body {
 }
 
 .t-h3 {
-  font-family: "Inter", sans-serif; /* sub-heads: crisp UI-grade step below display */
+  font-family: var(--font-inter); /* sub-heads: crisp UI-grade step below display */
   font-size: clamp(1.125rem, 1.5vw, 1.3rem);
   line-height: 1.3;
   letter-spacing: -0.012em;
@@ -263,7 +295,7 @@ body {
 }
 
 .t-h4 {
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-inter);
   font-size: 1.03rem;
   line-height: 1.3;
   letter-spacing: -0.008em;
@@ -309,7 +341,7 @@ body {
 /* Pull-quotes: Afacad Flux TRUE italic (slnt axis) - characterful
    obliques. PRE-SWAP ORIGINAL: Source Serif italic 500. */
 .t-serif-italic {
-  font-family: "Afacad Flux", "Inter", sans-serif;
+  font-family: var(--font-afacad);
   font-style: italic;
   font-weight: 500;
 }
