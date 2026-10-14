@@ -289,7 +289,14 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
 /** Hire roles - index + per-role chapters. */
 export async function getManagedHireRoles(): Promise<HireRole[]> {
   const rows = await readItems("hire");
-  if (!rows || rows.length === 0) return HIRE_ROLES;
+  // Preserve coded defaults only before this collection has ever been
+  // materialized. An empty published result with existing rows means every
+  // role is paused/draft, so do not resurrect hidden roles from constants.
+  if (rows === null) return HIRE_ROLES;
+  if (rows.length === 0) {
+    const anyStoredRows = await queryItems("hire", true);
+    return anyStoredRows?.length ? [] : HIRE_ROLES;
+  }
   return rows.map((r) => {
     const d = r.data as Record<string, unknown>;
     return {

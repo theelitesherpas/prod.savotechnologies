@@ -409,7 +409,8 @@ export async function toggleItemAction(formData: FormData): Promise<void> {
   const active = formData.get("active") === "true";
   if (!collection || !prisma) redirect("/admin?e=invalid");
 
-  await prisma!.contentItem.update({ where: { id }, data: { active } });
+  const updated = await prisma!.contentItem.updateMany({ where: { id, collection }, data: { active } });
+  if (updated.count !== 1) redirect(`/admin/content/${collection}?e=notfound`);
   await audit(user.id, active ? "content.activate" : "content.deactivate", "ContentItem", id);
   await revalidateManagedContent();
   revalidatePath(`/admin/content/${collection}`);

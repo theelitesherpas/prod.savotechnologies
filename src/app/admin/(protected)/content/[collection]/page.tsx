@@ -58,7 +58,7 @@ export default async function CollectionPage({
         description={`${def.publicNote} ${fallback ? (hasSeeds ? "The site currently renders the coded defaults." : "No published profiles are available yet.") : `${activeCount} of ${items.length} published.`}`}
         actions={
           <>
-            {fallback && hasSeeds ? (
+            {hasSeeds ? (
               <form action={importDefaultsAction}>
                 <input type="hidden" name="collection" value={def.key} />
                 <button
@@ -66,7 +66,7 @@ export default async function CollectionPage({
                   className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-4 text-[0.875rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
                 >
                   <AdminIcon name="import" className="h-4 w-4" />
-                  Import defaults
+                  {fallback ? "Import defaults" : "Import missing defaults"}
                 </button>
               </form>
             ) : null}
@@ -88,7 +88,8 @@ export default async function CollectionPage({
       ) : null}
       {sp.e === "invalid" ? <Notice kind="alert">Check the fields - a required value is missing or invalid.</Notice> : null}
       {sp.e === "dup" ? <Notice kind="alert">That slug is already in use. Choose another.</Notice> : null}
-      {sp.e && sp.e !== "invalid" && sp.e !== "dup" ? <Notice kind="alert">{decodeURIComponent(sp.e)}</Notice> : null}
+      {sp.e === "notfound" ? <Notice kind="alert">That role was not found in this collection. Refresh the list and try again.</Notice> : null}
+      {sp.e && sp.e !== "invalid" && sp.e !== "dup" && sp.e !== "notfound" ? <Notice kind="alert">{decodeURIComponent(sp.e)}</Notice> : null}
 
       {def.key === "team" ? <AboutHeroPanel /> : null}
 
@@ -105,7 +106,7 @@ export default async function CollectionPage({
                   className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-[0.875rem] font-semibold text-on-accent shadow-sm transition-colors hover:bg-accent-hover"
                 >
                   <AdminIcon name="import" className="h-4 w-4" />
-                  Import defaults
+                  Import missing defaults
                 </button>
               </form> : null}
               <Link
@@ -136,7 +137,7 @@ export default async function CollectionPage({
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {item.active && item.contentStatus === "published" ? <Chip tone="success">Published</Chip> : <Chip tone="warning">{item.active ? item.contentStatus : "Hidden"}</Chip>}
+                  {item.active && item.contentStatus === "published" ? <Chip tone="success">Published</Chip> : <Chip tone="warning">{item.active ? item.contentStatus : "Paused"}</Chip>}
                   <Link
                     href={`/admin/content/${def.key}/${item.id}`}
                     className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-foreground/80 transition-colors hover:border-foreground/40 hover:text-foreground"
@@ -152,7 +153,7 @@ export default async function CollectionPage({
                       className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
                     >
                       <AdminIcon name={item.active ? "eyeOff" : "eye"} className="h-3.5 w-3.5" />
-                      {item.active ? "Hide" : "Show"}
+                      {item.active ? "Pause" : "Resume"}
                     </button>
                   </form>
                   <form action={deleteItemAction}>
