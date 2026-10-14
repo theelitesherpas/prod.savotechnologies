@@ -20,7 +20,7 @@ function form(status = "published", data: Record<string, unknown> = INDUSTRY_DOS
   }
   return f;
 }
-beforeEach(() => { vi.clearAllMocks(); mocks.require.mockResolvedValue({ id: "test-admin" }); mocks.admin.mockResolvedValue({ role: "admin" }); mocks.create.mockResolvedValue({ id }); mocks.update.mockResolvedValue({ id }); mocks.deleteMany.mockResolvedValue({ count: 1 }); });
+beforeEach(() => { vi.clearAllMocks(); mocks.require.mockResolvedValue({ id: "test-admin" }); mocks.admin.mockResolvedValue({ role: "admin" }); mocks.create.mockResolvedValue({ id }); mocks.update.mockResolvedValue({ id }); mocks.updateMany.mockResolvedValue({ count: 1 }); mocks.deleteMany.mockResolvedValue({ count: 1 }); });
 describe("Industry CMS writes with in-memory adapters only", () => {
   it("creates a complete published dossier with authorisation, audit and invalidation", async () => {
     await expect(createItemAction(form())).rejects.toThrow("?saved=created");
@@ -42,7 +42,7 @@ describe("Industry CMS writes with in-memory adapters only", () => {
     mocks.admin.mockResolvedValue({ role: "editor" }); await expect(updateItemAction(form())).rejects.toThrow("?saved=updated"); expect(mocks.update.mock.calls[0][0].data.contentStatus).toBe("review"); expect(mocks.update.mock.calls[0][0].data.data.aiOpportunities[0].review).toBe(INDUSTRY_DOSSIERS[0].aiOpportunities[0].review);
   });
   it("allows hide, ordered publication and authorised deletion", async () => {
-    const f = form(); f.set("active", "false"); await toggleItemAction(f); expect(mocks.update.mock.calls[0][0].data.active).toBe(false);
+    const f = form(); f.set("active", "false"); await toggleItemAction(f); expect(mocks.updateMany.mock.calls[0][0]).toEqual({ where: { id, collection: "industry-dossiers" }, data: { active: false } });
     f.set("order", JSON.stringify([id])); await reorderItemsAction(f); expect(mocks.updateMany).toHaveBeenCalledWith({ where: { id, collection: "industry-dossiers" }, data: { order: 0 } });
     await expect(deleteItemAction(f)).rejects.toThrow("?saved=deleted"); expect(mocks.deleteMany).toHaveBeenCalledWith({ where: { id, collection: "industry-dossiers" } });
   });
