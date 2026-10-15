@@ -19,12 +19,20 @@ type Preview = {
 /** Read-only sample gallery. Frames have no scripts, forms or navigation permissions. */
 export function EmailDesignReview({ previews }: { previews: Preview[] }) {
   const [dept, setDept] = useState<"all" | "hello" | "hr">("all");
-  const [key, setKey] = useState(previews[0].key);
+  const [key, setKey] = useState(previews.find(p => p.key === "clientWelcome")?.key ?? previews[0].key);
   const [width, setWidth] = useState<"desktop" | "mobile">("desktop");
   const [format, setFormat] = useState<"html" | "text">("html");
+  const [appearance, setAppearance] = useState<"light" | "dark">("light");
   const pool = previews.filter(p => dept === "all" || p.dept === dept);
   const active = pool.find(p => p.key === key) ?? pool[0];
   const index = pool.indexOf(active);
+  // Preview only: force the chosen palette without changing the actual email.
+  // Real Gmail/Outlook auto-inversion still needs a physical inbox check.
+  const previewHtml = active.html
+    // srcDoc inherits this gallery's origin; avoid a stale configured dev port.
+    .replace(/https?:\/\/[^/"'\s]+(\/(?:images\/email|fonts)\/)/g, "$1")
+    .replace('@media (prefers-color-scheme:dark)', appearance === "dark" ? '@media all' : '@media not all')
+    .replace('<html lang="en"', `<html lang="en" style="color-scheme:${appearance}"`);
 
   return (
     <main className={styles.review}>
@@ -46,11 +54,12 @@ export function EmailDesignReview({ previews }: { previews: Preview[] }) {
             <div><h2>{active.label}</h2><p className={styles.subject}><strong>Subject:</strong> {active.subject}</p><p>{active.dept === "hr" ? "hr@savotechnologies.com" : "hello@savotechnologies.com"} · {CATEGORY_LABEL[active.category]}</p></div>
             <div className={styles.controls}>
               <div role="group" aria-label="Preview size"><button type="button" aria-pressed={width === "desktop"} onClick={() => setWidth("desktop")}>Desktop</button><button type="button" aria-pressed={width === "mobile"} onClick={() => setWidth("mobile")}>Phone · 320px</button></div>
+              <div role="group" aria-label="Inbox appearance"><button type="button" aria-pressed={appearance === "light"} onClick={() => setAppearance("light")}>Light</button><button type="button" aria-pressed={appearance === "dark"} onClick={() => setAppearance("dark")}>Dark</button></div>
               <div role="group" aria-label="Email format"><button type="button" aria-pressed={format === "html"} onClick={() => setFormat("html")}>Design</button><button type="button" aria-pressed={format === "text"} onClick={() => setFormat("text")}>Plain text</button></div>
             </div>
           </div>
-          {format === "html" ? <div className={styles.previewCanvas}><iframe key={`${active.key}-${width}`} title={`${active.label} design preview`} sandbox="" srcDoc={active.html} className={styles.frame} style={{ maxWidth: width === "mobile" ? 320 : 640 }} /></div> : <pre className={styles.plain}>{active.text}</pre>}
-          <p className={styles.note}>Code-default designs with illustrative details. Saved admin overrides keep their content and use the same new header/footer. Inbox font support and dark-mode behaviour vary by email client.</p>
+          {format === "html" ? <div className={styles.previewCanvas}><iframe key={`${active.key}-${width}-${appearance}`} title={`${active.label} design preview`} sandbox="" srcDoc={previewHtml} className={styles.frame} style={{ maxWidth: width === "mobile" ? 320 : 640 }} /></div> : <pre className={styles.plain}>{active.text}</pre>}
+          <p className={styles.note}>Sample content only; nothing is sent. Light/Dark previews show the authored email palettes, not a guarantee of inbox rendering. The logo has its own opaque backing so its contrast does not depend on the inbox background. Saved admin bodies inherit this same branding.</p>
         </section>
       </div>
     </main>

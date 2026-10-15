@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createHash } from "node:crypto";
+import sharp from "sharp";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { TEMPLATE_REGISTRY, templateEntry, bodyToHtml } from "@/lib/mail/registry";
 import { shell, p, spec, prose, highlight, UNSUBSCRIBE_PLACEHOLDER } from "@/lib/mail/templates";
@@ -8,7 +9,7 @@ import baseline from "./fixtures/mail-copy-baseline.json";
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-10-08T12:00:00Z"));
-  vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://localhost:4312");
+  vi.stubEnv("NEXT_PUBLIC_SITE_URL", process.env.MAIL_PREVIEW_ORIGIN || "http://localhost:3000");
 });
 afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); });
 
@@ -19,7 +20,12 @@ describe("Savo v7 correspondence", () => {
     expect(mail.html).toContain("'Outfit', Arial, Helvetica, sans-serif");
     expect(mail.html).toContain("'Inter', Arial, Helvetica, sans-serif");
     expect(mail.html).toContain("#b82222");
-    if (mail.html.includes('class="mail-button"')) expect(mail.html).toContain("#df2525");
+    if (mail.html.includes('mail-button-primary')) expect(mail.html).toContain("#df2525");
+    expect(mail.html).toContain('content="light dark"');
+    expect(mail.html).toContain('@media (prefers-color-scheme:dark)');
+    expect(mail.html).toContain('[data-ogsc] .mail-canvas');
+    expect(mail.html).toContain('/images/email/logo-lockup-v2.png');
+    expect(mail.html).not.toContain('/images/email/logo.png');
     expect(mail.html).toContain("#ffffff");
     expect(mail.html).toContain("#000000");
     expect(mail.html).toContain("#f7f7f7");
@@ -27,6 +33,10 @@ describe("Savo v7 correspondence", () => {
     expect(mail.html).toContain("<!--[if mso]>");
     expect(mail.html).toContain("width=\"600\"");
     expect(mail.html).not.toMatch(/<table(?![^>]*role="presentation")/);
+    const header = mail.html.match(/<td class="mail-header"[\s\S]*?<\/table><\/td><\/tr>/)?.[0];
+    expect(header, "shared email masthead exists").toBeDefined();
+    expect(header).not.toContain("@");
+    expect(mail.html).not.toContain("mail-header-address");
     expect(mail.html).toContain(`mailto:${entry.dept === "hr" ? "hr" : "hello"}@savotechnologies.com`);
     expect(mail.html).toContain(`tel:${entry.dept === "hr" ? "+917898852345" : "+917502901234"}`);
     expect(Buffer.byteLength(mail.html)).toBeLessThan(100000); // Gmail clipping threshold headroom.
@@ -87,11 +97,25 @@ describe("Savo v7 correspondence", () => {
     expect(html).toContain("mail-pitch-cell");
   });
 
+  it("ships a self-contained opaque logo, not dark text on transparency", async () => {
+    const image = sharp("public/images/email/logo-lockup-v2.png");
+    const metadata = await image.metadata();
+    expect(metadata.hasAlpha).toBe(false);
+    expect(metadata.width).toBe(396);
+    expect(metadata.height).toBe(216);
+    const { data } = await image.raw().toBuffer({ resolveWithObject: true });
+    // Actual pixels hold both foreground and ground; CSS inversion cannot
+    // remove the contrast by changing the surrounding HTML background.
+    expect(data.some(value => value === 255)).toBe(true);
+    expect(data[0]).toBe(21);
+  });
+
   it("exports sample-only browser fixtures from the actual renderers without sending anything", () => {
     const folder = "tmp/mail-redesign/fixtures";
     mkdirSync(folder, { recursive: true });
     const rows = TEMPLATE_REGISTRY.map(entry => {
       const mail = entry.default({ ...entry.vars, __to: "preview@example.invalid" });
+      expect(mail.html).toContain(`${process.env.NEXT_PUBLIC_SITE_URL}/images/email/logo-lockup-v2.png`);
       writeFileSync(`${folder}/${entry.key}.html`, mail.html);
       return { key: entry.key, label: entry.label, dept: entry.dept, subject: mail.subject };
     });

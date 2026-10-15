@@ -423,13 +423,13 @@ export function teamAskSavo(d: { email: string; question: string }): MailTemplat
 /* Website-like dark brand passage, with readable sentence-case type. */
 function pitchBand(label: string, href?: string): string {
   const text = `<span style="font-family:${DISPLAY};font-size:25px;line-height:1.3;font-weight:500;color:#ffffff;">${esc(label)}</span>`;
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#000000" style="margin:28px 0;background:#000000;table-layout:fixed;"><tr><td style="padding:24px;text-align:left;">${href ? `<a href="${esc(href)}" style="text-decoration:none;color:#ffffff;">${text}</a>` : text}</td></tr></table>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#000000" style="margin:28px 0;background:#000000;border-radius:10px;border-collapse:separate;table-layout:fixed;"><tr><td style="padding:24px;text-align:left;">${href ? `<a href="${esc(href)}" style="text-decoration:none;color:#ffffff;">${text}</a>` : text}</td></tr></table>`;
 }
 
 /* Open capability rows, two across; each becomes a readable phone row. */
 function pitchGrid(items: { icon: string; title: string; line: string }[]): string {
   const cell = (it: { icon: string; title: string; line: string }) => `
-<td class="mail-pitch-cell" width="50%" valign="top" style="width:50%;padding:16px 12px 16px 0;vertical-align:top;border-bottom:1px solid ${LINE};">
+<td class="mail-pitch-cell" width="50%" valign="top" style="width:50%;padding:18px 12px 18px 0;vertical-align:top;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;"><tr><td width="42" valign="top" style="width:42px;padding:2px 10px 0 0;">${it.icon}</td><td valign="top"><p style="margin:0 0 6px;font-family:${DISPLAY};font-size:18px;font-weight:500;line-height:1.3;color:${INK};">${esc(it.title)}</p><p style="margin:0;font-family:${SANS};font-size:13px;line-height:1.7;color:${MUTED};">${esc(it.line)}</p></td></tr></table></td>`;
   const rows: string[] = [];
   for (let i = 0; i < items.length; i += 2) rows.push(`<tr>${items.slice(i, i + 2).map(cell).join("")}</tr>`);
@@ -505,7 +505,7 @@ const iconChart = () =>
 
 /* Native actions, stacked on phones and still usable without head CSS. */
 function pitchCtas(primary: { href: string; label: string }, secondary: { href: string; label: string }): string {
-  const action = (link: { href: string; label: string }, primaryAction: boolean) => `<a href="${esc(link.href)}" class="mail-button" style="display:block;padding:14px 16px;background:${primaryAction ? ACCENT : CARD};border:1px solid ${primaryAction ? ACCENT : LINE};border-radius:6px;color:${primaryAction ? CARD : INK};font-family:${SANS};font-size:14px;font-weight:600;line-height:20px;text-align:center;text-decoration:none;">${esc(link.label)}${primaryAction ? "&nbsp;&nbsp;&rarr;" : ""}</a>`;
+  const action = (link: { href: string; label: string }, primaryAction: boolean) => `<a href="${esc(link.href)}" class="mail-button ${primaryAction ? "mail-button-primary" : "mail-button-secondary"}" style="display:block;padding:16px;background:${primaryAction ? ACCENT : CARD};border:1px solid ${primaryAction ? ACCENT : LINE};border-radius:6px;color:${primaryAction ? CARD : INK};font-family:${SANS};font-size:14px;font-weight:600;line-height:20px;text-align:center;text-decoration:none;">${esc(link.label)}${primaryAction ? "&nbsp;&nbsp;&rarr;" : ""}</a>`;
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0 0;table-layout:fixed;"><tr><td class="mail-dual-cell" width="50%" style="padding:0 12px 0 0;" valign="top">${action(primary, true)}</td><td class="mail-dual-cell" width="50%" valign="top">${action(secondary, false)}</td></tr></table>`;
 }
 

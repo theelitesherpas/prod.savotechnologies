@@ -293,67 +293,97 @@ commercial, contact or availability claims. Root inherited metadata, demo/
 dev overlays, closed-inert capture paint and existing Next development timing
 diagnostics are not new design-system tokens or production guarantees.
 
-## Current v7 Email correspondence override
+## Current v7 Email correspondence override — 2026-10-15
 
 Scope: `src/lib/mail/design.ts`, client/HR templates, saved/custom email shells,
 account-security and live-chat notifications, and their admin/local previews.
-This inherits the current website identity; it does not replace the legacy
-project-level frontmatter or the other surface overrides.
+This inherits the current website identity; other surface overrides and legacy
+project-level frontmatter are unchanged. It supersedes the previous alternating
+white header / black title / white body / black footer email treatment.
 
 ### Overview
 
-**The Correspondence Rule.** An email is a readable letter with one clear next
-step, not a miniature website. Show the actual department, greeting, facts and
-signature before decorative brand material.
+**The Correspondence Rule.** One cohesive branded letter: identify the sender,
+read the message, scan its details, take the next step or reply. Avoid the
+wireframe-like pile of contrasting rectangular bands the owner rejected.
 
 ### Colors
 
-White letter/header, black title passage, pale-grey canvas and fact rows, dark
-footer. Red identifies the department and primary action: the email CTA uses
-`#df2525` for readable white text; the department label uses `#b82222` on white.
-Do not carry the old warm-paper, gold, lavender or serif styling into emails.
+Light mode has a charcoal masthead (`#151515`), white continuous title/body,
+`#f7f7f7` ground/detail panels/footer, black headings, `#333333` body and
+`#626262` secondary text. Red actions remain `#df2525` with white text;
+light-surface text links use `#b82222`.
+
+Dark mode uses `#101112` ground, `#1b1d20` letter, `#25282d` panels/footer,
+`#f4f4f5` headings, `#d6d8dc` body, `#b1b5bd` secondary text and `#c2c5cb`
+footer copy. Links/text marks lighten to `#ff9999`; red action fill stays
+unchanged. Borders use `#34363b`/`#3c4047`, secondary actions `#666a73`.
+Declare light/dark schemes, support both colour-scheme media and Outlook's
+`data-ogsc` selectors, and preserve inline light fallbacks.
+
+**The Self-contained Mark Rule.** The official wordmark must carry both its
+foreground and ground inside the raster. White lettering is flattened onto
+opaque charcoal, never black letters on transparency depending on an inbox's
+white background. `logo-lockup-v2.png` is 396×216 RGB, displayed at 132×72;
+its versioned filename avoids cached copies of the old asset. Rebuild with
+`scripts/build-email-logo.mjs`; provenance accompanies the asset.
 
 ### Typography
 
-Outfit headings with Inter body, both backed by Arial/Helvetica. Standard
-headings are 32px/1.2 at weight 500, changing to 28px/1.2 below 480px; body is
-16px/1.75 (introductory text 1.8) and supporting text 13–14px. Web fonts use `font-display:swap`; Outlook
-gets explicit Arial fallbacks. Native-font email clients remain first-class.
+Existing Outfit headings and Inter reading remain brand-pinned, with Arial/
+Helvetica and explicit MSO fallbacks. Titles are 36px/1.15, weight 500, 29px/1.17
+below 480px; body 15px/1.8, introductions 16px/1.85, details 13–15px,
+footer/legal 11–13px. Webfonts swap; missing font support must not hide content.
 
 ### Layout
 
-**The Inbox Rule.** Use a fluid, table-based canvas capped at 600px with critical
-styles inline and an Outlook ghost table. Desktop letter padding is 32px;
-phone padding is 20px. Detail labels/values stack below 480px. Long values wrap
-without horizontal scrolling. Preheaders are present but visually hidden.
+**The Inbox Rule.** Fluid 600px table-based letter with inline critical styles
+and a 600px Outlook ghost table. One aligned 36px desktop / 20px phone content
+rail continues from title to signature and footer. The masthead shows the logo
+and department only—no sender email address at any size; contact email remains
+in the footer/sign-off area. On phones, facts stack as label/value pairs and
+red actions fill the reading width. Long values wrap;
+preheaders remain visually hidden. No animation in delivered HTML.
 
 ### Elevation & Depth
 
-Flat correspondence: hierarchy comes from type, whitespace and tonal passages,
-not shadows or stacked application cards. No animation in delivered HTML.
+One subtle outer letter shadow (`0 12px 32px rgba(0,0,0,.04)`), a quiet 1px
+perimeter and tonal inset panels. No per-row divider grid or nested app cards.
 
 ### Shapes
 
-The letter is square-edged. Fact panels and red action tables have quiet 6px
-corners; Outlook may render square corners without losing clarity or padding.
+Letter corners 16px, inset detail/note panels 12px, actions 8px. Outlook may
+render square corners without losing spacing, legibility or destinations.
 
 ### Components
 
-Shared helpers own the logo header, title, paragraphs, fact rows, red ≥44px
-link CTA, department-specific signature and footer. Reuse the existing wordmark
-and self-hosted fonts; no new raster assets. HR letters show HR contact details;
-client correspondence shows the client contact. Admin compose, saved overrides
-and mailbox replies inherit the same shell. The development-only sample gallery
-has department/template controls and desktop/320px/plain-text views; it is not
-a sending interface and is unavailable in production.
+Shared primitives own the dark masthead, title, reading copy, detail panels,
+red ≥44px native link actions, human signature and quiet contact/legal footer.
+Client letters use hello@ and client phone details; HR/careers letters use hr@
+and HR contacts. All 43 registered defaults, custom messages, saved bodies,
+account-security and live-chat shells inherit these components. The pitch's
+secondary action and dark-mode icon text have explicit theme treatments.
+
+The development-only `/email-preview` gallery starts with portal welcome,
+provides department/template choice, desktop/320px, light/dark and plain text.
+Asset paths use the gallery's own origin, not a stale configured dev port.
+Preview frames remain sandboxed and send/save nothing; production returns 404.
 
 ### Do's and Don'ts
 
-- **Do** retain subjects, plain-text twins, placeholders and delivery-policy gates.
-- **Do** check narrow screens, long values and stripped stylesheet fallbacks.
-- **Don't** imply that browser previews certify real Outlook/Gmail rendering.
-- **Don't** replace unsubscribe placeholders with invented or unsigned live URLs.
-- **Don't** promote legacy optional template sublabels into a general eyebrow rule.
+- **Do** preserve subjects, plain-text twins, variables, recipients, legal copy,
+  unsubscribe signing and delivery-policy gates.
+- **Do** test all templates in light/dark at 320/390/600/768px, long values,
+  stripped CSS, logo opacity and department identity.
+- **Don't** assume all inboxes honour dark CSS. Gmail's forced recolouring
+  requires a later approved real-device/inbox check; browser previews certify
+  only the authored palettes, not Gmail/Outlook delivery rendering.
+- **Don't** turn existing body-specific icons or optional reference sublabels
+  into a new global decoration or eyebrow convention.
+
+Local evidence: `tmp/mail-redesign/`, 405 browser layout checks, 43 templates,
+no contrast/overflow/image failures; full unit/build results in the handoff.
+No emails sent, live DB writes or production deployment for this redesign.
 
 ## Current v7 Meeting invitation override
 

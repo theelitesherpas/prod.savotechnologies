@@ -1,0 +1,11 @@
+{
+  "prompt": "Derived locally from the existing approved Savo wordmark at public/images/email/logo.png. Preserve its lettering and alpha contours; resize to 360x184, recolour to white, pad to 396x216 and flatten onto opaque #151515. No generated brand lettering or external assets. This baked foreground/background pair remains readable when inboxes recolour the surrounding HTML.",
+  "source": "public/images/email/logo.png",
+  "sourceSha256": "aa83a6f1c0f89fcb2e107651b8283be93e4eeda6a3a6379f84035d8350269edd",
+  "build": "node scripts/build-email-logo.mjs",
+  "dimensions": [
+    396,
+    216
+  ],
+  "alpha": false
+}

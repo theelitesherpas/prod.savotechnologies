@@ -4,7 +4,7 @@ import { chromium } from "playwright-core";
 import assert from "node:assert/strict";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 
-const base = process.env.BASE_URL || "http://localhost:4312";
+const base = process.env.BASE_URL || "http://localhost:3000";
 const output = "tmp/mail-redesign";
 const samples = JSON.parse(await readFile(`${output}/templates.json`, "utf8"));
 const browser = await chromium.launch();
@@ -19,9 +19,11 @@ try {
   for (const key of keys) {
     const html = await readFile(`${output}/fixtures/${key}.html`, "utf8");
     for (const width of [320, 390, 600, 768]) {
+      for (const appearance of ["light", "dark"]) {
+      await page.emulateMedia({ colorScheme: appearance });
       await page.setViewportSize({ width, height: 900 });
-      await page.setContent(html, { waitUntil: "networkidle" });
-      await page.evaluate(() => document.fonts.ready);
+      await page.setContent(html, { waitUntil: "load" });
+      await page.evaluate(async () => { await document.fonts.ready; await Promise.all([...document.images].map(img => img.decode())); });
       const metrics = await page.evaluate(() => {
         const canvas = document.querySelector(".mail-canvas");
         const bounds = canvas.getBoundingClientRect();
@@ -59,12 +61,18 @@ try {
       if (metrics.images.some(img => !img.loaded || !img.alt)) issue.push("logo unavailable");
       if (!metrics.fontsLoaded) issue.push("brand fonts unavailable");
       if (metrics.contrastFailures.length) issue.push("contrast");
-      results.push({ key, width, issue, metrics });
-      if (issue.length) failures.push({ key, width, issue, detail: metrics });
-      if (!process.env.SKIP_SCREENSHOTS && !process.env.CAPTURE_GALLERY_ONLY && ["enquiryAck", "offerLetter", "invoiceIssued", "buildWhatsNext", "meetingConfirmed"].includes(key) && [320, 600].includes(width)) {
-        await page.screenshot({ path: `${output}/screenshots/${key}-${width}.png`, fullPage: true });
+      results.push({ key, width, appearance, issue, metrics });
+      if (issue.length) failures.push({ key, width, appearance, issue, detail: metrics });
+      if (!process.env.SKIP_SCREENSHOTS && !process.env.CAPTURE_GALLERY_ONLY && ["clientWelcome", "offerLetter", "invoiceIssued", "buildWhatsNext", "meetingConfirmed"].includes(key) && [320, 600].includes(width)) {
+        await page.screenshot({ path: `${output}/screenshots/${key}-${width}-${appearance}.png`, fullPage: true });
+      }
       }
     }
+    // Outlook mobile uses data-ogsc instead of the colour-scheme media query.
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.setContent(html.replace('<body class=', '<body data-ogsc class='), { waitUntil: "load" });
+    const outlookDark = await page.locator('.mail-body').evaluate(el => getComputedStyle(el).backgroundColor);
+    if (outlookDark !== "rgb(27, 29, 32)") failures.push({ key, mode: "Outlook dark selector", background: outlookDark });
     // Inline fallback: strip the head CSS/webfonts, as restrictive clients do.
     await page.setViewportSize({ width: 320, height: 900 });
     await page.setContent(html.replace(/<style>[\s\S]*?<\/style>/g, ""), { waitUntil: "networkidle" });
@@ -109,6 +117,10 @@ try {
   await gallery.getByRole("button", { name: "Plain text", exact: true }).click();
   assert((await gallery.locator("pre").innerText()).includes("Compensation:"));
   await gallery.getByRole("button", { name: "Design", exact: true }).click();
+  await gallery.getByRole("button", { name: "Dark", exact: true }).click();
+  await settleFrame();
+  assert.equal(await gallery.frameLocator("iframe").locator(".mail-body").evaluate(el => getComputedStyle(el).backgroundColor), "rgb(27, 29, 32)");
+  await gallery.getByRole("button", { name: "Light", exact: true }).click();
   await gallery.getByRole("button", { name: "Desktop", exact: true }).click();
   await settleFrame();
   if (!process.env.SKIP_SCREENSHOTS) await gallery.screenshot({ path: `${output}/screenshots/gallery-desktop.png`, fullPage: true });
@@ -131,7 +143,7 @@ try {
 
   await writeFile(`${output}/browser-report.json`, JSON.stringify({ samples: samples.length, results, failures, mutations }, null, 2));
   assert.deepEqual(failures, [], "email layout/contrast checks failed; see browser-report.json");
-  console.log(`PASS: ${results.length} email layout checks; ${samples.length} gallery templates; responsive, inline fallback, contrast, fonts, logo, departments and no-send review.`);
+  console.log(`PASS: ${results.length} email layout checks; ${samples.length} gallery templates; light/dark responsive, Outlook dark selector, inline fallback, contrast, fonts, opaque logo, departments and no-send review.`);
 } finally {
   await browser.close();
 }
