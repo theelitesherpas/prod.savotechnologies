@@ -167,7 +167,7 @@ export function meetingConfirmed(opts: {
           ["Type", typeLabel],
           ["Location", opts.location],
         ]),
-        p(`We look forward to speaking with you. If you need to change anything, simply reply to this email and we will take care of it.`, true),
+        p(`We look forward to speaking with you.`, true),
       ].join(""),
       closing: "See you soon,",
       reason: "You are receiving this because your meeting was confirmed through savotechnologies.com.",
@@ -183,8 +183,6 @@ Time: ${opts.time} IST
 Duration: ${opts.durationMin} minutes
 Type: ${typeLabel}
 Location: ${opts.location}
-
-If you need to change anything, simply reply to this email.
 
 See you soon,
 The Savo team

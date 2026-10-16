@@ -49,7 +49,6 @@ export function enquiryAck(name: string, projectType: string, to?: string): Mail
           ["Response time", "One business day"],
         ]),
         p(`Your enquiry is reviewed in detail before we respond. A senior consultant will contact you within one business day with initial feedback and recommended next steps for your project.`),
-        p(`Should you wish to add a preferred timeline or an indicative budget in the meantime, simply reply to this email - it reaches the consultant handling your enquiry directly.`, true),
       ].join(""),
       cta: { href: site("/#start"), label: "Book the call now", sub: "Pick a slot while we prepare your reply." },
       closing: "Kind regards,",
@@ -252,14 +251,14 @@ export function invoiceOverdue(clientName: string, number: string, amount: numbe
           ["Amount", money(amount, currency)],
           ["Past due by", `${daysLate} day${daysLate === 1 ? "" : "s"}`],
         ], { big: 0 }),
-        p(`If payment has already been made, please disregard this notice with our thanks. To discuss this invoice, simply reply to this email.`, true),
+        p(`If payment has already been made, please disregard this notice with our thanks.`, true),
         payment ? p(`<a href="${site("/portal/invoices")}" style="color:#b82222;text-decoration:underline;">View or download your invoice in the portal</a>.`) : "",
       ].join(""),
       cta: payment ? { href: payment, label: "Pay now", sub: "Opens your payment provider. Payment status updates after confirmation by the Savo team." } : { href: site("/portal"), label: "View invoice" },
       closing: "Kind regards,",
       reason: "You are receiving this because an invoice on your account passed its due date.",
     }),
-    text: `REMINDER - INVOICE ${number} PAST DUE\n\n${money(amount, currency)} · ${daysLate} day(s) over\n\nAlready paid? Our thanks. Need to talk? Reply here.\n${payment ? `Pay now: ${payment}\n` : ""}${site("/portal")}\n\nEasily fixed,\nThe Savo team`,
+    text: `REMINDER - INVOICE ${number} PAST DUE\n\n${money(amount, currency)} · ${daysLate} day(s) over\n\nAlready paid? Our thanks.\n${payment ? `Pay now: ${payment}\n` : ""}${site("/portal")}\n\nEasily fixed,\nThe Savo team`,
   };
 }
 

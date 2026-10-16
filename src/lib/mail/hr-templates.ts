@@ -122,7 +122,6 @@ export function shortlistAck(vars: Record<string, string>): MailTemplate {
       bodyHtml: [
         lead(`Dear ${v(vars, "candidateName")},<br><br>We are pleased to inform you that your application for the <strong>${v(vars, "position")}</strong> position at Savo Technologies has been shortlisted for the next stage of our hiring process.`),
         p(`Our hiring team is reviewing shortlisted profiles and will contact you within <strong>two business days</strong> to schedule an interview. Please keep an eye on your inbox.`),
-        p(`If you have any questions in the meantime, simply reply to this email.`, true),
       ].join(""),
       closing: "Kind regards,",
       dept: "hr",
@@ -202,7 +201,7 @@ export function employeeWelcome(vars: Record<string, string>): MailTemplate {
           ["Reporting to", v(vars, "reportTo")],
         ]),
         p(`<strong>Leave policy:</strong> ${v(vars, "leavePolicy", "One leave is credited for every completed month of service; unused leaves carry forward.")}`),
-        p(`Your onboarding formalities and first-day details will follow in a separate email. For anything in the meantime, reply to this email - Human Resources reads it.`, true),
+        p(`Your onboarding formalities and first-day details will follow in a separate email.`, true),
       ].join(""),
       closing: "Kind regards,",
       dept: "hr",

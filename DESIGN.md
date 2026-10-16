@@ -382,8 +382,8 @@ footer/legal 11–13px. Webfonts swap; missing font support must not hide conten
 **The Inbox Rule.** Fluid 600px table-based letter with inline critical styles
 and a 600px Outlook ghost table. One aligned 36px desktop / 20px phone content
 rail continues from title to signature and footer. The masthead shows the logo
-and department only—no sender email address at any size; contact email remains
-in the footer/sign-off area. On phones, facts stack as label/value pairs and
+and department only—no sender email address at any size—and the footer carries
+site/social/legal links without contact email, phone or WhatsApp lines. On phones, facts stack as label/value pairs and
 red actions fill the reading width. Long values wrap;
 preheaders remain visually hidden. No animation in delivered HTML.
 
@@ -400,9 +400,9 @@ render square corners without losing spacing, legibility or destinations.
 ### Components
 
 Shared primitives own the dark masthead, title, reading copy, detail panels,
-red ≥44px native link actions, human signature and quiet contact/legal footer.
-Client letters use hello@ and client phone details; HR/careers letters use hr@
-and HR contacts. All 43 registered defaults, custom messages, saved bodies,
+red ≥44px native link actions, human signature and a quiet legal/social footer
+with no contact email, phone or WhatsApp rows. All 43 registered defaults,
+custom messages, saved bodies,
 account-security and live-chat shells inherit these components. The pitch's
 secondary action and dark-mode icon text have explicit theme treatments.
 

@@ -106,7 +106,7 @@ type Signature = { name: string; title: string; company?: string; tagline?: stri
 function signOff(closing: string, isHr: boolean, signature?: Signature): string {
   return `<div style="margin-top:32px;text-align:left;">
 <p class="mail-copy" style="margin:0 0 6px;font-family:${SANS};font-size:14px;line-height:1.8;color:#333333;">${esc(closing)}</p>
-${signature ? `<p class="mail-strong" style="margin:0;font-family:${SANS};font-size:16px;font-weight:600;line-height:1.6;color:#000000;">${esc(signature.name)}</p><p class="mail-muted" style="margin:3px 0 0;font-family:${SANS};font-size:13px;line-height:1.7;color:#626262;">${esc(signature.title)}</p>${signature.company ? `<p class="mail-muted" style="margin:2px 0 0;font-family:${SANS};font-size:13px;line-height:1.7;color:#626262;">${esc(signature.company)}</p>` : ""}${signature.tagline ? `<p style="margin:8px 0 0;font-family:${SANS};font-size:13px;line-height:1.7;color:#b82222;">${esc(signature.tagline)}</p>` : ""}` : `<p class="mail-strong" style="margin:0;font-family:${SANS};font-size:15px;font-weight:600;line-height:1.7;color:#000000;">${isHr ? "The Savo team - Human Resources" : "The Savo team"}</p><p class="mail-muted" style="margin:4px 0 0;font-family:${SANS};font-size:12px;line-height:1.7;color:#626262;">Reply to this email to reach our team</p>`}
+${signature ? `<p class="mail-strong" style="margin:0;font-family:${SANS};font-size:16px;font-weight:600;line-height:1.6;color:#000000;">${esc(signature.name)}</p><p class="mail-muted" style="margin:3px 0 0;font-family:${SANS};font-size:13px;line-height:1.7;color:#626262;">${esc(signature.title)}</p>${signature.company ? `<p class="mail-muted" style="margin:2px 0 0;font-family:${SANS};font-size:13px;line-height:1.7;color:#626262;">${esc(signature.company)}</p>` : ""}${signature.tagline ? `<p style="margin:8px 0 0;font-family:${SANS};font-size:13px;line-height:1.7;color:#b82222;">${esc(signature.tagline)}</p>` : ""}` : `<p class="mail-strong" style="margin:0;font-family:${SANS};font-size:15px;font-weight:600;line-height:1.7;color:#000000;">${isHr ? "The Savo team - Human Resources" : "The Savo team"}</p>`}
 </div>`;
 }
 
@@ -125,9 +125,6 @@ export function shell(opts: {
   dept?: "hello" | "hr";
 }): string {
   const isHr = opts.dept === "hr";
-  const contactEmail = isHr ? "hr@savotechnologies.com" : SITE.email;
-  const phone = isHr ? SITE.hrPhone : SITE.phone;
-  const phoneE164 = isHr ? SITE.hrPhoneE164 : SITE.phoneE164;
   const context = [opts.eyebrowText, opts.ref].filter(Boolean).map(t => esc(t!)).join(" &middot; ");
   const footerLink = "color:#626262;text-decoration:underline;text-underline-offset:3px;";
   return `<!doctype html><html lang="en" xmlns="http://www.w3.org/1999/xhtml"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><meta name="format-detection" content="telephone=no,date=no,address=no,email=no"><title>${esc(opts.heading || opts.preheader)}</title><style>${emailCss()}</style><!--[if mso]><style>body,table,td,p,a,h1,h2,h3{font-family:Arial,Helvetica,sans-serif!important;}</style><![endif]--></head>
@@ -146,8 +143,6 @@ ${signOff(opts.closing ?? "Kind regards,", isHr, opts.signature)}
 </td></tr>
 <tr><td class="mail-footer" bgcolor="#f7f7f7" style="padding:28px 36px;background:#f7f7f7;border-radius:0 0 15px 15px;text-align:left;">
 <p class="mail-footer-title" style="margin:0 0 16px;font-family:${DISPLAY};font-size:21px;font-weight:500;line-height:1.3;letter-spacing:-.015em;color:#000000;">${esc(SITE.tagline)}</p>
-<p class="mail-footer-copy" style="margin:0 0 6px;font-family:${SANS};font-size:13px;line-height:1.8;color:#626262;"><a href="mailto:${contactEmail}" style="${footerLink}">${contactEmail}</a></p>
-<p class="mail-footer-copy" style="margin:0 0 12px;font-family:${SANS};font-size:13px;line-height:1.8;color:#626262;"><a href="tel:${phoneE164}" style="${footerLink}">${phone}</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="https://wa.me/${phoneE164.replace("+", "")}" style="${footerLink}">WhatsApp</a></p>
 <p class="mail-footer-copy mail-footer-links" style="margin:0 0 18px;font-family:${SANS};font-size:12px;line-height:2;color:#626262;"><a href="${site()}" style="${footerLink}">savotechnologies.com</a><br><a href="https://www.linkedin.com/company/savotechnologies/" style="${footerLink}">LinkedIn</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="https://www.instagram.com/savotechnologies/" style="${footerLink}">Instagram</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="https://www.facebook.com/savotechnologies" style="${footerLink}">Facebook</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="https://www.youtube.com/@savotechnologies" style="${footerLink}">YouTube</a></p>
 <p class="mail-footer-copy" style="margin:0;font-family:${SANS};font-size:11px;line-height:1.8;color:#626262;">&copy; ${new Date().getFullYear()} ${esc(SITE.legalName)} &middot; Indore &middot; Zürich<br>${esc(opts.reason ?? "You are receiving this because you contacted Savo Technologies.")}${opts.unsubscribeEmail ? `<br><a href="${UNSUBSCRIBE_PLACEHOLDER}" style="${footerLink}">Unsubscribe</a>` : ""}</p>
 </td></tr></table>

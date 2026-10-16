@@ -18,7 +18,8 @@ describe("custom content inherits v7 email design", () => {
     expect(mail?.text).toBe("Dear R&D,\n\nPosition: Engineer");
     expect(mail?.html).toContain("Offer for R&amp;D");
     expect(mail?.html).toContain("Human Resources");
-    expect(mail?.html).toContain("mailto:hr@savotechnologies.com");
+    expect(mail?.html).toContain("People &amp; careers");
+    expect(mail?.html).not.toContain("mailto:");
     expect(mail?.html).toContain("Savo v7 correspondence");
     expect(mocks.transport).not.toHaveBeenCalled();
   });
@@ -28,7 +29,8 @@ describe("custom content inherits v7 email design", () => {
     expect(mail?.html).toContain("<strong>A &lt; B</strong>");
     expect(mail?.html).toContain(UNSUBSCRIBE_PLACEHOLDER);
     expect(mail?.unsubscribeEmail).toBe("sample@example.invalid");
-    expect(mail?.html).toContain("mailto:hello@savotechnologies.com");
+    expect(mail?.html).toContain("Client services");
+    expect(mail?.html).not.toContain("mailto:");
     expect(mocks.transport).not.toHaveBeenCalled();
   });
   it("keeps multiline plain-body values readable without treating variable markup as HTML", async () => {
@@ -57,7 +59,8 @@ describe("custom content inherits v7 email design", () => {
     const first = await renderTemplate("applicationAck", { name: "Aarav", role: "Engineer" });
     const second = await renderTemplate("applicationAck", { name: "Aarav", role: "Engineer" });
     expect(second?.html).toBe(first?.html);
-    expect(second?.html).toContain("mailto:hr@savotechnologies.com");
+    expect(second?.html).toContain("People &amp; careers");
+    expect(second?.html).not.toContain("mailto:");
     expect(mocks.transport).not.toHaveBeenCalled();
   });
 });

@@ -14,7 +14,7 @@ beforeEach(() => {
 afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); });
 
 describe("Savo v7 correspondence", () => {
-  it.each(TEMPLATE_REGISTRY.map(entry => [entry.key, entry] as const))("%s uses the shared website identity and department contacts", (_key, entry) => {
+  it.each(TEMPLATE_REGISTRY.map(entry => [entry.key, entry] as const))("%s uses the shared website identity with a contact-free footer", (_key, entry) => {
     const mail = entry.default({ ...entry.vars, __to: "preview@example.invalid" });
     expect(mail.html).toContain("Savo v7 correspondence");
     expect(mail.html).toContain("'Outfit', Arial, Helvetica, sans-serif");
@@ -39,8 +39,12 @@ describe("Savo v7 correspondence", () => {
     expect(header).toMatch(/<img [^>]*width="110" height="60"[^>]*width:110px;height:60px;/);
     expect(header).not.toContain("@");
     expect(mail.html).not.toContain("mail-header-address");
-    expect(mail.html).toContain(`mailto:${entry.dept === "hr" ? "hr" : "hello"}@savotechnologies.com`);
-    expect(mail.html).toContain(`tel:${entry.dept === "hr" ? "+917898852345" : "+917502901234"}`);
+    expect(mail.html).not.toContain("mailto:");
+    expect(mail.html).not.toContain("tel:+");
+    expect(mail.html).not.toContain("Reply to this email to reach our team");
+    const footer = mail.html.slice(mail.html.indexOf('class="mail-footer"'));
+    expect(footer).not.toContain("wa.me/");
+    expect(footer).not.toContain("mailto:");
     expect(Buffer.byteLength(mail.html)).toBeLessThan(100000); // Gmail clipping threshold headroom.
   });
 

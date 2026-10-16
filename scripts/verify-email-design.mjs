@@ -103,7 +103,9 @@ try {
     await gallery.getByRole("heading", { name: sample.label, exact: true }).waitFor();
     const doc = await gallery.locator("iframe").getAttribute("srcdoc");
     assert(doc.includes("Savo v7 correspondence"));
-    assert(doc.includes(`mailto:${sample.dept === "hr" ? "hr" : "hello"}@savotechnologies.com`));
+    assert(!doc.includes("mailto:"), "no footer contact email");
+    assert(!doc.includes("tel:+"), "no footer phone");
+    assert(!doc.slice(doc.indexOf('class="mail-footer"')).includes("wa.me/"), "no footer WhatsApp");
   }
   const settleFrame = async () => {
     const body = gallery.frameLocator("iframe").locator(".mail-body");
