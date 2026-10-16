@@ -22,6 +22,29 @@ function event(project: { title: string; client: { name: string; email: string }
   return { key: "projectUpdate", to: project.client.email, vars: { name: project.client.name, project: project.title, title, body } };
 }
 
+export async function archiveProjectAction(form: FormData): Promise<void> {
+  const user = await operator();
+  const id = idValue(form);
+  const project = await prisma!.clientProject.findUnique({ where: { id }, select: { id: true, archivedAt: true } });
+  if (!project) redirect("/admin/projects?e=Project%20not%20found.");
+  if (!project.archivedAt) {
+    await prisma!.clientProject.update({ where: { id }, data: { archivedAt: new Date(), updatedAt: new Date() } });
+    await audit(user.id, "project.archive", "ClientProject", id);
+  }
+  revalidateProjectViews(id);
+  redirect("/admin/projects?showArchived=1&saved=archived");
+}
+
+export async function restoreProjectAction(form: FormData): Promise<void> {
+  const user = await operator();
+  const id = idValue(form);
+  const result = await prisma!.clientProject.updateMany({ where: { id, archivedAt: { not: null } }, data: { archivedAt: null, updatedAt: new Date() } });
+  if (!result.count) redirect("/admin/projects?showArchived=1&e=Archived%20project%20not%20found.");
+  await audit(user.id, "project.restore", "ClientProject", id);
+  revalidateProjectViews(id);
+  redirect("/admin/projects?saved=restored");
+}
+
 export async function createProjectAction(form: FormData): Promise<void> {
   const user = await operator();
   let id = "", events: ProjectEmail[] = [];
@@ -41,7 +64,7 @@ export async function createProjectAction(form: FormData): Promise<void> {
       return { id: project.id, events: [event(project, "Your project plan is ready", `Your project has been created with a base budget of ${invoiceMoney(budgetMajor, core.currency)}. You can review the description, estimated delivery date and milestone allocations in your client portal.`)] };
     });
     id = result.id; events = result.events;
-  } catch (error) { failed("/admin/projects", error); }
+  } catch (error) { failed("/admin/projects/new", error); }
   await audit(user.id, "project.create", "ClientProject", id);
   revalidateProjectViews(id); projectEmails(events); redirect(`/admin/projects/${id}?saved=1`);
 }
@@ -78,7 +101,7 @@ export async function updateProjectAction(form: FormData): Promise<void> {
       const automatic = await reconcileProject(tx, id);
       return [event(project, "Your project plan has been updated", `The project details and milestone plan have been updated. Base budget: ${invoiceMoney(budgetMajor, d.currency)}. Review the current scope, dates and delivery progress in your portal.`), ...automatic];
     });
-  } catch (error) { failed(`/admin/projects/${id}`, error); }
+  } catch (error) { failed(`/admin/projects/${id}/edit`, error); }
   await audit(user.id, "project.update", "ClientProject", id);
   revalidateProjectViews(id); projectEmails(events); redirect(`/admin/projects/${id}?saved=1`);
 }

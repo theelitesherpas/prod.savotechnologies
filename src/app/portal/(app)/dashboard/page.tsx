@@ -22,7 +22,7 @@ export default async function PortalDashboard() {
   if (!client || !prisma) redirect("/portal");
   const [projects, invoices] = await Promise.all([
     prisma.clientProject.findMany({
-      where: { clientId: client.id, status: { notIn: ["cancelled"] } },
+      where: { clientId: client.id, archivedAt: null, status: { notIn: ["cancelled"] } },
       orderBy: { updatedAt: "desc" },
       include: { updates: { orderBy: { createdAt: "desc" }, take: 1 } },
     }),

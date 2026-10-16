@@ -18,11 +18,11 @@ describe("client leaves keep ownership checks outside the layout", () => {
     await Dashboard(); expect(m.projects.mock.calls[0][0].where.clientId).toBe("client-a"); expect(m.invoices.mock.calls[0][0].where).toEqual({ clientId: "client-a", status: { in: ["sent", "overdue"] } });
   });
   it("project listing cannot be expanded by another client ID", async () => {
-    await Projects(); expect(m.projects.mock.calls[0][0].where).toEqual({ clientId: "client-a" });
+    await Projects(); expect(m.projects.mock.calls[0][0].where).toEqual({ clientId: "client-a", archivedAt: null });
   });
   it("foreign/missing project fails closed with an ownership-constrained query", async () => {
     await expect(Project({ params: Promise.resolve({ id: "foreign-project" }) })).rejects.toThrow("NOT_FOUND");
-    expect(m.project.mock.calls[0][0].where).toEqual({ id: "foreign-project", clientId: "client-a" });
+    expect(m.project.mock.calls[0][0].where).toEqual({ id: "foreign-project", clientId: "client-a", archivedAt: null });
   });
   it("related invoices must belong to this client AND be published, even if a bad FK links another client's invoice", async () => {
     await expect(Project({ params: Promise.resolve({ id: "foreign-project" }) })).rejects.toThrow("NOT_FOUND");

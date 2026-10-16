@@ -325,6 +325,7 @@ model ClientProject {
   currency  String     @default("INR")
   /// Allows payment reversal/new scope to reopen auto-completed projects only.
   completedByPayment Boolean @default(false) @map("completed_by_payment")
+  archivedAt DateTime? @map("archived_at")
   summary   String     @default("")
   startDate DateTime?  @map("start_date")
   dueDate   DateTime?  @map("due_date")

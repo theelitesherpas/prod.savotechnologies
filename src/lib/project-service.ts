@@ -51,7 +51,7 @@ export function projectEmails(events: ProjectEmail[]) {
 }
 export function revalidateProjectViews(id?: string) {
   for (const path of ["/admin/projects", "/admin/invoices", "/admin/clients", "/portal/dashboard", "/portal/projects", "/portal/invoices"]) revalidatePath(path);
-  if (id) { revalidatePath(`/admin/projects/${id}`); revalidatePath(`/portal/projects/${id}`); }
+  if (id) { revalidatePath(`/admin/projects/${id}`); revalidatePath(`/admin/projects/${id}/edit`); revalidatePath(`/portal/projects/${id}`); }
 }
 export function projectError(error: unknown) {
   if (error instanceof BusinessIdError) return error.message;

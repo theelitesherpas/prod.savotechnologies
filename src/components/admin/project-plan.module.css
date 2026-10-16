@@ -26,14 +26,38 @@
 .allocation[data-balanced="true"] output { color:var(--success,#067647); }
 .panel { padding:24px; margin:24px 0; }
 .summary { grid-template-columns:repeat(4,minmax(0,1fr)); }
-.workList { display:grid; gap:12px; margin:16px 0; }
-.work { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; padding:18px 0; border-bottom:1px solid var(--border,#dedede); }
-.workCopy { flex:1; min-width:200px; overflow-wrap:anywhere; }
-.workCopy p { font-size:13px; color:var(--muted,#626262); margin-top:6px; line-height:1.7; }
-.statusForm { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-.statusForm select { min-height:44px; }
+.deliveryPanel { container-name:delivery; container-type:inline-size; }
+.deliveryHeading { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
+.deliveryHeading h2 { margin-bottom:0; }
+.deliveryHint { max-width:64ch; margin:7px 0 0; color:var(--muted,#626262); font-size:13px; line-height:1.6; }
+.deliveryCount { flex:none; padding:6px 10px; border:1px solid var(--border,#dedede); border-radius:999px; background:var(--surface-secondary,#f2f4f7); color:var(--muted,#626262); font-size:11px; font-weight:650; white-space:nowrap; }
+.deliveryLabels,.deliveryRow { display:grid; grid-template-columns:minmax(0,1.65fr) minmax(110px,.55fr) minmax(135px,.65fr) minmax(235px,1fr); gap:16px; }
+.deliveryLabels { margin-top:20px; padding:0 8px 9px; color:var(--muted,#626262); font-size:10px; font-weight:700; letter-spacing:.055em; text-transform:uppercase; }
+.deliveryList { display:grid; margin:0; padding:0; list-style:none; }
+.deliveryRow { min-width:0; align-items:start; padding:16px 8px; border-top:1px solid var(--border,#dedede); }
+.milestoneInfo { min-width:0; overflow-wrap:anywhere; }
+.milestoneInfo h3 { margin:0; color:var(--foreground); font-size:14px; font-weight:650; line-height:1.45; }
+.scopeLabel { display:inline-block; margin-top:4px; color:var(--muted,#626262); font-size:11px; }
+.milestoneDescription { margin:8px 0 0; color:var(--muted,#626262); font-size:12px; line-height:1.55; white-space:pre-wrap; }
+.milestoneMeta { display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:10px; color:var(--muted,#626262); font-size:11px; font-variant-numeric:tabular-nums; }
+.milestoneMeta strong { color:var(--foreground); font-weight:650; }
+.raiseInvoiceLink { display:inline-flex; min-height:40px; align-items:center; margin-top:6px; color:var(--accent); font-size:12px; font-weight:650; text-decoration:underline; text-underline-offset:3px; }
+.raiseInvoiceLink:hover { color:var(--accent-hover,var(--accent)); }
+.raiseInvoiceLink:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:3px; }
+.deliveryState { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:7px; }
+.mobileLabel { display:none; color:var(--muted,#626262); font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+.deliveryForm { display:grid; min-width:0; gap:6px; }
+.deliveryForm > label { color:var(--muted,#626262); font-size:11px; font-weight:600; }
+.deliveryControls { display:flex; min-width:0; align-items:center; gap:7px; }
+.deliveryControls select { min-width:0; min-height:40px; flex:1; }
+.deliveryControls :global(button) { height:40px; }
+.emptyMilestones { margin-top:16px; padding:16px; border-radius:8px; background:var(--surface-secondary,#f2f4f7); color:var(--muted,#626262); font-size:13px; line-height:1.6; }
+.emptyMilestones a { color:var(--accent); font-weight:650; text-decoration:underline; text-underline-offset:3px; }
 .extraForm { display:grid; gap:18px; padding:20px 0; }
 .controls { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:16px; }
 .form :is(button,summary):focus-visible,.controls button:focus-visible { outline:2px solid var(--accent,#d9480f); outline-offset:3px; }
 @media(max-width:1100px) { .milestoneGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media(max-width:650px) { .form,.panel { padding:20px; }.grid,.milestoneGrid { grid-template-columns:1fr; }.sectionHeading,.rowFoot { flex-direction:column; }.milestone { padding:16px; }.summary { grid-template-columns:repeat(2,minmax(0,1fr)); }.workCopy { min-width:0; }.statusForm { width:100%; }.rowFoot details { width:100%; } }
+@media(max-width:650px) { .form,.panel { padding:20px; }.grid,.milestoneGrid { grid-template-columns:1fr; }.sectionHeading,.rowFoot { flex-direction:column; }.milestone { padding:16px; }.summary { grid-template-columns:repeat(2,minmax(0,1fr)); }.rowFoot details { width:100%; } }
+@container delivery (max-width:840px) { .deliveryLabels { display:none; }.deliveryRow { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 20px; padding:18px 8px; }.milestoneInfo,.deliveryForm { grid-column:1/-1; }.mobileLabel { display:block; } }
+@container delivery (max-width:480px) { .deliveryHeading { flex-direction:column; gap:10px; }.deliveryRow { gap:14px 12px; padding:16px 2px; }.deliveryControls select { min-height:44px; }.deliveryControls :global(button) { height:44px; }.deliveryCount { align-self:flex-start; } }
+@media(prefers-reduced-motion:reduce) { .raiseInvoiceLink { transition:none; } }

@@ -6,21 +6,17 @@ import { prisma } from "@/lib/prisma";
 import { BackLink, PageHeader, Notice } from "@/components/admin/ui";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
-import { ProjectPlanForm } from "@/components/admin/project-plan-form";
 import { ProjectInvoiceForm } from "@/components/admin/project-invoice-form";
 import { MilestoneChip, MilestonePaymentChip } from "@/components/portal/ui";
 import { majorUnits, projectFinancials, milestonePaymentStatus } from "@/lib/project-finance";
 import { invoiceMoney } from "@/lib/invoice-document";
 import s from "@/components/admin/project-plan.module.css";
-import { updateProjectAction, cycleMilestoneAction, saveAdditionalWorkAction, changeProjectStatusAction, addUpdateAction, deleteUpdateAction } from "../actions";
+import { archiveProjectAction, restoreProjectAction, cycleMilestoneAction, saveAdditionalWorkAction, changeProjectStatusAction, addUpdateAction, deleteUpdateAction } from "../actions";
 
 export const metadata: Metadata = { title: "Manage project" };
 export default async function EditProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string; e?: string; invoice?: string }> }) {
   await requireAdminPage("/admin/projects/[id]"); const { id } = await params; const { saved, e, invoice } = await searchParams; if (!prisma) notFound();
-  const [project, clients] = await Promise.all([
-    prisma.clientProject.findUnique({ where: { id }, include: { milestones: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] }, updates: { orderBy: { createdAt: "desc" }, take: 30 }, invoices: { orderBy: { issuedAt: "desc" } }, client: { select: { name: true } } } }),
-    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, company: true, businessId: true } }),
-  ]); if (!project) notFound();
+  const project = await prisma.clientProject.findUnique({ where: { id }, include: { milestones: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] }, updates: { orderBy: { createdAt: "desc" }, take: 30 }, invoices: { orderBy: { issuedAt: "desc" } }, client: { select: { name: true } } } }); if (!project) notFound();
   const iso = (d: Date | null) => d?.toISOString().slice(0, 10) ?? "";
   const finance = projectFinancials(project, project.milestones, project.invoices.filter(i => i.clientId === project.clientId));
   const money = (amount: number | null) => amount == null ? "Not set" : invoiceMoney(amount, project.currency);
@@ -29,15 +25,56 @@ export default async function EditProjectPage({ params, searchParams }: { params
   const milestoneTitles = new Map(project.milestones.map(m => [m.id, m.title]));
   return <div className="max-w-6xl">
     <BackLink href="/admin/projects" label="All projects"/>
-    <PageHeader title={project.title} description={`${project.code} · ${project.client.name} · ${project.progress}% delivery progress`}/>
+    <PageHeader title={project.title} description={`${project.code} · ${project.client.name} · ${project.progress}% delivery progress`} actions={<><Link href={`/admin/projects/${id}/edit`} className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-semibold hover:bg-surface-secondary">Edit project plan</Link>{project.archivedAt ? <form action={restoreProjectAction}><input type="hidden" name="id" value={id}/><SubmitButton label="Restore project"/></form> : <form action={archiveProjectAction}><input type="hidden" name="id" value={id}/><ConfirmButton label="Delete" confirmLabel="Confirm archive"/></form>}</>}/>
     {saved ? <Notice>Changes saved. The client portal has been updated.</Notice> : null}{e ? <Notice kind="alert">{e}</Notice> : null}
+    {project.archivedAt ? <Notice kind="alert">This project is archived and hidden from active project lists and the client portal. Its invoices, reference and delivery history are preserved; restore it at any time.</Notice> : null}
     {project.budget == null ? <Notice>This legacy project needs a base budget and milestone cost allocation before additional paid work or automatic payment completion can be used.</Notice> : null}
     <section className={`adm-card ${s.panel}`} aria-label="Project financial summary"><dl className={s.summary}>{[["Base budget", project.budget], ["Additional work", finance.additional], ["Agreed total", finance.total], ["Paid", finance.paid], ["Balance against total", finance.balance], ["Unpaid issued invoices", finance.invoicedDue]].map(([label, value]) => <div key={String(label)}><dt>{label}</dt><dd>{money(value as number | null)}</dd></div>)}</dl><p className={s.hint}>All amounts are {project.currency}. Payment completion includes base scope plus additional work, not just the first issued invoice.</p>
       <div className={s.controls}>{project.status !== "delivered" ? <form action={changeProjectStatusAction}><input type="hidden" name="id" value={id}/><input type="hidden" name="revision" value={revision}/><input type="hidden" name="status" value="delivered"/><ConfirmButton label="Complete project" confirmLabel="Confirm completion" tone="quiet"/></form> : null}{project.status !== "cancelled" ? <form action={changeProjectStatusAction}><input type="hidden" name="id" value={id}/><input type="hidden" name="revision" value={revision}/><input type="hidden" name="status" value="cancelled"/><ConfirmButton label="Cancel project" confirmLabel="Confirm cancellation"/></form> : <form action={changeProjectStatusAction}><input type="hidden" name="id" value={id}/><input type="hidden" name="revision" value={revision}/><input type="hidden" name="status" value="in_progress"/><SubmitButton label="Reopen project" compact/></form>}</div>
       <p className={s.hint}>Manual completion/cancellation does not change invoices or mark unfinished work done. Existing financial records are retained.</p>
     </section>
-    <ProjectPlanForm key={revision} action={updateProjectAction} clients={clients} project={{ id: project.id, clientId: project.clientId, title: project.title, code: project.code, summary: project.summary, budget: project.budget, currency: project.currency, status: project.status, startDate: iso(project.startDate), dueDate: iso(project.dueDate), revision }} locked={project.invoices.length > 0} currencyLocked={project.budget != null && project.invoices.length > 0} milestones={project.milestones.filter(m => m.scope === "base").map(m => ({ ...m, dueDate: iso(m.dueDate) }))}/>
-    <section className={`adm-card ${s.panel}`} aria-labelledby="delivery-statuses"><h2 id="delivery-statuses">Delivery status</h2><p className={s.hint}>Mark a module done when delivered. Progress recalculates automatically; it cannot be manually inflated. Payment status follows each milestone&#39;s linked invoices.</p><ul className={s.workList}>{project.milestones.map(m => { const payment = milestonePaymentStatus(m.amount, project.invoices.filter(i => i.milestoneId === m.id)); return <li className={s.work} key={m.id}><div className={s.workCopy}><strong>{m.title}</strong><p>{m.scope === "additional" ? "Additional work" : "Base milestone"} · {money(m.amount)}{m.dueDate ? ` · Due ${iso(m.dueDate)}` : ""}</p><Link className="inline-flex min-h-11 items-center text-accent underline" href={`/admin/projects/${id}?invoice=${m.id}#raise-invoice`}>Raise invoice for this milestone</Link></div><span className="flex flex-wrap items-center gap-2"><MilestoneChip status={m.status}/><MilestonePaymentChip status={payment}/></span><form action={cycleMilestoneAction} className={s.statusForm}><input type="hidden" name="projectId" value={id}/><input type="hidden" name="id" value={m.id}/><label className="sr-only" htmlFor={`delivery-${m.id}`}>Status for {m.title}</label><select id={`delivery-${m.id}`} name="status" defaultValue={m.status} className="adm-select"><option value="pending">Upcoming</option><option value="in_progress">In progress</option><option value="done">Done</option></select><SubmitButton compact label="Update status"/></form></li>; })}</ul></section>
+    <section className={`adm-card ${s.panel}`} aria-labelledby="project-overview"><h2 id="project-overview">Project overview</h2><p className={s.hint}>Client, agreed scope and key delivery dates.</p><dl className={s.summary}>{[["Client", project.client.name], ["Project reference", project.code], ["Start date", project.startDate ? iso(project.startDate) : "Not set"], ["Estimated delivery", project.dueDate ? iso(project.dueDate) : "Not set"]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-muted">{project.summary || "No project description has been added."}</p></section>
+    <section className={`adm-card ${s.panel} ${s.deliveryPanel}`} aria-labelledby="delivery-statuses">
+      <header className={s.deliveryHeading}>
+        <div>
+          <h2 id="delivery-statuses">Delivery status by milestone</h2>
+          <p className={s.deliveryHint}>Delivery progress and payment are separate. Payment status is based on invoices linked to each milestone.</p>
+        </div>
+        <span className={s.deliveryCount}>{project.milestones.length} {project.milestones.length === 1 ? "milestone" : "milestones"}</span>
+      </header>
+      {project.milestones.length ? <>
+        <div className={s.deliveryLabels} aria-hidden="true"><span>Milestone</span><span>Delivery</span><span>Payment</span><span>Update delivery</span></div>
+        <ol className={s.deliveryList}>{project.milestones.map(m => {
+          const payment = milestonePaymentStatus(m.amount, project.invoices.filter(i => i.milestoneId === m.id));
+          return <li className={s.deliveryRow} key={m.id}>
+            <div className={s.milestoneInfo}>
+              <h3>{m.title}</h3>
+              <span className={s.scopeLabel}>{m.scope === "additional" ? "Additional work" : "Base milestone"}</span>
+              {m.description ? <p className={s.milestoneDescription}>{m.description}</p> : null}
+              <div className={s.milestoneMeta}><strong>{money(m.amount)}</strong>{m.dueDate ? <span>Due {iso(m.dueDate)}</span> : null}</div>
+              <Link className={s.raiseInvoiceLink} href={`/admin/projects/${id}?invoice=${m.id}#raise-invoice`}>Raise invoice for milestone</Link>
+            </div>
+            <div className={s.deliveryState}>
+              <span className={s.mobileLabel}>Delivery</span>
+              <MilestoneChip status={m.status}/>
+            </div>
+            <div className={s.deliveryState}>
+              <span className={s.mobileLabel}>Payment</span>
+              <MilestonePaymentChip status={payment}/>
+            </div>
+            <form action={cycleMilestoneAction} className={s.deliveryForm} aria-label={`Update delivery status for ${m.title}`}>
+              <input type="hidden" name="projectId" value={id}/>
+              <input type="hidden" name="id" value={m.id}/>
+              <label htmlFor={`delivery-${m.id}`}>Set delivery status</label>
+              <div className={s.deliveryControls}>
+                <select id={`delivery-${m.id}`} name="status" defaultValue={m.status} className="adm-select"><option value="pending">Upcoming</option><option value="in_progress">In progress</option><option value="done">Done</option></select>
+                <SubmitButton compact label="Save"/>
+              </div>
+            </form>
+          </li>;
+        })}</ol>
+      </> : <div className={s.emptyMilestones}>No milestones have been added. <Link href={`/admin/projects/${id}/edit`}>Edit the project plan</Link> to add them.</div>}
+    </section>
     <section className={`adm-card ${s.panel}`} aria-labelledby="additional-scope"><h2 id="additional-scope">Additional work</h2><p className={s.hint}>Keep scope changes separate from the fixed base budget. Each item adds to the agreed total and is visible in the client portal. Update the estimated project delivery date above if the scope changes the schedule.</p>
       {extras.map(m => <details key={m.id} className={s.milestone}><summary className="cursor-pointer py-3 font-medium">{m.title} · {money(m.amount)} — edit additional work</summary><FormGuard action={saveAdditionalWorkAction} className={s.extraForm}><input type="hidden" name="projectId" value={id}/><input type="hidden" name="id" value={m.id}/><input type="hidden" name="revision" value={revision}/><AdditionalFields prefix={m.id} work={{ ...m, dueDate: iso(m.dueDate) }}/><SubmitButton label="Save additional work"/></FormGuard></details>)}
       <FormGuard action={saveAdditionalWorkAction} className={s.extraForm}><input type="hidden" name="projectId" value={id}/><input type="hidden" name="revision" value={revision}/><h3 className="font-semibold">Add scope item</h3><AdditionalFields prefix="new"/><SubmitButton label="Add additional work"/></FormGuard>

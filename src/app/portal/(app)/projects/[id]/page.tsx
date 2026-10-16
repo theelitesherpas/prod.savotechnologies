@@ -27,7 +27,7 @@ export default async function PortalProjectPage({
   if (!client || !prisma) redirect("/portal");
   const { id } = await params;
   const project = await prisma.clientProject.findFirst({
-    where: { id, clientId: client.id },
+    where: { id, clientId: client.id, archivedAt: null },
     include: {
       milestones: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] },
       updates: { orderBy: { createdAt: "desc" }, take: 12 },
