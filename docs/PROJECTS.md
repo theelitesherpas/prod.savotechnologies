@@ -25,9 +25,18 @@ A forged/invalid plan cannot partially save a project or its allocations.
   server state after save. Removing/repricing a base module requires reallocating
   the fixed budget exactly.
 - Quick module-status controls; no manually editable progress percentage.
+  Each module shows its linked-invoice payment status (Paid, Partially paid,
+  Unpaid or Not invoiced) plus a **Raise invoice for this milestone** shortcut
+  that opens the billing form with that milestone and its allocated cost
+  prefilled. Payment status follows only the milestone's linked invoices:
+  a paid invoice marks the milestone Paid; sent/overdue/draft leave it Unpaid
+  (or Partially paid once payments cover part of the cost); cancelled invoices
+  never count; milestones without links show Not invoiced. Delivery status and
+  payment status are independent — marking a milestone done never marks it paid.
 - Separate additional-work editor (title, cost, description, optional estimate
   and delivery status). Additional work increases agreed total, not base budget.
   Edit the project estimate separately when new scope changes the schedule.
+  Additional items can be invoiced and tracked like base milestones.
 - Explicit Complete, Cancel and Reopen controls, with confirmation for completion
   and cancellation. Financial records are not deleted or silently cancelled.
 - Linked invoices and a client-visible delivery log.

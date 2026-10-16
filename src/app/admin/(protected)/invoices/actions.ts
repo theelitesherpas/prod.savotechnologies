@@ -14,9 +14,9 @@ import { invoiceMoney, invoiceDate } from "@/lib/invoice-document";
 import { invoicePaymentLink, normalizePaymentLink } from "@/lib/payment-links";
 import { projectTransaction, reconcileProject, projectEmails, revalidateProjectViews, projectError, type ProjectEmail } from "@/lib/project-service";
 
-const schema = z.object({ clientId: z.string().min(10).max(32), projectId: z.string().max(64), number: z.string().trim().max(32), currency: z.enum(PROJECT_CURRENCIES), status: z.enum(["draft", "sent", "paid", "overdue", "cancelled"]), notes: z.string().trim().max(500) });
+const schema = z.object({ clientId: z.string().min(10).max(32), projectId: z.string().max(64), milestoneId: z.string().max(64), number: z.string().trim().max(32), currency: z.enum(PROJECT_CURRENCIES), status: z.enum(["draft", "sent", "paid", "overdue", "cancelled"]), notes: z.string().trim().max(500) });
 function input(form: FormData) {
-  const parsed = schema.safeParse(Object.fromEntries(["clientId", "projectId", "number", "currency", "status", "notes"].map(k => [k, String(form.get(k) ?? "")])));
+  const parsed = schema.safeParse(Object.fromEntries(["clientId", "projectId", "milestoneId", "number", "currency", "status", "notes"].map(k => [k, String(form.get(k) ?? "")])));
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Check the invoice fields.");
   const amount = minorUnits(String(form.get("amountMajor") ?? ""));
   const issuedAt = calendarDate(String(form.get("issuedAt") ?? "")) ?? new Date();
@@ -24,18 +24,27 @@ function input(form: FormData) {
   const paidAt = parsed.data.status === "paid" ? calendarDate(String(form.get("paidAt") ?? "")) ?? new Date() : null;
   if (dueDate && dueDate < new Date(issuedAt.toISOString().slice(0, 10))) throw new Error("Due date cannot be before the invoice issue date.");
   const paymentLink = normalizePaymentLink(String(form.get("paymentLink") ?? ""));
-  return { ...parsed.data, projectId: parsed.data.projectId || null, amount, issuedAt, dueDate, paidAt, paymentLink };
+  return { ...parsed.data, projectId: parsed.data.projectId || null, milestoneId: parsed.data.milestoneId || null, amount, issuedAt, dueDate, paidAt, paymentLink };
 }
 async function operator() { const user = await requireAdmin(); await requireSection("clients"); if (!prisma) redirect("/admin/invoices?e=Database%20unavailable."); return user; }
 const idValue = (form: FormData) => z.string().regex(/^[A-Za-z0-9_-]{10,64}$/).parse(form.get("id"));
 function failed(base: string, error: unknown): never { redirect(`${base}?e=${encodeURIComponent(projectError(error))}`); }
-async function owner(tx: Prisma.TransactionClient, d: { clientId: string; projectId: string | null; currency: string }) {
+async function owner(tx: Prisma.TransactionClient, d: { clientId: string; projectId: string | null; milestoneId?: string | null; currency: string }) {
   const client = await tx.clientUser.findUnique({ where: { id: d.clientId }, select: { email: true, name: true } });
   if (!client) throw new Error("Choose an existing client.");
   if (d.projectId) {
     const project = await tx.clientProject.findFirst({ where: { id: d.projectId, clientId: d.clientId }, select: { currency: true, budget: true } });
     if (!project) throw new Error("The project does not belong to this client.");
     if (project.budget != null && project.currency !== d.currency) throw new Error("Invoice currency must match the selected project's currency. No automatic currency conversion is applied.");
+  }
+  if (d.milestoneId) {
+    if (d.milestoneId === d.projectId) throw new Error("Check the milestone link.");
+    // Same lookup shape as delivery edits: milestone + parent project in one read.
+    const milestone = await tx.projectMilestone.findFirst({ where: { id: d.milestoneId }, select: { projectId: true, project: { select: { clientId: true, currency: true } } } });
+    if (!milestone) throw new Error("Milestone not found.");
+    if (milestone.projectId !== d.projectId) throw new Error("Link the milestone's own project to this invoice before selecting the milestone.");
+    if (milestone.project.clientId !== d.clientId) throw new Error("The milestone belongs to a different client's project.");
+    if (milestone.project.currency !== d.currency) throw new Error("Invoice currency must match the milestone's project currency.");
   }
   return client;
 }
@@ -55,11 +64,11 @@ async function sync(tx: Prisma.TransactionClient, ids: (string | null)[]) {
 export async function createInvoiceAction(form: FormData): Promise<void> {
   const user = await operator();
   let number = "";
-  let events: ProjectEmail[] = [], projectId: string | null = null, paymentHost: string | null = null;
+  let events: ProjectEmail[] = [], projectId: string | null = null, paymentHost: string | null = null, milestoneId: string | null = null;
   try {
     rejectManualBusinessId(form.get("businessId"));
     rejectManualBusinessId(form.get("number"));
-    const d = input(form); projectId = d.projectId; paymentHost = d.paymentLink ? new URL(d.paymentLink).hostname : null;
+    const d = input(form); projectId = d.projectId; milestoneId = d.milestoneId; paymentHost = d.paymentLink ? new URL(d.paymentLink).hostname : null;
     events = await projectTransaction(async tx => {
       const client = await owner(tx, d);
       number = await claimBusinessId(form, "IN", user.id, tx) ?? await generateBusinessId("IN", tx);
@@ -68,14 +77,14 @@ export async function createInvoiceAction(form: FormData): Promise<void> {
       return [...notification(client, invoice), ...await sync(tx, [d.projectId])];
     });
   } catch (error) { failed("/admin/invoices", error); }
-  await audit(user.id, "invoice.create", "Invoice", number, { hasPaymentLink: !!paymentHost, paymentHost });
+  await audit(user.id, "invoice.create", "Invoice", number, { hasPaymentLink: !!paymentHost, paymentHost, milestoneId: milestoneId ?? undefined });
   revalidateProjectViews(projectId ?? undefined); projectEmails(events); redirect("/admin/invoices?saved=created");
 }
 export async function updateInvoiceAction(form: FormData): Promise<void> {
   const user = await operator(); const id = idValue(form); let events: ProjectEmail[] = []; let affected: (string | null)[] = [];
-  let paymentLinkChanged = false, paymentHost: string | null = null;
+  let paymentLinkChanged = false, paymentHost: string | null = null, milestoneChanged = false, milestoneId: string | null = null;
   try {
-    const d = input(form);
+    const d = input(form); milestoneId = d.milestoneId;
     const result = await projectTransaction(async tx => {
       const before = await tx.invoice.findUnique({ where: { id } });
       if (!before) throw new Error("Invoice not found.");
@@ -89,11 +98,11 @@ export async function updateInvoiceAction(form: FormData): Promise<void> {
       const client = await owner(tx, d);
       await tx.invoice.update({ where: { id }, data: d });
       const changed = before.status !== d.status || before.amount !== d.amount || before.number !== d.number || before.currency !== d.currency || before.clientId !== d.clientId || before.dueDate?.getTime() !== d.dueDate?.getTime() || (before.paymentLink ?? null) !== d.paymentLink;
-      return { paymentLinkChanged: (before.paymentLink ?? null) !== d.paymentLink, ids: [before.projectId, d.projectId], events: [...(changed ? notification(client, d) : []), ...await sync(tx, [before.projectId, d.projectId])] };
+      return { paymentLinkChanged: (before.paymentLink ?? null) !== d.paymentLink, milestoneChanged: (before.milestoneId ?? null) !== (d.milestoneId ?? null), ids: [before.projectId, d.projectId], events: [...(changed ? notification(client, d) : []), ...await sync(tx, [before.projectId, d.projectId])] };
     });
-    events = result.events; affected = result.ids; paymentLinkChanged = result.paymentLinkChanged; paymentHost = d.paymentLink ? new URL(d.paymentLink).hostname : null;
+    events = result.events; affected = result.ids; paymentLinkChanged = result.paymentLinkChanged; milestoneChanged = result.milestoneChanged; paymentHost = d.paymentLink ? new URL(d.paymentLink).hostname : null;
   } catch (error) { failed(`/admin/invoices/${id}`, error); }
-  await audit(user.id, "invoice.update", "Invoice", id, { paymentLinkChanged, paymentHost, paymentLinkReconfirmed: form.get("paymentLinkConfirmed") === "yes" });
+  await audit(user.id, "invoice.update", "Invoice", id, { paymentLinkChanged, paymentHost, paymentLinkReconfirmed: form.get("paymentLinkConfirmed") === "yes", milestoneChanged, milestoneId: milestoneId ?? undefined });
   for (const projectId of affected) revalidateProjectViews(projectId ?? undefined);
   revalidatePath(`/admin/invoices/${id}`); projectEmails(events); redirect("/admin/invoices?saved=1");
 }

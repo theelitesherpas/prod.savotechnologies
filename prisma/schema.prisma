@@ -356,6 +356,9 @@ model ProjectMilestone {
   createdAt DateTime      @default(now()) @map("created_at")
   updatedAt DateTime      @updatedAt @map("updated_at")
 
+  /// Invoices billing this milestone; drives the per-milestone paid status.
+  invoices Invoice[]
+
   @@index([projectId])
   @@map("project_milestones")
 }
@@ -383,6 +386,10 @@ model Invoice {
   client    ClientUser     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   projectId String?        @map("project_id")
   project   ClientProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  /// Optional milestone this invoice bills. Linked invoices drive the
+  /// milestone's Paid/Unpaid status; the link never changes any amount.
+  milestoneId String?          @map("milestone_id")
+  milestone   ProjectMilestone? @relation(fields: [milestoneId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   number    String         @unique
   /// Minor units (e.g. 250000 = Rs 2,500.00).
   amount    Int
@@ -398,6 +405,7 @@ model Invoice {
   updatedAt DateTime       @updatedAt @map("updated_at")
 
   @@index([clientId])
+  @@index([milestoneId])
   @@map("invoices")
 }
 

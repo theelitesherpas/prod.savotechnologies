@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { minorUnits, majorUnits, calendarDate, deliveryProgress, projectFinancials } from "@/lib/project-finance";
+import { minorUnits, majorUnits, calendarDate, deliveryProgress, projectFinancials, milestonePaymentStatus } from "@/lib/project-finance";
 import { parseProjectForm } from "@/lib/project-input";
 import { templateEntry } from "@/lib/mail/registry";
 const milestones = [{ amount: 3000, status: "done", scope: "base" }, { amount: 7000, status: "pending", scope: "base" }];
@@ -30,6 +30,22 @@ describe("delivery and payment calculations", () => {
     expect(deliveryProgress(milestones.map(m=>({...m,status:"done"})))).toBe(100);
     expect(deliveryProgress([{amount:99999,status:"done",scope:"base"},{amount:1,status:"pending",scope:"base"}])).toBe(99);
     expect(deliveryProgress([])).toBe(0);
+  });
+  it("derives milestone payment status from linked invoices only", () => {
+    expect(milestonePaymentStatus(5000, [])).toBe("uninvoiced");
+    expect(milestonePaymentStatus(5000, [{ amount: 5000, status: "sent" }])).toBe("unpaid");
+    expect(milestonePaymentStatus(5000, [{ amount: 5000, status: "draft" }])).toBe("unpaid");
+    expect(milestonePaymentStatus(5000, [{ amount: 5000, status: "paid" }])).toBe("paid");
+    expect(milestonePaymentStatus(5000, [{ amount: 2000, status: "paid" }, { amount: 3000, status: "sent" }])).toBe("partially_paid");
+    expect(milestonePaymentStatus(5000, [{ amount: 2000, status: "paid" }, { amount: 3000, status: "paid" }])).toBe("paid");
+    // Split invoicing across two invoices settles the milestone only when both are paid.
+    expect(milestonePaymentStatus(5000, [{ amount: 2500, status: "paid" }, { amount: 2500, status: "overdue" }])).toBe("partially_paid");
+    // Cancelled invoices never count as invoiced or paid.
+    expect(milestonePaymentStatus(5000, [{ amount: 5000, status: "cancelled" }])).toBe("uninvoiced");
+    expect(milestonePaymentStatus(5000, [{ amount: 5000, status: "paid" }, { amount: 9999, status: "cancelled" }])).toBe("paid");
+    // Legacy milestones without an allocated cost: any paid link settles them.
+    expect(milestonePaymentStatus(null, [{ amount: 100, status: "paid" }])).toBe("paid");
+    expect(milestonePaymentStatus(null, [{ amount: 100, status: "sent" }])).toBe("unpaid");
     expect(deliveryProgress([{amount:null,status:"done",scope:"base"},{amount:null,status:"pending",scope:"base"}])).toBe(50);
   });
   it("includes additional work in the agreed total and delivered progress", () => {

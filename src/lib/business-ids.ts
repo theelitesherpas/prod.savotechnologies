@@ -14,7 +14,11 @@ export function retryableBusinessTransaction(error: unknown): boolean {
   // Prisma wraps raw SELECT ... FOR UPDATE serialization/deadlock errors in
   // P2010, not P2034. Only these PostgreSQL SQLSTATEs warrant a full retry.
   const meta = "meta" in error ? error.meta : null;
-  return error.code === "P2010" && !!meta && typeof meta === "object" && "code" in meta && ["40001", "40P01"].includes(String(meta.code));
+  if (error.code === "P2010" && !!meta && typeof meta === "object" && "code" in meta && ["40001", "40P01"].includes(String(meta.code))) return true;
+  // Some engine builds surface the same SQLSTATEs as unknown-request errors
+  // carrying only the server text; these strings identify exactly 40P01/40001.
+  const message = error instanceof Error ? error.message : "";
+  return /deadlock detected|could not serialize access due to|Serialization failure/i.test(message);
 }
 export async function businessTransaction<T>(work: (tx: Prisma.TransactionClient) => Promise<T>, isolationLevel: Prisma.TransactionIsolationLevel = "ReadCommitted"): Promise<T> {
   if (!prisma) throw new BusinessIdError("NOT_READY", "Database unavailable.");

@@ -27,6 +27,20 @@ appear in new-client PDFs when assigned. This is identification, not a tax/legal
 compliance claim or proof of payment. See `docs/BUSINESS-IDS.md` for initialization,
 SQL migration, transaction guarantees, reserved ranges and legacy handling.
 
+## Milestone links
+
+Invoices can optionally link one project milestone (from the invoice forms or
+the project page's per-milestone **Raise invoice** shortcut). The link is
+validated to the invoice's own client, project and that project's currency;
+it never changes amounts. The milestone then derives its payment status from
+its linked invoices: fully covered by paid invoices → **Paid**, partly covered →
+**Partially paid**, invoiced but unpaid → **Unpaid**, no active link →
+**Not invoiced** (cancelled invoices are ignored). This status is shown on the
+admin and client project pages. A milestone with linked invoices cannot be
+deleted until those invoices are unlinked, preserving billing history.
+Milestone payment status is display/tracking only; project completion still
+follows the full-project payment rules.
+
 ## Optional Pay now links
 
 Admin invoice create/edit forms accept **Payment link (optional)**, stored as

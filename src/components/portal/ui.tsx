@@ -56,6 +56,19 @@ export function MilestoneChip({ status }: { status: string }) {
   return <Chip label={s.label} cls={s.cls} />;
 }
 
+/** Payment state of one milestone, derived from its linked invoices. */
+export function MilestonePaymentChip({ status }: { status: string }) {
+  const s =
+    status === "paid"
+      ? { label: "Paid", cls: "border-[rgb(30_122_63/0.5)] text-[rgb(30_122_63)]" }
+      : status === "partially_paid"
+        ? { label: "Partially paid", cls: "border-[rgb(146_90_16/0.5)] text-[rgb(146_90_16)]" }
+        : status === "unpaid"
+          ? { label: "Unpaid", cls: "border-[rgb(179_38_30/0.5)] text-[rgb(179_38_30)]" }
+          : { label: "Not invoiced", cls: "border-border text-muted" };
+  return <Chip label={s.label} cls={s.cls} />;
+}
+
 /** Hairline progress rail with the accent fill. */
 export function ProgressRail({ value, className }: { value: number; className?: string }) {
   const v = Math.max(0, Math.min(100, value));

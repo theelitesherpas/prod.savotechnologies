@@ -13,8 +13,8 @@ import {
   progressValue,
 } from "@/components/portal/workspace-ui";
 import { invoiceRecord } from "@/components/portal/records";
-import { money } from "@/components/portal/ui";
-import { projectFinancials } from "@/lib/project-finance";
+import { money, MilestonePaymentChip } from "@/components/portal/ui";
+import { projectFinancials, milestonePaymentStatus } from "@/lib/project-finance";
 import styles from "@/components/portal/portal.module.css";
 
 export const metadata: Metadata = { title: "Project details" };
@@ -101,7 +101,10 @@ export default async function PortalProjectPage({
                       ) : null}
                     </div>
                   </div>
-                  <PortalStatus status={milestone.status} />
+                  <span className="flex flex-col items-end gap-2">
+                    <PortalStatus status={milestone.status} />
+                    <MilestonePaymentChip status={milestonePaymentStatus(milestone.amount, project.invoices.filter(i => i.milestoneId === milestone.id))} />
+                  </span>
                 </li>
               ))}
             </ol>
@@ -139,7 +142,7 @@ export default async function PortalProjectPage({
           )}
         </section>
       </div>
-      {additional.length ? <section className={`${styles.panel} ${styles.section}`} aria-labelledby="project-additional"><div className={styles.sectionHead}><h2 id="project-additional">Additional work</h2></div><ol className={styles.milestones}>{additional.map(work => <li key={work.id}><div className={styles.milestoneTitle}><PortalIcon name={work.status === "done" ? "check" : "clock"}/><div><strong>{work.title}</strong>{work.description ? <p>{work.description}</p> : null}<p>{money(work.amount ?? 0, project.currency)} · {project.currency}{work.dueDate ? ` · Due ${dateLabel(work.dueDate)}` : ""}</p></div></div><PortalStatus status={work.status}/></li>)}</ol></section> : null}
+      {additional.length ? <section className={`${styles.panel} ${styles.section}`} aria-labelledby="project-additional"><div className={styles.sectionHead}><h2 id="project-additional">Additional work</h2></div><ol className={styles.milestones}>{additional.map(work => <li key={work.id}><div className={styles.milestoneTitle}><PortalIcon name={work.status === "done" ? "check" : "clock"}/><div><strong>{work.title}</strong>{work.description ? <p>{work.description}</p> : null}<p>{money(work.amount ?? 0, project.currency)} · {project.currency}{work.dueDate ? ` · Due ${dateLabel(work.dueDate)}` : ""}</p></div></div><span className="flex flex-col items-end gap-2"><PortalStatus status={work.status}/><MilestonePaymentChip status={milestonePaymentStatus(work.amount, project.invoices.filter(i => i.milestoneId === work.id))}/></span></li>)}</ol></section> : null}
       <section className={styles.section} aria-labelledby="project-invoices">
         <div className={styles.sectionHead}>
           <h2 id="project-invoices">Project invoices</h2>

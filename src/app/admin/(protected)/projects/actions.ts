@@ -63,6 +63,9 @@ export async function updateProjectAction(form: FormData): Promise<void> {
       const old = new Set(current.milestones.filter(m => m.scope === "base").map(m => m.id));
       if (d.milestones.some(m => m.id && !old.has(m.id))) throw new Error("A milestone does not belong to this project's base plan.");
       const keep = d.milestones.flatMap(m => m.id ? [m.id] : []);
+      const removed = current.milestones.filter(m => m.scope === "base" && !keep.includes(m.id)).map(m => m.id);
+      // A billed milestone keeps its invoice history; unlink the invoices first.
+      if (current.invoices.some(i => i.milestoneId && removed.includes(i.milestoneId))) throw new Error("A milestone being removed still has linked invoices. Unlink those invoices before removing the milestone.");
       await tx.projectMilestone.deleteMany({ where: { projectId: id, scope: "base", id: { notIn: keep } } });
       for (const [order, m] of d.milestones.entries()) {
         const data = { title: m.title, description: m.description, amount: m.amountMajor, dueDate: m.dueDate, status: m.status, order };

@@ -21,13 +21,14 @@ export default async function AdminInvoicesPage({
 }) {
   await requireAdminPage("/admin/invoices");
   const sp = await searchParams;
-  const [invoices, clients, projects] = prisma
+  const [invoices, clients, projects, milestones] = prisma
     ? await Promise.all([
-        prisma.invoice.findMany({ orderBy: { issuedAt: "desc" }, include: { client: { select: { name: true } }, project: { select: { code: true } } } }).catch(() => []),
+        prisma.invoice.findMany({ orderBy: { issuedAt: "desc" }, include: { client: { select: { name: true } }, project: { select: { code: true } }, milestone: { select: { title: true } } } }).catch(() => []),
         prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, businessId: true } }).catch(() => []),
         prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true, clientId: true, currency: true, budget: true } }).catch(() => []),
+        prisma.projectMilestone.findMany({ orderBy: [{ projectId: "asc" }, { order: "asc" }, { createdAt: "asc" }], select: { id: true, projectId: true, title: true, scope: true, amount: true, project: { select: { currency: true } } } }).catch(() => []),
       ])
-    : [[], [], []];
+    : [[], [], [], []];
 
   const input = "adm-input w-full";
   const iso = (d: Date | null) => (d ? new Date(d).toISOString().slice(0, 10) : "");
@@ -56,7 +57,7 @@ export default async function AdminInvoicesPage({
                 </div>
                 <p className="t-caption mt-1 text-muted">
                   {inv.client.name}
-                  {inv.project ? ` · ${inv.project.code}` : ""} · issued {new Date(inv.issuedAt).toLocaleDateString("en-GB")}
+                  {inv.project ? ` · ${inv.project.code}` : ""}{inv.milestone ? ` · ${inv.milestone.title}` : ""} · issued {new Date(inv.issuedAt).toLocaleDateString("en-GB")}
                 </p>
               </div>
               <p className="t-sm font-semibold tnum">{money(inv.amount, inv.currency)}</p>
@@ -91,7 +92,7 @@ export default async function AdminInvoicesPage({
       <FormGuard action={createInvoiceAction} className="adm-card space-y-5 p-5">
         <p className="adm-label">New invoice</p>
         <div className="grid gap-5 sm:grid-cols-2">
-          <InvoiceLinkFields clients={clients} projects={projects} initialClient={sp.client}/>
+          <InvoiceLinkFields clients={clients} projects={projects} initialClient={sp.client} milestones={milestones.map(m => ({ id: m.id, projectId: m.projectId, label: `${m.title}${m.amount != null ? ` · ${money(m.amount, m.project.currency)}` : ""}${m.scope === "additional" ? " · additional" : ""}` }))}/>
           <BusinessIdField type="IN" label="Invoice ID" id="invoice-reference" resetKey={invoices.length}/>
 
           <div>

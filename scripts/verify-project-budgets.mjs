@@ -47,7 +47,10 @@ try{
  let project=await p.clientProject.findFirst({where:{clientId:owners[0]},include:{milestones:true}});assert(project);const id=project.id;
  ok(project.budget===100000&&project.currency==="USD"&&project.milestones.reduce((n,m)=>n+m.amount,0)===100000,"project and all budgeted milestones committed together");
  await a.locator('[id^="ms-status-"]').first().selectOption("done");await submit(a,a.getByRole("button",{name:"Save project and plan",exact:true}),new RegExp(`/admin/projects/${id}\\?saved=1`));
- project=await p.clientProject.findUnique({where:{id},include:{milestones:true}});ok(project.progress===40,"done module updates delivery progress by allocated cost");
+ // The save lands on the same ?saved=1 URL the create redirected to, so the
+ // navigation can resolve before the action commits: await the DB value.
+ for(let i=0;i<60&&project.progress!==40;i++){await new Promise(r=>setTimeout(r,250));project=await p.clientProject.findUnique({where:{id},include:{milestones:true}});}
+ ok(project.progress===40,"done module updates delivery progress by allocated cost");
  // Fresh navigation prevents same-URL waitForURL resolving before the save.
  await visit(a,`/admin/projects/${id}`);await a.getByLabel("Project description",{exact:true}).fill("Synthetic scope edited after creation, visible to the client.");await a.getByLabel("Estimated delivery date",{exact:true}).fill("2027-02-15");
  await submit(a,a.getByRole("button",{name:"Save project and plan",exact:true}),new RegExp(`/admin/projects/${id}\\?saved=1`));
@@ -76,6 +79,33 @@ try{
  await invoice("50.00","paid");project=await p.clientProject.findUnique({where:{id}});ok(project.status==="cancelled","cancelled project cannot be reactivated by payments");
  await visit(a,`/admin/projects/${id}`);await a.getByRole("button",{name:"Complete project",exact:true}).click();await submit(a,a.getByRole("button",{name:"Confirm completion",exact:true}),new RegExp(`/admin/projects/${id}\\?saved=1`));
  project=await p.clientProject.findUnique({where:{id}});ok(project.status==="delivered"&&!project.completedByPayment,"admin can explicitly complete a project");
+ // ── Milestone-linked invoicing, raised straight from the project page ──
+ const plan=await p.clientProject.findUnique({where:{id},include:{milestones:{orderBy:[{order:"asc"},{createdAt:"asc"}]}}});const discovery=plan.milestones.find(m=>m.title==="Discovery and design");assert(discovery);
+ await visit(a,`/admin/projects/${id}`);
+ await a.locator("li").filter({hasText:"Discovery and design"}).getByText("Not invoiced",{exact:true}).waitFor();ok(true,"milestone shows Not invoiced before any linked invoice");
+ await a.getByRole("link",{name:"Raise invoice for this milestone"}).first().click();
+ await a.waitForURL(new RegExp(`/admin/projects/${id}\\?invoice=${discovery.id}#raise-invoice`));
+ await a.locator("#raise-invoice").waitFor();
+ ok(await a.locator("#project-invoice-milestone").inputValue()===discovery.id,"milestone link preselects the milestone");
+ ok(await a.locator("#project-invoice-amount").inputValue()==="400.00","milestone allocated cost prefills the invoice amount");
+ await submit(a,a.getByRole("button",{name:"Create invoice",exact:true}),/\/admin\/invoices\?saved=created/);
+ const linked=await p.invoice.findFirst({where:{milestoneId:discovery.id},orderBy:{createdAt:"desc"}});assert(linked);ok(linked.projectId===id&&linked.amount===40000&&linked.status==="sent","linked invoice stores the milestone, project and exact allocated cost");
+ await visit(a,`/admin/projects/${id}`);
+ await a.locator("li").filter({hasText:"Discovery and design"}).getByText("Unpaid",{exact:true}).waitFor();ok(true,"linked unpaid invoice marks the milestone Unpaid");
+ await a.locator("li").filter({hasText:"Implementation and launch"}).getByText("Not invoiced",{exact:true}).waitFor();ok(true,"unlinked sibling milestone remains Not invoiced");
+ await visit(c,`/portal/projects/${id}`);
+ await c.locator("li").filter({hasText:"Discovery and design"}).getByText("Unpaid",{exact:true}).waitFor();ok(true,"client sees the milestone payment status from the linked invoice");
+ await markPaid(linked.number);
+ await visit(a,`/admin/projects/${id}`);
+ await a.locator("li").filter({hasText:"Discovery and design"}).getByText("Paid",{exact:true}).waitFor();ok(true,"paid linked invoice marks the milestone Paid");
+ await visit(c,`/portal/projects/${id}`);
+ await c.locator("li").filter({hasText:"Discovery and design"}).getByText("Paid",{exact:true}).waitFor();ok(true,"client sees the milestone as Paid once its invoice is paid");
+ ok((await p.invoice.findUnique({where:{id:linked.id}})).status==="paid","linked invoice is recorded paid");
  ok(await p.sentEmail.count({where:{toEmail:{contains:key}}})===0,"no real emails sent during local integration checks");ok(errors.length===0,`no browser errors: ${errors.join("; ")}`);
  await writeFile(`${dir}/report.json`,JSON.stringify({localOnly:true,synthetic:true,checks,errors},null,2));console.log(`PASS: ${checks.length} project workflow assertions, including actual admin actions, client views, full/partial payment and cancellation. No live data or emails.`);
-}finally{await browser.close();await p.clientUser.deleteMany({where:{id:{in:owners}}});if(operator){await p.auditLog.deleteMany({where:{userId:operator.id}});await p.adminUser.delete({where:{id:operator.id}});}await p.$disconnect();}
+}finally{await browser.close();
+ // Delete dependants before clients so cascade/FK lock ordering cannot
+ // deadlock against concurrently finishing server transactions.
+ const cleanup=async()=>{await p.invoice.deleteMany({where:{clientId:{in:owners}}});await p.projectUpdate.deleteMany({where:{project:{clientId:{in:owners}}}});await p.projectMilestone.deleteMany({where:{project:{clientId:{in:owners}}}});await p.clientProject.deleteMany({where:{clientId:{in:owners}}});await p.clientUser.deleteMany({where:{id:{in:owners}}});};
+ try{await cleanup();}catch{await new Promise(r=>setTimeout(r,750));await cleanup();}
+ if(operator){await p.auditLog.deleteMany({where:{userId:operator.id}});await p.adminUser.delete({where:{id:operator.id}});}await p.$disconnect();}

@@ -22,6 +22,22 @@ export function calendarDate(value: string): Date | null {
   return date;
 }
 export type FinanceMilestone = { amount: number | null; status: string; scope: string };
+/** Per-milestone payment view derived from the milestone's linked invoices.
+ * Cancelled invoices never count. With a known milestone cost the milestone
+ * is Paid only once paid linked invoices cover that exact cost; without one
+ * (legacy rows) any paid linked invoice settles it. */
+export type MilestonePaymentStatus = "paid" | "partially_paid" | "unpaid" | "uninvoiced";
+export const MILESTONE_PAYMENT_LABELS: Record<MilestonePaymentStatus, string> = {
+  paid: "Paid", partially_paid: "Partially paid", unpaid: "Unpaid", uninvoiced: "Not invoiced",
+};
+export function milestonePaymentStatus(milestoneAmount: number | null, linkedInvoices: { amount: number; status: string }[]): MilestonePaymentStatus {
+  const active = linkedInvoices.filter(i => i.status !== "cancelled");
+  if (!active.length) return "uninvoiced";
+  const paid = active.filter(i => i.status === "paid").reduce((n, i) => n + i.amount, 0);
+  if (milestoneAmount == null || milestoneAmount <= 0) return paid > 0 ? "paid" : "unpaid";
+  if (paid >= milestoneAmount) return "paid";
+  return paid > 0 ? "partially_paid" : "unpaid";
+}
 export function deliveryProgress(milestones: FinanceMilestone[]): number {
   if (!milestones.length) return 0;
   const total = milestones.reduce((n, m) => n + (m.amount ?? 0), 0);
