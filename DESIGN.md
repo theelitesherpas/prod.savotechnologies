@@ -365,7 +365,8 @@ Declare light/dark schemes, support both colour-scheme media and Outlook's
 **The Self-contained Mark Rule.** The official wordmark must carry both its
 foreground and ground inside the raster. White lettering is flattened onto
 opaque charcoal, never black letters on transparency depending on an inbox's
-white background. `logo-lockup-v2.png` is 396×216 RGB, displayed at 132×72;
+white background. `logo-lockup-v2.png` is 396×216 RGB, displayed at 110×60 (compact masthead
+mark, ~3.6× source);
 its versioned filename avoids cached copies of the old asset. Rebuild with
 `scripts/build-email-logo.mjs`; provenance accompanies the asset.
 

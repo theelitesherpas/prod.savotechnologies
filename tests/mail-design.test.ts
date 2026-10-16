@@ -35,6 +35,8 @@ describe("Savo v7 correspondence", () => {
     expect(mail.html).not.toMatch(/<table(?![^>]*role="presentation")/);
     const header = mail.html.match(/<td class="mail-header"[\s\S]*?<\/table><\/td><\/tr>/)?.[0];
     expect(header, "shared email masthead exists").toBeDefined();
+    expect(header).toMatch(/<td width="110" valign="middle"><a[^>]*width:110px;/);
+    expect(header).toMatch(/<img [^>]*width="110" height="60"[^>]*width:110px;height:60px;/);
     expect(header).not.toContain("@");
     expect(mail.html).not.toContain("mail-header-address");
     expect(mail.html).toContain(`mailto:${entry.dept === "hr" ? "hr" : "hello"}@savotechnologies.com`);
