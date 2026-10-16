@@ -18,11 +18,62 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─────────────────────── Business identification ──────────────────────
+
+/// Provisioned once from lib/business-id-config.ts, never reset at startup.
+/// SQL guards/constraints are installed by scripts/setup-business-ids.mjs.
+model BusinessIdCounter {
+  type           String @id
+  rangeStart     Int @map("range_start")
+  rangeEnd       Int @map("range_end")
+  initialCurrent Int @map("initial_current")
+  current        Int
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+  reservations   BusinessId[]
+  @@map("business_id_counters")
+}
+
+/// Permanent issuance ledger: references/numbers are never deleted or recycled,
+/// even when the associated business record is removed. Not a record count.
+model BusinessId {
+  id              String @id
+  type            String
+  referenceNumber Int @unique @map("reference_number")
+  counter         BusinessIdCounter @relation(fields: [type], references: [type], onDelete: Restrict, onUpdate: Restrict)
+  createdAt       DateTime @default(now()) @map("created_at")
+  client          ClientUser?
+  project         ClientProject?
+  invoice         Invoice?
+  enquiry         ProjectEnquiry?
+  ticket          BugReport?
+  draft           BusinessIdDraft?
+  @@index([type, createdAt])
+  @@map("business_ids")
+}
+
+/// Durable, owner-bound pre-creation reservation. The actor key is retained as
+/// an opaque audit identifier even if that panel user is later removed.
+model BusinessIdDraft {
+  businessId String @id @map("business_id")
+  reference BusinessId @relation(fields: [businessId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  type String
+  ownerId String @map("owner_id")
+  requestKey String @map("request_key")
+  createdAt DateTime @default(now()) @map("created_at")
+  consumedAt DateTime? @map("consumed_at")
+  @@unique([ownerId, type, requestKey])
+  @@index([ownerId, type, consumedAt])
+  @@map("business_id_drafts")
+}
+
 // ─────────────────────────────── Leads ───────────────────────────────
 
 /// Inbound project enquiries and phone callback requests (single inbox).
 model ProjectEnquiry {
   id          String   @id @default(cuid())
+  /// LD for new sales enquiries/callbacks only, not HR applications or tokens.
+  businessId  String? @unique @map("business_id")
+  businessReference BusinessId? @relation(fields: [businessId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   name        String
   email       String?
   company     String?
@@ -224,6 +275,8 @@ model SiteSetting {
 /// Credentials are managed by admins; passwords are bcrypt-hashed.
 model ClientUser {
   id           String   @id @default(cuid())
+  businessId   String? @unique @map("business_id")
+  businessReference BusinessId? @relation(fields: [businessId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   email        String   @unique
   passwordHash String   @map("password_hash")
   name         String
@@ -256,9 +309,11 @@ model ClientSession {
 
 model ClientProject {
   id        String     @id @default(cuid())
+  businessId String? @unique @map("business_id")
+  businessReference BusinessId? @relation(fields: [businessId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   clientId  String     @map("client_id")
   client    ClientUser @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  /// Human reference, e.g. SAVO-2026-014.
+  /// New references use STPLPR + five digits; issued legacy codes are retained.
   code      String     @unique
   title     String
   /// planning | in_progress | review | delivered | paused | cancelled
@@ -322,6 +377,8 @@ model ProjectUpdate {
 /// currency code; status: draft | sent | paid | overdue | cancelled.
 model Invoice {
   id        String         @id @default(cuid())
+  businessId String? @unique @map("business_id")
+  businessReference BusinessId? @relation(fields: [businessId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   clientId  String         @map("client_id")
   client    ClientUser     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   projectId String?        @map("project_id")
@@ -464,6 +521,9 @@ model EmployeeSession {
 /// 404 pages, and user submissions. Managed in the admin Bug Reports page.
 model BugReport {
   id          String   @id @default(cuid())
+  /// TK for human user_report support requests, not automatic error telemetry.
+  businessId  String? @unique @map("business_id")
+  businessReference BusinessId? @relation(fields: [businessId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   /// error | 404 | api_error | user_report
   type        String
   /// Short summary line

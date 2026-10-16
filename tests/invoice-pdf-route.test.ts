@@ -38,7 +38,7 @@ describe("private client invoice PDF endpoint", () => {
     expect(res.headers.get("cache-control")).toContain("private, no-store");
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(res.headers.get("x-robots-tag")).toContain("noindex");
-    expect(m.render).toHaveBeenCalledWith({ ...record, status, client: { name: client.name, email: client.email, company: client.company } });
+    expect(m.render).toHaveBeenCalledWith({ ...record, status, client: { name: client.name, email: client.email, company: client.company, businessId: null } });
     expect(new TextDecoder().decode(await res.arrayBuffer())).toMatch(/^%PDF-/);
   });
   it("opens the identical PDF inline for native viewing and printing", async () => {

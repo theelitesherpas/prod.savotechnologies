@@ -13,7 +13,10 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:e2e": "node scripts/verify.mjs",
-    "db:push": "prisma db push",
+    "db:push": "node --env-file-if-exists=.env scripts/prepare-business-id-schema.mjs && prisma db push && node --env-file-if-exists=.env scripts/setup-business-ids.mjs --apply",
+    "db:business-ids": "node --env-file-if-exists=.env scripts/setup-business-ids.mjs --apply",
+    "db:business-ids:status": "node --env-file-if-exists=.env scripts/setup-business-ids.mjs",
+    "test:business-ids": "node --env-file-if-exists=.env scripts/verify-business-ids.mjs",
     "db:seed": "node scripts/seed.mjs",
     "db:studio": "prisma studio",
     "preview:prod": "NEXT_PUBLIC_CONTENT_MODE=production npm run build && npm run start -- -p 4000"

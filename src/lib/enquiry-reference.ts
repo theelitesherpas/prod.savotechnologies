@@ -1,7 +1,9 @@
 import { randomInt } from "node:crypto";
 
 /**
- * Public enquiry references — SAVO-XXXXXXXX.
+ * Legacy public receipt/access tokens — SAVO-XXXXXXXX, NOT business IDs.
+ * Sales lead IDs are allocated separately by lib/business-ids.ts. Never accept
+ * a predictable STPLLD number as proof of a public submission or authorization.
  *
  * Shown to the visitor on the thank-you page and safe to speak aloud on a
  * call or paste into an email: it reveals nothing (no sequence, no row id,

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
+import { businessTransaction, generateBusinessId, claimBusinessId, rejectManualBusinessId, BusinessIdError } from "@/lib/business-ids";
 import { sendTemplateNow } from "@/lib/mail";
 import { hashPassword, generateClientPassword } from "@/lib/client-auth";
 import { passwordFitsBcrypt } from "@/lib/passwords";
@@ -55,18 +56,18 @@ export async function createClientAction(formData: FormData): Promise<void> {
   }
 
   try {
-    const client = await prisma.clientUser.create({
-      data: {
-        name: parsed.data.name,
-        email: parsed.data.email,
-        company: parsed.data.company ?? "",
-        passwordHash: await hashPassword(password),
-      },
-    });
-    await audit(user.id, "client.create", "ClientUser", client.email);
-    sendTemplateNow("clientWelcome", client.email, { name: parsed.data.name, email: client.email, password });
-  } catch {
-    redirect(slugError("That email is already registered."));
+    rejectManualBusinessId(formData.get("businessId"));
+    const passwordHash = await hashPassword(password);
+    const client = await businessTransaction(async tx => tx.clientUser.create({
+      data: { name: parsed.data.name, email: parsed.data.email, company: parsed.data.company ?? "", passwordHash, businessId: await claimBusinessId(formData, "CS", user.id, tx) ?? await generateBusinessId("CS", tx) },
+    }));
+    await audit(user.id, "client.create", "ClientUser", client.email, { businessId: client.businessId });
+    sendTemplateNow("clientWelcome", client.email, { name: parsed.data.name, email: client.email, password, clientReference: client.businessId ?? "" });
+  } catch (error) {
+    if (error instanceof BusinessIdError) redirect(slugError(error.message));
+    if (error instanceof Error && error.message.startsWith("Business IDs")) redirect(slugError(error.message));
+    if (error && typeof error === "object" && "code" in error && error.code === "P2002") redirect(slugError("That email or reference is already registered. No changes were saved."));
+    redirect(slugError("Client could not be created. Please try again; if numbering is unavailable, contact an administrator."));
   }
 
   await setClientPasswordReceipt(user.id, "created", password);
@@ -89,6 +90,7 @@ export async function updateClientAction(formData: FormData): Promise<void> {
   if (!parsed.success) redirect(`/admin/clients/${id}?e=invalid`);
 
   try {
+    rejectManualBusinessId(formData.get("businessId"));
     await prisma.clientUser.update({
       where: { id },
       data: {

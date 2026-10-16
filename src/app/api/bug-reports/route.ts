@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp, readJsonBody } from "@/lib/api";
 import { logger } from "@/lib/logger";
+import { businessTransaction, generateBusinessId } from "@/lib/business-ids";
 import { publicTelemetryUrl } from "@/lib/telemetry-policy";
 
 export const runtime = "nodejs";
@@ -19,6 +20,7 @@ export const dynamic = "force-dynamic";
 const TYPES = new Set(["error", "404", "api_error", "user_report"]);
 
 export async function POST(req: Request) {
+  let isSupportRequest = false;
   try {
     const ip = clientIp(req);
     const limit = rateLimit(`bug-report:${ip}`, 10, 60 * 60 * 1000);
@@ -35,6 +37,7 @@ export async function POST(req: Request) {
     if (typeof body.url === "string" && !publicUrl) return new Response(null, { status: 204 });
 
     const type = typeof body.type === "string" && TYPES.has(body.type) ? body.type : "error";
+    isSupportRequest = type === "user_report";
     const message = typeof body.message === "string" ? body.message.slice(0, 500) : "Unknown error";
     const details = typeof body.details === "string" ? body.details.slice(0, 8000) : null;
     const url = publicUrl?.slice(0, 500) ?? null;
@@ -53,13 +56,13 @@ export async function POST(req: Request) {
       };
     }
 
-    await prisma.bugReport.create({
-      data: { type, message, details, url, referrer, userAgent, ...(context ? { context: JSON.parse(JSON.stringify(context)) } : {}) },
-    });
+    const data = { type, message, details, url, referrer, userAgent, ...(context ? { context: JSON.parse(JSON.stringify(context)) } : {}) };
+    if (isSupportRequest) await businessTransaction(async tx => tx.bugReport.create({ data: { ...data, businessId: await generateBusinessId("TK", tx) } }));
+    else await prisma.bugReport.create({ data }); // telemetry is not a support ticket
 
     return new Response(null, { status: 201 });
   } catch {
     logger.error("bug-report: capture failed");
-    return new Response(null, { status: 204 });
+    return new Response(null, { status: isSupportRequest ? 503 : 204 });
   }
 }

@@ -93,7 +93,9 @@ cd "$APP_DIR"
 cp .env.production .env 2>/dev/null || true
 npm ci --include=dev
 set -a; . ./.env.production; set +a
+node scripts/prepare-business-id-schema.mjs
 npx prisma db push
+node scripts/setup-business-ids.mjs --apply
 node scripts/seed.mjs
 
 say "8/9 Production build (CONTENT_MODE=production, indexable)"

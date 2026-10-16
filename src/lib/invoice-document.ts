@@ -19,7 +19,7 @@ export type InvoiceDocument = {
   paidAt: Date | null;
   notes: string;
   paymentLink?: string | null;
-  client: { name: string; company: string; email: string };
+  client: { name: string; company: string; email: string; businessId?: string | null };
   project: { code: string; title: string } | null;
 };
 

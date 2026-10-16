@@ -6,13 +6,14 @@ import { SubmitButton } from "@/components/admin/form";
 import { majorUnits, minorUnits, PROJECT_CURRENCIES, PROJECT_STATUSES, PROJECT_STATUS_LABELS } from "@/lib/project-finance";
 import { invoiceMoney } from "@/lib/invoice-document";
 import s from "./project-plan.module.css";
+import { BusinessIdField } from "./business-id-field";
 
 type Milestone = { id?: string; title: string; amount: number | null; description: string; status: string; dueDate: string };
 type Project = { id: string; clientId: string; title: string; code: string; summary: string; budget: number | null; currency: string; status: string; startDate: string; dueDate: string; revision: string };
 type Row = { key: string; id?: string; title: string; amountMajor: string; description: string; status: string; dueDate: string };
 export function ProjectPlanForm({ action, clients, project, milestones = [], locked = false, currencyLocked = locked, selectedClient }: {
   action: (form: FormData) => Promise<void>;
-  clients: { id: string; name: string; company?: string }[];
+  clients: { id: string; name: string; company?: string; businessId?: string | null }[];
   project?: Project; milestones?: Milestone[]; locked?: boolean; currencyLocked?: boolean; selectedClient?: string;
 }) {
   const counter = useRef(0);
@@ -33,9 +34,9 @@ export function ProjectPlanForm({ action, clients, project, milestones = [], loc
       <h2 id="project-details-heading">{project ? "Project details" : "Create a project"}</h2>
       <p className={s.hint}>Define the scope, budget and delivery plan the client will see.</p>
       <div className={s.grid}>
-        <div className={s.full}><label htmlFor="plan-client">Client</label><select id="plan-client" name="clientId" required disabled={locked} defaultValue={project?.clientId || selectedClient || ""} className="adm-select w-full"><option value="" disabled>Select a client</option>{clients.map(c => <option key={c.id} value={c.id}>{c.name}{c.company ? ` · ${c.company}` : ""}</option>)}</select>{locked ? <input type="hidden" name="clientId" value={project?.clientId}/> : null}</div>
+        <div className={s.full}><label htmlFor="plan-client">Client</label><select id="plan-client" name="clientId" required disabled={locked} defaultValue={project?.clientId || selectedClient || ""} className="adm-select w-full"><option value="" disabled>Select a client</option>{clients.map(c => <option key={c.id} value={c.id}>{c.businessId ? `${c.businessId} · ` : ""}{c.name}{c.company ? ` · ${c.company}` : ""}</option>)}</select>{locked ? <input type="hidden" name="clientId" value={project?.clientId}/> : null}</div>
         <div><label htmlFor="plan-title">Project title</label><input id="plan-title" name="title" required maxLength={140} defaultValue={project?.title} className="adm-input w-full" placeholder="Client website and booking platform"/></div>
-        <div><label htmlFor="plan-code">Reference code {project ? "" : "(optional)"}</label><input id="plan-code" name="code" maxLength={24} required={!!project} defaultValue={project?.code} className="adm-input w-full" placeholder="Generated automatically if blank"/></div>
+        {project ? <div><label htmlFor="plan-code">Project ID</label><input id="plan-code" name="code" readOnly value={project.code} className="adm-input w-full"/><p className={s.hint}>Existing references cannot be edited.</p></div> : <BusinessIdField type="PR" label="Project ID" id="plan-code"/>}
         <div className={s.full}><label htmlFor="plan-description">Project description</label><textarea id="plan-description" name="summary" rows={4} required minLength={10} maxLength={2000} defaultValue={project?.summary} className="adm-input w-full" placeholder="Describe the agreed scope, deliverables and what is included."/></div>
         <div><label htmlFor="plan-budget">Fixed base budget</label><input id="plan-budget" name="budgetMajor" type="number" min="0.01" step="0.01" max="21474836.47" required value={budget} onChange={e => setBudget(e.target.value)} className="adm-input w-full" placeholder="0.00"/></div>
         <div><label htmlFor="plan-currency">Currency</label><select id="plan-currency" name="currency" value={currency} disabled={currencyLocked} onChange={e => setCurrency(e.target.value)} className="adm-select w-full">{PROJECT_CURRENCIES.map(c => <option value={c} key={c}>{c}</option>)}</select>{currencyLocked ? <input type="hidden" name="currency" value={currency}/> : null}</div>

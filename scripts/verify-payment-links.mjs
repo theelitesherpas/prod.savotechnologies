@@ -39,13 +39,14 @@ async function visit(page, path) {
   await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.locator("main h1").waitFor();
   await page.waitForFunction(() => [...document.querySelectorAll("main form")].every(f => Object.keys(f).some(k => k.startsWith("__reactProps"))));
+  await page.waitForFunction(() => { const input = document.querySelector('input[name="reservedBusinessId"]'); return !input || /^STPL[A-Z]{2}\d{5}$/.test(input.value); });
   await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
 }
 async function submit(page, label, url) {
   const path = new URL(page.url()).pathname;
   const response = page.waitForResponse(r => r.request().method() === "POST" && new URL(r.url()).pathname === path);
   await page.getByRole("button", { name: label, exact: true }).click();
-  await (await response).finished(); await page.waitForURL(url);
+  await response; await page.waitForURL(url); // committed navigation, not a long-lived RSC stream
 }
 async function snapshot(page, name) {
   await page.evaluate(() => document.fonts.ready);
@@ -71,10 +72,10 @@ try {
   const project = await p.clientProject.create({ data: { clientId: owners[0], title: "Synthetic payment-link project", code: key, summary: "Synthetic local review only, not a real invoice or payment.", status: "in_progress", budget: 100000, currency: "USD", milestones: { create: { title: "Agreed delivery", amount: 100000, scope: "base", status: "pending" } } } });
   await visit(a, `/admin/invoices?client=${owners[0]}`);
   await a.locator('select[name="clientId"]').selectOption(owners[0]); await a.locator('select[name="projectId"]').selectOption(project.id);
-  await a.locator('input[name="number"]').fill(key); await a.locator('input[name="amountMajor"]').fill("1000.00"); await a.locator('select[name="status"]').selectOption("sent");
+  await a.locator('input[name="amountMajor"]').fill("1000.00"); await a.locator('select[name="status"]').selectOption("sent");
   await a.getByLabel("Payment link (optional)").fill(paypal);
   await submit(a, "Create invoice", /\/admin\/invoices\?saved=created/);
-  let invoice = await p.invoice.findUniqueOrThrow({ where: { number: key } }); const id = invoice.id;
+  let invoice = await p.invoice.findFirstOrThrow({ where: { clientId: owners[0], projectId: project.id }, orderBy: { createdAt: "desc" } }); const id = invoice.id, invoiceReference = invoice.number;
   ok(invoice.paymentLink === paypal, "admin create persists a canonical hosted link");
   await p.invoice.createMany({ data: [{ clientId: owners[0], number: `${key}-BLANK`, amount: 100, currency: "USD", status: "sent" }, { clientId: owners[0], number: `${key}-CANCELLED`, amount: 100, currency: "USD", status: "cancelled", paymentLink: paypal }] });
   await visit(a, `/admin/invoices/${id}`); ok(await a.getByLabel("Payment link (optional)").inputValue() === paypal, "admin edit restores the optional link");
@@ -85,7 +86,7 @@ try {
   await submit(a, "Save invoice", /\?e=/);
   ok((await p.invoice.findUniqueOrThrow({ where: { id } })).amount === 100000, "changed invoice terms cannot silently reuse an unconfirmed old checkout link");
   await visit(c, "/portal/invoices");
-  const pay = c.getByRole("link", { name: `Pay now for invoice ${key} via PayPal (opens in a new tab)`, exact: true });
+  const pay = c.getByRole("link", { name: `Pay now for invoice ${invoiceReference} via PayPal (opens in a new tab)`, exact: true });
   ok(await pay.getAttribute("href") === paypal, "client invoice list shows the exact PayPal link");
   ok(await c.getByRole("row").filter({ hasText: `${key}-BLANK` }).getByRole("link", { name: /Pay now/ }).count() === 0, "blank-link invoices keep only existing document actions");
   ok(await c.getByRole("row").filter({ hasText: `${key}-CANCELLED` }).getByRole("link", { name: /Pay now/ }).count() === 0, "cancelled invoices never offer payment despite a stored link");

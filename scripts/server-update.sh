@@ -34,7 +34,11 @@ npm ci --include=dev
 
 echo "═══ 3/5 Database schema ═══"
 set -a; . ./.env.production; set +a
+node scripts/prepare-business-id-schema.mjs
 npx prisma db push
+# Idempotent: inserts missing policy rows, installs SQL invariants, never resets
+# an existing counter or renumbers historical records. Must precede app start.
+node scripts/setup-business-ids.mjs --apply
 
 echo "═══ 4/5 Production build ═══"
 NEXT_PUBLIC_CONTENT_MODE=production NEXT_PUBLIC_INDEXABLE=true npm run build

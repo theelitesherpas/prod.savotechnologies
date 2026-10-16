@@ -18,7 +18,7 @@ export const milestoneInput = z.object({
 });
 export const projectInput = z.object({
   clientId: z.string().min(10).max(32), title: z.string().trim().min(2).max(140),
-  code: z.string().trim().regex(/^[A-Z0-9-]{3,24}$/i, "Use a unique project code of 3–24 letters, digits or hyphens."),
+  code: z.string().trim().max(24).default(""), // assigned server-side on create; immutable on update
   summary: z.string().trim().min(10, "Please describe the project (at least 10 characters).").max(2000),
   budgetMajor: amount, currency: z.enum(PROJECT_CURRENCIES),
   status: z.enum(PROJECT_STATUSES), startDate: date, dueDate: date,

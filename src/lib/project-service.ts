@@ -2,21 +2,14 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
 import { renderTemplate, sendMail } from "@/lib/mail";
 import { logger } from "@/lib/logger";
+import { BusinessIdError, businessTransaction } from "@/lib/business-ids";
 import { deliveryProgress, projectFinancials } from "@/lib/project-finance";
 
 export type ProjectEmail = { key: string; to: string; vars: Record<string, string> };
 export async function projectTransaction<T>(work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
-  if (!prisma) throw new Error("Database unavailable.");
-  for (let attempt = 0; ; attempt++) {
-    try { return await prisma.$transaction(work, { isolationLevel: "Serializable", maxWait: 10000, timeout: 20000 }); }
-    catch (error) {
-      if (attempt < 2 && error && typeof error === "object" && "code" in error && error.code === "P2034") continue;
-      throw error;
-    }
-  }
+  return businessTransaction(work, "Serializable");
 }
 
 /** Called INSIDE the same transaction as every plan, milestone and invoice
@@ -61,8 +54,9 @@ export function revalidateProjectViews(id?: string) {
   if (id) { revalidatePath(`/admin/projects/${id}`); revalidatePath(`/portal/projects/${id}`); }
 }
 export function projectError(error: unknown) {
+  if (error instanceof BusinessIdError) return error.message;
   if (error && typeof error === "object" && "code" in error) {
-    if (error.code === "P2002") return "That reference is already in use. Choose another.";
+    if (error.code === "P2002") return "A record conflicts with an existing reference. No changes were saved; ask an administrator to review numbering.";
     if (error.code === "P2034") return "Another update is in progress. Refresh and try again.";
     return "The project could not be saved. Refresh and try again.";
   }

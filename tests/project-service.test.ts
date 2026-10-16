@@ -42,6 +42,13 @@ describe("atomic project reconciliation",()=>{
   const work=vi.fn();expect(await projectTransaction(work)).toBe("committed");expect(m.transaction).toHaveBeenCalledTimes(2);
   expect(m.transaction.mock.calls[0][1].isolationLevel).toBe("Serializable");
  });
+ it("retries PostgreSQL serialization/deadlock SQLSTATEs wrapped by Prisma raw queries",async()=>{
+  m.transaction.mockRejectedValueOnce({code:"P2010",meta:{code:"40001"}}).mockRejectedValueOnce({code:"P2010",meta:{code:"40P01"}}).mockResolvedValueOnce("committed");
+  expect(await projectTransaction(vi.fn())).toBe("committed");expect(m.transaction).toHaveBeenCalledTimes(3);
+ });
+ it("does not retry constraint violations or exhaust business ranges",async()=>{
+  m.transaction.mockRejectedValueOnce({code:"P2010",meta:{code:"23514"}});await expect(projectTransaction(vi.fn())).rejects.toMatchObject({code:"P2010"});expect(m.transaction).toHaveBeenCalledTimes(1);
+ });
  it("does not send before commit/redirect; errors in the notification do not roll back a saved project",async()=>{
   projectEmails([{key:"projectUpdate",to:"sample@example.invalid",vars:{title:"Saved"}}]);
   expect(m.send).not.toHaveBeenCalled();expect(m.after).toHaveBeenCalledTimes(1);

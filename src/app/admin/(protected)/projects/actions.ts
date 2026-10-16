@@ -1,6 +1,6 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
+import { generateBusinessId, claimBusinessId, rejectManualBusinessId, assertUnchangedReference } from "@/lib/business-ids";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -24,15 +24,17 @@ function event(project: { title: string; client: { name: string; email: string }
 
 export async function createProjectAction(form: FormData): Promise<void> {
   const user = await operator();
-  if (!form.get("code")) form.set("code", `SAVO-${new Date().getUTCFullYear()}-${randomBytes(3).toString("hex").toUpperCase()}`);
   let id = "", events: ProjectEmail[] = [];
   try {
+    rejectManualBusinessId(form.get("businessId"));
+    rejectManualBusinessId(form.get("code"));
     const d = parseProjectForm(form);
     const result = await projectTransaction(async tx => {
       if (!(await tx.clientUser.findUnique({ where: { id: d.clientId }, select: { id: true } }))) throw new Error("Choose an existing client.");
       if (d.milestones.some(m => m.id)) throw new Error("New projects cannot reuse existing milestones.");
       const { milestones, budgetMajor, ...core } = d;
-      const project = await tx.clientProject.create({ data: { ...core, budget: budgetMajor,
+      const businessId = await claimBusinessId(form, "PR", user.id, tx) ?? await generateBusinessId("PR", tx);
+      const project = await tx.clientProject.create({ data: { ...core, code: businessId, businessId, budget: budgetMajor,
         milestones: { create: milestones.map((m, order) => ({ title: m.title, description: m.description, amount: m.amountMajor, dueDate: m.dueDate, status: m.status, scope: "base", order })) } },
         include: { client: { select: { name: true, email: true } } } });
       await reconcileProject(tx, project.id);
@@ -52,6 +54,8 @@ export async function updateProjectAction(form: FormData): Promise<void> {
       const current = await tx.clientProject.findUnique({ where: { id }, include: { milestones: true, invoices: true } });
       if (!current) throw new Error("Project not found.");
       revision(form, current.updatedAt);
+      rejectManualBusinessId(form.get("businessId"));
+      assertUnchangedReference(d.code, current.code);
       if (current.invoices.length && d.clientId !== current.clientId) throw new Error("Client cannot change after invoices have been linked.");
       if (current.budget != null && current.invoices.length && d.currency !== current.currency) throw new Error("Currency cannot change after invoices have been linked.");
       if (current.invoices.some(i => i.status !== "cancelled" && i.currency !== d.currency)) throw new Error("Linked invoice currencies must match the project currency. Correct or unlink conflicting billing records first.");
@@ -66,7 +70,7 @@ export async function updateProjectAction(form: FormData): Promise<void> {
         else await tx.projectMilestone.create({ data: { ...data, projectId: id, scope: "base" } });
       }
       const budgetMajor = d.budgetMajor;
-      const core = { clientId: d.clientId, title: d.title, code: d.code, summary: d.summary, currency: d.currency, status: d.status, startDate: d.startDate, dueDate: d.dueDate };
+      const core = { clientId: d.clientId, title: d.title, code: current.code, summary: d.summary, currency: d.currency, status: d.status, startDate: d.startDate, dueDate: d.dueDate };
       const project = await tx.clientProject.update({ where: { id }, data: { ...core, budget: budgetMajor, completedByPayment: d.status === current.status ? current.completedByPayment : false }, include: { client: { select: { name: true, email: true } } } });
       const automatic = await reconcileProject(tx, id);
       return [event(project, "Your project plan has been updated", `The project details and milestone plan have been updated. Base budget: ${invoiceMoney(budgetMajor, d.currency)}. Review the current scope, dates and delivery progress in your portal.`), ...automatic];

@@ -219,6 +219,15 @@ not large promotional pills. Native fields/selects preserve familiar behavior.
   two-decimal ISO-currency amounts and paginate long fields. PDFs have their
   own printer-safe layout, not screenshots of the portal. No invented tax,
   GST, itemized rates or bank details. See `docs/INVOICES.md`.
+- **Business references:** use the existing admin/portal fonts and tabular
+  numerals, not a new visual system. New CS/PR/IN references are server-assigned,
+  five-digit and immutable. Create forms show the actual reserved ID before save,
+  with Copy ID, loading/retry feedback and an explicit no-recycling explanation.
+  Saving keeps that exact owner-bound ID; refresh resumes the browser draft.
+  The copy button wraps below the full-width ID on phones; no clipped digits.
+  Edit fields remain read-only. Client IDs
+  accompany names in selectors and the client's own workspace/PDF. Preserve
+  issued legacy references and all employee IDs. No fake history/count claims.
 - **Budgeted projects:** the admin extends its existing operations theme, not
   public marketing chrome. Labelled two-column details/financial fields precede
   repeatable base-milestone fieldsets. Title/cost/date/state align in four columns,

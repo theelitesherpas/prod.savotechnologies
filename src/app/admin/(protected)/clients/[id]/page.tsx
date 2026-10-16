@@ -32,7 +32,7 @@ export default async function EditClientPage({
   return (
     <div className="max-w-3xl">
       <BackLink href="/admin/clients" label="All clients" />
-      <PageHeader title="Edit client" description={client.email} />
+      <PageHeader title="Edit client" description={`${client.businessId ? `${client.businessId} · ` : ""}${client.email}`} />
       {e === "invalid" ? <Notice kind="alert">Check the fields - name and a valid email are required.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That email is already used by another client.</Notice> : null}
 

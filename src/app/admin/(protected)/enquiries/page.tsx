@@ -54,6 +54,8 @@ export default async function EnquiriesPage({
     ...(q
       ? {
           OR: [
+            { businessId: { contains: q, mode: "insensitive" as const } },
+            { reference: { contains: q, mode: "insensitive" as const } },
             { name: { contains: q, mode: "insensitive" as const } },
             { email: { contains: q, mode: "insensitive" as const } },
             { company: { contains: q, mode: "insensitive" as const } },
@@ -72,6 +74,7 @@ export default async function EnquiriesPage({
       skip: (page - 1) * PAGE_SIZE,
       select: {
         id: true,
+        businessId: true,
         name: true,
         email: true,
         company: true,
@@ -262,6 +265,7 @@ export default async function EnquiriesPage({
                           <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent ring-2 ring-accent/20" />
                         ) : null}
                         {enq.name}
+                        {enq.businessId ? <span className="ml-2 text-xs font-normal text-muted tnum">{enq.businessId}</span> : null}
                       </span>
                       <span className={`t-caption block truncate ${enq.status === "new" ? "font-semibold text-foreground/70" : "text-muted"}`}>
                         {enq.email ?? enq.company ?? "-"}

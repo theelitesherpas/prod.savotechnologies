@@ -7,6 +7,7 @@ import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { ConfirmAction } from "@/components/admin/confirm-dialog";
 import { FormGuard } from "@/components/admin/form-guard";
 import { InvoiceLinkFields } from "@/components/admin/invoice-link-fields";
+import { BusinessIdField } from "@/components/admin/business-id-field";
 import { InvoicePaymentField } from "@/components/admin/invoice-payment-field";
 import { InvoiceStatusChip, money } from "@/components/portal/ui";
 import { createInvoiceAction, markInvoicePaidAction, deleteInvoiceAction } from "./actions";
@@ -23,7 +24,7 @@ export default async function AdminInvoicesPage({
   const [invoices, clients, projects] = prisma
     ? await Promise.all([
         prisma.invoice.findMany({ orderBy: { issuedAt: "desc" }, include: { client: { select: { name: true } }, project: { select: { code: true } } } }).catch(() => []),
-        prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }).catch(() => []),
+        prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, businessId: true } }).catch(() => []),
         prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true, clientId: true, currency: true, budget: true } }).catch(() => []),
       ])
     : [[], [], []];
@@ -91,10 +92,8 @@ export default async function AdminInvoicesPage({
         <p className="adm-label">New invoice</p>
         <div className="grid gap-5 sm:grid-cols-2">
           <InvoiceLinkFields clients={clients} projects={projects} initialClient={sp.client}/>
-          <div>
-            <label className="adm-label mb-1.5 block">Number</label>
-            <input name="number" maxLength={32} className={input} placeholder="Generated automatically if blank" />
-          </div>
+          <BusinessIdField type="IN" label="Invoice ID" id="invoice-reference" resetKey={invoices.length}/>
+
           <div>
             <label className="adm-label mb-1.5 block">Amount *</label>
             <input name="amountMajor" type="number" step="0.01" min={0} required className={input} placeholder="2500.00" />

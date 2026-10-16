@@ -20,6 +20,17 @@ See `docs/PROJECTS.md` for schema, ownership, atomicity and notification contrac
 This extension requires the additive project/invoice schema before starting the
 updated application; back up production first and follow `docs/WORKFLOW.md`.
 
+## Business identification
+
+New client/project/invoice records use separate STPL CS/PR/IN references. IDs are
+reserved and shown in full before creation, with Copy ID; saving retains the
+same ID. Reservations remain read-only; the client's own CS reference is shown
+in their workspace and PDFs. Original database keys/ownership checks and employee
+IDs are unchanged. Legacy issued references remain intact. Business references
+are predictable, never authentication or public-receipt tokens. Before deployment,
+apply the reviewed additive SQL and initialize policy/guards without resetting
+counters; see `docs/BUSINESS-IDS.md`.
+
 ## CAPTCHA: a release prerequisite
 
 Client and employee sign-in **require Google reCAPTCHA v2 checkbox verification from the first attempt**, enforced server-side before credential processing. Missing/rejected tokens, partial configuration and missing configuration cannot silently bypass verification. Admin retains its previous progressive-attempt policy; other public forms keep their existing configuration policy.

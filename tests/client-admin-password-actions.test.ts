@@ -5,6 +5,7 @@ const m = vi.hoisted(() => ({
   admin: vi.fn(), section: vi.fn(), audit: vi.fn(), send: vi.fn(), receiptSet: vi.fn(), receiptConsume: vi.fn(),
   hash: vi.fn(), generate: vi.fn(), passwordFits: vi.fn(), revalidate: vi.fn(),
 }));
+vi.mock("@/lib/business-ids", async original => ({ ...await original<typeof import("@/lib/business-ids")>(), generateBusinessId: vi.fn(async () => "STPLCS01437") }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
   clientUser: { create: m.clientCreate, findUnique: m.clientFind, update: m.clientUpdate },
   clientSession: { deleteMany: m.sessionDelete },
@@ -34,11 +35,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   m.admin.mockResolvedValue(admin);
   m.section.mockResolvedValue(undefined);
-  m.clientCreate.mockResolvedValue({ id: "client-fixture", email: "client@example.test" });
+  m.clientCreate.mockResolvedValue({ id: "client-fixture", email: "client@example.test", businessId: "STPLCS01437" });
   m.clientFind.mockResolvedValue({ id: "client-fixture", email: "client@example.test", name: "Test Client" });
   m.clientUpdate.mockResolvedValue({});
   m.sessionDelete.mockResolvedValue({ count: 1 });
-  m.transaction.mockImplementation(async (ops: Promise<unknown>[]) => Promise.all(ops));
+  m.transaction.mockImplementation(async (ops: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) => typeof ops === "function" ? ops({ clientUser: { create: m.clientCreate } }) : Promise.all(ops));
   m.audit.mockResolvedValue(undefined);
   m.hash.mockResolvedValue("bcrypt-fixture");
   m.generate.mockReturnValue(password);

@@ -126,6 +126,7 @@ export default async function BugReportsPage({
                         {fmtIST(r.createdAt)}
                       </span>
                     </div>
+                    {r.businessId ? <p className="mt-2 text-xs text-muted tnum">Ticket {r.businessId}</p> : null}
                     <p className="mt-2 text-[0.875rem] font-semibold text-foreground">{r.message}</p>
                     {r.url ? (
                       <p className="t-caption mt-1 truncate font-mono text-muted">URL: {r.url}</p>

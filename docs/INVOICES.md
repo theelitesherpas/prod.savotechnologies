@@ -15,6 +15,18 @@ Available for stored `sent` (shown as **Unpaid**), `paid`, `overdue` and
 The invoice's stored status remains authoritative; downloading never changes
 payment status, creates a new number or automatically marks a record overdue.
 
+## Business references
+
+New invoices get an immutable server-assigned `STPLIN` + five-digit reference,
+independent of CS client and PR project sequences. The creation form reserves and
+shows the full ID before save, with a Copy ID button, so it can be used externally
+in advance. Save claims that exact reservation; abandoned IDs are not recycled. Admin forms cannot choose or
+change issued IDs. Existing invoice numbers, ownership, amounts and dates remain
+unchanged; no historical renumbering is automatic. Client CS references also
+appear in new-client PDFs when assigned. This is identification, not a tax/legal
+compliance claim or proof of payment. See `docs/BUSINESS-IDS.md` for initialization,
+SQL migration, transaction guarantees, reserved ranges and legacy handling.
+
 ## Optional Pay now links
 
 Admin invoice create/edit forms accept **Payment link (optional)**, stored as

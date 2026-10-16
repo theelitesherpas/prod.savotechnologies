@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const { create, mail } = vi.hoisted(() => ({ create: vi.fn(), mail: vi.fn() }));
+vi.mock("@/lib/business-ids", async original => ({ ...await original<typeof import("@/lib/business-ids")>(), businessTransaction: async (work: (tx: unknown) => Promise<unknown>) => work({projectEnquiry:{create}}), generateBusinessId: vi.fn(async () => "STPLLD07321") }));
 vi.mock("@/lib/prisma", () => ({ prisma: { projectEnquiry: { create } } }));
 vi.mock("@/lib/mail", () => ({ sendTemplateNow: mail, teamEmail: () => "test@example.com" }));
 vi.mock("@/lib/captcha", () => ({ enforceCaptcha: vi.fn(async () => ({ ok: true })), recordSubmission: vi.fn() }));

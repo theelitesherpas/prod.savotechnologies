@@ -9,6 +9,7 @@ import { logger } from "@/lib/logger";
 import { enforceCaptcha } from "@/lib/captcha";
 import { sendTemplateNow, teamEmail } from "@/lib/mail";
 import { publish } from "@/lib/livechat/pubsub";
+import { businessTransaction, generateBusinessId, BusinessIdError } from "@/lib/business-ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -76,8 +77,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    await prisma.projectEnquiry.create({
+    await businessTransaction(async tx => {
+      const businessId = await generateBusinessId("LD", tx);
+      return tx.projectEnquiry.create({
       data: {
+        businessId, reference: businessId,
         name: data.name || "Callback request",
         email: null,
         company: null,
@@ -96,6 +100,7 @@ export async function POST(req: Request) {
                 .digest("hex")
                 .slice(0, 32),
       },
+      });
     });
     // Real-time admin alert: callback request
     publish("admin", {
@@ -112,8 +117,8 @@ export async function POST(req: Request) {
     return apiOk();
   } catch (err) {
     logger.error("callback.store_failed", {
-      message: err instanceof Error ? err.message : "unknown",
+      code: err instanceof BusinessIdError ? err.code : "STORAGE_FAILURE",
     });
-    return apiError("Could not store your request. Please try again shortly.", 500);
+    return apiError("Could not store your request. Please try again shortly.", err instanceof BusinessIdError ? 503 : 500);
   }
 }

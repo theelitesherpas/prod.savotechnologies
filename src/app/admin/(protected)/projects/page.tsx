@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Projects" };
 export default async function AdminProjectsPage({ searchParams }: { searchParams: Promise<{ saved?: string; e?: string; client?: string }> }) {
   await requireAdminPage("/admin/projects"); const sp = await searchParams;
   const projects = prisma ? await prisma.clientProject.findMany({ orderBy: { updatedAt: "desc" }, include: { client: { select: { name: true, company: true } } } }) : [];
-  const clients = prisma ? await prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, company: true } }) : [];
+  const clients = prisma ? await prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, company: true, businessId: true } }) : [];
   return <div className="max-w-6xl">
     <PageHeader title="Projects" description="Plan the agreed budget and milestones, manage delivery, and keep each client informed."/>
     {sp.saved ? <Notice>Project saved.</Notice> : null}{sp.e ? <Notice kind="alert">{sp.e}</Notice> : null}

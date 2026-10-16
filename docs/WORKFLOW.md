@@ -101,9 +101,9 @@ git push https://github.com/theelitesherpas/prod.savotechnologies.git main
 
 ## Linear production releases with legacy dev/test merges
 
-Production enforces linear history. Dev/test `main` already contain legacy merge
-`c61e119`, while production `2bab92c` has the identical source tree without that
-merge. Do not push those merge ancestors to protected production or rewrite
+Production enforces linear history. At v7.2.1, dev/test `main` contained legacy
+merge `c61e119`, while production `2bab92c` had the identical tree without that
+merge. At v7.3.0, dev/test `6e5f340` and production `39028a0` again share a tree. Do not push those merge ancestors to protected production or rewrite
 existing branches to remove them.
 
 For this ancestry, prepare `release/vX.Y.Z` as a normal commit descended from the
@@ -123,6 +123,13 @@ Before the VPS update:
 - Take a private `pg_dump` backup and retain the prior commit/build for rollback.
 - Inspect the Prisma schema diff; invoice/project releases add nullable/defaulted
   columns only. Never accept data-loss/reset flags to push this schema.
+- Business IDs require the reviewed `prepare-business-id-schema.mjs` additive SQL
+  before Prisma synchronization, then `setup-business-ids.mjs --apply` for policy/
+  guards. Never accept generic data-loss flags. See `docs/BUSINESS-IDS.md`.
+  For the first upgrade from v7.3.0, fetch/check out the verified promoted release
+  **before invoking its updated deployment script**: the already-running old
+  updater cannot acquire new migration logic mid-execution. Retain the old SHA/
+  build and backup first; use only a clean server checkout.
 - Apply the schema **before** the new code starts, build with the existing live
   environment, then restart only PM2 `savo`. Keep private environment files intact.
 - Smoke-test public routes, unauthenticated portal/admin boundaries and PDF

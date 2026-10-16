@@ -129,6 +129,7 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
   if (invoice.client.company) text(invoice.client.company, 13, ink, bodyWidth, margin, bold);
   text(invoice.client.name, 11);
   text(invoice.client.email, 10, muted);
+  if (invoice.client.businessId) text(`Client ID: ${invoice.client.businessId}`, 9, muted);
   gap(12);
 
   room(64);

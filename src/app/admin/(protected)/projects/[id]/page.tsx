@@ -18,7 +18,7 @@ export default async function EditProjectPage({ params, searchParams }: { params
   await requireAdminPage("/admin/projects/[id]"); const { id } = await params; const { saved, e } = await searchParams; if (!prisma) notFound();
   const [project, clients] = await Promise.all([
     prisma.clientProject.findUnique({ where: { id }, include: { milestones: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] }, updates: { orderBy: { createdAt: "desc" }, take: 30 }, invoices: { orderBy: { issuedAt: "desc" } }, client: { select: { name: true } } } }),
-    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, company: true } }),
+    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, company: true, businessId: true } }),
   ]); if (!project) notFound();
   const iso = (d: Date | null) => d?.toISOString().slice(0, 10) ?? "";
   const finance = projectFinancials(project, project.milestones, project.invoices.filter(i => i.clientId === project.clientId));

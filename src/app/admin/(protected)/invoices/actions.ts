@@ -1,6 +1,6 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
+import { generateBusinessId, claimBusinessId, rejectManualBusinessId, assertUnchangedReference } from "@/lib/business-ids";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -14,7 +14,7 @@ import { invoiceMoney, invoiceDate } from "@/lib/invoice-document";
 import { invoicePaymentLink, normalizePaymentLink } from "@/lib/payment-links";
 import { projectTransaction, reconcileProject, projectEmails, revalidateProjectViews, projectError, type ProjectEmail } from "@/lib/project-service";
 
-const schema = z.object({ clientId: z.string().min(10).max(32), projectId: z.string().max(64), number: z.string().trim().min(3).max(32), currency: z.enum(PROJECT_CURRENCIES), status: z.enum(["draft", "sent", "paid", "overdue", "cancelled"]), notes: z.string().trim().max(500) });
+const schema = z.object({ clientId: z.string().min(10).max(32), projectId: z.string().max(64), number: z.string().trim().max(32), currency: z.enum(PROJECT_CURRENCIES), status: z.enum(["draft", "sent", "paid", "overdue", "cancelled"]), notes: z.string().trim().max(500) });
 function input(form: FormData) {
   const parsed = schema.safeParse(Object.fromEntries(["clientId", "projectId", "number", "currency", "status", "notes"].map(k => [k, String(form.get(k) ?? "")])));
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Check the invoice fields.");
@@ -54,17 +54,21 @@ async function sync(tx: Prisma.TransactionClient, ids: (string | null)[]) {
 
 export async function createInvoiceAction(form: FormData): Promise<void> {
   const user = await operator();
-  if (!form.get("number")) form.set("number", `INV-${new Date().getUTCFullYear()}-${randomBytes(3).toString("hex").toUpperCase()}`);
+  let number = "";
   let events: ProjectEmail[] = [], projectId: string | null = null, paymentHost: string | null = null;
   try {
+    rejectManualBusinessId(form.get("businessId"));
+    rejectManualBusinessId(form.get("number"));
     const d = input(form); projectId = d.projectId; paymentHost = d.paymentLink ? new URL(d.paymentLink).hostname : null;
     events = await projectTransaction(async tx => {
       const client = await owner(tx, d);
-      await tx.invoice.create({ data: d });
-      return [...notification(client, d), ...await sync(tx, [d.projectId])];
+      number = await claimBusinessId(form, "IN", user.id, tx) ?? await generateBusinessId("IN", tx);
+      const invoice = { ...d, number, businessId: number };
+      await tx.invoice.create({ data: invoice });
+      return [...notification(client, invoice), ...await sync(tx, [d.projectId])];
     });
   } catch (error) { failed("/admin/invoices", error); }
-  await audit(user.id, "invoice.create", "Invoice", String(form.get("number")), { hasPaymentLink: !!paymentHost, paymentHost });
+  await audit(user.id, "invoice.create", "Invoice", number, { hasPaymentLink: !!paymentHost, paymentHost });
   revalidateProjectViews(projectId ?? undefined); projectEmails(events); redirect("/admin/invoices?saved=created");
 }
 export async function updateInvoiceAction(form: FormData): Promise<void> {
@@ -76,6 +80,9 @@ export async function updateInvoiceAction(form: FormData): Promise<void> {
       const before = await tx.invoice.findUnique({ where: { id } });
       if (!before) throw new Error("Invoice not found.");
       if (form.get("revision") !== before.updatedAt.toISOString()) throw new Error("This invoice changed while you were editing. Refresh before saving.");
+      rejectManualBusinessId(form.get("businessId"));
+      assertUnchangedReference(d.number, before.number);
+      d.number = before.number;
       if (d.paymentLink && d.paymentLink === before.paymentLink && (d.clientId !== before.clientId || d.amount !== before.amount || d.currency !== before.currency) && form.get("paymentLinkConfirmed") !== "yes") {
         throw new Error("Client, amount or currency changed. Replace or clear the payment link, or verify it matches the updated invoice and tick the confirmation checkbox.");
       }

@@ -150,6 +150,7 @@ describe("client workspace presentation", () => {
     expect(p).not.toHaveProperty("clientId");
     const inv = invoiceRecord({
       ...invoice,
+      businessId: null,
       issuedAt: date,
       dueDate: null,
       paidAt: date,

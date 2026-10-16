@@ -140,7 +140,7 @@ export function applicationAck(name: string, role: string): MailTemplate {
 /* ══════════════ CLIENT PORTAL ══════════════ */
 
 /** Admin created a portal account for a client. */
-export function clientWelcome(name: string, email: string, password: string): MailTemplate {
+export function clientWelcome(name: string, email: string, password: string, clientReference?: string): MailTemplate {
   return {
     subject: "Your Savo client portal is ready",
     html: shell({
@@ -151,6 +151,7 @@ export function clientWelcome(name: string, email: string, password: string): Ma
         lead(`Dear ${fn(name)},<br><br>Your client portal is now active. It provides a continuous, current view of your engagement with Savo Technologies - project progress, milestones, delivery updates from your team, and complete invoice records - in one place.`),
         spec([
           ["Portal", "savotechnologies.com/portal"],
+          ["Client ID", clientReference],
           ["Registered email", email],
           ["Password", password],
         ]),
@@ -160,7 +161,7 @@ export function clientWelcome(name: string, email: string, password: string): Ma
       closing: "Kind regards,",
       reason: "You are receiving this because a Savo project lead created a portal account for you.",
     }),
-    text: `${fn(name).toUpperCase()}, YOUR PORTAL IS READY\n\nPortal: ${site("/portal")}\nEmail: ${email}\nPassword: ${password}\n\nInside: progress & milestones, delivery updates, invoices & receipts.\n\nWelcome aboard,\nThe Savo team`,
+    text: `${fn(name).toUpperCase()}, YOUR PORTAL IS READY\n\nPortal: ${site("/portal")}\n${clientReference ? `Client ID: ${clientReference}\n` : ""}Email: ${email}\nPassword: ${password}\n\nInside: progress & milestones, delivery updates, invoices & receipts.\n\nWelcome aboard,\nThe Savo team`,
   };
 }
 
@@ -320,6 +321,7 @@ export function teamEnquiry(d: {
   budget?: string | null;
   message: string;
   source: string;
+  reference?: string;
 }): MailTemplate {
   return {
     subject: `New ${d.source}: ${d.name} - ${d.projectType}`,
@@ -329,6 +331,7 @@ export function teamEnquiry(d: {
       heading: `${d.name} - ${d.projectType}`,
       bodyHtml: [
         spec([
+          ["Lead ID", d.reference],
           ["Email", d.email ?? "-"],
           ["Phone", d.phone ?? "-"],
           ["Budget", d.budget ?? "-"],
@@ -340,7 +343,7 @@ export function teamEnquiry(d: {
       closing: "Regards,",
       reason: "Internal team notification.",
     }),
-    text: `NEW ENQUIRY (${d.source})\n\n${d.name} · ${d.email ?? "no email"} · ${d.phone ?? "no phone"}\nType: ${d.projectType}\nBudget: ${d.budget ?? "-"}\n\n${d.message}\n\nReply promised within one business day.\n${site("/admin/enquiries")}\n\nOwn the promise,\nThe Savo team`,
+    text: `NEW ENQUIRY (${d.source})\n\n${d.reference ? `Lead ID: ${d.reference}\n` : ""}${d.name} · ${d.email ?? "no email"} · ${d.phone ?? "no phone"}\nType: ${d.projectType}\nBudget: ${d.budget ?? "-"}\n\n${d.message}\n\nReply promised within one business day.\n${site("/admin/enquiries")}\n\nOwn the promise,\nThe Savo team`,
   };
 }
 

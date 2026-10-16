@@ -150,6 +150,10 @@ export function FormGuard({
       const msg = nativeProblem(el);
       if (msg) errs.push({ anchor: anchorOf(el), message: msg });
     }
+    const reservation = form.elements.namedItem("reservedBusinessId");
+    if (form.elements.namedItem("businessReservationRequired") && reservation instanceof HTMLInputElement && !reservation.value) {
+      errs.push({ anchor: form.querySelector<HTMLInputElement>("[data-business-id-input]")?.id ?? "", message: "Wait for your reserved ID, or retry reserving it, before saving." });
+    }
     if (validate)
       errs.push(
         ...validate(form).filter((p) => !errs.some((e) => e.anchor === p.anchor)),

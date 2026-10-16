@@ -9,6 +9,7 @@
  * fully customized email stays on brand. No override → code default.
  */
 
+import { BUSINESS_ID_CONFIG, formatBusinessId } from "@/lib/business-id-config";
 import { minorUnits } from "@/lib/project-finance";
 import { invoicePaymentLink } from "@/lib/payment-links";
 
@@ -253,8 +254,8 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Admin creates a client account",
     recipient: "client",
     dept: "hello",
-    vars: { name: "Sara Khan", email: "sara@acme.co", password: "Savo-Start-2026" },
-    default: (v) => clientWelcome(v.name, v.email, v.password),
+    vars: { name: "Sara Khan", email: "sara@acme.co", password: "Savo-Start-2026", clientReference: "" },
+    default: (v) => clientWelcome(v.name, v.email, v.password, v.clientReference),
   },
   {
     key: "clientPasswordReset",
@@ -273,7 +274,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Admin creates an invoice",
     recipient: "client",
     dept: "hello",
-    vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500", currency: "INR", due: "22 Oct 2026", paymentLink: "" },
+    vars: { name: "Acme Trading", number: formatBusinessId("IN", BUSINESS_ID_CONFIG.IN.initialCurrent + 1), amount: "₹2,500", currency: "INR", due: "22 Oct 2026", paymentLink: "" },
     default: (v) => invoiceIssued(v.name, v.number, invoiceAmount(v), v.currency || "INR", invoiceDueDate(v), v.paymentLink, v.invoiceStatus),
   },
   {
@@ -283,7 +284,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Invoice marked paid",
     recipient: "client",
     dept: "hello",
-    vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500", currency: "INR" },
+    vars: { name: "Acme Trading", number: formatBusinessId("IN", BUSINESS_ID_CONFIG.IN.initialCurrent + 1), amount: "₹2,500", currency: "INR" },
     default: (v) => invoicePaid(v.name, v.number, invoiceAmount(v), v.currency || "INR"),
   },
   {
@@ -293,7 +294,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Invoice status set to overdue",
     recipient: "client",
     dept: "hello",
-    vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500", currency: "INR", days: "7", paymentLink: "" },
+    vars: { name: "Acme Trading", number: formatBusinessId("IN", BUSINESS_ID_CONFIG.IN.initialCurrent + 1), amount: "₹2,500", currency: "INR", days: "7", paymentLink: "" },
     default: (v) => invoiceOverdue(v.name, v.number, invoiceAmount(v), v.currency || "INR", Number(v.days) || 1, v.paymentLink, v.invoiceStatus),
   },
   {
@@ -331,6 +332,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
       budget: "$15k – $40k",
       message: "We need an AI agent that triages inbound support mail and drafts replies.",
       source: "contact-page",
+      reference: "",
     },
     default: (v) =>
       teamEnquiry({
@@ -341,6 +343,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
         budget: v.budget,
         message: v.message,
         source: v.source,
+        reference: v.reference,
       }),
   },
   {

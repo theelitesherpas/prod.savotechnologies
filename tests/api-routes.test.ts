@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 const create = vi.fn();
+vi.mock("@/lib/business-ids", async original => ({ ...await original<typeof import("@/lib/business-ids")>(), businessTransaction: async (work: (tx: unknown) => Promise<unknown>) => work({projectEnquiry:{create}}), generateBusinessId: vi.fn(async () => "STPLLD07321") }));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: { projectEnquiry: { create } },

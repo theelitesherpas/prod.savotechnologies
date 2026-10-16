@@ -28,6 +28,7 @@ const LOGIN_LIMIT = 8; // attempts per IP / per email per 15min
 
 export type ClientSessionUser = {
   id: string;
+  businessId?: string | null;
   email: string;
   name: string;
   company: string;
@@ -118,7 +119,7 @@ export const getClientUser = cache(async (): Promise<ClientSessionUser | null> =
       where: { tokenHash: hashClientToken(token) },
       select: {
         expiresAt: true,
-        client: { select: { id: true, email: true, name: true, company: true, active: true } },
+        client: { select: { id: true, email: true, name: true, company: true, businessId: true, active: true } },
       },
     });
     if (!row || row.expiresAt <= new Date() || !row.client.active) return null;
@@ -127,6 +128,7 @@ export const getClientUser = cache(async (): Promise<ClientSessionUser | null> =
       email: row.client.email,
       name: row.client.name,
       company: row.client.company,
+      businessId: row.client.businessId,
     };
   } catch {
     return null;

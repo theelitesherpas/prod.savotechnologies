@@ -18,7 +18,9 @@ A forged/invalid plan cannot partially save a project or its allocations.
 `/admin/projects/[id]` contains:
 - Financial summary: base budget, additional scope, agreed total, payments,
   balance against the agreed total and unpaid issued invoice balance.
-- Fully editable project details and base allocation plan. Milestone IDs stay
+- Editable project details and base allocation plan. New project IDs are assigned
+  server-side as STPLPR plus five digits, reserved/shown in full before creation
+  with Copy ID; saving retains that exact ID. Issued/legacy references are immutable. Milestone IDs stay
   project-scoped and stable; new client-side rows are refreshed from committed
   server state after save. Removing/repricing a base module requires reallocating
   the fixed budget exactly.
@@ -56,6 +58,10 @@ completion is tracked by `completedByPayment`; payment reversal, increased scope
 or loss of full coverage reopens ONLY payment-completed projects. Deliberate
 manual completions are preserved. Cancelled projects never reactivate from
 payment events. An admin may explicitly override state with the visible controls.
+
+Business numbering uses independent CS/PR/IN sequences, never client-number
+embedding in projects/invoices. Original primary/foreign keys remain unchanged;
+see `docs/BUSINESS-IDS.md` for ranges, locking, migration and exhaustion.
 
 ## Invoice connections
 

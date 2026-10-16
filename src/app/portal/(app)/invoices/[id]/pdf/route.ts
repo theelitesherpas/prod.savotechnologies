@@ -42,7 +42,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const bytes = await renderInvoicePdf({
       ...invoice,
       status: invoice.status as ClientInvoiceStatus,
-      client: { name: client.name, company: client.company, email: client.email },
+      client: { name: client.name, company: client.company, email: client.email, businessId: client.businessId ?? null },
     });
     const disposition = new URL(request.url).searchParams.get("view") === "1" ? "inline" : "attachment";
     return new Response(new Uint8Array(bytes), {

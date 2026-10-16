@@ -7,6 +7,7 @@ import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
 import { ClientPasswordReceipt } from "@/components/admin/client-password-receipt";
 import { hasClientPasswordReceipt } from "@/lib/client-password-receipt";
+import { BusinessIdField } from "@/components/admin/business-id-field";
 import { deleteClientAction } from "./actions";
 
 export const metadata: Metadata = { title: "Clients" };
@@ -61,6 +62,7 @@ export default async function AdminClientsPage({
                   <Link href={`/admin/clients/${c.id}`} className="truncate text-[0.9375rem] font-semibold text-foreground hover:text-accent">
                     {c.name}
                   </Link>
+                  {c.businessId ? <span className="tnum text-xs text-muted">{c.businessId}</span> : null}
                   {!c.active ? <Chip tone="muted">disabled</Chip> : null}
                 </div>
                 <p className="t-caption mt-1 text-muted">
@@ -95,18 +97,20 @@ export default async function AdminClientsPage({
 
       {/* Create */}
       <form action={"../clients/create"} className="hidden" />
-      <CreateClientCard />
+      <CreateClientCard resetKey={clients.length} />
     </div>
   );
 }
 
 import { createClientAction } from "./actions";
 
-function CreateClientCard() {
+function CreateClientCard({ resetKey }: { resetKey: number }) {
   const input = "adm-input w-full";
   return (
     <FormGuard action={createClientAction} className="adm-card space-y-5 p-5">
       <p className="adm-label">New client account</p>
+      <BusinessIdField type="CS" label="Client ID" id="client-reference" resetKey={resetKey}/>
+      <p className="text-xs leading-relaxed text-muted">Existing accounts keep their issued references.</p>
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label className="adm-label mb-1.5 block" htmlFor="cl-name">Name *</label>

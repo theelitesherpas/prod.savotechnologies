@@ -11,6 +11,7 @@ import { careerApplicationSchema, careerApplicationErrors } from "@/schemas/care
 import { enforceCaptcha } from "@/lib/captcha";
 import { sendTemplateNow, teamEmail } from "@/lib/mail";
 import { publish } from "@/lib/livechat/pubsub";
+import { businessTransaction, generateBusinessId, BusinessIdError } from "@/lib/business-ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -87,7 +88,8 @@ export async function POST(req: Request) {
     return apiOk();
   }
 
-  if (CAREERS_TYPES.some(type => type === data.projectType) || source === "careers" || source.startsWith("careers:") || (raw.details as { form?: unknown } | null)?.form === "careers") {
+  const isCareer = CAREERS_TYPES.some(type => type === data.projectType) || source === "careers" || source.startsWith("careers:") || (raw.details as { form?: unknown } | null)?.form === "careers";
+  if (isCareer) {
     const application = careerApplicationSchema.safeParse(raw.details);
     if (!application.success) {
       return Response.json({ ok: false, error: "Please check your skills and availability.", careerFieldErrors: careerApplicationErrors(application.error) }, { status: 400 });
@@ -100,8 +102,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    await prisma.projectEnquiry.create({
+    const enquiry = await businessTransaction(async tx => {
+      const businessId = isCareer ? null : await generateBusinessId("LD", tx);
+      return tx.projectEnquiry.create({
       data: {
+        businessId, reference: businessId,
         name: data.name,
         email: data.email,
         company: data.company ?? null,
@@ -121,6 +126,7 @@ export async function POST(req: Request) {
                 .digest("hex")
                 .slice(0, 32),
       },
+      });
     });
     logger.info("enquiry.stored", { source, type: data.projectType });
 
@@ -167,14 +173,15 @@ export async function POST(req: Request) {
         budget: data.budget,
         message: data.message,
         source,
+        reference: enquiry.businessId ?? "",
       });
     }
 
     return apiOk();
   } catch (err) {
     logger.error("enquiry.store_failed", {
-      message: err instanceof Error ? err.message : "unknown",
+      code: err instanceof BusinessIdError ? err.code : "STORAGE_FAILURE",
     });
-    return apiError("Could not store your enquiry. Please try again shortly.", 500);
+    return apiError("Could not store your enquiry. Please try again shortly.", err instanceof BusinessIdError ? 503 : 500);
   }
 }

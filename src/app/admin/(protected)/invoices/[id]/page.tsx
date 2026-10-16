@@ -25,7 +25,7 @@ export default async function EditInvoicePage({
 
   const [invoice, clients, projects] = await Promise.all([
     prisma.invoice.findUnique({ where: { id } }),
-    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, businessId: true } }),
     prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true, clientId: true, currency: true, budget: true } }),
   ]);
   if (!invoice) notFound();
@@ -47,8 +47,9 @@ export default async function EditInvoicePage({
         <div className="grid gap-5 sm:grid-cols-2">
           <InvoiceLinkFields clients={clients} projects={projects} initialClient={invoice.clientId} initialProject={invoice.projectId ?? ""} initialCurrency={invoice.currency}/>
           <div>
-            <label className="adm-label mb-1.5 block">Number</label>
-            <input name="number" required maxLength={32} defaultValue={invoice.number} className={input} />
+            <label className="adm-label mb-1.5 block" htmlFor="invoice-reference">Invoice ID / issued reference</label>
+            <input id="invoice-reference" name="number" readOnly value={invoice.number} className={input} aria-describedby="invoice-reference-help" />
+            <p id="invoice-reference-help" className="mt-2 text-xs leading-relaxed text-muted">Immutable. Previously issued invoice numbers are preserved.</p>
           </div>
           <div>
             <label className="adm-label mb-1.5 block">Amount *</label>

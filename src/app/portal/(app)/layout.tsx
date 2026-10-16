@@ -76,6 +76,7 @@ export default async function PortalLayout({
             </span>
             <div>
               <p className={styles.identityName}>{client.name}</p>
+              {client.businessId ? <p className={styles.identityCompany}>Client ID: {client.businessId}</p> : null}
               {client.company ? (
                 <p className={styles.identityCompany}>{client.company}</p>
               ) : null}

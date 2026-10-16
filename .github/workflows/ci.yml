@@ -10,6 +10,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  business-ids:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: savo_ids_ci
+        ports: [5432:5432]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/savo_ids_ci?connection_limit=5&pool_timeout=20"
+      MAIL_DELIVERY_MODE: "off"
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Real PostgreSQL numbering, rollback, exhaustion and concurrency
+        run: npm run test:business-ids
+
   verify:
     runs-on: ubuntu-latest
 
