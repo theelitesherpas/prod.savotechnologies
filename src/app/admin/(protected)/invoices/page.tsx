@@ -6,6 +6,8 @@ import { PageHeader, Notice, EmptyState } from "@/components/admin/ui";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { ConfirmAction } from "@/components/admin/confirm-dialog";
 import { FormGuard } from "@/components/admin/form-guard";
+import { InvoiceLinkFields } from "@/components/admin/invoice-link-fields";
+import { InvoicePaymentField } from "@/components/admin/invoice-payment-field";
 import { InvoiceStatusChip, money } from "@/components/portal/ui";
 import { createInvoiceAction, markInvoicePaidAction, deleteInvoiceAction } from "./actions";
 
@@ -14,15 +16,15 @@ export const metadata: Metadata = { title: "Payments" };
 export default async function AdminInvoicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; deleted?: string; e?: string }>;
+  searchParams: Promise<{ saved?: string; deleted?: string; e?: string; client?: string }>;
 }) {
   await requireAdminPage("/admin/invoices");
   const sp = await searchParams;
   const [invoices, clients, projects] = prisma
     ? await Promise.all([
         prisma.invoice.findMany({ orderBy: { issuedAt: "desc" }, include: { client: { select: { name: true } }, project: { select: { code: true } } } }).catch(() => []),
-        prisma.clientUser.findMany({ orderBy: { name: "asc" } }).catch(() => []),
-        prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true, clientId: true } }).catch(() => []),
+        prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }).catch(() => []),
+        prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true, clientId: true, currency: true, budget: true } }).catch(() => []),
       ])
     : [[], [], []];
 
@@ -58,7 +60,7 @@ export default async function AdminInvoicesPage({
               </div>
               <p className="t-sm font-semibold tnum">{money(inv.amount, inv.currency)}</p>
               <div className="flex items-center gap-2">
-                {inv.status !== "paid" && inv.status !== "cancelled" ? (
+                {["sent", "overdue"].includes(inv.status) ? (
                   <ConfirmAction
                     action={markInvoicePaidAction}
                     id={inv.id}
@@ -88,40 +90,16 @@ export default async function AdminInvoicesPage({
       <FormGuard action={createInvoiceAction} className="adm-card space-y-5 p-5">
         <p className="adm-label">New invoice</p>
         <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label className="adm-label mb-1.5 block">Client *</label>
-            <select name="clientId" required className="adm-select w-full">
-              {clients.length === 0 ? <option value="">- create a client first -</option> : null}
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="adm-label mb-1.5 block">Project</label>
-            <select name="projectId" className="adm-select w-full">
-              <option value="">- none -</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.code} · {p.title}</option>
-              ))}
-            </select>
-          </div>
+          <InvoiceLinkFields clients={clients} projects={projects} initialClient={sp.client}/>
           <div>
             <label className="adm-label mb-1.5 block">Number</label>
-            <input name="number" maxLength={32} className={input} placeholder="auto (INV-2026-001)" />
+            <input name="number" maxLength={32} className={input} placeholder="Generated automatically if blank" />
           </div>
           <div>
             <label className="adm-label mb-1.5 block">Amount *</label>
             <input name="amountMajor" type="number" step="0.01" min={0} required className={input} placeholder="2500.00" />
           </div>
-          <div>
-            <label className="adm-label mb-1.5 block">Currency</label>
-            <select name="currency" defaultValue="INR" className="adm-select w-full">
-              {["INR", "USD", "CHF", "EUR", "GBP", "AED"].map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
+
           <div>
             <label className="adm-label mb-1.5 block">Status</label>
             <select name="status" defaultValue="sent" className="adm-select w-full">
@@ -136,8 +114,9 @@ export default async function AdminInvoicesPage({
           </div>
           <div>
             <label className="adm-label mb-1.5 block">Due</label>
-            <input name="dueDate" type="date" min={new Date().toISOString().slice(0, 10)} className={input} />
+            <input name="dueDate" type="date" className={input} />
           </div>
+          <InvoicePaymentField/>
           <div className="sm:col-span-2">
             <label className="adm-label mb-1.5 block">Notes</label>
             <input name="notes" maxLength={500} className={input} placeholder="Phase 2 milestone payment (optional)" />

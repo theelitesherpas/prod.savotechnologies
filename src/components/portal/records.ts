@@ -1,4 +1,5 @@
 import type { ClientProject, Invoice } from "@prisma/client";
+import { invoicePaymentLink } from "@/lib/payment-links";
 import type { ProjectRecord, InvoiceRecord } from "./workspace-ui";
 
 /** Only the client-visible record fields cross the interactive boundary. */
@@ -27,6 +28,7 @@ export function invoiceRecord(
     dueDate: invoice.dueDate?.toISOString() ?? null,
     paidAt: invoice.paidAt?.toISOString() ?? null,
     notes: invoice.notes,
+    paymentLink: invoicePaymentLink(invoice),
     project: invoice.project ?? null,
   };
 }

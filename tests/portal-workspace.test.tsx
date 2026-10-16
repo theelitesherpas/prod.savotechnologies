@@ -90,11 +90,20 @@ describe("client workspace presentation", () => {
     expect(html).toContain('data-label="Amount"');
     expect(html).not.toContain("Not scheduled");
   });
-  it("does not invent invoice/download/payment endpoints", () => {
-    const html = renderToStaticMarkup(<InvoiceTable invoices={[invoice]} />);
-    expect(html).not.toContain("href=");
+  it.each(["paid", "sent", "overdue", "cancelled"])("offers authorized PDF download and printing for %s invoices without inventing payments", (status) => {
+    const html = renderToStaticMarkup(<InvoiceTable invoices={[{ ...invoice, status }]} />);
+    expect(html).toContain('href="/portal/invoices/invoice/pdf"');
+    expect(html).toContain('href="/portal/invoices/invoice/pdf?view=1"');
+    expect(html).toContain('aria-label="Download PDF for invoice TEST-001"');
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain('rel="noopener noreferrer"');
     expect(html).not.toContain("Pay now");
-    expect(html).not.toContain("Download");
+  });
+  it("does not offer documents for private drafts or unsupported statuses", () => {
+    for (const status of ["draft", "unknown"]) {
+      const html = renderToStaticMarkup(<InvoiceTable invoices={[{ ...invoice, status }]} />);
+      expect(html).not.toContain("/pdf");
+    }
   });
   it("keeps missing dates and empty states explicit and recoverable", () => {
     const project = {

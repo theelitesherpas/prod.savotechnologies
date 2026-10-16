@@ -1,202 +1,49 @@
 import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { BackLink, PageHeader, Notice } from "@/components/admin/ui";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
+import { ProjectPlanForm } from "@/components/admin/project-plan-form";
 import { MilestoneChip } from "@/components/portal/ui";
-import {
-  updateProjectAction,
-  addMilestoneAction,
-  cycleMilestoneAction,
-  deleteMilestoneAction,
-  addUpdateAction,
-  deleteUpdateAction,
-  deleteProjectAction,
-} from "../actions";
+import { majorUnits, projectFinancials } from "@/lib/project-finance";
+import { invoiceMoney } from "@/lib/invoice-document";
+import s from "@/components/admin/project-plan.module.css";
+import { updateProjectAction, cycleMilestoneAction, saveAdditionalWorkAction, changeProjectStatusAction, addUpdateAction, deleteUpdateAction } from "../actions";
 
-export const metadata: Metadata = { title: "Edit project" };
-
-export default async function EditProjectPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string; e?: string }>;
-}) {
-  await requireAdminPage("/admin/projects/[id]");
-  const { id } = await params;
-  const { saved, e } = await searchParams;
-  if (!prisma) notFound();
-
+export const metadata: Metadata = { title: "Manage project" };
+export default async function EditProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string; e?: string }> }) {
+  await requireAdminPage("/admin/projects/[id]"); const { id } = await params; const { saved, e } = await searchParams; if (!prisma) notFound();
   const [project, clients] = await Promise.all([
-    prisma.clientProject.findUnique({
-      where: { id },
-      include: {
-        milestones: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] },
-        updates: { orderBy: { createdAt: "desc" } },
-        invoices: { orderBy: { issuedAt: "desc" } },
-        client: { select: { id: true, name: true } },
-      },
-    }),
-    prisma.clientUser.findMany({ orderBy: { name: "asc" } }),
-  ]);
-  if (!project) notFound();
-
-  const input = "adm-input w-full";
-  const iso = (d: Date | null) => (d ? new Date(d).toISOString().slice(0, 10) : "");
-
-  return (
-    <div className="max-w-4xl">
-      <BackLink href="/admin/projects" label="All projects" />
-      <PageHeader title={project.title} description={`${project.code} · ${project.client.name} · ${project.progress}%`} />
-      {saved === "1" ? <Notice>Project saved.</Notice> : null}
-      {saved === "milestone" ? <Notice>Milestones updated.</Notice> : null}
-      {saved === "update" ? <Notice>Delivery log updated.</Notice> : null}
-      {e ? <Notice kind="alert">{e}</Notice> : null}
-
-      {/* Core fields */}
-      <FormGuard action={updateProjectAction} className="adm-card mb-6 space-y-5 p-5">
-        <input type="hidden" name="id" value={project.id} />
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className="adm-label mb-1.5 block">Client</label>
-            <select name="clientId" required className="adm-select w-full" defaultValue={project.clientId}>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="adm-label mb-1.5 block">Title *</label>
-            <input name="title" required maxLength={140} defaultValue={project.title} className={input} />
-          </div>
-          <div>
-            <label className="adm-label mb-1.5 block">Code</label>
-            <input name="code" required maxLength={24} defaultValue={project.code} className={input} />
-          </div>
-          <div>
-            <label className="adm-label mb-1.5 block">Status</label>
-            <select name="status" defaultValue={project.status} className="adm-select w-full">
-              {["planning", "in_progress", "review", "delivered", "paused", "cancelled"].map((s) => (
-                <option key={s} value={s}>{s.replace("_", " ")}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="adm-label mb-1.5 block">Progress %</label>
-            <input name="progress" type="number" min={0} max={100} defaultValue={project.progress} className={input} />
-          </div>
-          <div>
-            <label className="adm-label mb-1.5 block">Start date</label>
-            <input name="startDate" type="date" defaultValue={iso(project.startDate)} className={input} />
-          </div>
-          <div>
-            <label className="adm-label mb-1.5 block">Due date</label>
-            <input name="dueDate" type="date" defaultValue={iso(project.dueDate)} className={input} />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="adm-label mb-1.5 block">Summary</label>
-            <textarea name="summary" rows={2} maxLength={600} defaultValue={project.summary} className={input} />
-          </div>
-        </div>
-        <SubmitButton label="Save project" />
-      </FormGuard>
-
-      {/* Milestones */}
-      <div className="adm-card mb-6 p-5">
-        <p className="adm-label mb-4">Milestones</p>
-        {project.milestones.length === 0 ? (
-          <p className="t-caption mb-4 text-muted">None yet.</p>
-        ) : (
-          <ul className="mb-5 divide-y divide-border">
-            {project.milestones.map((m) => (
-              <li key={m.id} className="flex items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="t-sm font-medium">{m.title}</p>
-                  <p className="t-caption mt-0.5 text-muted">{m.dueDate ? `due ${new Date(m.dueDate).toLocaleDateString("en-GB")}` : "no date"}</p>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <MilestoneChip status={m.status} />
-                  <form action={cycleMilestoneAction}>
-                    <input type="hidden" name="id" value={m.id} />
-                    <input type="hidden" name="projectId" value={project.id} />
-                    <button type="submit" className="t-caption rounded-lg border border-border px-2.5 py-1.5 text-muted transition-colors hover:border-foreground/40 hover:text-foreground" title="Cycle: upcoming → current → done">
-                      ⇄
-                    </button>
-                  </form>
-                  <form action={deleteMilestoneAction}>
-                    <input type="hidden" name="id" value={m.id} />
-                    <input type="hidden" name="projectId" value={project.id} />
-                    <button type="submit" className="px-2 text-muted hover:text-error" aria-label={`Delete ${m.title}`}>×</button>
-                  </form>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        <FormGuard action={addMilestoneAction} className="grid gap-3 sm:grid-cols-[1fr_10rem_6rem_auto] sm:items-end">
-          <input type="hidden" name="projectId" value={project.id} />
-          <div>
-            <label className="adm-label mb-1 block">New milestone</label>
-            <input name="title" required maxLength={140} className={input} placeholder="Design system sign-off" />
-          </div>
-          <div>
-            <label className="adm-label mb-1 block">Due</label>
-            <input name="dueDate" type="date" min={new Date().toISOString().slice(0, 10)} className={input} />
-          </div>
-          <div>
-            <label className="adm-label mb-1 block">Order</label>
-            <input name="order" type="number" min={0} max={999} defaultValue={project.milestones.length + 1} className={input} />
-          </div>
-          <SubmitButton label="Add milestone" />
-        </FormGuard>
-      </div>
-
-      {/* Delivery log */}
-      <div className="adm-card mb-6 p-5">
-        <p className="adm-label mb-4">Delivery log</p>
-        {project.updates.length === 0 ? (
-          <p className="t-caption mb-4 text-muted">No entries yet.</p>
-        ) : (
-          <ul className="mb-5 divide-y divide-border">
-            {project.updates.map((u) => (
-              <li key={u.id} className="flex items-start justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="t-sm font-semibold">{u.title}</p>
-                  {u.body ? <p className="t-caption mt-1 leading-relaxed text-muted">{u.body}</p> : null}
-                  <p className="t-caption mt-1 text-muted/60">{new Date(u.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p>
-                </div>
-                <form action={deleteUpdateAction}>
-                  <input type="hidden" name="id" value={u.id} />
-                  <input type="hidden" name="projectId" value={project.id} />
-                  <button type="submit" className="px-2 text-muted hover:text-error" aria-label={`Delete ${u.title}`}>×</button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        )}
-        <FormGuard action={addUpdateAction} className="space-y-3">
-          <input type="hidden" name="projectId" value={project.id} />
-          <div>
-            <label className="adm-label mb-1 block">Post an update</label>
-            <input name="title" required maxLength={140} className={input} placeholder="Weekly demo shipped - checkout v2 live on staging" />
-          </div>
-          <textarea name="body" rows={2} maxLength={2000} className={input} placeholder="Details the client sees on their dashboard (optional)" />
-          <SubmitButton label="Post update" />
-        </FormGuard>
-      </div>
-
-      {/* Danger zone */}
-      <form action={deleteProjectAction} className="adm-card flex flex-wrap items-center justify-between gap-4 border-[rgb(179_38_30/0.25)] p-5">
-        <div>
-          <p className="adm-label text-[rgb(179_38_30)]">Delete project</p>
-          <p className="t-caption mt-1 text-muted">Removes milestones, log entries and unlinks invoices. Cannot be undone.</p>
-        </div>
-        <input type="hidden" name="id" value={project.id} />
-        <ConfirmButton label="Delete project" confirmLabel="Really delete?" />
-      </form>
-    </div>
-  );
+    prisma.clientProject.findUnique({ where: { id }, include: { milestones: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] }, updates: { orderBy: { createdAt: "desc" }, take: 30 }, invoices: { orderBy: { issuedAt: "desc" } }, client: { select: { name: true } } } }),
+    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, company: true } }),
+  ]); if (!project) notFound();
+  const iso = (d: Date | null) => d?.toISOString().slice(0, 10) ?? "";
+  const finance = projectFinancials(project, project.milestones, project.invoices.filter(i => i.clientId === project.clientId));
+  const money = (amount: number | null) => amount == null ? "Not set" : invoiceMoney(amount, project.currency);
+  const revision = project.updatedAt.toISOString();
+  const extras = project.milestones.filter(m => m.scope === "additional");
+  return <div className="max-w-6xl">
+    <BackLink href="/admin/projects" label="All projects"/>
+    <PageHeader title={project.title} description={`${project.code} · ${project.client.name} · ${project.progress}% delivery progress`}/>
+    {saved ? <Notice>Changes saved. The client portal has been updated.</Notice> : null}{e ? <Notice kind="alert">{e}</Notice> : null}
+    {project.budget == null ? <Notice>This legacy project needs a base budget and milestone cost allocation before additional paid work or automatic payment completion can be used.</Notice> : null}
+    <section className={`adm-card ${s.panel}`} aria-label="Project financial summary"><dl className={s.summary}>{[["Base budget", project.budget], ["Additional work", finance.additional], ["Agreed total", finance.total], ["Paid", finance.paid], ["Balance against total", finance.balance], ["Unpaid issued invoices", finance.invoicedDue]].map(([label, value]) => <div key={String(label)}><dt>{label}</dt><dd>{money(value as number | null)}</dd></div>)}</dl><p className={s.hint}>All amounts are {project.currency}. Payment completion includes base scope plus additional work, not just the first issued invoice.</p>
+      <div className={s.controls}>{project.status !== "delivered" ? <form action={changeProjectStatusAction}><input type="hidden" name="id" value={id}/><input type="hidden" name="revision" value={revision}/><input type="hidden" name="status" value="delivered"/><ConfirmButton label="Complete project" confirmLabel="Confirm completion" tone="quiet"/></form> : null}{project.status !== "cancelled" ? <form action={changeProjectStatusAction}><input type="hidden" name="id" value={id}/><input type="hidden" name="revision" value={revision}/><input type="hidden" name="status" value="cancelled"/><ConfirmButton label="Cancel project" confirmLabel="Confirm cancellation"/></form> : <form action={changeProjectStatusAction}><input type="hidden" name="id" value={id}/><input type="hidden" name="revision" value={revision}/><input type="hidden" name="status" value="in_progress"/><SubmitButton label="Reopen project" compact/></form>}</div>
+      <p className={s.hint}>Manual completion/cancellation does not change invoices or mark unfinished work done. Existing financial records are retained.</p>
+    </section>
+    <ProjectPlanForm key={revision} action={updateProjectAction} clients={clients} project={{ id: project.id, clientId: project.clientId, title: project.title, code: project.code, summary: project.summary, budget: project.budget, currency: project.currency, status: project.status, startDate: iso(project.startDate), dueDate: iso(project.dueDate), revision }} locked={project.invoices.length > 0} currencyLocked={project.budget != null && project.invoices.length > 0} milestones={project.milestones.filter(m => m.scope === "base").map(m => ({ ...m, dueDate: iso(m.dueDate) }))}/>
+    <section className={`adm-card ${s.panel}`} aria-labelledby="delivery-statuses"><h2 id="delivery-statuses">Delivery status</h2><p className={s.hint}>Mark a module done when delivered. Progress recalculates automatically; it cannot be manually inflated.</p><ul className={s.workList}>{project.milestones.map(m => <li className={s.work} key={m.id}><div className={s.workCopy}><strong>{m.title}</strong><p>{m.scope === "additional" ? "Additional work" : "Base milestone"} · {money(m.amount)}{m.dueDate ? ` · Due ${iso(m.dueDate)}` : ""}</p></div><MilestoneChip status={m.status}/><form action={cycleMilestoneAction} className={s.statusForm}><input type="hidden" name="projectId" value={id}/><input type="hidden" name="id" value={m.id}/><label className="sr-only" htmlFor={`delivery-${m.id}`}>Status for {m.title}</label><select id={`delivery-${m.id}`} name="status" defaultValue={m.status} className="adm-select"><option value="pending">Upcoming</option><option value="in_progress">In progress</option><option value="done">Done</option></select><SubmitButton compact label="Update status"/></form></li>)}</ul></section>
+    <section className={`adm-card ${s.panel}`} aria-labelledby="additional-scope"><h2 id="additional-scope">Additional work</h2><p className={s.hint}>Keep scope changes separate from the fixed base budget. Each item adds to the agreed total and is visible in the client portal. Update the estimated project delivery date above if the scope changes the schedule.</p>
+      {extras.map(m => <details key={m.id} className={s.milestone}><summary className="cursor-pointer py-3 font-medium">{m.title} · {money(m.amount)} — edit additional work</summary><FormGuard action={saveAdditionalWorkAction} className={s.extraForm}><input type="hidden" name="projectId" value={id}/><input type="hidden" name="id" value={m.id}/><input type="hidden" name="revision" value={revision}/><AdditionalFields prefix={m.id} work={{ ...m, dueDate: iso(m.dueDate) }}/><SubmitButton label="Save additional work"/></FormGuard></details>)}
+      <FormGuard action={saveAdditionalWorkAction} className={s.extraForm}><input type="hidden" name="projectId" value={id}/><input type="hidden" name="revision" value={revision}/><h3 className="font-semibold">Add scope item</h3><AdditionalFields prefix="new"/><SubmitButton label="Add additional work"/></FormGuard>
+    </section>
+    <section className={`adm-card ${s.panel}`} aria-labelledby="project-billing"><h2 id="project-billing">Linked invoices</h2><p className={s.hint}>Invoices must belong to this client and use {project.currency}. Marking the entire agreed total paid automatically completes a non-cancelled project.</p><Link className="inline-flex min-h-11 items-center text-accent underline" href={`/admin/invoices?client=${project.clientId}`}>Manage invoices</Link><ul className="divide-y divide-border">{project.invoices.map(inv => <li className="flex flex-wrap justify-between gap-3 py-4" key={inv.id}><Link className="text-accent underline" href={`/admin/invoices/${inv.id}`}>{inv.number}</Link><span>{invoiceMoney(inv.amount, inv.currency)} · {inv.status}</span></li>)}</ul></section>
+    <section className={`adm-card ${s.panel}`} aria-labelledby="project-log"><h2 id="project-log">Delivery log</h2><ul className="divide-y divide-border">{project.updates.map(u => <li key={u.id} className="flex items-start justify-between gap-4 py-4"><div><p className="font-semibold">{u.title}</p><p className="mt-2 whitespace-pre-wrap text-sm text-muted">{u.body}</p><p className="mt-2 text-xs text-muted">{iso(u.createdAt)}</p></div><form action={deleteUpdateAction}><input type="hidden" name="id" value={u.id}/><input type="hidden" name="projectId" value={id}/><ConfirmButton label="Remove update" confirmLabel="Confirm"/></form></li>)}</ul><FormGuard action={addUpdateAction} className={s.extraForm}><input type="hidden" name="projectId" value={id}/><div><label htmlFor="log-title">Update title</label><input id="log-title" name="title" required minLength={2} maxLength={140} className="adm-input w-full"/></div><div><label htmlFor="log-body">Update details</label><textarea id="log-body" name="body" maxLength={2000} rows={3} className="adm-input w-full"/></div><SubmitButton label="Post update and notify client"/></FormGuard></section>
+  </div>;
+}
+function AdditionalFields({ prefix, work }: { prefix: string; work?: { title: string; description: string; amount: number | null; status: string; dueDate: string } }) {
+  return <><div className={s.grid}><div><label htmlFor={`extra-title-${prefix}`}>Work title</label><input id={`extra-title-${prefix}`} name="title" required minLength={2} maxLength={140} defaultValue={work?.title} className="adm-input w-full"/></div><div><label htmlFor={`extra-cost-${prefix}`}>Additional cost (project currency)</label><input id={`extra-cost-${prefix}`} name="amountMajor" type="number" min="0.01" max="21474836.47" step="0.01" required defaultValue={majorUnits(work?.amount)} className="adm-input w-full"/></div><div><label htmlFor={`extra-date-${prefix}`}>Estimated item delivery (optional)</label><input id={`extra-date-${prefix}`} name="dueDate" type="date" defaultValue={work?.dueDate} className="adm-input w-full"/></div><div><label htmlFor={`extra-status-${prefix}`}>Delivery status</label><select id={`extra-status-${prefix}`} name="status" defaultValue={work?.status || "pending"} className="adm-select w-full"><option value="pending">Upcoming</option><option value="in_progress">In progress</option><option value="done">Done</option></select></div><div className={s.full}><label htmlFor={`extra-description-${prefix}`}>Scope description</label><textarea id={`extra-description-${prefix}`} name="description" rows={3} maxLength={2000} defaultValue={work?.description} className="adm-input w-full"/></div></div></>;
 }

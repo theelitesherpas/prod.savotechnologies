@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { money } from "./ui";
+import { InvoicePayButton } from "./invoice-pay-button";
+import { invoicePaymentLink } from "@/lib/payment-links";
+import { CLIENT_INVOICE_STATUSES, type ClientInvoiceStatus } from "@/lib/invoice-document";
 import styles from "./portal.module.css";
 
 export type PortalIconName =
@@ -124,11 +127,11 @@ const states: Record<string, { label: string; tone: string }> = {
   planning: { label: "Planning", tone: styles.neutral },
   in_progress: { label: "In progress", tone: styles.working },
   review: { label: "In review", tone: styles.attention },
-  delivered: { label: "Delivered", tone: styles.success },
+  delivered: { label: "Completed", tone: styles.success },
   paused: { label: "Paused", tone: styles.neutral },
   cancelled: { label: "Cancelled", tone: styles.neutral },
   draft: { label: "Draft", tone: styles.neutral },
-  sent: { label: "Due", tone: styles.attention },
+  sent: { label: "Unpaid", tone: styles.attention },
   overdue: { label: "Overdue", tone: styles.working },
   paid: { label: "Paid", tone: styles.success },
   done: { label: "Done", tone: styles.success },
@@ -249,6 +252,7 @@ export type InvoiceRecord = {
   dueDate: string | null;
   paidAt: string | null;
   notes: string | null;
+  paymentLink?: string | null;
   project: { code: string; title: string } | null;
 };
 export function invoiceTotals(
@@ -280,13 +284,14 @@ export function InvoiceTable({
   invoices: InvoiceRecord[];
   caption?: string;
 }) {
+  const actionLabel = invoices.some(invoice => invoicePaymentLink(invoice)) ? "Actions" : "Documents";
   return (
     <div className={styles.tableWrap}>
       <table className={styles.invoiceTable} role="table">
         <caption>{caption}</caption>
         <thead role="rowgroup">
           <tr role="row">
-            {["Invoice", "Project", "Dates", "Amount", "Status"].map((h) => (
+            {["Invoice", "Project", "Dates", "Amount", "Status", actionLabel].map((h) => (
               <th scope="col" role="columnheader" key={h}>
                 {h}
               </th>
@@ -333,6 +338,19 @@ export function InvoiceTable({
               </td>
               <td role="cell" data-label="Status">
                 <PortalStatus status={invoice.status} />
+              </td>
+              <td role="cell" data-label={actionLabel}>
+                {CLIENT_INVOICE_STATUSES.includes(invoice.status as ClientInvoiceStatus) ? (
+                  <div className={styles.invoiceActions}>
+                    <InvoicePayButton invoice={invoice}/>
+                    <a href={`/portal/invoices/${invoice.id}/pdf`} download aria-label={`Download PDF for invoice ${invoice.number}`}>
+                      Download PDF
+                    </a>
+                    <a href={`/portal/invoices/${invoice.id}/pdf?view=1`} target="_blank" rel="noopener noreferrer" aria-label={`View or print invoice ${invoice.number} (opens in a new tab)`}>
+                      View / print
+                    </a>
+                  </div>
+                ) : <span>Not available</span>}
               </td>
             </tr>
           ))}

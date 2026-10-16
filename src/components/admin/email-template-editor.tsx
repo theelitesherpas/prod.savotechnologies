@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { TEMPLATE_REGISTRY, RECIPIENT_LABEL, CATEGORY_ORDER, CATEGORY_LABEL, fillText, renderBodyHtml, type TemplateEntry, type TemplateCategory } from "@/lib/mail/registry";
+import { TEMPLATE_REGISTRY, RECIPIENT_LABEL, CATEGORY_ORDER, CATEGORY_LABEL, fillText, renderBodyHtml, invoiceTemplatePayment, templateSamplePlaceholders, type TemplateEntry, type TemplateCategory } from "@/lib/mail/registry";
 import { shell } from "@/lib/mail/templates";
 import { saveTemplateAction, resetTemplateAction } from "@/app/admin/(protected)/email-templates/actions";
 import { FormGuard } from "@/components/admin/form-guard";
@@ -20,21 +20,12 @@ type Override = { key: string; subject: string; body: string };
 /** Editable starter: the default email's text with sample values swapped
  *  for {{placeholders}}, so edits begin from something close to reality. */
 function starterFor(entry: TemplateEntry): string {
-  const rendered = entry.default(entry.vars).text;
-  let out = rendered;
-  for (const [name, sample] of Object.entries(entry.vars)) {
-    out = out.split(sample).join(`{{${name}}}`);
-  }
-  return out.trim();
+  return templateSamplePlaceholders(entry.default(entry.vars).text, entry.vars).trim();
 }
 
 /** Default subject with sample values swapped for placeholders. */
 function fillSubject(entry: TemplateEntry): string {
-  let out = entry.default(entry.vars).subject;
-  for (const [name, sample] of Object.entries(entry.vars)) {
-    out = out.split(sample).join(`{{${name}}}`);
-  }
-  return out;
+  return templateSamplePlaceholders(entry.default(entry.vars).subject, entry.vars);
 }
 
 export function EmailTemplateEditor({ overrides }: { overrides: Override[] }) {
@@ -60,7 +51,7 @@ export function EmailTemplateEditor({ overrides }: { overrides: Override[] }) {
   // Live preview of the override (sample values), wrapped in the shell.
   const overrideHtml = useMemo(() => {
     const html = renderBodyHtml(body, entry.vars);
-    return shell({ preheader: fillText(subject, entry.vars).slice(0, 120), heading: fillText(subject, entry.vars), bodyHtml: html, dept: entry.dept });
+    return shell({ preheader: fillText(subject, entry.vars).slice(0, 120), heading: fillText(subject, entry.vars), bodyHtml: html, dept: entry.dept, cta: invoiceTemplatePayment(entry.key, entry.vars) });
   }, [body, subject, entry]);
 
   return (

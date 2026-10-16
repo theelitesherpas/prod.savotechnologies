@@ -1,208 +1,168 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
-import { sendTemplateNow } from "@/lib/mail";
+import { parseProjectForm, parseAdditionalForm } from "@/lib/project-input";
+import { PROJECT_STATUSES, PROJECT_STATUS_LABELS } from "@/lib/project-finance";
+import { invoiceMoney } from "@/lib/invoice-document";
+import { projectTransaction, reconcileProject, projectEmails, revalidateProjectViews, projectError, type ProjectEmail } from "@/lib/project-service";
 
-const STATUSES = ["planning", "in_progress", "review", "delivered", "paused", "cancelled"] as const;
-
-const projectSchema = z.object({
-  clientId: z.string().min(10).max(32),
-  title: z.string().trim().min(2).max(140),
-  code: z.string().trim().regex(/^[A-Z0-9-]{3,24}$/i, "Code: letters, digits, hyphens (3-24)."),
-  status: z.enum(STATUSES),
-  progress: z.coerce.number().int().min(0).max(100),
-  summary: z.string().trim().max(600).optional().or(z.literal("")),
-  startDate: z.string().optional().or(z.literal("")),
-  dueDate: z.string().optional().or(z.literal("")),
-});
-
-function toNullableDate(v?: string): Date | null {
-  if (!v) return null;
-  const d = new Date(v);
-  return Number.isNaN(d.getTime()) ? null : d;
+const idValue = (form: FormData, key = "id") => z.string().regex(/^[A-Za-z0-9_-]{10,64}$/).parse(form.get(key));
+async function operator() { const user = await requireAdmin(); await requireSection("clients"); if (!prisma) redirect("/admin/projects?e=Database%20unavailable."); return user; }
+function failed(base: string, error: unknown): never { redirect(`${base}?e=${encodeURIComponent(projectError(error))}`); }
+function revision(form: FormData, updatedAt: Date) {
+  if (form.get("revision") !== updatedAt.toISOString()) throw new Error("This project changed while you were editing. Refresh before saving.");
+}
+function event(project: { title: string; client: { name: string; email: string } }, title: string, body: string): ProjectEmail {
+  return { key: "projectUpdate", to: project.client.email, vars: { name: project.client.name, project: project.title, title, body } };
 }
 
-async function nextCode(): Promise<string> {
-  const year = new Date().getFullYear();
-  const count = (await prisma!.clientProject.count()) + 1;
-  return `SAVO-${year}-${String(count).padStart(3, "0")}`;
-}
-
-export async function createProjectAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
-  await requireSection("clients");
-  if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
-
-  const parsed = projectSchema.safeParse({
-    clientId: formData.get("clientId"),
-    title: formData.get("title"),
-    code: formData.get("code") || (await nextCode()),
-    status: formData.get("status") ?? "in_progress",
-    progress: formData.get("progress") ?? 0,
-    summary: formData.get("summary") ?? "",
-    startDate: formData.get("startDate") ?? "",
-    dueDate: formData.get("dueDate") ?? "",
-  });
-  if (!parsed.success) redirect(`/admin/projects?e=${encodeURIComponent(parsed.error.issues[0]?.message ?? "invalid")}`);
-
-  const { startDate, dueDate, ...data } = parsed.data;
+export async function createProjectAction(form: FormData): Promise<void> {
+  const user = await operator();
+  if (!form.get("code")) form.set("code", `SAVO-${new Date().getUTCFullYear()}-${randomBytes(3).toString("hex").toUpperCase()}`);
+  let id = "", events: ProjectEmail[] = [];
   try {
-    await prisma.clientProject.create({
-      data: { ...data, startDate: toNullableDate(startDate), dueDate: toNullableDate(dueDate) },
+    const d = parseProjectForm(form);
+    const result = await projectTransaction(async tx => {
+      if (!(await tx.clientUser.findUnique({ where: { id: d.clientId }, select: { id: true } }))) throw new Error("Choose an existing client.");
+      if (d.milestones.some(m => m.id)) throw new Error("New projects cannot reuse existing milestones.");
+      const { milestones, budgetMajor, ...core } = d;
+      const project = await tx.clientProject.create({ data: { ...core, budget: budgetMajor,
+        milestones: { create: milestones.map((m, order) => ({ title: m.title, description: m.description, amount: m.amountMajor, dueDate: m.dueDate, status: m.status, scope: "base", order })) } },
+        include: { client: { select: { name: true, email: true } } } });
+      await reconcileProject(tx, project.id);
+      return { id: project.id, events: [event(project, "Your project plan is ready", `Your project has been created with a base budget of ${invoiceMoney(budgetMajor, core.currency)}. You can review the description, estimated delivery date and milestone allocations in your client portal.`)] };
     });
-  } catch {
-    redirect("/admin/projects?e=That%20project%20code%20is%20already%20in%20use.");
-  }
-  await audit(user.id, "project.create", "ClientProject", data.code);
-  revalidatePath("/admin/projects");
-  redirect("/admin/projects?saved=created");
+    id = result.id; events = result.events;
+  } catch (error) { failed("/admin/projects", error); }
+  await audit(user.id, "project.create", "ClientProject", id);
+  revalidateProjectViews(id); projectEmails(events); redirect(`/admin/projects/${id}?saved=1`);
 }
 
-export async function updateProjectAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
-  await requireSection("clients");
-  if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
-  const id = z.string().min(10).max(32).parse(formData.get("id"));
-
-  const parsed = projectSchema.safeParse({
-    clientId: formData.get("clientId"),
-    title: formData.get("title"),
-    code: formData.get("code"),
-    status: formData.get("status") ?? "in_progress",
-    progress: formData.get("progress") ?? 0,
-    summary: formData.get("summary") ?? "",
-    startDate: formData.get("startDate") ?? "",
-    dueDate: formData.get("dueDate") ?? "",
-  });
-  if (!parsed.success) redirect(`/admin/projects/${id}?e=${encodeURIComponent(parsed.error.issues[0]?.message ?? "invalid")}`);
-
-  const { startDate, dueDate, ...data } = parsed.data;
+export async function updateProjectAction(form: FormData): Promise<void> {
+  const user = await operator(); const id = idValue(form); let events: ProjectEmail[] = [];
   try {
-    await prisma.clientProject.update({
-      where: { id },
-      data: { ...data, startDate: toNullableDate(startDate), dueDate: toNullableDate(dueDate) },
+    const d = parseProjectForm(form);
+    events = await projectTransaction(async tx => {
+      const current = await tx.clientProject.findUnique({ where: { id }, include: { milestones: true, invoices: true } });
+      if (!current) throw new Error("Project not found.");
+      revision(form, current.updatedAt);
+      if (current.invoices.length && d.clientId !== current.clientId) throw new Error("Client cannot change after invoices have been linked.");
+      if (current.budget != null && current.invoices.length && d.currency !== current.currency) throw new Error("Currency cannot change after invoices have been linked.");
+      if (current.invoices.some(i => i.status !== "cancelled" && i.currency !== d.currency)) throw new Error("Linked invoice currencies must match the project currency. Correct or unlink conflicting billing records first.");
+      if (!(await tx.clientUser.findUnique({ where: { id: d.clientId }, select: { id: true } }))) throw new Error("Choose an existing client.");
+      const old = new Set(current.milestones.filter(m => m.scope === "base").map(m => m.id));
+      if (d.milestones.some(m => m.id && !old.has(m.id))) throw new Error("A milestone does not belong to this project's base plan.");
+      const keep = d.milestones.flatMap(m => m.id ? [m.id] : []);
+      await tx.projectMilestone.deleteMany({ where: { projectId: id, scope: "base", id: { notIn: keep } } });
+      for (const [order, m] of d.milestones.entries()) {
+        const data = { title: m.title, description: m.description, amount: m.amountMajor, dueDate: m.dueDate, status: m.status, order };
+        if (m.id) await tx.projectMilestone.update({ where: { id: m.id, projectId: id, scope: "base" }, data });
+        else await tx.projectMilestone.create({ data: { ...data, projectId: id, scope: "base" } });
+      }
+      const budgetMajor = d.budgetMajor;
+      const core = { clientId: d.clientId, title: d.title, code: d.code, summary: d.summary, currency: d.currency, status: d.status, startDate: d.startDate, dueDate: d.dueDate };
+      const project = await tx.clientProject.update({ where: { id }, data: { ...core, budget: budgetMajor, completedByPayment: d.status === current.status ? current.completedByPayment : false }, include: { client: { select: { name: true, email: true } } } });
+      const automatic = await reconcileProject(tx, id);
+      return [event(project, "Your project plan has been updated", `The project details and milestone plan have been updated. Base budget: ${invoiceMoney(budgetMajor, d.currency)}. Review the current scope, dates and delivery progress in your portal.`), ...automatic];
     });
-  } catch {
-    redirect(`/admin/projects/${id}?e=dup`);
-  }
-  await audit(user.id, "project.update", "ClientProject", data.code);
-  revalidatePath("/admin/projects");
-  revalidatePath(`/admin/projects/${id}`);
-  redirect(`/admin/projects/${id}?saved=1`);
+  } catch (error) { failed(`/admin/projects/${id}`, error); }
+  await audit(user.id, "project.update", "ClientProject", id);
+  revalidateProjectViews(id); projectEmails(events); redirect(`/admin/projects/${id}?saved=1`);
 }
 
-export async function addMilestoneAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
-  await requireSection("clients");
-  if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
-  const projectId = z.string().min(10).max(32).parse(formData.get("projectId"));
-  const title = z.string().trim().min(2).max(140).parse(formData.get("title"));
-  const dueDate = formData.get("dueDate")?.toString() || "";
-  const order = z.coerce.number().int().min(0).max(999).catch(99).parse(formData.get("order") ?? 99);
-
-  await prisma.projectMilestone.create({
-    data: { projectId, title, order, dueDate: toNullableDate(dueDate) },
-  });
-  await audit(user.id, "project.milestoneAdd", "ClientProject", projectId, { title });
-  revalidatePath(`/admin/projects/${projectId}`);
-  redirect(`/admin/projects/${projectId}?saved=milestone`);
-}
-
-export async function cycleMilestoneAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  await requireSection("clients");
-  if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
-  const id = z.string().min(10).max(32).parse(formData.get("id"));
-  const projectId = z.string().min(10).max(32).parse(formData.get("projectId"));
-
-  const m = await prisma.projectMilestone.findUnique({ where: { id } });
-  if (m) {
-    const next = m.status === "pending" ? "in_progress" : m.status === "in_progress" ? "done" : "pending";
-    await prisma.projectMilestone.update({ where: { id }, data: { status: next } });
-    // Notify the client when work starts or a milestone completes.
-    if (next !== "pending") {
-      const proj = await prisma.clientProject.findUnique({
-        where: { id: projectId },
-        include: { client: { select: { email: true, name: true } } },
-      });
-      if (proj)
-        sendTemplateNow("milestoneUpdate", proj.client.email, {
-          name: proj.client.name,
-          project: proj.title,
-          milestone: m.title,
-          status: next === "done" ? "completed" : "started",
-        });
-    }
-  }
-  revalidatePath(`/admin/projects/${projectId}`);
-  redirect(`/admin/projects/${projectId}?saved=milestone`);
-}
-
-export async function deleteMilestoneAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  await requireSection("clients");
-  if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
-  const id = z.string().min(10).max(32).parse(formData.get("id"));
-  const projectId = z.string().min(10).max(32).parse(formData.get("projectId"));
-
-  await prisma.projectMilestone.delete({ where: { id } }).catch(() => undefined);
-  revalidatePath(`/admin/projects/${projectId}`);
-  redirect(`/admin/projects/${projectId}?saved=milestone`);
-}
-
-export async function addUpdateAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
-  await requireSection("clients");
-  if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
-  const projectId = z.string().min(10).max(32).parse(formData.get("projectId"));
-  const title = z.string().trim().min(2).max(140).parse(formData.get("title"));
-  const body = z.string().trim().max(2000).catch("").parse(formData.get("body") ?? "");
-
-  await prisma.projectUpdate.create({ data: { projectId, title, body } });
-  const proj = await prisma.clientProject.findUnique({
-    where: { id: projectId },
-    include: { client: { select: { email: true, name: true } } },
-  });
-  if (proj)
-    sendTemplateNow("projectUpdate", proj.client.email, {
-      name: proj.client.name,
-      project: proj.title,
-      title,
-      body,
+export async function cycleMilestoneAction(form: FormData): Promise<void> {
+  const user = await operator(); const projectId = idValue(form, "projectId"); const id = idValue(form); let events: ProjectEmail[] = [];
+  try {
+    events = await projectTransaction(async tx => {
+      const project = await tx.clientProject.findUnique({ where: { id: projectId }, include: { client: { select: { name: true, email: true } } } });
+      if (!project) throw new Error("Project not found.");
+      if (project.status === "cancelled") throw new Error("Reopen the project before changing delivery statuses.");
+      const milestone = await tx.projectMilestone.findFirst({ where: { id, projectId } });
+      if (!milestone) throw new Error("Milestone not found in this project.");
+      const status = z.enum(["pending", "in_progress", "done"]).parse(form.get("status"));
+      if (milestone.status === status) return [];
+      await tx.projectMilestone.update({ where: { id, projectId }, data: { status } });
+      await tx.clientProject.update({ where: { id: projectId }, data: { updatedAt: new Date() } });
+      const title = `${milestone.title} — ${status === "done" ? "completed" : status === "in_progress" ? "started" : "returned to upcoming"}`;
+      await tx.projectUpdate.create({ data: { projectId, title, body: "Delivery progress has been recalculated from the milestone plan." } });
+      const automatic = await reconcileProject(tx, projectId);
+      const notification: ProjectEmail = status === "pending" ? event(project, title, "The milestone status has changed. Review your current delivery plan in the client portal.") : { key: "milestoneUpdate", to: project.client.email, vars: { name: project.client.name, project: project.title, milestone: milestone.title, status: status === "done" ? "completed" : "started" } };
+      return [notification, ...automatic];
     });
-  await audit(user.id, "project.updatePost", "ClientProject", projectId, { title });
-  revalidatePath(`/admin/projects/${projectId}`);
-  redirect(`/admin/projects/${projectId}?saved=update`);
+  } catch (error) { failed(`/admin/projects/${projectId}`, error); }
+  await audit(user.id, "project.milestoneStatus", "ClientProject", projectId, { milestoneId: id });
+  revalidateProjectViews(projectId); projectEmails(events); redirect(`/admin/projects/${projectId}?saved=milestone`);
 }
 
-export async function deleteUpdateAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  await requireSection("clients");
-  if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
-  const id = z.string().min(10).max(32).parse(formData.get("id"));
-  const projectId = z.string().min(10).max(32).parse(formData.get("projectId"));
-
-  await prisma.projectUpdate.delete({ where: { id } }).catch(() => undefined);
-  revalidatePath(`/admin/projects/${projectId}`);
-  redirect(`/admin/projects/${projectId}?saved=update`);
+export async function saveAdditionalWorkAction(form: FormData): Promise<void> {
+  const user = await operator(); const projectId = idValue(form, "projectId"); let events: ProjectEmail[] = [];
+  try {
+    const d = parseAdditionalForm(form); const id = form.get("id") ? idValue(form) : null;
+    events = await projectTransaction(async tx => {
+      const project = await tx.clientProject.findUnique({ where: { id: projectId }, include: { client: { select: { name: true, email: true } } } });
+      if (!project) throw new Error("Project not found.");
+      revision(form, project.updatedAt);
+      if (project.budget == null) throw new Error("Set the base budget and allocate the base milestones before adding paid scope.");
+      const data = { title: d.title, description: d.description, amount: d.amountMajor, status: d.status, dueDate: d.dueDate };
+      if (id) {
+        if (!(await tx.projectMilestone.findFirst({ where: { id, projectId, scope: "additional" } }))) throw new Error("Additional work not found in this project.");
+        await tx.projectMilestone.update({ where: { id, projectId, scope: "additional" }, data });
+      } else await tx.projectMilestone.create({ data: { ...data, projectId, scope: "additional", order: 999 } });
+      // Touch the project even if computed progress/status is unchanged so
+      // optimistic editors cannot overwrite an additional-scope change.
+      await tx.clientProject.update({ where: { id: projectId }, data: { updatedAt: new Date() } });
+      const title = id ? "Additional work updated" : "Additional work added";
+      const body = `${d.title}: ${invoiceMoney(d.amountMajor, project.currency)}. ${d.description} Review the additional scope and updated agreed total in your portal.`;
+      await tx.projectUpdate.create({ data: { projectId, title, body } });
+      return [event(project, title, body), ...await reconcileProject(tx, projectId)];
+    });
+  } catch (error) { failed(`/admin/projects/${projectId}`, error); }
+  await audit(user.id, "project.additionalWork", "ClientProject", projectId);
+  revalidateProjectViews(projectId); projectEmails(events); redirect(`/admin/projects/${projectId}?saved=additional`);
 }
 
-export async function deleteProjectAction(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
-  await requireSection("clients");
-  if (!prisma) redirect("/admin/projects?e=Database%20unavailable.");
-  const id = z.string().min(10).max(32).parse(formData.get("id"));
-  const project = await prisma.clientProject.findUnique({ where: { id } });
-  if (!project) redirect("/admin/projects?e=Project%20not%20found.");
+export async function changeProjectStatusAction(form: FormData): Promise<void> {
+  const user = await operator(); const id = idValue(form); let events: ProjectEmail[] = [];
+  try {
+    const status = z.enum(PROJECT_STATUSES).parse(form.get("status"));
+    events = await projectTransaction(async tx => {
+      const project = await tx.clientProject.findUnique({ where: { id }, include: { client: { select: { name: true, email: true } } } });
+      if (!project) throw new Error("Project not found."); revision(form, project.updatedAt);
+      if (project.status === status) return [];
+      await tx.clientProject.update({ where: { id }, data: { status, completedByPayment: false } });
+      const title = `Project ${PROJECT_STATUS_LABELS[status].toLowerCase()}`;
+      const body = `Your delivery lead marked the project ${PROJECT_STATUS_LABELS[status].toLowerCase()}. Milestone progress and invoice payment records are unchanged. Contact us if you need clarification.`;
+      await tx.projectUpdate.create({ data: { projectId: id, title, body } });
+      return [event(project, title, body)];
+    });
+  } catch (error) { failed(`/admin/projects/${id}`, error); }
+  await audit(user.id, "project.status", "ClientProject", id);
+  revalidateProjectViews(id); projectEmails(events); redirect(`/admin/projects/${id}?saved=1`);
+}
 
-  await prisma.clientProject.delete({ where: { id } });
-  await audit(user.id, "project.delete", "ClientProject", project.code);
-  revalidatePath("/admin/projects");
-  redirect("/admin/projects?deleted=1");
+export async function addUpdateAction(form: FormData): Promise<void> {
+  const user = await operator(); const projectId = idValue(form, "projectId"); let events: ProjectEmail[] = [];
+  try {
+    const title = z.string().trim().min(2).max(140).parse(form.get("title")); const body = z.string().trim().max(2000).parse(form.get("body") ?? "");
+    events = await projectTransaction(async tx => {
+      const project = await tx.clientProject.findUnique({ where: { id: projectId }, include: { client: { select: { name: true, email: true } } } });
+      if (!project) throw new Error("Project not found.");
+      await tx.projectUpdate.create({ data: { projectId, title, body } });
+      return [event(project, title, body)];
+    });
+  } catch (error) { failed(`/admin/projects/${projectId}`, error); }
+  await audit(user.id, "project.updatePost", "ClientProject", projectId);
+  revalidateProjectViews(projectId); projectEmails(events); redirect(`/admin/projects/${projectId}?saved=update`);
+}
+export async function deleteUpdateAction(form: FormData): Promise<void> {
+  const user = await operator(); const projectId = idValue(form, "projectId"); const id = idValue(form);
+  await prisma!.projectUpdate.deleteMany({ where: { id, projectId } });
+  await audit(user.id, "project.updateDelete", "ClientProject", projectId);
+  revalidateProjectViews(projectId); redirect(`/admin/projects/${projectId}?saved=update`);
 }

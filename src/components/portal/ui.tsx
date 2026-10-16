@@ -17,14 +17,14 @@ const PROJECT_STATUS: Record<string, { label: string; cls: string }> = {
   planning: { label: "Planning", cls: "border-border text-muted" },
   in_progress: { label: "In progress", cls: "border-accent/50 text-accent" },
   review: { label: "In review", cls: "border-foreground/40 text-foreground/80" },
-  delivered: { label: "Delivered", cls: "border-[rgb(30_122_63/0.5)] text-[rgb(30_122_63)]" },
+  delivered: { label: "Completed", cls: "border-[rgb(30_122_63/0.5)] text-[rgb(30_122_63)]" },
   paused: { label: "Paused", cls: "border-border text-muted" },
   cancelled: { label: "Cancelled", cls: "border-border text-muted/60" },
 };
 
 const INVOICE_STATUS: Record<string, { label: string; cls: string }> = {
   draft: { label: "Draft", cls: "border-border text-muted" },
-  sent: { label: "Due", cls: "border-accent/50 text-accent" },
+  sent: { label: "Unpaid", cls: "border-accent/50 text-accent" },
   overdue: { label: "Overdue", cls: "border-[rgb(179_38_30/0.5)] text-[rgb(179_38_30)]" },
   paid: { label: "Paid", cls: "border-[rgb(30_122_63/0.5)] text-[rgb(30_122_63)]" },
   cancelled: { label: "Cancelled", cls: "border-border text-muted/60" },

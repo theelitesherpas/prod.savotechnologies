@@ -7,6 +7,7 @@ import { invoiceTotals, PortalIcon } from "@/components/portal/workspace-ui";
 import { invoiceRecord } from "@/components/portal/records";
 import { InvoiceBrowser } from "@/components/portal/record-browsers";
 import styles from "@/components/portal/portal.module.css";
+import { invoicePaymentLink } from "@/lib/payment-links";
 
 export const metadata: Metadata = { title: "Invoices" };
 export default async function PortalInvoicesPage() {
@@ -28,9 +29,10 @@ export default async function PortalInvoicesPage() {
       <header className={styles.pageHeader}>
         <h1>Your invoices.</h1>
         <p>
-          Review issued invoices and payment history. Amounts stay in their
-          original currency; cancelled invoices are excluded from outstanding
-          and paid totals.
+          Review issued invoices and payment history. Download a PDF for your
+          records, or choose View / print to open it in your PDF viewer.
+          Amounts stay in their original currency; cancelled invoices are
+          excluded from outstanding and paid totals.
         </p>
       </header>
       {totals.length ? (
@@ -56,6 +58,7 @@ export default async function PortalInvoicesPage() {
           ))}
         </div>
       ) : null}
+      {invoices.some(invoice => invoicePaymentLink(invoice)) ? <p className={styles.projectBudgetNote}>Pay now opens your payment provider. Savo updates the invoice after confirming payment. Opening the link or returning here doesn’t confirm payment.</p> : null}
       <InvoiceBrowser invoices={invoices.map(invoiceRecord)} />
       <div className={styles.helpStrip}>
         <p>Questions about an invoice or payment?</p>

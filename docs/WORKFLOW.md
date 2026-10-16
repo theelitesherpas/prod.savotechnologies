@@ -30,7 +30,7 @@ git config user.email   # theelitesherpas@users.noreply.github.com
 1. `git checkout -b feat/<short-name>` from `main`
 2. Work, commit, push to origin (dev repo)
 3. Open a PR against `main` in **dev.savotechnologies**; review, then merge
-4. CI (lint + typecheck + 56 tests + production build) must pass before merge
+4. CI (lint + typecheck + unit/integration tests + production build) must pass before merge; use squash/rebase, not merge commits, for new PRs
 
 ## Push policy (default on this machine)
 
@@ -77,8 +77,11 @@ git push https://github.com/theelitesherpas/prod.savotechnologies.git main
 
 ## Rules (industry standard)
 
-1. **Same SHAs everywhere on release** — prod always contains commits that
-   passed through dev → test. Never "hotfix" prod with untested commits.
+1. **Same immutable release commit everywhere** — prod always contains code that
+   passed through dev → test. Release tags/branches identify the exact published
+   SHA in all three repos. Legacy dev/test merge ancestry may leave their `main`
+   heads different; use the tree-verified linear-release procedure below, never a
+   force-push or an untested hotfix.
 2. **Emergency hotfix path**: branch from prod's `main`, fix, push to prod,
    then immediately back-merge the same commit into dev `main` so the
    environments never drift.
@@ -95,6 +98,38 @@ git push https://github.com/theelitesherpas/prod.savotechnologies.git main
    git tag -a v0.2.0 -m "Release: <summary>"
    git push prod v0.2.0
    ```
+
+## Linear production releases with legacy dev/test merges
+
+Production enforces linear history. Dev/test `main` already contain legacy merge
+`c61e119`, while production `2bab92c` has the identical source tree without that
+merge. Do not push those merge ancestors to protected production or rewrite
+existing branches to remove them.
+
+For this ancestry, prepare `release/vX.Y.Z` as a normal commit descended from the
+current production `main`, carrying the reviewed feature tree. Push that release
+branch to **dev**, open a PR, wait for CI, and squash the PR into dev `main`.
+Promote dev `main` to test `main`, plus the exact release branch to test; wait for
+test CI. Verify `git diff --exit-code <release> <tested-main>` is empty (including
+schema, assets and lockfile), and verify there are no merges between production
+and the release. Only then fast-forward prod `main` to the release branch.
+Publish the same annotated version tag and release-branch SHA in all three
+repositories. Record the dev/test SHA and identical Git tree alongside the
+published SHA. This preserves all ancestry and branch protection; no force-push,
+main deletion, content cherry-pick after QA, or protection change is needed.
+
+Before the VPS update:
+- Check the already-loaded production runtime with `verify-runtime-env.mjs live`.
+- Take a private `pg_dump` backup and retain the prior commit/build for rollback.
+- Inspect the Prisma schema diff; invoice/project releases add nullable/defaulted
+  columns only. Never accept data-loss/reset flags to push this schema.
+- Apply the schema **before** the new code starts, build with the existing live
+  environment, then restart only PM2 `savo`. Keep private environment files intact.
+- Smoke-test public routes, unauthenticated portal/admin boundaries and PDF
+  authorization without changing real invoices/projects or sending test emails.
+  Local fixture scripts refuse production and must not be run on the live DB.
+- Roll back code/build if needed; additive columns may remain. Never restore an
+  old database over new customer activity as a routine code rollback.
 
 ## Environment configuration per stage
 

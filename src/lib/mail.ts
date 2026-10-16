@@ -4,7 +4,7 @@ import nodemailer, { type Transporter } from "nodemailer";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import type { MailTemplate } from "@/lib/mail/templates";
-import { fillText, renderBodyHtml, bodyToText, templateEntry } from "@/lib/mail/registry";
+import { fillText, renderBodyHtml, bodyToText, templateEntry, invoiceTemplatePayment } from "@/lib/mail/registry";
 import { unsubscribeUrl, withSignedUnsubscribe } from "@/lib/mail/unsubscribe";
 
 /**
@@ -196,18 +196,20 @@ export async function renderTemplate(
       const { shell } = await import("@/lib/mail/templates");
       const html = renderBodyHtml(override.body, vars);
       const subject = fillText(override.subject, vars);
+      const payment = invoiceTemplatePayment(key, vars);
       return {
         subject,
         html: shell({
           preheader: subject.slice(0, 120),
           heading: subject,
           bodyHtml: html,
+          ...(payment ? { cta: payment } : {}),
           ...(entry.dept === "hr" ? { dept: "hr" as const } : {}),
           ...(entry.recipient === "customer" && to
             ? { reason: "You are receiving this because you contacted Savo Technologies.", unsubscribeEmail: to }
             : {}),
         }),
-        text: fillText(bodyToText(override.body), vars),
+        text: fillText(bodyToText(override.body), vars) + (payment ? `\n\nPay now: ${payment.href}` : ""),
         unsubscribeEmail: entry.recipient === "customer" && to ? to : undefined,
       };
     }

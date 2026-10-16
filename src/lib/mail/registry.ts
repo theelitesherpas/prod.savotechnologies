@@ -9,6 +9,25 @@
  * fully customized email stays on brand. No override → code default.
  */
 
+import { minorUnits } from "@/lib/project-finance";
+import { invoicePaymentLink } from "@/lib/payment-links";
+
+function invoiceAmount(v: Record<string, string>): number {
+  if (v.amountMinor !== undefined) {
+    const amount = Number(v.amountMinor);
+    if (!Number.isSafeInteger(amount) || amount < 0) throw new Error("Invalid invoice amount.");
+    return amount;
+  }
+  return minorUnits((v.amount || "").replace(/[^\d.-]/g, ""));
+}
+function invoiceDueDate(v: Record<string, string>): Date | null {
+  const raw = v.dueDateIso !== undefined ? v.dueDateIso : v.due;
+  if (!raw) return null;
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) throw new Error("Invalid invoice due date.");
+  return date;
+}
+
 import {
   appointmentLetter,
   candidateRejection,
@@ -254,8 +273,8 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Admin creates an invoice",
     recipient: "client",
     dept: "hello",
-    vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500", due: "14 Oct 2026" },
-    default: (v) => invoiceIssued(v.name, v.number, 250000, "INR", new Date(Date.now() + 14 * 86400000)),
+    vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500", currency: "INR", due: "22 Oct 2026", paymentLink: "" },
+    default: (v) => invoiceIssued(v.name, v.number, invoiceAmount(v), v.currency || "INR", invoiceDueDate(v), v.paymentLink, v.invoiceStatus),
   },
   {
     key: "invoicePaid",
@@ -264,8 +283,8 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Invoice marked paid",
     recipient: "client",
     dept: "hello",
-    vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500" },
-    default: (v) => invoicePaid(v.name, v.number, 250000, "INR"),
+    vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500", currency: "INR" },
+    default: (v) => invoicePaid(v.name, v.number, invoiceAmount(v), v.currency || "INR"),
   },
   {
     key: "invoiceOverdue",
@@ -274,8 +293,8 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Invoice status set to overdue",
     recipient: "client",
     dept: "hello",
-    vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500", days: "7" },
-    default: (v) => invoiceOverdue(v.name, v.number, 250000, "INR", 7),
+    vars: { name: "Acme Trading", number: "SAVO-2026-014", amount: "₹2,500", currency: "INR", days: "7", paymentLink: "" },
+    default: (v) => invoiceOverdue(v.name, v.number, invoiceAmount(v), v.currency || "INR", Number(v.days) || 1, v.paymentLink, v.invoiceStatus),
   },
   {
     key: "milestoneUpdate",
@@ -285,7 +304,7 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     recipient: "client",
     dept: "hello",
     vars: { name: "Acme Trading", project: "Commerce Platform", milestone: "Design system sign-off", status: "completed" },
-    default: (v) => milestoneUpdate(v.name, v.project, v.milestone, "done"),
+    default: (v) => milestoneUpdate(v.name, v.project, v.milestone, ["done", "completed"].includes(v.status) ? "done" : "in_progress"),
   },
   {
     key: "projectUpdate",
@@ -580,6 +599,25 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     default: (v) => holidayAnnouncement(v),
   },
 ];
+
+/** Saved invoice body overrides retain their wording but get the same validated
+ * optional payment action as code defaults. Other email kinds never get it. */
+export function invoiceTemplatePayment(key: string, vars: Record<string, string | number | null | undefined>) {
+  if (key !== "invoiceIssued" && key !== "invoiceOverdue") return undefined;
+  const values = Object.fromEntries(Object.entries(vars).filter(([,v]) => v != null).map(([k,v]) => [k, String(v)]));
+  try {
+    const href = invoicePaymentLink({ paymentLink: values.paymentLink, status: values.invoiceStatus || (key === "invoiceIssued" ? "sent" : "overdue"), amount: invoiceAmount(values) });
+    return href ? { href, label: "Pay now", sub: "Opens your payment provider. Payment status updates after confirmation by the Savo team." } : undefined;
+  } catch { return undefined; }
+}
+
+/** Optional sample variables may be blank. Never split text on an empty
+ * paymentLink (which would insert placeholders between every character). */
+export function templateSamplePlaceholders(text: string, vars: Record<string, string>): string {
+  let out = text;
+  for (const [name, sample] of Object.entries(vars)) if (sample) out = out.split(sample).join(`{{${name}}}`);
+  return out;
+}
 
 export function templateEntry(key: string): TemplateEntry | undefined {
   return TEMPLATE_REGISTRY.find((t) => t.key === key);

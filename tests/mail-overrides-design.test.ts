@@ -39,6 +39,19 @@ describe("custom content inherits v7 email design", () => {
     expect(mail?.html).toContain("Photo ID<br>Qualification certificate");
     expect(mocks.transport).not.toHaveBeenCalled();
   });
+  it("adds a validated Pay now action to saved invoice bodies without replacing their content", async () => {
+    mocks.override.mockResolvedValue({ subject: "Invoice {{number}}", body: "Dear {{name}},\n\nYour agreed billing details are ready." });
+    const vars = { name: "Example", number: "TEST-001", amountMinor: "12345", currency: "USD", paymentLink: "https://rzp.io/i/TEST-123", invoiceStatus: "sent" };
+    const mail = await renderTemplate("invoiceIssued", vars);
+    expect(mail?.html).toContain("Your agreed billing details are ready.");
+    expect(mail?.html).toContain('href="https://rzp.io/i/TEST-123"');
+    expect(mail?.html).toContain("Pay now");
+    expect(mail?.text).toContain("Pay now: https://rzp.io/i/TEST-123");
+    const paid = await renderTemplate("invoicePaid", { ...vars, invoiceStatus: "paid" });
+    expect(paid?.html).not.toContain("Pay now");
+    expect(paid?.text).not.toContain("Pay now:");
+    expect(mocks.transport).not.toHaveBeenCalled();
+  });
   it("keeps default HR mail and lookup-failure fallback on the same design", async () => {
     mocks.override.mockResolvedValueOnce(null).mockRejectedValueOnce(new Error("Test lookup failure"));
     const first = await renderTemplate("applicationAck", { name: "Aarav", role: "Engineer" });

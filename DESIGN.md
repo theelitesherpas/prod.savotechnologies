@@ -201,7 +201,39 @@ not large promotional pills. Native fields/selects preserve familiar behavior.
 - **Browsers:** project/invoice search and native status filters provide
   live result counts, clear-filters recovery and honest empty states.
 - **Billing:** retain original currencies, summarize each separately and
-  exclude draft/cancelled invoices from balances. No fictional pay/download.
+  exclude draft/cancelled invoices from balances. Issued invoices have real
+  Download PDF and View / print actions in a Documents column, retained in
+  mobile record rows. Actions use native anchors, 44px targets and red focus.
+  The stored `sent` status is labelled Unpaid consistently. Optional validated
+  invoice-specific HTTPS links add a red **Pay now** action for positive unpaid/
+  overdue invoices only; then the column is titled Actions. Dashboard/project
+  rows reuse the same native link, with no referrer and a new provider tab.
+  No link means the prior Documents experience. Paid/cancelled/draft records
+  never offer payment. Email/PDF actions follow the same policy; no invented
+  gateway confirmation. Admin link entry is labelled and optional, with explicit
+  reconfirmation when retaining a link after financial/client edits.
+- **Invoice documents:** branded white A4 pages with the official black logo,
+  supplier/client identity, stored reference/dates, service amount, status,
+  paid/due balances and actual notes. Embed complete static Inter Regular/
+  SemiBold programs (not unreliable variable/subset font outlines), retain
+  two-decimal ISO-currency amounts and paginate long fields. PDFs have their
+  own printer-safe layout, not screenshots of the portal. No invented tax,
+  GST, itemized rates or bank details. See `docs/INVOICES.md`.
+- **Budgeted projects:** the admin extends its existing operations theme, not
+  public marketing chrome. Labelled two-column details/financial fields precede
+  repeatable base-milestone fieldsets. Title/cost/date/state align in four columns,
+  two below 1100px and one below 650px. Live allocation summary exposes exact
+  remaining/over-budget amounts and disables ordinary saving until balanced.
+  A single revision-keyed plan editor refreshes committed row IDs after save.
+  Quick module controls, additional-scope editing, invoices and the delivery log
+  have separate task headings; completion/cancellation require confirmation.
+  Inherit admin light/dark surface, text, error, success and focus tokens.
+- **Client project budgets:** keep the existing hero/progress, then a separated
+  agreed-cost/payment summary and base milestone/delivery panels. Additional
+  work is itemised separately with its description, price, state and estimate.
+  Distinguish milestone delivery progress from payment-based completion; retain
+  native responsive records and no marketing interruptions. No forced currency
+  conversion, fictional budgets or unearned completed module progress.
 - **Recovery:** preserve readable loading, retry/home recovery, and scoped
   project-unavailable UI. Foreign project IDs must not reveal ownership.
 

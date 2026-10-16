@@ -13,6 +13,8 @@ import {
   progressValue,
 } from "@/components/portal/workspace-ui";
 import { invoiceRecord } from "@/components/portal/records";
+import { money } from "@/components/portal/ui";
+import { projectFinancials } from "@/lib/project-finance";
 import styles from "@/components/portal/portal.module.css";
 
 export const metadata: Metadata = { title: "Project details" };
@@ -36,6 +38,9 @@ export default async function PortalProjectPage({
     },
   });
   if (!project) notFound();
+  const finance = projectFinancials(project, project.milestones, project.invoices);
+  const additional = project.milestones.filter(m => m.scope === "additional");
+  const baseMilestones = project.milestones.filter(m => m.scope !== "additional");
   return (
     <div className={styles.content}>
       <Link href="/portal/projects" className={styles.textLink}>
@@ -62,11 +67,15 @@ export default async function PortalProjectPage({
               ? `Started ${dateLabel(project.startDate)} · `
               : ""}
             {project.dueDate
-              ? `Due ${dateLabel(project.dueDate)}`
+              ? `Estimated delivery ${dateLabel(project.dueDate)}`
               : "Due date not set"}
           </span>
         </div>
       </header>
+      {project.budget != null ? <div className={`${styles.currencyTotals} ${styles.projectFinancialSummary}`}>
+        <section className={styles.currencyTotal} aria-label="Agreed project cost"><h2>Agreed project cost · {project.currency}</h2><dl><div><dt>Fixed base budget</dt><dd>{money(project.budget, project.currency)}</dd></div><div><dt>Additional work</dt><dd>{money(finance.additional, project.currency)}</dd></div><div><dt>Agreed total</dt><dd>{money(finance.total!, project.currency)}</dd></div></dl></section>
+        <section className={styles.currencyTotal} aria-label="Project payments"><h2>Project payments · {project.currency}</h2><dl><div><dt>Payments recorded</dt><dd>{money(finance.paid, project.currency)}</dd></div><div><dt>Balance against agreed total</dt><dd>{money(finance.balance!, project.currency)}</dd></div></dl><p className={styles.projectBudgetNote}>This balance includes agreed work that may not yet be invoiced. Delivery progress follows completed milestones; payment completion is tracked separately.</p></section>
+      </div> : null}
       <div className={styles.projectDetailGrid}>
         <section
           className={`${styles.panel} ${styles.section}`}
@@ -75,9 +84,9 @@ export default async function PortalProjectPage({
           <div className={styles.sectionHead}>
             <h2 id="project-milestones">Milestones</h2>
           </div>
-          {project.milestones.length ? (
+          {baseMilestones.length ? (
             <ol className={styles.milestones}>
-              {project.milestones.map((milestone) => (
+              {baseMilestones.map((milestone) => (
                 <li key={milestone.id}>
                   <div className={styles.milestoneTitle}>
                     <PortalIcon
@@ -85,6 +94,8 @@ export default async function PortalProjectPage({
                     />
                     <div>
                       <strong>{milestone.title}</strong>
+                      {milestone.description ? <p>{milestone.description}</p> : null}
+                      {milestone.amount != null ? <p>{money(milestone.amount, project.currency)} · {project.currency}</p> : null}
                       {milestone.dueDate ? (
                         <p>Due {dateLabel(milestone.dueDate)}</p>
                       ) : null}
@@ -128,6 +139,7 @@ export default async function PortalProjectPage({
           )}
         </section>
       </div>
+      {additional.length ? <section className={`${styles.panel} ${styles.section}`} aria-labelledby="project-additional"><div className={styles.sectionHead}><h2 id="project-additional">Additional work</h2></div><ol className={styles.milestones}>{additional.map(work => <li key={work.id}><div className={styles.milestoneTitle}><PortalIcon name={work.status === "done" ? "check" : "clock"}/><div><strong>{work.title}</strong>{work.description ? <p>{work.description}</p> : null}<p>{money(work.amount ?? 0, project.currency)} · {project.currency}{work.dueDate ? ` · Due ${dateLabel(work.dueDate)}` : ""}</p></div></div><PortalStatus status={work.status}/></li>)}</ol></section> : null}
       <section className={styles.section} aria-labelledby="project-invoices">
         <div className={styles.sectionHead}>
           <h2 id="project-invoices">Project invoices</h2>

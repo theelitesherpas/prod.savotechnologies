@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { BackLink, PageHeader, Notice } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
+import { InvoiceLinkFields } from "@/components/admin/invoice-link-fields";
+import { InvoicePaymentField } from "@/components/admin/invoice-payment-field";
 import { updateInvoiceAction } from "../actions";
 
 export const metadata: Metadata = { title: "Edit invoice" };
@@ -23,8 +25,8 @@ export default async function EditInvoicePage({
 
   const [invoice, clients, projects] = await Promise.all([
     prisma.invoice.findUnique({ where: { id } }),
-    prisma.clientUser.findMany({ orderBy: { name: "asc" } }),
-    prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true } }),
+    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true, clientId: true, currency: true, budget: true } }),
   ]);
   if (!invoice) notFound();
 
@@ -37,27 +39,13 @@ export default async function EditInvoicePage({
       <PageHeader title={invoice.number} description={`Stored amount: ${(invoice.amount / 100).toFixed(2)} ${invoice.currency}`} />
       {e === "invalid" ? <Notice kind="alert">Check the fields.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That invoice number is already in use.</Notice> : null}
+      {e && e !== "dup" && e !== "invalid" ? <Notice kind="alert">{e}</Notice> : null}
 
       <FormGuard action={updateInvoiceAction} className="adm-card space-y-5 p-5">
         <input type="hidden" name="id" value={invoice.id} />
+        <input type="hidden" name="revision" value={invoice.updatedAt.toISOString()} />
         <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label className="adm-label mb-1.5 block">Client *</label>
-            <select name="clientId" required defaultValue={invoice.clientId} className="adm-select w-full">
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="adm-label mb-1.5 block">Project</label>
-            <select name="projectId" defaultValue={invoice.projectId ?? ""} className="adm-select w-full">
-              <option value="">- none -</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.code} · {p.title}</option>
-              ))}
-            </select>
-          </div>
+          <InvoiceLinkFields clients={clients} projects={projects} initialClient={invoice.clientId} initialProject={invoice.projectId ?? ""} initialCurrency={invoice.currency}/>
           <div>
             <label className="adm-label mb-1.5 block">Number</label>
             <input name="number" required maxLength={32} defaultValue={invoice.number} className={input} />
@@ -66,14 +54,7 @@ export default async function EditInvoicePage({
             <label className="adm-label mb-1.5 block">Amount *</label>
             <input name="amountMajor" type="number" step="0.01" min={0} required defaultValue={(invoice.amount / 100).toFixed(2)} className={input} />
           </div>
-          <div>
-            <label className="adm-label mb-1.5 block">Currency</label>
-            <select name="currency" defaultValue={invoice.currency} className="adm-select w-full">
-              {["INR", "USD", "CHF", "EUR", "GBP", "AED"].map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
+
           <div>
             <label className="adm-label mb-1.5 block">Status</label>
             <select name="status" defaultValue={invoice.status} className="adm-select w-full">
@@ -88,12 +69,13 @@ export default async function EditInvoicePage({
           </div>
           <div>
             <label className="adm-label mb-1.5 block">Due</label>
-            <input name="dueDate" type="date" min={new Date().toISOString().slice(0, 10)} defaultValue={iso(invoice.dueDate)} className={input} />
+            <input name="dueDate" type="date" defaultValue={iso(invoice.dueDate)} className={input} />
           </div>
           <div>
             <label className="adm-label mb-1.5 block">Paid on</label>
             <input name="paidAt" type="date" defaultValue={iso(invoice.paidAt)} className={input} />
           </div>
+          <InvoicePaymentField value={invoice.paymentLink}/>
           <div className="sm:col-span-2">
             <label className="adm-label mb-1.5 block">Notes</label>
             <input name="notes" maxLength={500} defaultValue={invoice.notes} className={input} />

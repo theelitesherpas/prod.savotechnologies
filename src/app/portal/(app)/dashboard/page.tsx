@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getClientUser } from "@/lib/client-auth";
 import { money } from "@/components/portal/ui";
+import { InvoicePayButton } from "@/components/portal/invoice-pay-button";
 import {
   EmptyState,
   PortalIcon,
@@ -61,7 +62,7 @@ export default async function PortalDashboard() {
       hint: "Across active projects",
     },
     {
-      label: "Delivered projects",
+      label: "Completed projects",
       value: String(projects.filter((p) => p.status === "delivered").length),
       hint: "Completed engagements",
     },
@@ -146,6 +147,7 @@ export default async function PortalDashboard() {
                       {invoice.currency}
                     </strong>
                     <PortalStatus status={invoice.status} />
+                    <InvoicePayButton invoice={invoice}/>
                   </div>
                 </li>
               ))}

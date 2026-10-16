@@ -8,6 +8,18 @@
 - `site-chrome.tsx` provides focused access chrome and prevents marketing form providers/assistant from mounting on portal routes. Other website routes retain their original provider hierarchy.
 - Scoped visual authority: the current portal override in `DESIGN.md`. No new fonts or runtime dependencies.
 
+## Budgeted delivery and invoice completion
+
+Admin projects now include a fixed currency/budget, exactly allocated base
+milestones, required description/estimate and separate additional paid work.
+Client project pages expose agreed costs, delivery progress and additional scope.
+Progress follows done module costs; full-payment completion is reconciled against
+the entire agreed project total, not just a paid first invoice. Manual completion/
+cancellation and payment-completion reversals retain their distinct rules.
+See `docs/PROJECTS.md` for schema, ownership, atomicity and notification contracts.
+This extension requires the additive project/invoice schema before starting the
+updated application; back up production first and follow `docs/WORKFLOW.md`.
+
 ## CAPTCHA: a release prerequisite
 
 Client and employee sign-in **require Google reCAPTCHA v2 checkbox verification from the first attempt**, enforced server-side before credential processing. Missing/rejected tokens, partial configuration and missing configuration cannot silently bypass verification. Admin retains its previous progressive-attempt policy; other public forms keep their existing configuration policy.
@@ -22,7 +34,7 @@ Both forms retain visible labels, password-manager autocomplete, show/hide passw
 
 - Client pages independently validate the current client and query by its ID. Private drafts stay excluded; interactive record DTOs remain allowlisted.
 - Employee dashboard preserves expiration, active-employment and linked-panel-user checks, querying authored content by that employee's ID.
-- No new HR edits, leave-request submission, payment/download, support inbox or account-reset capability was invented.
+- No new HR edits, leave-request submission, card processing, automatic payment verification, support inbox or account-reset capability was invented. Authorized invoice extensions add real PDF download/native printing and optional trusted-provider **Pay now** links. Status changes still require confirmed admin recording; see `docs/INVOICES.md`.
 - Normal session/password/rate-limit behavior remains intact; existing admin access permissions do not change.
 
 ## Verification
@@ -40,6 +52,23 @@ AXE_PATH=/path/to/axe.min.js node --env-file=.env --env-file=.env.local scripts/
 ```
 
 Browser scripts permit only localhost origins/databases and Google's official testing pair. They create labeled synthetic records, verify real local sign-in/provider test-token handling, ownership, responsive layout and recovery, then delete fixtures in `finally`. They do not automate real CAPTCHA challenges or send real credentials/email. `REUSE_ENTRANCE_CAPTURES=1` preserves already-inspected entrance evidence while continuing functional checks; default runs cover all widths.
+
+Invoice PDF verification (local fixtures only, no mail):
+
+```sh
+BASE_URL=http://localhost:3000 node --env-file=.env --env-file=.env.local scripts/verify-invoice-downloads.mjs
+# Also disable mail in the local server. Generates email review fixtures first:
+npx vitest run tests/payment-links.test.tsx
+MAIL_DELIVERY_MODE=off node --env-file=.env --env-file=.env.local scripts/verify-payment-links.mjs
+```
+
+This covers PDF downloads/inline printing, drafts/foreign invoice exclusion,
+expired/inactive sessions, real browser downloads and 1440/390/320px controls.
+Synthetic clients and invoices are deleted in `finally`. Payment-link checks additionally
+cover actual admin forms, trusted-host validation, changed-term reconfirmation,
+client ownership, external navigation without making a real provider request,
+HTML/plain-text email actions, blank/removal/non-payable states and financial
+project completion. Payment screenshots/PDFs/report: `tmp/payment-links/`.
 
 Current evidence: `.impeccable/review/portal-v2/` and `.impeccable/review/employee-portal/`. Desktop/mobile and 320/390/768/1440 captures are available. Final functional continuations passed 130 client and 42 employee assertions, with earlier four-width entrance scans/captures retained. Unit suite: 96 files / 1,370 tests; lint, typecheck and production build passed. Axe scans cover client main-task surfaces and employee body/chrome; third-party CAPTCHA frame internals and whole-site compliance are not certified.
 

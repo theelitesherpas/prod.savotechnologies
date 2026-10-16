@@ -110,7 +110,7 @@ export function ProjectBrowser({ projects }: { projects: ProjectRecord[] }) {
           { value: "planning", label: "Planning" },
           { value: "in_progress", label: "In progress" },
           { value: "review", label: "In review" },
-          { value: "delivered", label: "Delivered" },
+          { value: "delivered", label: "Completed" },
           { value: "paused", label: "Paused" },
           { value: "cancelled", label: "Cancelled" },
         ]}
@@ -157,7 +157,7 @@ export function InvoiceBrowser({ invoices }: { invoices: InvoiceRecord[] }) {
         count={visible.length}
         total={invoices.length}
         statuses={[
-          { value: "sent", label: "Due" },
+          { value: "sent", label: "Unpaid" },
           { value: "overdue", label: "Overdue" },
           { value: "paid", label: "Paid" },
           { value: "cancelled", label: "Cancelled" },
