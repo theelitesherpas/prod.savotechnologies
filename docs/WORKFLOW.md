@@ -108,7 +108,12 @@ existing branches to remove them.
 
 For this ancestry, prepare `release/vX.Y.Z` as a normal commit descended from the
 current production `main`, carrying the reviewed feature tree. Push that release
-branch to **dev**, open a PR, wait for CI, and squash the PR into dev `main`.
+branch to **dev**. If its PR is conflict-free, wait for CI and squash it into dev
+`main`. In subsequent releases the prior squash and production commits can have
+identical trees but different ancestry, making a direct release PR conflict.
+Instead create a feature branch from dev `main`, cherry-pick the release's new
+commits onto it, and verify its complete tree equals the untouched linear release.
+Run CI and squash that feature PR. Never force-rewrite either existing branch.
 Promote dev `main` to test `main`, plus the exact release branch to test; wait for
 test CI. Verify `git diff --exit-code <release> <tested-main>` is empty (including
 schema, assets and lockfile), and verify there are no merges between production
