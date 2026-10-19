@@ -2,13 +2,15 @@ import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { BackLink, PageHeader, Notice } from "@/components/admin/ui";
+import { razorpayStatus } from "@/lib/razorpay-config";
+import { BackLink, PageHeader, Notice, Chip } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
+import { ConfirmAction } from "@/components/admin/confirm-dialog";
 import { InvoiceLinkFields } from "@/components/admin/invoice-link-fields";
 import { InvoicePaymentField } from "@/components/admin/invoice-payment-field";
 import { money } from "@/components/portal/ui";
-import { updateInvoiceAction } from "../actions";
+import { updateInvoiceAction, createInvoiceRazorpayLinkAction, syncInvoiceRazorpayAction } from "../actions";
 
 export const metadata: Metadata = { title: "Edit invoice" };
 
@@ -17,11 +19,12 @@ export default async function EditInvoicePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ e?: string }>;
+  searchParams: Promise<{ e?: string; linked?: string; saved?: string; via?: string; razorpay?: string; linkError?: string }>;
 }) {
   await requireAdminPage("/admin/invoices/[id]");
   const { id } = await params;
-  const { e } = await searchParams;
+  const sp = await searchParams;
+  const e = sp.e;
   if (!prisma) notFound();
 
   const [invoice, clients, projects, milestones] = await Promise.all([
@@ -31,6 +34,9 @@ export default async function EditInvoicePage({
     prisma.projectMilestone.findMany({ orderBy: [{ projectId: "asc" }, { order: "asc" }, { createdAt: "asc" }], select: { id: true, projectId: true, title: true, scope: true, amount: true, project: { select: { currency: true } } } }),
   ]);
   if (!invoice) notFound();
+  const gateway = await razorpayStatus().catch(() => null);
+  const payable = ["sent", "overdue"].includes(invoice.status) && invoice.amount > 0;
+  const showRazorpayCard = !!gateway?.configured && (payable || !!invoice.razorpayLinkId);
 
   const input = "adm-input w-full";
   const iso = (d: Date | null) => (d ? new Date(d).toISOString().slice(0, 10) : "");
@@ -41,7 +47,66 @@ export default async function EditInvoicePage({
       <PageHeader title={invoice.number} description={`Stored amount: ${(invoice.amount / 100).toFixed(2)} ${invoice.currency}${invoice.milestone ? ` · milestone: ${invoice.milestone.title}` : ""}`} />
       {e === "invalid" ? <Notice kind="alert">Check the fields.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That invoice number is already in use.</Notice> : null}
-      {e && e !== "dup" && e !== "invalid" ? <Notice kind="alert">{e}</Notice> : null}
+      {e && e !== "dup" && e !== "invalid" ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
+      {sp.linked ? <Notice>{sp.linked === "auto" ? "Invoice saved — a Razorpay payment link was created automatically and the email was sent with the Pay now action." : "Payment link created. The client's Pay now actions are live and the invoice email was resent with the payment button."}</Notice> : null}
+      {sp.linkError ? <Notice kind="alert">The invoice was saved, but the automatic Razorpay link failed: {decodeURIComponent(sp.linkError)}. The email went out without a Pay now action — use “Create payment link” on this page to retry.</Notice> : null}
+      {sp.saved === "paid" ? <Notice>{sp.via === "razorpay" ? "Payment confirmed from Razorpay — invoice marked paid and receipt sent." : "Invoice marked paid."}</Notice> : null}
+      {sp.razorpay ? <Notice>Razorpay link status: {decodeURIComponent(sp.razorpay)} (not paid yet).</Notice> : null}
+
+      {showRazorpayCard ? (
+        <div className="adm-card mb-8 p-5">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <p className="adm-label mr-auto">Razorpay payment link</p>
+            {invoice.razorpayLinkId ? <Chip tone={invoice.status === "paid" ? "success" : "accent"} mono>{invoice.status === "paid" ? "Link paid" : "Link active"}</Chip> : <Chip tone="muted" mono>No link</Chip>}
+            {invoice.razorpayPaymentId ? <Chip tone="muted" mono>pay …{invoice.razorpayPaymentId.slice(-6)}</Chip> : null}
+          </div>
+          {payable ? (
+            <>
+              <p className="t-caption mb-4 text-muted">
+                {invoice.razorpayLinkId
+                  ? "A hosted Razorpay link is attached. Pay now shows in the client portal, the invoice PDF and the branded email. Sync checks the provider's own record; replacing cancels the old link first."
+                  : "Create a hosted Razorpay link for the exact invoice amount. The client receives the branded invoice email with a Pay now action, and payment is confirmed automatically by webhook."}
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                {invoice.razorpayLinkId ? (
+                  <>
+                    <form action={syncInvoiceRazorpayAction}>
+                      <input type="hidden" name="id" value={invoice.id} />
+                      <SubmitButton label="Sync status with Razorpay" pendingLabel="Checking…" compact />
+                    </form>
+                    <ConfirmAction
+                      action={createInvoiceRazorpayLinkAction}
+                      id={invoice.id}
+                      extra={{ replace: "yes" }}
+                      label="Replace link"
+                      title="Replace the Razorpay link?"
+                      description="The current link is cancelled at Razorpay first, then a fresh link for this invoice's exact amount is created and the invoice email is resent."
+                      confirmLabel="Replace"
+                      compact
+                    />
+                  </>
+                ) : (
+                  <ConfirmAction
+                    action={createInvoiceRazorpayLinkAction}
+                    id={invoice.id}
+                    label="Create payment link"
+                    title={`Create a Razorpay link for ${money(invoice.amount, invoice.currency)}?`}
+                    description="Razorpay hosts a checkout for this invoice's exact amount. The client gets the Pay now action in the portal, PDF and email; payment is recorded automatically when Razorpay confirms it."
+                    confirmLabel="Create link"
+                    tone="success"
+                  />
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="t-caption text-muted">
+              {invoice.razorpayLinkId
+                ? "This invoice is no longer payable — its Razorpay link was cancelled automatically and can no longer be paid."
+                : "Create payment links only for unpaid invoices with a positive amount."}
+            </p>
+          )}
+        </div>
+      ) : null}
 
       <FormGuard action={updateInvoiceAction} className="adm-card space-y-5 p-5">
         <input type="hidden" name="id" value={invoice.id} />

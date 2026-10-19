@@ -399,6 +399,12 @@ model Invoice {
   notes     String         @default("")
   /// Optional hosted provider URL; never evidence of payment by itself.
   paymentLink String?       @map("payment_link")
+  /// Razorpay payment-link id (plink_…) when the link was created through
+  /// the gateway — the authoritative join key for webhook reconciliation.
+  razorpayLinkId String?    @map("razorpay_link_id")
+  /// Razorpay payment id (pay_…) recorded when payment was confirmed by
+  /// signature-verified webhook or admin sync. Evidence reference only.
+  razorpayPaymentId String? @map("razorpay_payment_id")
   issuedAt  DateTime       @default(now()) @map("issued_at")
   dueDate   DateTime?      @map("due_date")
   paidAt    DateTime?      @map("paid_at")
@@ -431,6 +437,24 @@ model PaymentGatewayConfig {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@map("payment_gateway_configs")
+}
+
+/// Webhook deliveries received from payment gateways. The provider event id
+/// as primary key makes processing idempotent: retries and replays are
+/// acknowledged (200) without re-running effects. Status summaries never
+/// contain secret material or raw URLs.
+model WebhookEvent {
+  id        String   @id
+  /// e.g. "payment_link.paid" — provider event type.
+  event     String
+  /// processed | ignored | rejected
+  status    String
+  /// Safe one-line outcome for the audit trail (reference ids, status).
+  detail    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([event, createdAt])
+  @@map("webhook_events")
 }
 
 /// Step-up email verification challenges (e.g. before the payment-gateway

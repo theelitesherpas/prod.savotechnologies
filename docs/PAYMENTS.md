@@ -109,9 +109,35 @@ masked status, connection-test failure path, danger-zone clear, lock-now,
 editor lockout — 28 assertions, synthetic fixtures cleaned up in `finally`,
 refuses non-local databases. Evidence screenshots in `tmp/razorpay-settings/`.
 
-## Not yet implemented
+## Invoice pipeline (v7.6+)
 
-Automatic invoice payment-link creation, the `/api/webhooks/razorpay`
-signature-verified webhook endpoint and payment reconciliation. The webhook
-secret stored here is prepared for that work; until it ships, invoice
-`paymentLink` remains manual-entry under the existing policy (docs/INVOICES.md).
+- **Payment links:** `src/lib/razorpay.ts` (server-only, no SDK) creates
+  Payment Links for unpaid invoices with the exact minor-unit amount,
+  `reference_id` = invoice number, provider notifications off. **Precedence:
+  a manual payment link always wins — the gateway is consulted only when no
+  link was provided** (invoice created payable, or first transitioning into
+  payable; cleared links are never auto-recreated). Admin actions:
+  create/replace (`razorpay.link.create`), stored in `paymentLink` +
+  `razorpayLinkId`. Replacing, editing out of sent/overdue, deleting or
+  manually overriding an invoice cancels the provider link (best-effort) and
+  detaches the managed id. Creation failure never fails the save: the email
+  is sent without Pay now and the operator is told why.
+- **Webhook:** `POST /api/webhooks/razorpay` — signature-verified
+  (constant-time HMAC-SHA256 vs the panel-stored secret), replay-safe
+  (`webhook_events` unique event id, effects + dedupe row commit together),
+  amount/currency must match exactly or the delivery is recorded `rejected`.
+  Payment recording goes through `recordInvoicePaid` (lib/invoice-payments.ts)
+  — one transactional routine shared by manual marking, admin sync and the
+  webhook: status + `paidAt` + `razorpayPaymentId`, receipt email, project and
+  milestone reconciliation.
+- **Reconciliation:** Sync status with Razorpay (per invoice) reads the
+  provider's own record; `razorpay.sync.paid` audit entry. Webhook audits:
+  `razorpay.webhook.paid` / `.mismatch`.
+- **Dashboard setup:** Razorpay → Settings → Webhooks → add
+  `https://savotechnologies.com/api/webhooks/razorpay`, set a secret, save
+  the same secret in the panel, subscribe to `payment_link.paid` and
+  `payment_link.cancelled`.
+- **Local verification:** `scripts/verify-razorpay-payments.mjs` drives the
+  full path against a stub gateway (link creation through the UI, portal Pay
+  now, signed webhook, replay, bad signature, mismatch, sync, cancellation) —
+  23 browser checks. Unit coverage in `tests/razorpay-payments.test.ts`.

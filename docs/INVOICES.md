@@ -79,14 +79,34 @@ checking the reconfirmation checkbox, or replacing/clearing that link. Link
 changes, provider hostname and reconfirmations are audited without logging URL
 tokens. An administrator's checkbox is not proof that funds were received.
 
-**Not a payment gateway integration:** clicking, returning from the provider,
-or a URL parameter never changes invoice/project status. Confirm receipt with
-the provider, then mark the invoice paid in admin; existing invoice reconciliation
-completes a fully funded project. Automatic provider confirmation would need
-separately configured, signature-verified, replay-safe webhooks and transaction
-reconciliation. Previously delivered emails/downloaded PDFs cannot be revoked
-when the portal record changes; expire/revoke old payment links with the provider
-to prevent duplicate or outdated payments.
+**Razorpay-managed links (v7.6+):** with gateway credentials configured
+(Settings → Payment gateway), invoices follow a strict precedence policy:
+**a manually entered payment link always wins and the gateway is never
+triggered for that invoice; only when no link is provided does Razorpay create
+one.** Automatic creation fires when a payable invoice (sent/overdue, positive
+amount) is created, or first transitions into payable, with no prior link —
+deliberately cleared links are never silently re-created. The server calls the
+Payment Links API with the exact stored amount (provider-side sms/email
+notifications stay off; Savo sends its own branded email), stores `short_url`
+in `Invoice.paymentLink` plus the gateway link id in `Invoice.razorpayLinkId`,
+and the notification email carries the Pay now action. If creation fails, the
+invoice still saves, the email goes out without a payment action and the
+operator is told why (retry via **Create payment link**). Replacing a link
+cancels the old one at the provider first; editing an invoice out of
+sent/overdue, deleting it, or pasting a manual link over a managed one
+best-effort cancels the gateway link and detaches its id so stale links can
+never be paid.
+
+**Automatic confirmation:** `POST /api/webhooks/razorpay` verifies the
+`X-Razorpay-Signature` HMAC-SHA256 (constant-time) against the webhook secret
+stored encrypted in the panel, deduplicates by event id
+(`webhook_events`, replay-safe), matches the invoice by link id or reference,
+and records payment only when amount and currency match exactly — through
+`recordInvoicePaid`, the same transactional routine as manual marking (receipt
+email, project + milestone reconciliation). Mismatches are recorded as
+rejected for human review. **Sync status with Razorpay** on the invoice page
+reconciles manually from the provider's own record. Manual Pay now links and
+manual marking remain fully supported without any gateway.
 
 **Deployment:** apply the additive nullable `invoices.payment_link` column before
 starting this code, together with the project schema additions. Back up the

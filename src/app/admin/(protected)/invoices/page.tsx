@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: "Payments" };
 export default async function AdminInvoicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; deleted?: string; e?: string; client?: string }>;
+  searchParams: Promise<{ saved?: string; deleted?: string; e?: string; client?: string; linked?: string; linkError?: string }>;
 }) {
   await requireAdminPage("/admin/invoices");
   const sp = await searchParams;
@@ -41,6 +41,8 @@ export default async function AdminInvoicesPage({
       />
 
       {sp.saved ? <Notice>{sp.saved === "paid" ? "Invoice marked paid." : sp.saved === "created" ? "Invoice created." : "Invoice saved."}</Notice> : null}
+      {sp.linked === "auto" ? <Notice>A Razorpay payment link was created automatically — the client&rsquo;s email includes the Pay now action.</Notice> : null}
+      {sp.linkError ? <Notice kind="alert">The invoice was created, but the automatic Razorpay link failed: {decodeURIComponent(sp.linkError)}. Open the invoice and use “Create payment link” to retry.</Notice> : null}
       {sp.deleted ? <Notice>Invoice deleted.</Notice> : null}
       {sp.e ? <Notice kind="alert">{sp.e}</Notice> : null}
 
