@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { money } from "./ui";
 import { InvoicePayButton } from "./invoice-pay-button";
-import { invoicePaymentLink } from "@/lib/payment-links";
 import { CLIENT_INVOICE_STATUSES, type ClientInvoiceStatus } from "@/lib/invoice-document";
 import styles from "./portal.module.css";
 
@@ -253,6 +252,9 @@ export type InvoiceRecord = {
   paidAt: string | null;
   notes: string | null;
   paymentLink?: string | null;
+  /** Server-decided pay target: external provider URL or portal checkout path. */
+  payUrl?: string | null;
+  payExternal?: boolean;
   project: { code: string; title: string } | null;
 };
 export function invoiceTotals(
@@ -284,7 +286,7 @@ export function InvoiceTable({
   invoices: InvoiceRecord[];
   caption?: string;
 }) {
-  const actionLabel = invoices.some(invoice => invoicePaymentLink(invoice)) ? "Actions" : "Documents";
+  const actionLabel = invoices.some(invoice => invoice.payUrl || invoice.paymentLink) ? "Actions" : "Documents";
   return (
     <div className={styles.tableWrap}>
       <table className={styles.invoiceTable} role="table">

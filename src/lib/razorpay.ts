@@ -32,6 +32,26 @@ export type RazorpayLinkEntity = {
   short_url?: string;
 };
 
+export type RazorpayOrderEntity = {
+  id: string;
+  amount: number;
+  currency: string;
+  receipt?: string | null;
+  status?: string;
+};
+
+export type RazorpayPaymentEntity = {
+  id: string;
+  order_id?: string | null;
+  amount?: number;
+  currency?: string;
+  status?: string;
+  method?: string | null;
+  email?: string | null;
+  contact?: string | null;
+  notes?: Record<string, string> | null;
+};
+
 async function call<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
   const config = await getRazorpayConfig();
   if (!config) throw new RazorpayError("Razorpay is not configured. Save the API keys under Settings → Payment gateway.");
@@ -66,6 +86,43 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown })
     throw new RazorpayError("Could not reach Razorpay. Try again in a moment.");
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/** Create a Standard Checkout order on demand (client-initiated payment).
+ *  Amounts are integer minor units matching Invoice.amount exactly. */
+export async function createRazorpayOrder(input: {
+  amount: number;
+  currency: string;
+  receipt: string;
+  notes?: Record<string, string>;
+}): Promise<RazorpayOrderEntity> {
+  const entity = await call<RazorpayOrderEntity>("/v1/orders", {
+    method: "POST",
+    body: { amount: input.amount, currency: input.currency, receipt: input.receipt, ...(input.notes ? { notes: input.notes } : {}) },
+  });
+  if (!entity?.id || !/^order_/.test(entity.id)) throw new RazorpayError("Razorpay did not return a usable order.");
+  return entity;
+}
+
+/** Fetch one payment — used for checkout verification and reconciliation. */
+export async function fetchRazorpayPayment(paymentId: string): Promise<RazorpayPaymentEntity | null> {
+  try {
+    return await call<RazorpayPaymentEntity>(`/v1/payments/${encodeURIComponent(paymentId)}`);
+  } catch (error) {
+    if (error instanceof RazorpayError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+/** All payments attempted against one order — the sync/reconciliation view. */
+export async function fetchRazorpayOrderPayments(orderId: string): Promise<RazorpayPaymentEntity[]> {
+  try {
+    const list = await call<{ items?: RazorpayPaymentEntity[] }>(`/v1/orders/${encodeURIComponent(orderId)}/payments`);
+    return Array.isArray(list?.items) ? list.items : [];
+  } catch (error) {
+    if (error instanceof RazorpayError && error.status === 404) return [];
+    throw error;
   }
 }
 

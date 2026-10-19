@@ -41,9 +41,10 @@ function validSignature(raw: string, signature: string, secret: string): boolean
 }
 
 type LinkEntity = { id?: string; reference_id?: string | null; amount?: number; currency?: string; status?: string };
+type PaymentEntity = { id?: string; order_id?: string | null; amount?: number; currency?: string; status?: string; method?: string | null; notes?: Record<string, string> | null };
 type Payload = {
   event?: string;
-  payload?: { payment_link?: { entity?: LinkEntity }; payment?: { entity?: { id?: string } } };
+  payload?: { payment_link?: { entity?: LinkEntity }; payment?: { entity?: PaymentEntity } };
 };
 
 export async function POST(request: Request): Promise<Response> {
@@ -69,8 +70,9 @@ export async function POST(request: Request): Promise<Response> {
     return reply(400, { error: "invalid payload" });
   }
   const event = typeof body.event === "string" ? body.event : "";
-  const entity = body.payload?.payment_link?.entity ?? {};
-  const eventId = request.headers.get("x-razorpay-event-id") ?? `${event}:${entity.id ?? "unknown"}`;
+  const linkEntity = body.payload?.payment_link?.entity ?? {};
+  const paymentEntity = body.payload?.payment?.entity ?? {};
+  const eventId = request.headers.get("x-razorpay-event-id") ?? `${event}:${linkEntity.id ?? paymentEntity.id ?? "unknown"}`;
   if (!event) return reply(400, { error: "missing event" });
 
   if (!prisma) return reply(503, { error: "database unavailable" });
@@ -83,24 +85,53 @@ export async function POST(request: Request): Promise<Response> {
       // processed — acknowledge idempotently without re-running effects.
       await tx.webhookEvent.create({ data: { id: eventId, event, status: "pending", detail: null } });
 
-      if (event !== "payment_link.paid") {
-        // payment_link.cancelled and everything else: recorded, no effect —
-        // cancelling a link never mutates the invoice by itself.
+      if (event !== "payment_link.paid" && event !== "payment.captured") {
+        // Other events (payment_link.cancelled, refunds, …): recorded, no
+        // effect — cancelling a link never mutates the invoice by itself.
         await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "ignored", detail: `${event} received; no automatic effect` } });
         return { kind: "ignored" as const };
       }
-      if (!entity.id) {
+
+      if (event === "payment.captured") {
+        // Standard Checkout confirmation: bind by OUR order id (authoritative),
+        // with the order notes' invoice id as the secondary match.
+        if (!paymentEntity.id) {
+          await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "rejected", detail: "missing payment id" } });
+          return { kind: "rejected" as const };
+        }
+        const matchers: Record<string, string>[] = [];
+        if (paymentEntity.order_id) matchers.push({ razorpayOrderId: paymentEntity.order_id });
+        if (paymentEntity.notes?.invoiceId) matchers.push({ id: paymentEntity.notes.invoiceId });
+        const invoice = matchers.length ? await tx.invoice.findFirst({ where: { OR: matchers } }) : null;
+        if (!invoice) {
+          await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "ignored", detail: `no invoice for payment ${paymentEntity.id}` } });
+          return { kind: "ignored" as const };
+        }
+        if (Number.isSafeInteger(paymentEntity.amount) && (paymentEntity.amount !== invoice.amount || (paymentEntity.currency ?? invoice.currency) !== invoice.currency)) {
+          await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "rejected", detail: `amount/currency mismatch on ${invoice.number}` } });
+          return { kind: "mismatch" as const, invoiceId: invoice.id, number: invoice.number };
+        }
+        const paid = await recordInvoicePaid(tx, invoice.id, { source: "razorpay.webhook", paymentId: paymentEntity.id });
+        if (!paid.ok) {
+          await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "rejected", detail: `invoice ${invoice.number} not payable (${paid.reason})` } });
+          return { kind: "rejected" as const };
+        }
+        await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "processed", detail: `${invoice.number} paid${paid.alreadyPaid ? " (already)" : ""}` } });
+        return { kind: "paid" as const, events: paid.events, projectId: paid.projectId, number: invoice.number, alreadyPaid: paid.alreadyPaid, invoiceId: invoice.id };
+      }
+
+      if (!linkEntity.id) {
         await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "rejected", detail: "missing link id" } });
         return { kind: "rejected" as const };
       }
       const invoice = await tx.invoice.findFirst({
-        where: { OR: [{ razorpayLinkId: entity.id }, ...(entity.reference_id ? [{ number: entity.reference_id }] : [])] },
+        where: { OR: [{ razorpayLinkId: linkEntity.id }, ...(linkEntity.reference_id ? [{ number: linkEntity.reference_id }] : [])] },
       });
       if (!invoice) {
-        await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "ignored", detail: `no invoice for link ${entity.id}` } });
+        await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "ignored", detail: `no invoice for link ${linkEntity.id}` } });
         return { kind: "ignored" as const };
       }
-      if (Number.isSafeInteger(entity.amount) && (entity.amount !== invoice.amount || (entity.currency ?? invoice.currency) !== invoice.currency)) {
+      if (Number.isSafeInteger(linkEntity.amount) && (linkEntity.amount !== invoice.amount || (linkEntity.currency ?? invoice.currency) !== invoice.currency)) {
         await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "rejected", detail: `amount/currency mismatch on ${invoice.number}` } });
         return { kind: "mismatch" as const, invoiceId: invoice.id, number: invoice.number };
       }

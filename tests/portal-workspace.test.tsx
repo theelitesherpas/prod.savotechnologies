@@ -161,6 +161,7 @@ describe("client workspace presentation", () => {
       milestoneId: null,
       razorpayLinkId: null,
       razorpayPaymentId: null,
+      razorpayOrderId: null,
     } as Invoice);
     expect(inv).not.toHaveProperty("clientId");
     expect(inv.paidAt).toBe(date.toISOString());

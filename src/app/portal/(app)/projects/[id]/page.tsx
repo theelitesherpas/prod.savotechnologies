@@ -13,6 +13,7 @@ import {
   progressValue,
 } from "@/components/portal/workspace-ui";
 import { invoiceRecord } from "@/components/portal/records";
+import { getRazorpayConfig } from "@/lib/razorpay-config";
 import { money, MilestonePaymentChip } from "@/components/portal/ui";
 import { projectFinancials, milestonePaymentStatus } from "@/lib/project-finance";
 import styles from "@/components/portal/portal.module.css";
@@ -24,6 +25,7 @@ export default async function PortalProjectPage({
   params: Promise<{ id: string }>;
 }) {
   const client = await getClientUser();
+  const gatewayOn = !!(await getRazorpayConfig().catch(() => null));
   if (!client || !prisma) redirect("/portal");
   const { id } = await params;
   const project = await prisma.clientProject.findFirst({
@@ -155,10 +157,13 @@ export default async function PortalProjectPage({
           <InvoiceTable
             caption={`Invoices for ${project.title}`}
             invoices={project.invoices.map((invoice) =>
-              invoiceRecord({
-                ...invoice,
-                project: { code: project.code, title: project.title },
-              }),
+              invoiceRecord(
+                {
+                  ...invoice,
+                  project: { code: project.code, title: project.title },
+                },
+                gatewayOn,
+              ),
             )}
           />
         ) : (

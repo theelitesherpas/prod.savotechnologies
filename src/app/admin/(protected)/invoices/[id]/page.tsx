@@ -6,11 +6,10 @@ import { razorpayStatus } from "@/lib/razorpay-config";
 import { BackLink, PageHeader, Notice, Chip } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
-import { ConfirmAction } from "@/components/admin/confirm-dialog";
 import { InvoiceLinkFields } from "@/components/admin/invoice-link-fields";
 import { InvoicePaymentField } from "@/components/admin/invoice-payment-field";
 import { money } from "@/components/portal/ui";
-import { updateInvoiceAction, createInvoiceRazorpayLinkAction, syncInvoiceRazorpayAction } from "../actions";
+import { updateInvoiceAction, syncInvoiceRazorpayAction } from "../actions";
 
 export const metadata: Metadata = { title: "Edit invoice" };
 
@@ -19,7 +18,7 @@ export default async function EditInvoicePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ e?: string; linked?: string; saved?: string; via?: string; razorpay?: string; linkError?: string }>;
+  searchParams: Promise<{ e?: string; saved?: string; via?: string; razorpay?: string }>;
 }) {
   await requireAdminPage("/admin/invoices/[id]");
   const { id } = await params;
@@ -48,8 +47,6 @@ export default async function EditInvoicePage({
       {e === "invalid" ? <Notice kind="alert">Check the fields.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That invoice number is already in use.</Notice> : null}
       {e && e !== "dup" && e !== "invalid" ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
-      {sp.linked ? <Notice>{sp.linked === "auto" ? "Invoice saved — a Razorpay payment link was created automatically and the email was sent with the Pay now action." : "Payment link created. The client's Pay now actions are live and the invoice email was resent with the payment button."}</Notice> : null}
-      {sp.linkError ? <Notice kind="alert">The invoice was saved, but the automatic Razorpay link failed: {decodeURIComponent(sp.linkError)}. The email went out without a Pay now action — use “Create payment link” on this page to retry.</Notice> : null}
       {sp.saved === "paid" ? <Notice>{sp.via === "razorpay" ? "Payment confirmed from Razorpay — invoice marked paid and receipt sent." : "Invoice marked paid."}</Notice> : null}
       {sp.razorpay ? <Notice>Razorpay link status: {decodeURIComponent(sp.razorpay)} (not paid yet).</Notice> : null}
 
@@ -63,46 +60,20 @@ export default async function EditInvoicePage({
           {payable ? (
             <>
               <p className="t-caption mb-4 text-muted">
-                {invoice.razorpayLinkId
-                  ? "A hosted Razorpay link is attached. Pay now shows in the client portal, the invoice PDF and the branded email. Sync checks the provider's own record; replacing cancels the old link first."
-                  : "Create a hosted Razorpay link for the exact invoice amount. The client receives the branded invoice email with a Pay now action, and payment is confirmed automatically by webhook."}
+                {invoice.razorpayOrderId
+                  ? "A checkout session exists for this invoice. The client pays from the portal Pay now action; payment is verified server-side and recorded automatically. Sync reads the provider's own record at any time."
+                  : "When this invoice is issued, the client's Pay now action opens Razorpay Standard Checkout from the portal — payment is verified server-side and recorded automatically. A checkout session is created the moment the client starts payment."}
               </p>
-              <div className="flex flex-wrap items-center gap-3">
-                {invoice.razorpayLinkId ? (
-                  <>
-                    <form action={syncInvoiceRazorpayAction}>
-                      <input type="hidden" name="id" value={invoice.id} />
-                      <SubmitButton label="Sync status with Razorpay" pendingLabel="Checking…" compact />
-                    </form>
-                    <ConfirmAction
-                      action={createInvoiceRazorpayLinkAction}
-                      id={invoice.id}
-                      extra={{ replace: "yes" }}
-                      label="Replace link"
-                      title="Replace the Razorpay link?"
-                      description="The current link is cancelled at Razorpay first, then a fresh link for this invoice's exact amount is created and the invoice email is resent."
-                      confirmLabel="Replace"
-                      compact
-                    />
-                  </>
-                ) : (
-                  <ConfirmAction
-                    action={createInvoiceRazorpayLinkAction}
-                    id={invoice.id}
-                    label="Create payment link"
-                    title={`Create a Razorpay link for ${money(invoice.amount, invoice.currency)}?`}
-                    description="Razorpay hosts a checkout for this invoice's exact amount. The client gets the Pay now action in the portal, PDF and email; payment is recorded automatically when Razorpay confirms it."
-                    confirmLabel="Create link"
-                    tone="success"
-                  />
-                )}
-              </div>
+              <form action={syncInvoiceRazorpayAction}>
+                <input type="hidden" name="id" value={invoice.id} />
+                <SubmitButton label="Sync status with Razorpay" pendingLabel="Checking…" compact />
+              </form>
             </>
           ) : (
             <p className="t-caption text-muted">
-              {invoice.razorpayLinkId
-                ? "This invoice is no longer payable — its Razorpay link was cancelled automatically and can no longer be paid."
-                : "Create payment links only for unpaid invoices with a positive amount."}
+              {invoice.razorpayOrderId
+                ? "Any checkout session for this invoice can no longer complete a payment that would be recorded — verify the status above."
+                : "Checkout sessions are created by clients when they start payment on unpaid invoices."}
             </p>
           )}
         </div>

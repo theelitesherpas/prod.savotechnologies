@@ -169,7 +169,11 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
     : invoice.status === "overdue" ? "This invoice is marked overdue. Please contact our team if payment has already been made."
     : "Payment has not yet been recorded for this invoice.", 10, statusColour[invoice.status]);
 
-  const payment = invoicePaymentLink(invoice);
+  // Pay target: the validated external provider link, or the portal checkout
+  // page when the gateway handles this invoice. Both are HTTPS URLs we minted
+  // server-side — annotation targets only, never evidence of payment.
+  const external = invoicePaymentLink(invoice);
+  const payment = external ?? (invoice.payUrl && /^https:\/\//.test(invoice.payUrl) ? invoice.payUrl : null);
   if (payment) {
     gap(10);
     room(65);
@@ -181,7 +185,7 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
     }));
     page!.node.addAnnot(link);
     y -= 44;
-    text(`Continue securely with ${paymentProvider(payment)}. Payment is recorded after confirmation.`, 8, muted);
+    text(external ? `Continue securely with ${paymentProvider(external)}. Payment is recorded after confirmation.` : "Continue securely in your client portal. Payment status is verified and recorded automatically.", 8, muted);
   }
 
   if (invoice.notes.trim()) {

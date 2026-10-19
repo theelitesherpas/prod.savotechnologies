@@ -274,8 +274,8 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Admin creates an invoice",
     recipient: "client",
     dept: "hello",
-    vars: { name: "Acme Trading", number: formatBusinessId("IN", BUSINESS_ID_CONFIG.IN.initialCurrent + 1), amount: "₹2,500", currency: "INR", due: "22 Oct 2026", paymentLink: "" },
-    default: (v) => invoiceIssued(v.name, v.number, invoiceAmount(v), v.currency || "INR", invoiceDueDate(v), v.paymentLink, v.invoiceStatus),
+    vars: { name: "Acme Trading", number: formatBusinessId("IN", BUSINESS_ID_CONFIG.IN.initialCurrent + 1), amount: "₹2,500", currency: "INR", due: "22 Oct 2026", paymentLink: "", payUrl: "" },
+    default: (v) => invoiceIssued(v.name, v.number, invoiceAmount(v), v.currency || "INR", invoiceDueDate(v), v.paymentLink, v.invoiceStatus, v.payUrl),
   },
   {
     key: "invoicePaid",
@@ -294,8 +294,8 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     fires: "Invoice status set to overdue",
     recipient: "client",
     dept: "hello",
-    vars: { name: "Acme Trading", number: formatBusinessId("IN", BUSINESS_ID_CONFIG.IN.initialCurrent + 1), amount: "₹2,500", currency: "INR", days: "7", paymentLink: "" },
-    default: (v) => invoiceOverdue(v.name, v.number, invoiceAmount(v), v.currency || "INR", Number(v.days) || 1, v.paymentLink, v.invoiceStatus),
+    vars: { name: "Acme Trading", number: formatBusinessId("IN", BUSINESS_ID_CONFIG.IN.initialCurrent + 1), amount: "₹2,500", currency: "INR", days: "7", paymentLink: "", payUrl: "" },
+    default: (v) => invoiceOverdue(v.name, v.number, invoiceAmount(v), v.currency || "INR", Number(v.days) || 1, v.paymentLink, v.invoiceStatus, v.payUrl),
   },
   {
     key: "milestoneUpdate",

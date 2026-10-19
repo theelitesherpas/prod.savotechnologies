@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getClientUser } from "@/lib/client-auth";
 import { money } from "@/components/portal/ui";
 import { InvoicePayButton } from "@/components/portal/invoice-pay-button";
+import { getRazorpayConfig } from "@/lib/razorpay-config";
+import { invoicePayTarget } from "@/lib/payment-targets";
 import {
   EmptyState,
   PortalIcon,
@@ -19,6 +21,8 @@ import styles from "@/components/portal/portal.module.css";
 export const metadata: Metadata = { title: "Overview" };
 export default async function PortalDashboard() {
   const client = await getClientUser();
+  const gatewayOn = !!(await getRazorpayConfig().catch(() => null));
+  const payTargetFor = (invoice: { id: string; status: string; amount: number; paymentLink?: string | null }) => invoicePayTarget(invoice, gatewayOn);
   if (!client || !prisma) redirect("/portal");
   const [projects, invoices] = await Promise.all([
     prisma.clientProject.findMany({
@@ -147,7 +151,7 @@ export default async function PortalDashboard() {
                       {invoice.currency}
                     </strong>
                     <PortalStatus status={invoice.status} />
-                    <InvoicePayButton invoice={invoice}/>
+                    <InvoicePayButton invoice={{ ...invoice, payUrl: payTargetFor(invoice)?.url ?? null, payExternal: payTargetFor(invoice)?.external }}/>
                   </div>
                 </li>
               ))}

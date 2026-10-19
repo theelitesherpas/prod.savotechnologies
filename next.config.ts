@@ -13,12 +13,12 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${
     isProd ? "" : " 'unsafe-eval'"
-  } https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com https://static.cloudflareinsights.com`,
+  } https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com https://static.cloudflareinsights.com https://checkout.razorpay.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://cdn.simpleicons.org https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "img-src 'self' data: blob: https://cdn.simpleicons.org https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.razorpay.com https://razp.io https://rzp.io",
   "font-src 'self'",
-  "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://cloudflareinsights.com https://*.cloudflareinsights.com",
-  "frame-src https://www.google.com https://recaptcha.google.com",
+  "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://cloudflareinsights.com https://*.cloudflareinsights.com https://api.razorpay.com https://lumberjack.razorpay.com",
+  "frame-src https://www.google.com https://recaptcha.google.com https://api.razorpay.com https://checkout.razorpay.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

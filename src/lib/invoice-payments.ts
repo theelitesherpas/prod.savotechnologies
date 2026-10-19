@@ -16,13 +16,15 @@ import { reconcileProject, type ProjectEmail } from "@/lib/project-service";
 export type InvoiceNotificationClient = { name: string; email: string };
 
 /** Email events for an invoice state change (issued/paid/overdue). Drafts,
- *  cancelled records and unknown states never notify. */
-export function invoiceNotification(client: InvoiceNotificationClient, invoice: { number: string; amount: number; currency: string; status: string; dueDate: Date | null; paymentLink?: string | null }): ProjectEmail[] {
+ *  cancelled records and unknown states never notify. `payUrl` is the
+ *  server-decided checkout target (absolute portal pay URL) used by the
+ *  email CTA when no manual provider link exists. */
+export function invoiceNotification(client: InvoiceNotificationClient, invoice: { number: string; amount: number; currency: string; status: string; dueDate: Date | null; paymentLink?: string | null; payUrl?: string | null }): ProjectEmail[] {
   if (!["sent", "paid", "overdue"].includes(invoice.status)) return [];
   const days = invoice.dueDate ? Math.max(1, Math.ceil((Date.now() - invoice.dueDate.getTime()) / 86400000)) : 1;
   return [{ key: invoice.status === "paid" ? "invoicePaid" : invoice.status === "overdue" ? "invoiceOverdue" : "invoiceIssued", to: client.email,
     vars: { name: client.name, number: invoice.number, amount: invoiceMoney(invoice.amount, invoice.currency), amountMinor: String(invoice.amount), currency: invoice.currency,
-      due: invoice.dueDate ? invoiceDate(invoice.dueDate) : "", dueDateIso: invoice.dueDate?.toISOString() ?? "", days: String(days), invoiceStatus: invoice.status, paymentLink: invoicePaymentLink(invoice) ?? "" } }];
+      due: invoice.dueDate ? invoiceDate(invoice.dueDate) : "", dueDateIso: invoice.dueDate?.toISOString() ?? "", days: String(days), invoiceStatus: invoice.status, paymentLink: invoicePaymentLink(invoice) ?? "", payUrl: invoice.payUrl ?? "" } }];
 }
 
 export type RecordPaidOutcome =
@@ -34,7 +36,7 @@ export type RecordPaidOutcome =
 export async function recordInvoicePaid(
   tx: Prisma.TransactionClient,
   invoiceId: string,
-  opts: { source: "admin" | "razorpay.webhook" | "razorpay.sync"; paymentId?: string },
+  opts: { source: "admin" | "razorpay.webhook" | "razorpay.sync" | "razorpay.checkout"; paymentId?: string },
 ): Promise<RecordPaidOutcome> {
   const invoice = await tx.invoice.findUnique({ where: { id: invoiceId } });
   if (!invoice) return { ok: false, reason: "not_found" };

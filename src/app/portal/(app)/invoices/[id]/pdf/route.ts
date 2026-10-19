@@ -4,6 +4,9 @@ import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { CLIENT_INVOICE_STATUSES, invoiceFilename, type ClientInvoiceStatus } from "@/lib/invoice-document";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
+import { getRazorpayConfig } from "@/lib/razorpay-config";
+import { invoicePayTarget } from "@/lib/payment-targets";
+import { absoluteUrl } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,7 +34,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const invoice = await prisma.invoice.findFirst({
       where: { id, clientId: client.id, status: { in: [...CLIENT_INVOICE_STATUSES] } },
       select: {
-        number: true, amount: true, currency: true, status: true, notes: true, paymentLink: true,
+        id: true, number: true, amount: true, currency: true, status: true, notes: true, paymentLink: true,
         issuedAt: true, dueDate: true, paidAt: true,
         project: { where: { clientId: client.id }, select: { code: true, title: true } },
       },
@@ -39,8 +42,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     // Same response for unknown, another client's, private draft or an
     // unsupported status; never reveal whether a foreign invoice exists.
     if (!invoice) return failure("Invoice not found.", 404);
+    const gateway = await getRazorpayConfig().catch(() => null);
+    const payTarget = invoicePayTarget(invoice, !!gateway);
     const bytes = await renderInvoicePdf({
       ...invoice,
+      payUrl: payTarget && !payTarget.external ? absoluteUrl(payTarget.url) : null,
       status: invoice.status as ClientInvoiceStatus,
       client: { name: client.name, company: client.company, email: client.email, businessId: client.businessId ?? null },
     });

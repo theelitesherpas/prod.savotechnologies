@@ -402,6 +402,10 @@ model Invoice {
   /// Razorpay payment-link id (plink_…) when the link was created through
   /// the gateway — the authoritative join key for webhook reconciliation.
   razorpayLinkId String?    @map("razorpay_link_id")
+  /// Razorpay order id (order_…) created on demand when the client starts
+  /// Standard Checkout from the portal. Latest order wins; unused orders
+  /// simply expire at the provider.
+  razorpayOrderId  String?  @map("razorpay_order_id")
   /// Razorpay payment id (pay_…) recorded when payment was confirmed by
   /// signature-verified webhook or admin sync. Evidence reference only.
   razorpayPaymentId String? @map("razorpay_payment_id")
@@ -413,6 +417,7 @@ model Invoice {
 
   @@index([clientId])
   @@index([milestoneId])
+  @@index([razorpayOrderId])
   @@map("invoices")
 }
 

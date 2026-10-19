@@ -191,8 +191,11 @@ function money(minor: number, currency = "INR") {
 const fmtDate = (d: Date) => d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" });
 
 /** Invoice issued to a client. */
-export function invoiceIssued(clientName: string, number: string, amount: number, currency: string, dueDate: Date | null, paymentLink?: string | null, invoiceStatus = "sent"): MailTemplate {
+export function invoiceIssued(clientName: string, number: string, amount: number, currency: string, dueDate: Date | null, paymentLink?: string | null, invoiceStatus = "sent", payUrl?: string | null): MailTemplate {
   const payment = invoicePaymentLink({ paymentLink, status: invoiceStatus, amount });
+  // Gateway checkout: the CTA opens the client's own portal pay page, where
+  // Standard Checkout runs and returns with a server-verified status.
+  const checkout = !payment && payUrl && /^https:\/\//.test(payUrl) ? payUrl : null;
   return {
     subject: `Invoice ${number} · ${money(amount, currency)}`,
     html: shell({
@@ -206,11 +209,15 @@ export function invoiceIssued(clientName: string, number: string, amount: number
         p(`The invoice and its current status are available in your client portal, alongside your project records.`, true),
         payment ? p(`<a href="${site("/portal/invoices")}" style="color:#b82222;text-decoration:underline;">View or download your invoice in the portal</a>.`) : "",
       ].join(""),
-      cta: payment ? { href: payment, label: "Pay now", sub: "Opens your payment provider. Payment status updates after confirmation by the Savo team." } : { href: site("/portal"), label: "View invoice", sub: "A PDF-ready view is available from your dashboard." },
+      cta: payment
+        ? { href: payment, label: "Pay now", sub: "Opens your payment provider. Payment status updates after confirmation by the Savo team." }
+        : checkout
+          ? { href: checkout, label: "Pay now", sub: "Opens your secure Savo checkout (Razorpay). You return to the portal and the status updates automatically once the payment is verified." }
+          : { href: site("/portal"), label: "View invoice", sub: "A PDF-ready view is available from your dashboard." },
       closing: "Kind regards,",
       reason: "You are receiving this because a Savo invoice was issued to your account.",
     }),
-    text: `INVOICE ${number}\n\nAmount: ${money(amount, currency)}\nIssued: ${fmtDate(new Date())}\nDue: ${dueDate ? fmtDate(dueDate) : "On receipt"}\n\n${payment ? `Pay now: ${payment}\n\n` : ""}View: ${site("/portal")}\n\nWith thanks,\nThe Savo team`,
+    text: `INVOICE ${number}\n\nAmount: ${money(amount, currency)}\nIssued: ${fmtDate(new Date())}\nDue: ${dueDate ? fmtDate(dueDate) : "On receipt"}\n\n${payment || checkout ? `Pay now: ${payment || checkout}\n\n` : ""}View: ${site("/portal")}\n\nWith thanks,\nThe Savo team`,
   };
 }
 
@@ -237,8 +244,9 @@ export function invoicePaid(clientName: string, number: string, amount: number, 
 }
 
 /** Invoice flagged overdue. */
-export function invoiceOverdue(clientName: string, number: string, amount: number, currency: string, daysLate: number, paymentLink?: string | null, invoiceStatus = "overdue"): MailTemplate {
+export function invoiceOverdue(clientName: string, number: string, amount: number, currency: string, daysLate: number, paymentLink?: string | null, invoiceStatus = "overdue", payUrl?: string | null): MailTemplate {
   const payment = invoicePaymentLink({ paymentLink, status: invoiceStatus, amount });
+  const checkout = !payment && payUrl && /^https:\/\//.test(payUrl) ? payUrl : null;
   return {
     subject: `Reminder - invoice ${number} is past due`,
     html: shell({
@@ -254,11 +262,15 @@ export function invoiceOverdue(clientName: string, number: string, amount: numbe
         p(`If payment has already been made, please disregard this notice with our thanks.`, true),
         payment ? p(`<a href="${site("/portal/invoices")}" style="color:#b82222;text-decoration:underline;">View or download your invoice in the portal</a>.`) : "",
       ].join(""),
-      cta: payment ? { href: payment, label: "Pay now", sub: "Opens your payment provider. Payment status updates after confirmation by the Savo team." } : { href: site("/portal"), label: "View invoice" },
+      cta: payment
+        ? { href: payment, label: "Pay now", sub: "Opens your payment provider. Payment status updates after confirmation by the Savo team." }
+        : checkout
+          ? { href: checkout, label: "Pay now", sub: "Opens your secure Savo checkout (Razorpay) — you return to the portal and the status updates automatically." }
+          : { href: site("/portal"), label: "View invoice" },
       closing: "Kind regards,",
       reason: "You are receiving this because an invoice on your account passed its due date.",
     }),
-    text: `REMINDER - INVOICE ${number} PAST DUE\n\n${money(amount, currency)} · ${daysLate} day(s) over\n\nAlready paid? Our thanks.\n${payment ? `Pay now: ${payment}\n` : ""}${site("/portal")}\n\nEasily fixed,\nThe Savo team`,
+    text: `REMINDER - INVOICE ${number} PAST DUE\n\n${money(amount, currency)} · ${daysLate} day(s) over\n\nAlready paid? Our thanks.\n${payment || checkout ? `Pay now: ${payment || checkout}\n` : ""}${site("/portal")}\n\nEasily fixed,\nThe Savo team`,
   };
 }
 
