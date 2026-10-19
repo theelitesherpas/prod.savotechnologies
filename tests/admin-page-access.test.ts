@@ -46,7 +46,7 @@ beforeEach(() => {
 
 describe("all protected admin leaves authorize independently of their layout", () => {
   it("covers all protected leaves and keeps an awaited page-owned guard before data work", () => {
-    expect(pages).toHaveLength(41);
+    expect(pages).toHaveLength(42);
     for (const { file, path } of pages) {
       const source = readFileSync(file.replace(/^\.\.\//, ""), "utf8");
       const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);

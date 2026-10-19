@@ -564,3 +564,28 @@ export function buildWhatsNext(v: {
     text: `HI ${first.toUpperCase()},\n\nWe came across ${v.company} and wanted to introduce ourselves. Savo Technologies designs and builds modern websites, digital products, mobile applications, custom software and AI-powered solutions.\n\nWHAT WE DO\n- Web platforms: modern sites, portals, storefronts\n- AI & automation: agents, copilots, automation\n- Mobile apps: iOS and Android from one codebase\n- UI/UX design: interfaces that make products obvious\n- Custom software: portals, SaaS, internal systems\n- Digital marketing & SEO: search, content, campaigns\n\nNo generic proposal: first a short conversation about your goals, then concrete ideas, whether that means ${focus}.\n\nWould a few minutes this week work? Chat with us on WhatsApp (+91 75029 01234), write to hello@savotechnologies.com, or see our work at ${site("/case-studies")}\n\nWarm regards,\nThe Savo team\nBold Brands. Built by Savo.\n${site("/")}`,
   };
 }
+
+/* ══════════════ SECURITY · ADMIN STEP-UP VERIFICATION ══════════════ */
+
+/** One-time code for admin step-up verification (e.g. payment credentials).
+ *  Deliberately NOT in the admin-editable template registry: security mail
+ *  keeps its tested code default. Codes expire in 10 minutes. */
+export function stepUpCode(name: string, code: string, purposeLabel: string): MailTemplate {
+  const spaced = code.split("").join(" ");
+  return {
+    subject: `${code} is your Savo verification code`,
+    html: shell({
+      preheader: `Verification code for ${purposeLabel}. It expires in 10 minutes.`,
+      eyebrowText: "Security verification",
+      heading: "Confirm it is you.",
+      bodyHtml: [
+        lead(`Hi ${fn(name)},<br><br>use the code below to continue. It works once and expires in 10 minutes.`),
+        spec([[`Verification code · ${purposeLabel}`, spaced]], { big: 0 }),
+        p(`If you did not request this code, no action is needed — the request came from a signed-in Savo admin session. Review the admin audit log if it was unexpected. Savo staff will never ask you to share this code.`, true),
+      ].join(""),
+      closing: "Kind regards,",
+      reason: "You are receiving this because a verification code was requested for your Savo admin account.",
+    }),
+    text: `SAVO VERIFICATION CODE\n\n${code}\n\nPurpose: ${purposeLabel}\nExpires: 10 minutes · Single use\n\nIf you did not request it, review the admin audit log. Never share this code.\n\nThe Savo team`,
+  };
+}

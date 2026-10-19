@@ -410,6 +410,51 @@ model Invoice {
   @@map("invoices")
 }
 
+/// Server-side payment gateway credentials (Razorpay first). Secrets are
+/// AES-256-GCM encrypted at rest with SECRETS_MASTER_KEY (lib/secret-box.ts);
+/// only masked metadata (mode, key id, verify state) ever reaches the admin
+/// UI, audit trail or logs. One row per gateway ("razorpay").
+model PaymentGatewayConfig {
+  gateway        String    @id
+  /// "test" | "live", derived from the Razorpay key id prefix at save time.
+  mode           String
+  keyId          String    @map("key_id")
+  /// secret-box ciphertext, never plaintext and never returned to a client.
+  keySecretEnc   String    @map("key_secret_enc")
+  /// Optional: secret-box ciphertext of the webhook signing secret.
+  webhookSecretEnc String? @map("webhook_secret_enc")
+  lastVerifiedAt DateTime? @map("last_verified_at")
+  lastVerifyOk   Boolean?  @map("last_verify_ok")
+  createdBy      String?   @map("created_by")
+  updatedBy      String?   @map("updated_by")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("payment_gateway_configs")
+}
+
+/// Step-up email verification challenges (e.g. before the payment-gateway
+/// credential page or its actions run). Codes are HMAC-hashed with the
+/// server master key — plaintext codes are never stored — and challenges
+/// are single-use, expiring and attempt-limited.
+model StepUpChallenge {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  /// Feature scope, e.g. "payments-settings" — a grant never crosses purposes.
+  purpose    String
+  /// HMAC-SHA256(masterKey, purpose + code); safe against offline brute force.
+  codeHash   String    @map("code_hash")
+  /// Admin inbox the code was sent to (audit/display; masked in UI).
+  emailTo    String    @map("email_to")
+  attempts   Int       @default(0)
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([userId, purpose, createdAt])
+  @@map("step_up_challenges")
+}
+
 /// First-party web analytics (privacy-friendly by design: no raw IPs or
 /// user agents are stored — only a salted daily hash for rough uniques).
 /// type: "pageview" | "event"; events mirror the GA4 dataLayer names.

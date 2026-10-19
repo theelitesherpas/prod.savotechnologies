@@ -134,6 +134,22 @@ export default async function SettingsPage({
           <SubmitButton label="Save settings" />
         </div>
       </FormGuard>
+
+      <div className="adm-card mt-6 flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
+        <div>
+          <p className="adm-label">Payment gateway — Razorpay</p>
+          <p className="t-caption mt-1 text-muted">
+            API keys and webhook secret for client-invoice payment links. Admin-only; secrets are
+            encrypted at rest.
+          </p>
+        </div>
+        <a
+          href="/admin/settings/payments"
+          className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-[0.8125rem] font-semibold text-foreground/75 transition-colors hover:border-accent/60 hover:text-accent"
+        >
+          Manage
+        </a>
+      </div>
     </div>
   );
 }
