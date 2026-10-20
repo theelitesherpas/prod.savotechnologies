@@ -13,7 +13,7 @@ const local = new Set(["localhost", "127.0.0.1", "[::1]"]);
 assert(local.has(new URL(base).hostname), "Only a local server may be tested");
 assert(local.has(new URL(process.env.DATABASE_URL).hostname), "Only a local DB may receive fixtures");
 const p = new PrismaClient();
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true });
 const owners = [];
 const checks = [];
 const dir = "tmp/invoice-pdf";
@@ -78,7 +78,7 @@ try {
     ok(!await page.locator("main").innerText().then(t => t.includes("-DRAFT") || t.includes("FOREIGN-PROJECT-MUST-NOT-LEAK")), `${width}: drafts and foreign project stay private`);
     ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${width}: no document overflow`);
     ok(await page.getByRole("link", { name: /^Download PDF for invoice/ }).evaluateAll(links => links.every(link => link.getBoundingClientRect().height >= 44)), `${width}: usable download targets`);
-    await page.screenshot({ path: `${dir}/invoices-${width}.png`, fullPage: true, style: "[inert], [inert] * { visibility:hidden !important; }" });
+    if (process.env.SKIP_SCREENSHOTS !== "1") await page.screenshot({ path: `${dir}/invoices-${width}.png`, fullPage: true, style: "[inert], [inert] * { visibility:hidden !important; }" });
   }
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /^Download PDF for invoice/ }).first().click()]);
   ok(download.suggestedFilename().startsWith("Savo-Invoice-") && download.suggestedFilename().endsWith(".pdf"), "actual browser download uses named PDF attachment");

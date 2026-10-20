@@ -79,38 +79,30 @@ checking the reconfirmation checkbox, or replacing/clearing that link. Link
 changes, provider hostname and reconfirmations are audited without logging URL
 tokens. An administrator's checkbox is not proof that funds were received.
 
-**Razorpay-managed links (v7.6+):** with gateway credentials configured
-(Settings → Payment gateway), invoices follow a strict precedence policy:
-**a manually entered payment link always wins and the gateway is never
-triggered for that invoice; only when no link is provided does Razorpay create
-one.** Automatic creation fires when a payable invoice (sent/overdue, positive
-amount) is created, or first transitions into payable, with no prior link —
-deliberately cleared links are never silently re-created. The server calls the
-Payment Links API with the exact stored amount (provider-side sms/email
-notifications stay off; Savo sends its own branded email), stores `short_url`
-in `Invoice.paymentLink` plus the gateway link id in `Invoice.razorpayLinkId`,
-and the notification email carries the Pay now action. If creation fails, the
-invoice still saves, the email goes out without a payment action and the
-operator is told why (retry via **Create payment link**). Replacing a link
-cancels the old one at the provider first; editing an invoice out of
-sent/overdue, deleting it, or pasting a manual link over a managed one
-best-effort cancels the gateway link and detaches its id so stale links can
-never be paid.
+**Current Razorpay Standard Checkout:** a manual payment link always wins;
+without one, the owner-scoped portal checkout is the PDF's payment destination
+when the gateway is configured. A server order is created only when the client
+starts online payment, not when an invoice is issued or a PDF is downloaded.
+Existing legacy hosted links remain supported. Manual/invalid-link precedence,
+fee rules, verification, transaction history and bank-deposit confirmation are
+documented in `docs/PAYMENTS.md`. The PDF displays the issued invoice amount,
+not a reconstructed provider charge or estimated processing-fee breakdown.
 
 **Automatic confirmation:** `POST /api/webhooks/razorpay` verifies the
 `X-Razorpay-Signature` HMAC-SHA256 (constant-time) against the webhook secret
 stored encrypted in the panel, deduplicates by event id
 (`webhook_events`, replay-safe), matches the invoice by link id or reference,
-and records payment only when amount and currency match exactly — through
-`recordInvoicePaid`, the same transactional routine as manual marking (receipt
+and records payment only when the server checkout total (or legacy link amount)
+and currency match exactly — through `recordInvoicePaid`, the same transactional routine as manual marking (receipt
 email, project + milestone reconciliation). Mismatches are recorded as
 rejected for human review. **Sync status with Razorpay** on the invoice page
 reconciles manually from the provider's own record. Manual Pay now links and
 manual marking remain fully supported without any gateway.
 
-**Deployment:** apply the additive nullable `invoices.payment_link` column before
-starting this code, together with the project schema additions. Back up the
-production database first; see `docs/WORKFLOW.md` for promotion and deployment.
+**Deployment:** the v7.10.1 PDF redesign changes no database schema, payment
+rules, keys or webhook configuration. Preserve the existing live environment,
+back up the database/prior build and promote through dev → test → production;
+see `docs/WORKFLOW.md`.
 
 ## Document structure and financial truth
 
@@ -122,6 +114,31 @@ The document includes the existing invoice number, issued/due/paid dates,
 client/company, owner-scoped project, aggregate service amount, payment status,
 paid/due balances, stored notes, page numbers and status-as-of generation date.
 Long references, names and notes wrap/paginate; normal records fit one page.
+
+### Balanced A4 design (v7.10.1)
+
+- Explicit white page, official black logo and fully embedded Inter fonts.
+  A shared 48pt outer grid aligns the supplier, client, table and footer;
+  invoice title, number and stamp are consistently right-aligned.
+- Measured bill-to and date/currency columns preserve long client details
+  without moving the metadata or clipping names. Missing optional fields
+  disappear cleanly rather than creating placeholder blocks.
+- A light service-table header, restrained separators and an independent
+  amount rail. Service amount, invoice total, amount paid and balance due all
+  end at exactly the same x-coordinate. The highlighted balance adapts only
+  its monetary type size for the largest stored amounts; body text stays readable.
+- **Status stamp:** stored `paid` → green PAID; `sent` → neutral UNPAID;
+  `overdue` → red OVERDUE; `cancelled` → grey CANCELLED. A stamp is a visual
+  status label, not a signature, certification or payment mutation. It never
+  follows query parameters, and dates do not silently change the stored status.
+- Payment information and totals are kept together. Pay now remains a real
+  HTTPS URI annotation, with manual-link precedence; paid/cancelled/zero-value
+  invoices and unsafe/stale fallbacks never expose a payment action.
+- Billing/service/notes continuation pages preserve their context, long text
+  and references. The service amount is not repeated as another charge when
+  a row continues. Footers show status-as-of and Page x of y. Notes are plain
+  text, not interpreted HTML. No fabricated quantities, addresses, tax IDs,
+  bank instructions or additional tax/fee lines.
 
 The current schema stores one aggregate invoice amount and full-payment status,
 not line-item quantities/rates, partial transactions, billing address, GST/tax
@@ -184,6 +201,23 @@ actual browser attachments and 1440/390/320px layout. Fixtures are deleted in
 A4 structure, one-page normal documents, currencies/fractional amounts,
 multi-page long values and both complete embedded static font programs.
 
+For actual-document design verification on macOS (local QA only):
+
+```sh
+npx vitest run tests/invoice-document.test.ts
+swift scripts/review-invoice-pdfs.swift .impeccable/review/invoice \
+  tmp/invoice-pdf/{sent,paid,overdue,cancelled,long-values,minimal,portal-checkout,long-service,long-billing,maximum-INR,maximum-USD,maximum-CHF,maximum-EUR,maximum-GBP,maximum-AED}.pdf
+node scripts/check-invoice-pdf-geometry.mjs .impeccable/review/invoice/geometry.json
+BASE_URL=http://localhost:4312 SKIP_SCREENSHOTS=1 node --env-file=.env --env-file=.env.local scripts/verify-invoice-downloads.mjs
+```
+
+The Swift helper uses Apple PDFKit (Preview's rendering engine), exports every
+page to PNG and extracts text/geometry. The checker validates status stamps,
+A4 print bounds, the shared monetary right edge, complete multi-page text,
+page counts and zero paid/cancelled balances across 15 synthetic documents.
+Largest stored amounts are tested in INR/USD/CHF/EUR/GBP/AED. This is a rendered
+PDF review, not an HTML approximation; no physical-printer claim is implied.
+
 Evidence: `tmp/invoice-pdf/` contains sample PDFs, Apple PDFKit-rendered pages,
 extracted text, portal screenshots and browser report. PDF review was performed
 in-thread, not by a separate reviewer. Payment evidence (HTML email previews,
@@ -194,5 +228,6 @@ network request, blank/removal/overdue/paid/cancelled states, PDF URI annotation
 and invoice-based project completion. All synthetic data is cleaned up in
 `finally`. Full local gate and browser assertion counts are in its report and
 `tmp/payment-links/review.md`. Production
-runtime dependency audit has zero findings. No live deployment, real invoice
-mutations or real mail sends in this feature implementation.
+runtime dependency audit has zero findings. Local verification does not mutate real invoices, send real mail or execute
+live charges. Production publication is a separate, backed-up release through
+`docs/WORKFLOW.md`.

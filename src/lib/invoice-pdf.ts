@@ -2,15 +2,12 @@ import "server-only";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import fontkit from "@pdf-lib/fontkit";
-import { PDFDocument, PDFName, PDFString, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { PDFDocument, PDFName, PDFString, rgb, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
 import { SITE } from "@/constants/site";
 import { invoicePaymentLink, paymentProvider } from "@/lib/payment-links";
-import {
-  INVOICE_STATUS_LABEL, invoiceBalances, invoiceDate, invoiceMoney,
-  type InvoiceDocument,
-} from "@/lib/invoice-document";
+import { INVOICE_STATUS_LABEL, invoiceBalances, invoiceDate, invoiceMoney, type InvoiceDocument } from "@/lib/invoice-document";
 
-// Cache only public brand assets, never client documents or authorization.
+// Cache only public brand assets. Never cache client documents or authorization.
 let assets: Promise<[Buffer, Buffer, Buffer]> | undefined;
 function brandAssets() {
   return assets ??= Promise.all([
@@ -19,30 +16,27 @@ function brandAssets() {
     readFile(join(process.cwd(), "public/images/email/logo.png")),
   ]).catch(error => { assets = undefined; throw error; });
 }
-
-const ink = rgb(.08, .08, .08);
-const muted = rgb(.36, .36, .36);
-const red = rgb(.72, .13, .13);
-const grey = rgb(.92, .92, .92);
-const soft = rgb(.97, .97, .97);
-const statusColour = {
-  paid: rgb(.1, .4, .23), sent: muted, overdue: red, cancelled: muted,
+const ink = rgb(.075, .075, .075), muted = rgb(.36, .36, .36);
+const border = rgb(.87, .87, .87), soft = rgb(.96, .96, .96), red = rgb(.72, .13, .13);
+const white = rgb(1, 1, 1);
+const stamps = {
+  sent: { text: "UNPAID", ink: rgb(.31, .31, .31), fill: rgb(.97, .97, .97) },
+  paid: { text: "PAID", ink: rgb(.12, .38, .23), fill: rgb(.95, .98, .96) },
+  overdue: { text: "OVERDUE", ink: red, fill: rgb(.995, .96, .96) },
+  cancelled: { text: "CANCELLED", ink: muted, fill: soft },
 };
 
-/** Standalone A4 document with embedded Unicode font and logo. No browser,
- * remote asset fetch, HTML execution, SMTP or database mutation is involved. */
+/** Savo's print document: one 48pt grid, measured columns, a real status stamp,
+ * and a shared right edge for every amount. No inferred tax/bank/line-item data.
+ * Standalone A4; no remote fetch, HTML execution, SMTP or database mutation. */
 export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date()): Promise<Uint8Array> {
   const balances = invoiceBalances(invoice);
-  // Validate before writing any document, including zero/cancelled balances.
-  invoiceMoney(invoice.amount, invoice.currency);
+  const amount = invoiceMoney(invoice.amount, invoice.currency); // validate before rendering
   const [fontBytes, boldBytes, logoBytes] = await brandAssets();
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
-  // Keep the complete static font programs. fontkit subsetting can produce
-  // glyph mappings that extract as text but render with missing letters in
-  // Apple PDFKit/Preview. Full embedding is small and preserves print fidelity.
-  const font = await pdf.embedFont(fontBytes);
-  const bold = await pdf.embedFont(boldBytes);
+  // Full static fonts avoid missing glyph outlines in Apple PDFKit/Preview.
+  const font = await pdf.embedFont(fontBytes), bold = await pdf.embedFont(boldBytes);
   const logo = await pdf.embedPng(logoBytes);
   pdf.setTitle(`Invoice ${invoice.number}`);
   pdf.setAuthor(SITE.legalName);
@@ -50,161 +44,223 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
   pdf.setCreator("Savo Technologies client portal");
   pdf.setProducer("Savo Technologies invoice service");
   pdf.setLanguage("en-IN");
-  pdf.setCreationDate(now);
-  pdf.setModificationDate(now);
+  pdf.setCreationDate(now); pdf.setModificationDate(now);
 
-  const width = 595.28, height = 841.89, margin = 44, bodyWidth = width - margin * 2;
-  let page: PDFPage;
-  let y = height - margin;
-  const clean = (s: string) => s.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").replace(/\r\n?/g, "\n");
-  function lines(text: string, size: number, maxWidth: number, face: PDFFont = font): string[] {
+  const width = 595.28, height = 841.89, margin = 48;
+  const right = width - margin, bodyWidth = right - margin;
+  const bottom = height - 86, amountEdge = right - 14;
+  let page: PDFPage, cursor = margin;
+  const clean = (value: string) => value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").replace(/\r\n?/g, "\n");
+  function wrap(value: string, size: number, maxWidth: number, face = font) {
     const output: string[] = [];
-    for (const paragraph of clean(text).split("\n")) {
+    for (const paragraph of clean(value).split("\n")) {
       let line = "";
       for (const word of paragraph.split(/\s+/).filter(Boolean)) {
         const candidate = line ? `${line} ${word}` : word;
         if (face.widthOfTextAtSize(candidate, size) <= maxWidth) { line = candidate; continue; }
         if (line) { output.push(line); line = ""; }
-        // Break very long references/URLs without dropping or clipping text.
-        for (const char of word) {
-          if (line && face.widthOfTextAtSize(line + char, size) > maxWidth) { output.push(line); line = ""; }
-          line += char;
+        for (const character of word) {
+          if (line && face.widthOfTextAtSize(line + character, size) > maxWidth) { output.push(line); line = ""; }
+          line += character;
         }
       }
       output.push(line);
     }
     return output;
   }
-  function newPage(continuation = false) {
+  // All layout uses distances from the top; the PDF baseline conversion lives here.
+  function line(value: string, x: number, top: number, size = 9.5, face = font, color = ink, align: "left" | "right" = "left") {
+    if (!value) return;
+    page.drawText(value, { x: align === "right" ? x - face.widthOfTextAtSize(value, size) : x, y: height - top - size, font: face, size, color });
+  }
+  function fixedText(value: string, x: number, top: number, maxWidth: number, size = 9.5, face = font, color = ink, leading = size * 1.45, align: "left" | "right" = "left") {
+    const rows = wrap(value, size, maxWidth, face);
+    rows.forEach((value, index) => line(value, x, top + index * leading, size, face, color, align));
+    return top + rows.length * leading;
+  }
+  function rule(top: number, x = margin, end = right) {
+    page.drawLine({ start: { x, y: height - top }, end: { x: end, y: height - top }, thickness: .65, color: border });
+  }
+  function rectangle(x: number, top: number, w: number, h: number, color: RGB) {
+    page.drawRectangle({ x, y: height - top - h, width: w, height: h, color });
+  }
+  function newPage(continued = false) {
     page = pdf.addPage([width, height]);
-    y = height - margin;
-    if (continuation) {
-      page.drawText("Savo Technologies · Invoice continued", { x: margin, y: y - 10, font, size: 10, color: muted });
-      y -= 34;
+    rectangle(0, 0, width, height, white);
+    cursor = margin;
+    if (continued) {
+      const logoHeight = 72 * logo.height / logo.width;
+      page.drawImage(logo, { x: margin, y: height - 36 - logoHeight, width: 72, height: logoHeight });
+      line("Invoice continued", right, 37, 11, bold, ink, "right");
+      const referenceEnd = fixedText(invoice.number, right, 57, 300, 8.5, font, muted, 12, "right");
+      const headerEnd = Math.max(36 + logoHeight, referenceEnd) + 16;
+      rule(headerEnd); cursor = headerEnd + 22;
     }
   }
   function room(required: number) {
-    if (y - required < 76) newPage(true);
+    if (cursor + required <= bottom) return false;
+    newPage(true); return true;
   }
-  function text(value: string, size = 10, colour = ink, maxWidth = bodyWidth, x = margin, face = font) {
-    for (const line of lines(value, size, maxWidth, face)) {
-      room(size * 1.6);
-      page.drawText(line, { x, y: y - size, font: face, size, color: colour });
-      y -= size * 1.6;
+  function flowingText(value: string, size = 9.5, color = muted, continuation?: string) {
+    const rows = wrap(value, size, bodyWidth);
+    for (const value of rows) {
+      if (room(size * 1.5) && continuation) {
+        line(continuation, margin, cursor, 10.5, bold); cursor += 24;
+      }
+      line(value, margin, cursor, size, font, color);
+      cursor += size * 1.5;
     }
-  }
-  function gap(amount = 18) { y -= amount; }
-  function rule() {
-    room(12);
-    page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: .7, color: grey });
-    gap(16);
-  }
-  function totalRow(label: string, minor: number, prominent = false) {
-    room(34);
-    const size = prominent ? 16 : 10;
-    const amount = invoiceMoney(minor, invoice.currency);
-    const face = prominent ? bold : font;
-    page.drawText(label, { x: margin, y: y - size, font: face, size, color: prominent ? ink : muted });
-    page.drawText(amount, { x: width - margin - face.widthOfTextAtSize(amount, size), y: y - size, font: face, size, color: ink });
-    y -= prominent ? 30 : 22;
   }
 
   newPage();
-  // An opaque white page keeps this original black wordmark print-friendly.
-  page!.drawImage(logo, { x: margin, y: y - 52, width: 105, height: 53.65 });
-  const right = width - margin;
-  page!.drawText("INVOICE", { x: right - bold.widthOfTextAtSize("INVOICE", 25), y: y - 25, font: bold, size: 25, color: ink });
-  const headingY = y;
-  y -= 37;
-  text(invoice.number, 11, muted, 255, right - 255);
-  text(INVOICE_STATUS_LABEL[invoice.status], 11, statusColour[invoice.status], 255, right - 255);
-  y = Math.min(y, headingY - 75);
-  text(SITE.legalName, 10, ink, bodyWidth, margin, bold);
-  text(`${SITE.hq.street}\n${SITE.hq.city}, ${SITE.hq.region} ${SITE.hq.postalCode}, ${SITE.hq.country}`, 9, muted);
-  text(`${SITE.email}  ·  ${SITE.phone}`, 9, muted);
-  gap(10);
-  rule();
+  // Supplier and document identity share a top baseline and a fixed outer grid.
+  const logoWidth = 108, logoHeight = logoWidth * logo.height / logo.width;
+  page!.drawImage(logo, { x: margin, y: height - margin - logoHeight, width: logoWidth, height: logoHeight });
+  line("INVOICE", right, 44, 28, bold, ink, "right");
+  const referenceEnd = fixedText(invoice.number, right, 88, 230, 10.5, font, muted, 15, "right");
+  const stamp = stamps[invoice.status], stampTop = referenceEnd + 11, stampWidth = 96, stampHeight = 30;
+  page!.drawRectangle({ x: right - stampWidth, y: height - stampTop - stampHeight, width: stampWidth, height: stampHeight, color: stamp.fill, borderColor: stamp.ink, borderWidth: .9 });
+  const stampSize = 11.5;
+  line(stamp.text, right - stampWidth / 2 - bold.widthOfTextAtSize(stamp.text, stampSize) / 2, stampTop + 8, stampSize, bold, stamp.ink);
 
-  text("Bill to", 10, muted);
-  if (invoice.client.company) text(invoice.client.company, 13, ink, bodyWidth, margin, bold);
-  text(invoice.client.name, 11);
-  text(invoice.client.email, 10, muted);
-  if (invoice.client.businessId) text(`Client ID: ${invoice.client.businessId}`, 9, muted);
-  gap(12);
+  const supplierWidth = 285;
+  let supplierEnd = margin + logoHeight + 14;
+  supplierEnd = fixedText(SITE.legalName, margin, supplierEnd, supplierWidth, 9.5, bold, ink, 14);
+  supplierEnd = fixedText(`${SITE.hq.street}\n${SITE.hq.city}, ${SITE.hq.region} ${SITE.hq.postalCode}, ${SITE.hq.country}`, margin, supplierEnd, supplierWidth, 8.5, font, muted, 12.5);
+  supplierEnd = fixedText(`${SITE.email}  ·  ${SITE.phone}`, margin, supplierEnd + 2, supplierWidth, 8.5, font, muted, 12.5);
+  cursor = Math.max(supplierEnd, stampTop + stampHeight) + 22;
+  rule(cursor); cursor += 24;
 
-  room(64);
-  const columnWidth = bodyWidth / 3;
-  const dates = [["Issued on", invoiceDate(invoice.issuedAt)], ["Due date", invoiceDate(invoice.dueDate)], ["Paid on", invoice.status === "paid" ? invoiceDate(invoice.paidAt) : "—"]];
-  page!.drawRectangle({ x: margin, y: y - 55, width: bodyWidth, height: 55, color: soft });
-  dates.forEach(([label, value], i) => {
-    const x = margin + i * columnWidth + 12;
-    page!.drawText(label, { x, y: y - 18, font, size: 9, color: muted });
-    page!.drawText(value, { x, y: y - 37, font, size: 10, color: ink });
-  });
-  y -= 65;
-
-  if (invoice.project) {
-    text("Project", 10, muted);
-    text(invoice.project.title, 12);
-    text(invoice.project.code, 9, muted);
-    gap(10);
+  // Independent measured columns: long names cannot move dates or collide with them.
+  type BillingLine = { text: string; size: number; step: number; face?: PDFFont; color?: RGB };
+  const billingWidth = bodyWidth - 192 - 36, metaX = right - 192;
+  const bill: BillingLine[] = [];
+  const addBill = (text: string, size: number, step: number, face = font, color = ink) => wrap(text, size, billingWidth, face).forEach(text => bill.push({ text, size, step, face, color }));
+  addBill("Bill to", 9, 22, font, muted);
+  if (invoice.client.company.trim()) addBill(invoice.client.company, 12, 18, bold);
+  addBill(invoice.client.name, 10.5, 17);
+  addBill(invoice.client.email, 9, 15, font, muted);
+  if (invoice.client.businessId) addBill(`Client ID: ${invoice.client.businessId}`, 8.5, 14, font, muted);
+  const dates = [
+    ["Invoice date", invoiceDate(invoice.issuedAt)], ["Due date", invoiceDate(invoice.dueDate)], ["Currency", invoice.currency],
+    ...(invoice.status === "paid" ? [["Paid on", invoiceDate(invoice.paidAt)]] : []),
+  ];
+  let billIndex = 0, dateIndex = 0;
+  room(Math.min(Math.max(bill.reduce((sum, item) => sum + item.step, 0), dates.length * 22), 170));
+  while (billIndex < bill.length || dateIndex < dates.length) {
+    const start = cursor;
+    let leftEnd = start, rightEnd = start;
+    while (billIndex < bill.length && leftEnd + bill[billIndex].step <= bottom) {
+      const item = bill[billIndex++];
+      line(item.text, margin, leftEnd, item.size, item.face, item.color);
+      leftEnd += item.step;
+    }
+    while (dateIndex < dates.length && rightEnd + 22 <= bottom) {
+      const [label, value] = dates[dateIndex++];
+      line(label, metaX, rightEnd, 9, font, muted);
+      line(value, right, rightEnd, 9, bold, ink, "right");
+      rightEnd += 22;
+    }
+    cursor = Math.max(leftEnd, rightEnd);
+    if (billIndex < bill.length || dateIndex < dates.length) {
+      newPage(true); line("Billing details (continued)", margin, cursor, 9, bold, muted); cursor += 24;
+    }
   }
+  cursor += 28;
 
-  room(95);
-  page!.drawRectangle({ x: margin, y: y - 29, width: bodyWidth, height: 29, color: ink });
-  page!.drawText("Description", { x: margin + 12, y: y - 19, font, size: 10, color: rgb(1, 1, 1) });
-  page!.drawText("Amount", { x: right - 52, y: y - 19, font, size: 10, color: rgb(1, 1, 1) });
-  y -= 40;
-  page!.drawText("Professional services", { x: margin + 12, y: y - 10, font, size: 11, color: ink });
-  const amount = invoiceMoney(invoice.amount, invoice.currency);
-  page!.drawText(amount, { x: right - 12 - font.widthOfTextAtSize(amount, 11), y: y - 10, font, size: 11, color: ink });
-  y -= 30;
-  rule();
-  room(120);
-  totalRow("Invoice total", balances.total);
-  totalRow("Amount paid", balances.paid);
-  totalRow("Balance due", balances.due, true);
-  text(invoice.status === "cancelled" ? "This invoice is cancelled. No payment is due."
-    : invoice.status === "paid" ? "Payment recorded in full. Thank you."
-    : invoice.status === "overdue" ? "This invoice is marked overdue. Please contact our team if payment has already been made."
-    : "Payment has not yet been recorded for this invoice.", 10, statusColour[invoice.status]);
+  // One real aggregate service row. No fictitious quantities, rates or tax lines.
+  const descriptionWidth = bodyWidth - 188;
+  const service: BillingLine[] = [{ text: "Professional services", size: 10.5, step: 20, face: bold }];
+  if (invoice.project) {
+    wrap(invoice.project.title, 9.5, descriptionWidth).forEach(text => service.push({ text, size: 9.5, step: 14.5 }));
+    service.push({ text: "", size: 8.5, step: 4 });
+    wrap(invoice.project.code, 8.5, descriptionWidth).forEach(text => service.push({ text, size: 8.5, step: 13, color: muted }));
+  }
+  function tableHeading(continued = false) {
+    rectangle(margin, cursor, bodyWidth, 30, soft);
+    rule(cursor); rule(cursor + 30);
+    line("Description", margin + 14, cursor + 9, 9, bold, muted);
+    line("Amount", amountEdge, cursor + 9, 9, bold, muted, "right");
+    cursor += 44;
+    if (continued) { line("Professional services (continued)", margin + 14, cursor, 10.5, bold); cursor += 22; }
+  }
+  room(80); tableHeading();
+  for (let index = 0; index < service.length; index++) {
+    const item = service[index];
+    if (room(item.step + 14)) tableHeading(true);
+    line(item.text, margin + 14, cursor, item.size, item.face, item.color);
+    if (index === 0) line(amount, amountEdge, cursor, 10.5, bold, ink, "right");
+    cursor += item.step;
+  }
+  cursor += 12; rule(cursor); cursor += 24;
 
-  // Pay target: the validated external provider link, or the portal checkout
-  // page when the gateway handles this invoice. Both are HTTPS URLs we minted
-  // server-side — annotation targets only, never evidence of payment.
+  // Payment actions are document annotations only. A paid/cancelled or zero
+  // invoice never receives a pay action, even if a caller supplies a stale URL.
   const external = invoicePaymentLink(invoice);
-  const payment = external ?? (invoice.payUrl && /^https:\/\//.test(invoice.payUrl) ? invoice.payUrl : null);
+  let portal: string | null = null;
+  if (!invoice.paymentLink?.trim() && invoice.payUrl && !/[\s\u0000-\u001f\u007f\\]/.test(invoice.payUrl)) {
+    try {
+      const url = new URL(invoice.payUrl);
+      if (url.protocol === "https:" && !url.username && !url.password && (!url.port || url.port === "443")) portal = url.href;
+    } catch { /* Invalid stored/server target fails closed. */ }
+  }
+  const payment = invoice.amount > 0 && ["sent", "overdue"].includes(invoice.status) ? external ?? portal : null;
+  const information = invoice.status === "cancelled" ? "This invoice is cancelled. No payment is due."
+    : invoice.status === "paid" ? "Payment recorded in full. Thank you."
+    : invoice.status === "overdue" ? "Payment is overdue. If you have already paid, please contact our team."
+    : "Payment has not yet been recorded for this invoice.";
+  const infoWidth = bodyWidth - 260 - 27;
+  const infoLines = wrap(information, 9.3, infoWidth);
+  const actionDetail = payment ? wrap(external ? `Pay securely with ${paymentProvider(external)}. Recorded after confirmation.` : "Pay securely in your client portal. Recorded after confirmation.", 8.1, infoWidth) : [];
+  const infoHeight = 26 + infoLines.length * 14 + (payment ? 50 + actionDetail.length * 11.5 : 0);
+  room(Math.max(126, infoHeight));
+  const summaryTop = cursor;
+  line(invoice.status === "paid" ? "Payment received" : invoice.status === "cancelled" ? "Invoice cancelled" : "Payment information", margin, cursor + 2.5, 10.5, bold);
+  infoLines.forEach((value, index) => line(value, margin, cursor + 26 + index * 14, 9.3, font, invoice.status === "overdue" ? red : muted));
   if (payment) {
-    gap(10);
-    room(65);
-    page!.drawRectangle({ x: margin, y: y - 34, width: 116, height: 34, color: red });
-    page!.drawText("Pay now", { x: margin + 14, y: y - 22, font: bold, size: 11, color: rgb(1, 1, 1) });
+    const buttonTop = cursor + 26 + infoLines.length * 14 + 10, buttonWidth = 102, buttonHeight = 31;
+    rectangle(margin, buttonTop, buttonWidth, buttonHeight, red);
+    line("Pay now", margin + (buttonWidth - bold.widthOfTextAtSize("Pay now", 10)) / 2, buttonTop + 9, 10, bold, white);
     const link = pdf.context.register(pdf.context.obj({
-      Type: PDFName.of("Annot"), Subtype: PDFName.of("Link"), Rect: [margin, y - 34, margin + 116, y], Border: [0, 0, 0],
+      Type: PDFName.of("Annot"), Subtype: PDFName.of("Link"),
+      Rect: [margin, height - buttonTop - buttonHeight, margin + buttonWidth, height - buttonTop], Border: [0, 0, 0],
       A: { Type: PDFName.of("Action"), S: PDFName.of("URI"), URI: PDFString.of(payment) },
     }));
     page!.node.addAnnot(link);
-    y -= 44;
-    text(external ? `Continue securely with ${paymentProvider(external)}. Payment is recorded after confirmation.` : "Continue securely in your client portal. Payment status is verified and recorded automatically.", 8, muted);
+    actionDetail.forEach((value, index) => line(value, margin, buttonTop + buttonHeight + 8 + index * 11.5, 8.1, font, muted));
   }
+  const summaryX = right - 260;
+  const summaryRows: [string, number][] = [["Invoice total", balances.total], ["Amount paid", balances.paid]];
+  for (const [index, [label, value]] of summaryRows.entries()) {
+    const top = summaryTop + 3 + index * 23;
+    line(label, summaryX + 14, top, 9.5, font, muted);
+    line(invoiceMoney(value, invoice.currency), amountEdge, top, 9.5, bold, ink, "right");
+  }
+  rule(summaryTop + 52, summaryX, right);
+  rectangle(summaryX, summaryTop + 65, 260, 57, soft);
+  const balance = invoiceMoney(balances.due, invoice.currency);
+  const amountWidth = 140;
+  const balanceSize = Math.min(18, 18 * amountWidth / bold.widthOfTextAtSize(balance, 18));
+  const baseline = summaryTop + 100;
+  line("Balance due", summaryX + 14, baseline - 10, 10, bold);
+  line(balance, amountEdge, baseline - balanceSize, balanceSize, bold, ink, "right");
+  cursor = summaryTop + Math.max(126, infoHeight);
 
   if (invoice.notes.trim()) {
-    gap(16);
-    room(50);
-    text("Notes", 11, ink, bodyWidth, margin, bold);
-    text(invoice.notes, 10, muted);
+    cursor += 26; room(58);
+    line("Notes", margin, cursor, 10.5, bold); cursor += 24;
+    flowingText(invoice.notes, 9.5, muted, "Notes (continued)");
   }
-  gap(16);
-  room(45);
-  text("For payment instructions or invoice queries, contact hello@savotechnologies.com.", 9, muted);
-  text("Amounts reflect the issued portal record. No additional taxes or charges have been calculated in this document.", 8, muted);
+  cursor += 24; room(50);
+  flowingText("For invoice queries or payment instructions, contact hello@savotechnologies.com.", 8.5);
+  cursor += 5;
+  flowingText("Amounts reflect the issued invoice. No additional taxes or fees are calculated in this document.", 8);
 
-  const pages = pdf.getPages();
-  pages.forEach((p, index) => {
-    p.drawLine({ start: { x: margin, y: 55 }, end: { x: right, y: 55 }, thickness: .6, color: grey });
-    p.drawText(`Payment status as of ${invoiceDate(now)} · ${INVOICE_STATUS_LABEL[invoice.status]}`, { x: margin, y: 39, font, size: 8, color: muted });
+  pdf.getPages().forEach((p, index, pages) => {
+    p.drawLine({ start: { x: margin, y: 66 }, end: { x: right, y: 66 }, thickness: .65, color: border });
+    p.drawText(`Status as of ${invoiceDate(now)} · ${INVOICE_STATUS_LABEL[invoice.status]}`, { x: margin, y: 43, font, size: 8, color: muted });
     const count = `Page ${index + 1} of ${pages.length}`;
-    p.drawText(count, { x: right - font.widthOfTextAtSize(count, 8), y: 39, font, size: 8, color: muted });
+    p.drawText(count, { x: right - font.widthOfTextAtSize(count, 8), y: 43, font, size: 8, color: muted });
   });
   return pdf.save();
 }

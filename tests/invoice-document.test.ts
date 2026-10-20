@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { PDFDocument, PDFRawStream, decodePDFRawStream } from "pdf-lib";
+import { PDFDict, PDFDocument, PDFName, PDFString, PDFRawStream, decodePDFRawStream } from "pdf-lib";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
 import { invoiceBalances, invoiceDate, invoiceMoney, invoiceFilename, type InvoiceDocument } from "@/lib/invoice-document";
 
@@ -57,6 +57,53 @@ describe("invoice financial document", () => {
     }
     mkdirSync("tmp/invoice-pdf", { recursive: true });
     writeFileSync(`tmp/invoice-pdf/${status}.pdf`, bytes);
+  });
+  it.each(["INR", "USD", "CHF", "EUR", "GBP", "AED"])("keeps the largest stored %s amount in a one-page document without shrinking body type", async currency => {
+    const bytes = await renderInvoicePdf({ ...invoice, amount: 2147483647, currency, client: { ...invoice.client, businessId: "STPLCS02684" } }, now);
+    const pdf = await PDFDocument.load(bytes);
+    expect(pdf.getPageCount()).toBe(1);
+    expect(bytes.byteLength).toBeLessThan(500000);
+    mkdirSync("tmp/invoice-pdf", { recursive: true });
+    writeFileSync(`tmp/invoice-pdf/maximum-${currency}.pdf`, bytes);
+  });
+  it.each(["sent", "overdue", "paid", "cancelled"] as const)("preserves the status and gates stale portal payment actions for %s", async status => {
+    const payUrl = "https://www.savotechnologies.com/portal/invoices/synthetic-review-only/pay";
+    const bytes = await renderInvoicePdf({ ...invoice, status, payUrl }, now);
+    const pdf = await PDFDocument.load(bytes);
+    const annotations = pdf.getPages().flatMap(page => {
+      const annotations = page.node.Annots();
+      return annotations ? Array.from({ length: annotations.size() }, (_, index) => annotations.lookup(index, PDFDict)) : [];
+    });
+    expect(pdf.getPageCount()).toBe(1);
+    expect(annotations).toHaveLength(["sent", "overdue"].includes(status) ? 1 : 0);
+    if (annotations.length) {
+      expect(annotations[0].lookup(PDFName.of("A"), PDFDict).lookup(PDFName.of("URI"), PDFString).decodeText()).toBe(payUrl);
+    }
+    if (status === "sent") writeFileSync("tmp/invoice-pdf/portal-checkout.pdf", bytes);
+  });
+  it.each([
+    { payUrl: "javascript:alert(1)" }, { payUrl: "https://user:secret@example.invalid/pay" },
+    { payUrl: "https://example.invalid:444/pay" }, { payUrl: "https://example.invalid/pay\n?bad=1" },
+    { paymentLink: "javascript:bad", payUrl: "https://www.savotechnologies.com/portal/invoices/synthetic/pay" },
+    { amount: 0, payUrl: "https://www.savotechnologies.com/portal/invoices/synthetic/pay" },
+  ])("does not annotate unsafe, zero-value or invalid-manual-link fallbacks: %j", async input => {
+    const pdf = await PDFDocument.load(await renderInvoicePdf({ ...invoice, ...input }, now));
+    expect(pdf.getPages().every(page => !page.node.Annots() || page.node.Annots()!.size() === 0)).toBe(true);
+  });
+  it("paginates an oversized service description with repeated table context", async () => {
+    const bytes = await renderInvoicePdf({ ...invoice, notes: "", project: { code: "SYNTHETIC-SERVICE-END", title: "Synthetic detailed service scope. ".repeat(180) } }, now);
+    expect((await PDFDocument.load(bytes)).getPageCount()).toBeGreaterThan(1);
+    writeFileSync("tmp/invoice-pdf/long-service.pdf", bytes);
+  });
+  it("retains exceptionally long legacy billing fields across pages", async () => {
+    const bytes = await renderInvoicePdf({ ...invoice, notes: "", client: { ...invoice.client, company: "Synthetic legacy billing company ".repeat(100), name: "BILLING-END-MARKER", businessId: "STPLCS02684" } }, now);
+    expect((await PDFDocument.load(bytes)).getPageCount()).toBeGreaterThan(1);
+    writeFileSync("tmp/invoice-pdf/long-billing.pdf", bytes);
+  });
+  it("renders an ordinary invoice without optional company/project/date/notes fields", async () => {
+    const bytes = await renderInvoicePdf({ ...invoice, client: { ...invoice.client, company: "" }, dueDate: null, project: null, notes: "" }, now);
+    expect((await PDFDocument.load(bytes)).getPageCount()).toBe(1);
+    writeFileSync("tmp/invoice-pdf/minimal.pdf", bytes);
   });
   it("wraps long references and Unicode client/project names and paginates long notes", async () => {
     const bytes = await renderInvoicePdf({
