@@ -154,12 +154,17 @@ try {
   await page.waitForURL(/\/portal\/invoices\/.+\/pay$/, { timeout: 30_000 });
   ok(await page.getByText("Pay your invoice.", { exact: false }).first().isVisible(), "pay page shows the invoice summary");
   ok(await page.getByRole("radio", { name: /Pay Online/ }).isChecked(), "Pay Online (Razorpay) is selected by default");
-  ok(await page.getByText("Processing fee (2%)").first().isVisible(), "fee breakdown shows the 2% processing fee");
-  ok(await page.getByText("GST on processing fee (18%)").first().isVisible(), "GST on the fee is itemised for INR");
+  ok(await page.getByText("Processing fee", { exact: true }).first().isVisible(), "fee breakdown shows the processing fee without an inline percentage");
+  ok(await page.getByText("GST on processing fee", { exact: true }).first().isVisible(), "GST line itemised without an inline percentage");
   ok(await page.getByText("₹1,023.60").first().isVisible(), "total to pay includes fee + GST (₹1,000 → ₹1,023.60)");
   // Regression: the checkout must become ready on ARRIVAL — no radio toggling.
   await page.getByRole("button", { name: /Pay .* securely/ }).waitFor({ timeout: 30_000 });
   ok(true, "checkout ready on arrival without toggling payment methods");
+  // Tooltips (after layout settles): hover each info dot, read its popup.
+  await page.getByRole("button", { name: /Calculated as 2% of the invoice amount/ }).hover();
+  ok(await page.getByRole("tooltip").getByText(/2% of the invoice amount for INR payments and 3% for all other currencies/).isVisible(), "processing-fee info popup explains the 2% / 3% currency rule");
+  await page.getByRole("button", { name: /GST is charged at 18%/ }).hover();
+  ok(await page.getByRole("tooltip").getByText(/18% on the processing fee and applies to domestic/).isVisible(), "GST info popup explains the 18%-on-fee rule");
   // Bank option: unconfigured fallback first, then the configured details.
   await p.siteSetting.deleteMany({ where: { key: { in: ["bank_name", "bank_account_name", "bank_account_number", "bank_ifsc", "bank_swift", "bank_branch", "bank_instructions"] } } });
   await page.reload({ waitUntil: "domcontentloaded" });

@@ -1843,3 +1843,60 @@
     margin: 0 6px;
   }
 }
+
+/* ── Fee info dot + tooltip ────────────────────────────────────────────── */
+
+.feeInfoWrap {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 5px;
+}
+
+.feeInfoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+  background: none;
+  color: var(--muted);
+  cursor: help;
+  padding: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.feeInfoButton:hover,
+.feeInfoButton:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.feeInfoButton svg {
+  width: 9px;
+  height: 9px;
+}
+
+.feePopup {
+  position: absolute;
+  top: 22px;
+  left: -6px;
+  width: 235px;
+  background: #141414;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.55;
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  z-index: 6;
+}
+
+/* The tooltip is informational only — it must never intercept the pointer
+   (it opens over the rows below and would trap hover/click). */
+.feePopup {
+  pointer-events: none;
+}

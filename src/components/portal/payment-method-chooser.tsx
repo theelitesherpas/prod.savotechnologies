@@ -42,6 +42,22 @@ function RazorpayMark({ className }: { className?: string }) {
   );
 }
 
+function FeeInfo({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className={styles.feeInfoWrap}>
+      <button type="button" className={styles.feeInfoButton} aria-label={`About this fee: ${text}`}
+        aria-expanded={open} onClick={() => setOpen(v => !v)} onBlur={() => setOpen(false)}
+        onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+        <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+          <circle cx="10" cy="10" r="8.2" /><path d="M10 9v5" /><circle cx="10" cy="6.3" r="0.4" fill="currentColor" stroke="none" />
+        </svg>
+      </button>
+      {open ? <span role="tooltip" className={styles.feePopup}>{text}</span> : null}
+    </span>
+  );
+}
+
 function BankMark({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" role="img" aria-label="Bank" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -172,8 +188,16 @@ export function PaymentMethodChooser({
               <>
                 <dl className={styles.feeRows}>
                   <div><dt>Subtotal</dt><dd>{labels.subtotal}</dd></div>
-                  <div><dt>Processing fee ({Math.round(totals.feeRate * 100)}%)</dt><dd>{labels.fee}</dd></div>
-                  {labels.gst ? <div><dt>GST on processing fee ({Math.round(totals.gstRate * 100)}%)</dt><dd>{labels.gst}</dd></div> : null}
+                  <div>
+                    <dt>Processing fee <FeeInfo text="Calculated as 2% of the invoice amount for INR payments and 3% for all other currencies." /></dt>
+                    <dd>{labels.fee}</dd>
+                  </div>
+                  {labels.gst ? (
+                    <div>
+                      <dt>GST on processing fee <FeeInfo text="GST is charged at 18% on the processing fee and applies to domestic (INR) payments only." /></dt>
+                      <dd>{labels.gst}</dd>
+                    </div>
+                  ) : null}
                   <div className={styles.feeTotal}><dt>Total to pay ({currencyLabel})</dt><dd>{labels.total}</dd></div>
                 </dl>
                 <button type="button" className={styles.payCta} onClick={() => { loadScript(); void startPayment(); }} disabled={busy || !scriptReady}>
