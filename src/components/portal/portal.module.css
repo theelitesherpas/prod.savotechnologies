@@ -1754,16 +1754,18 @@
 }
 
 .methodLogoOnline {
-  height: 15px;
+  height: 14px;
   width: auto;
   flex-shrink: 0;
+  margin-left: 2px;
 }
 
 .methodLogoBank {
-  height: 20px;
-  width: 20px;
+  height: 18px;
+  width: 18px;
   color: #02042b;
   flex-shrink: 0;
+  margin-left: 3px;
 }
 
 .methodName {

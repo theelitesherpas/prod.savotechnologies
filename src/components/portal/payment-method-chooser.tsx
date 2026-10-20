@@ -49,8 +49,8 @@ function FeeInfo({ text }: { text: string }) {
       <button type="button" className={styles.feeInfoButton} aria-label={`About this fee: ${text}`}
         aria-expanded={open} onClick={() => setOpen(v => !v)} onBlur={() => setOpen(false)}
         onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-        <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-          <circle cx="10" cy="10" r="8.2" /><path d="M10 9v5" /><circle cx="10" cy="6.3" r="0.4" fill="currentColor" stroke="none" />
+        <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="10" cy="10" r="8.2" /><path d="M10 13.6V9.4" /><path d="M10 6.5h.01" strokeWidth="2.2" />
         </svg>
       </button>
       {open ? <span role="tooltip" className={styles.feePopup}>{text}</span> : null}
@@ -176,8 +176,8 @@ export function PaymentMethodChooser({
         <label className={styles.methodLabel}>
           <input type="radio" name="payment-method" value="online" checked={method === "online"}
             onChange={() => setMethod("online")} onClick={loadScript} disabled={providerUnavailable} />
-          <RazorpayMark className={styles.methodLogoOnline} />
           <span className={styles.methodName}>Pay Online</span>
+          <RazorpayMark className={styles.methodLogoOnline} />
           <span className={styles.methodSub}>Cards · UPI · Netbanking · Wallets</span>
         </label>
         {method === "online" ? (
@@ -189,12 +189,12 @@ export function PaymentMethodChooser({
                 <dl className={styles.feeRows}>
                   <div><dt>Subtotal</dt><dd>{labels.subtotal}</dd></div>
                   <div>
-                    <dt>Processing fee <FeeInfo text="Calculated as 2% of the invoice amount for INR payments and 3% for all other currencies." /></dt>
+                    <dt>Processing fee <FeeInfo text={`Calculated as ${Math.round(totals.feeRate * 100)}% of the invoice amount.`} /></dt>
                     <dd>{labels.fee}</dd>
                   </div>
                   {labels.gst ? (
                     <div>
-                      <dt>GST on processing fee <FeeInfo text="GST is charged at 18% on the processing fee and applies to domestic (INR) payments only." /></dt>
+                      <dt>GST on processing fee <FeeInfo text={`GST is charged at ${Math.round(totals.gstRate * 100)}% on the processing fee.`} /></dt>
                       <dd>{labels.gst}</dd>
                     </div>
                   ) : null}
@@ -217,8 +217,8 @@ export function PaymentMethodChooser({
       <div className={`${styles.methodOption} ${method === "bank" ? styles.methodActive : ""}`}>
         <label className={styles.methodLabel}>
           <input type="radio" name="payment-method" value="bank" checked={method === "bank"} onChange={() => setMethod("bank")} />
-          <BankMark className={styles.methodLogoBank} />
           <span className={styles.methodName}>Bank Deposit</span>
+          <BankMark className={styles.methodLogoBank} />
           <span className={styles.methodSub}>NEFT · RTGS · IMPS · Wire transfer</span>
         </label>
         {method === "bank" ? (

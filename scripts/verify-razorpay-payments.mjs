@@ -162,9 +162,10 @@ try {
   ok(true, "checkout ready on arrival without toggling payment methods");
   // Tooltips (after layout settles): hover each info dot, read its popup.
   await page.getByRole("button", { name: /Calculated as 2% of the invoice amount/ }).hover();
-  ok(await page.getByRole("tooltip").getByText(/2% of the invoice amount for INR payments and 3% for all other currencies/).isVisible(), "processing-fee info popup explains the 2% / 3% currency rule");
+  ok(await page.getByRole("tooltip").getByText("Calculated as 2% of the invoice amount.").isVisible(), "INR invoice: processing-fee popup states only the 2% rule");
   await page.getByRole("button", { name: /GST is charged at 18%/ }).hover();
-  ok(await page.getByRole("tooltip").getByText(/18% on the processing fee and applies to domestic/).isVisible(), "GST info popup explains the 18%-on-fee rule");
+  ok(await page.getByRole("tooltip").getByText("GST is charged at 18% on the processing fee.").isVisible(), "INR invoice: GST popup states only the 18%-on-fee rule");
+
   // Bank option: unconfigured fallback first, then the configured details.
   await p.siteSetting.deleteMany({ where: { key: { in: ["bank_name", "bank_account_name", "bank_account_number", "bank_ifsc", "bank_swift", "bank_branch", "bank_instructions"] } } });
   await page.reload({ waitUntil: "domcontentloaded" });
@@ -195,6 +196,17 @@ try {
   await page.screenshot({ path: `${dir}/2-success.png`, fullPage: true });
   const audits = await p.auditLog.count({ where: { action: "razorpay.checkout.paid", entityId: invoiceA.id } });
   ok(audits === 1, "checkout payment audited");
+  // ── 2b. USD invoice: 3% structure only — no GST row, currency-specific popup ──
+  const invoiceE = await p.invoice.create({ data: { clientId: client.id, projectId: project.id, number: `${key}-E`, amount: 100, currency: "USD", status: "sent", notes: "Synthetic local review only." } });
+  await visit(page, `/portal/invoices/${invoiceE.id}/pay`);
+  await page.getByRole("button", { name: /Pay .* securely/ }).waitFor({ timeout: 30_000 });
+  ok(await page.getByText("GST on processing fee", { exact: true }).count() === 0, "non-INR invoice shows no GST row at all");
+  ok(await page.getByText("$1.03").first().isVisible(), "USD total is $1.00 + 3% fee ($1.03)");
+  await page.getByRole("button", { name: /Calculated as 3% of the invoice amount/ }).hover();
+  ok(await page.getByRole("tooltip").getByText("Calculated as 3% of the invoice amount.").isVisible(), "USD invoice: processing-fee popup states only the 3% rule");
+  await page.screenshot({ path: `${dir}/1b-usd-fees.png`, fullPage: true });
+  await p.invoice.delete({ where: { id: invoiceE.id } }).catch(() => {});
+
 
   // ── 3. manual-link invoice: pay page routes to the provider, zero gateway orders ──
   await visit(page, `/portal/invoices/${invoiceC.id}/pay`);
