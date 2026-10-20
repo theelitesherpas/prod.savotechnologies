@@ -157,9 +157,14 @@ try {
   ok(await page.getByText("Processing fee (2%)").first().isVisible(), "fee breakdown shows the 2% processing fee");
   ok(await page.getByText("GST on processing fee (18%)").first().isVisible(), "GST on the fee is itemised for INR");
   ok(await page.getByText("₹1,023.60").first().isVisible(), "total to pay includes fee + GST (₹1,000 → ₹1,023.60)");
+  // Regression: the checkout must become ready on ARRIVAL — no radio toggling.
+  await page.getByRole("button", { name: /Pay .* securely/ }).waitFor({ timeout: 30_000 });
+  ok(true, "checkout ready on arrival without toggling payment methods");
   // Bank option: unconfigured fallback first, then the configured details.
   await p.siteSetting.deleteMany({ where: { key: { in: ["bank_name", "bank_account_name", "bank_account_number", "bank_ifsc", "bank_swift", "bank_branch", "bank_instructions"] } } });
   await page.reload({ waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: /Pay .* securely/ }).waitFor({ timeout: 30_000 });
+  ok(true, "checkout ready again after reload without toggling");
   await page.getByRole("radio", { name: /Bank Deposit/ }).check();
   ok(await page.getByText("Bank transfer details are available on request", { exact: false }).first().isVisible(), "unconfigured bank option falls back to a contact note");
   ok(await page.getByText("₹1,000", { exact: false }).first().isVisible(), "bank option shows the invoice amount with no online fees");
@@ -167,6 +172,7 @@ try {
     await p.siteSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
   }
   await page.reload({ waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: /Pay .* securely/ }).waitFor({ timeout: 30_000 });
   await page.getByRole("radio", { name: /Bank Deposit/ }).check();
   ok(await page.getByText("50200012345678").first().isVisible(), "configured account number is shown");
   ok(await page.getByText("HDFC0000123").first().isVisible(), "configured IFSC is shown");

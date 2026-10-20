@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CheckoutStart, CheckoutVerify } from "@/app/portal/(app)/invoices/[id]/pay/types";
 import styles from "./portal.module.css";
 
@@ -72,15 +72,48 @@ export function PaymentMethodChooser({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadScript = () => {
-    if (scriptReady || typeof document === "undefined") return;
-    if (document.querySelector(`script[data-rzp-checkout]`)) { setScriptReady(true); return; }
+  // Primary loader: start fetching checkout.js the moment the chooser mounts
+  // (Pay Online is the default selection — waiting for a radio click would
+  // leave the button in "Loading…" forever). setState only fires from the
+  // async load/error callbacks, never synchronously in the effect body.
+  useEffect(() => {
+    if (providerUnavailable) return;
+    const markReady = () => setScriptReady(true);
+    const markFailed = () => setError("Razorpay checkout could not be loaded. Check your connection and retry.");
+    const existing = document.querySelector<HTMLScriptElement>("script[data-rzp-checkout]");
+    if (existing) {
+      if (window.Razorpay) {
+        const settled = setTimeout(markReady, 0); // already loaded on a prior mount
+        return () => clearTimeout(settled);
+      }
+      existing.addEventListener("load", markReady);  // still in flight
+      existing.addEventListener("error", markFailed);
+      return () => { existing.removeEventListener("load", markReady); existing.removeEventListener("error", markFailed); };
+    }
     const script = document.createElement("script");
     script.src = CHECKOUT_SRC;
     script.async = true;
     script.dataset.rzpCheckout = "1";
-    script.onload = () => setScriptReady(true);
-    script.onerror = () => setError("Razorpay checkout could not be loaded. Check your connection and retry.");
+    script.addEventListener("load", markReady);
+    script.addEventListener("error", markFailed);
+    document.body.appendChild(script);
+    return () => { script.removeEventListener("load", markReady); script.removeEventListener("error", markFailed); };
+  }, [providerUnavailable]);
+
+  // Retry path only (e.g. after a failed load); the mount effect above is the
+  // primary loader.
+  const loadScript = () => {
+    if (scriptReady || typeof document === "undefined") return;
+    if (document.querySelector("script[data-rzp-checkout]")) {
+      if (window.Razorpay) setScriptReady(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = CHECKOUT_SRC;
+    script.async = true;
+    script.dataset.rzpCheckout = "1";
+    script.addEventListener("load", () => setScriptReady(true));
+    script.addEventListener("error", () => setError("Razorpay checkout could not be loaded. Check your connection and retry."));
     document.body.appendChild(script);
   };
 
