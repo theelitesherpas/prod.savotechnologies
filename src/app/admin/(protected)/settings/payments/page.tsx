@@ -8,7 +8,8 @@ import { PageHeader, Notice, Chip, DangerZone, BackLink } from "@/components/adm
 import { SubmitButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
-import { saveRazorpayConfigAction, verifyRazorpayConfigAction, clearRazorpayConfigAction, sendStepUpCodeAction, verifyStepUpCodeAction, lockStepUpAction } from "./actions";
+import { saveRazorpayConfigAction, verifyRazorpayConfigAction, clearRazorpayConfigAction, sendStepUpCodeAction, verifyStepUpCodeAction, lockStepUpAction, saveBankDetailsAction } from "./actions";
+import { getBankDetails } from "@/lib/bank-details";
 
 export const metadata: Metadata = { title: "Payment gateway" };
 
@@ -26,14 +27,14 @@ const webhookUrl = `${canonicalOrigin}/api/webhooks/razorpay`;
 export default async function PaymentsSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; verified?: string; cleared?: string; otp?: string; e?: string }>;
+  searchParams: Promise<{ saved?: string; verified?: string; cleared?: string; bankSaved?: string; otp?: string; e?: string }>;
 }) {
   const user = await requireAdminPage("/admin/settings/payments");
   if (user.role !== "admin") {
     // requireAdminPage authorizes the section; payments is additionally admin-only.
     redirect("/admin?denied=Payment%20credentials%20are%20admin-only");
   }
-  const [{ saved, verified, cleared, otp, e }, granted] = await Promise.all([searchParams, stepUpVerified(user.id, STEP_UP_PURPOSE_PAYMENTS)]);
+  const [{ saved, verified, cleared, bankSaved, otp, e }, granted] = await Promise.all([searchParams, stepUpVerified(user.id, STEP_UP_PURPOSE_PAYMENTS)]);
   // Fixed security inbox when configured; otherwise the signed-in admin's own email.
   let destination = user.email, fixedInbox = false;
   try {
@@ -103,6 +104,7 @@ export default async function PaymentsSettingsPage({
 
   // ── Verified: full management surface. ──────────────────────────────────
   const status = await razorpayStatus();
+  const bank = await getBankDetails().catch(() => null);
 
   return (
     <div className="max-w-xl">
@@ -115,6 +117,7 @@ export default async function PaymentsSettingsPage({
       {saved ? <Notice>Razorpay credentials saved and encrypted. Use “Verify connection” to test them against Razorpay.</Notice> : null}
       {verified ? <Notice>Razorpay accepted the credentials. The gateway is ready.</Notice> : null}
       {cleared ? <Notice>Stored Razorpay credentials were removed.</Notice> : null}
+      {bankSaved ? <Notice>Bank transfer details saved. The Bank Deposit option on the client pay page is updated.</Notice> : null}
       {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
 
       {/* ── Status ─────────────────────────────────────────────── */}
@@ -249,6 +252,37 @@ export default async function PaymentsSettingsPage({
           <SubmitButton label="Save credentials" pendingLabel="Encrypting & saving…" />
           <p className="t-caption text-muted">Encrypted with AES-256-GCM before it touches the database.</p>
         </div>
+      </FormGuard>
+
+      {/* ── Bank transfer details (manual payment option) ───────── */}
+      <FormGuard action={saveBankDetailsAction} className="adm-card mt-6 space-y-5 p-5 sm:p-6">
+        <div>
+          <p className="adm-label">Bank transfer details</p>
+          <p className="t-caption mt-1 text-muted">
+            Shown on the client pay page under the Bank Deposit option. Leave fields empty to omit them; clearing
+            everything removes the option (clients are asked to contact the team instead).
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            { name: "accountName", label: "Account name", value: bank?.accountName ?? "", ph: "Savo Technologies Private Limited" },
+            { name: "bankName", label: "Bank name", value: bank?.bankName ?? "", ph: "e.g. HDFC Bank" },
+            { name: "accountNumber", label: "Account number", value: bank?.accountNumber ?? "", ph: "502000XXXXXX" },
+            { name: "ifsc", label: "IFSC (domestic)", value: bank?.ifsc ?? "", ph: "HDFC0000123" },
+            { name: "swift", label: "SWIFT / BIC (international)", value: bank?.swift ?? "", ph: "HDFCINBB" },
+            { name: "branch", label: "Branch", value: bank?.branch ?? "", ph: "Ahmedabad" },
+          ].map(f => (
+            <div key={f.name}>
+              <label htmlFor={`bank-${f.name}`} className="adm-label mb-1.5 block">{f.label}</label>
+              <input id={`bank-${f.name}`} name={f.name} maxLength={120} defaultValue={f.value} placeholder={f.ph} className="adm-input" autoComplete="off" />
+            </div>
+          ))}
+        </div>
+        <div>
+          <label htmlFor="bank-instructions" className="adm-label mb-1.5 block">Payment reference instructions</label>
+          <input id="bank-instructions" name="instructions" maxLength={400} defaultValue={bank?.instructions ?? ""} placeholder="Include the invoice number in the transfer reference. Payment is confirmed within one business day." className="adm-input" />
+        </div>
+        <SubmitButton label="Save bank details" pendingLabel="Saving…" />
       </FormGuard>
 
       {/* ── Verify ─────────────────────────────────────────────── */}

@@ -15,6 +15,7 @@ import { recordInvoicePaid, invoiceNotification } from "@/lib/invoice-payments";
 import { cancelRazorpayPaymentLink, fetchRazorpayPaymentLink, fetchRazorpayOrderPayments } from "@/lib/razorpay";
 import { getRazorpayConfig } from "@/lib/razorpay-config";
 import { portalPayPath } from "@/lib/payment-targets";
+import { checkoutTotals } from "@/lib/payment-fees";
 import { absoluteUrl } from "@/lib/env";
 import { projectTransaction, reconcileProject, projectEmails, revalidateProjectViews, projectError, type ProjectEmail } from "@/lib/project-service";
 
@@ -170,7 +171,8 @@ export async function syncInvoiceRazorpayAction(form: FormData): Promise<void> {
     if (invoice.razorpayOrderId) {
       // Standard Checkout: reconcile against the order's own payment records.
       const payments = await fetchRazorpayOrderPayments(invoice.razorpayOrderId);
-      const captured = payments.find(p => p.status === "captured" && Number.isSafeInteger(p.amount) && p.amount === invoice.amount && (p.currency ?? invoice.currency) === invoice.currency);
+      const expectedTotal = checkoutTotals(invoice).total;
+      const captured = payments.find(p => p.status === "captured" && Number.isSafeInteger(p.amount) && p.amount === expectedTotal && (p.currency ?? invoice.currency) === invoice.currency);
       if (!captured) {
         // redirect() throws — it must not fire inside this try/catch.
         providerStatus = payments.length ? `latest attempt ${payments[0].status ?? "unknown"}` : "no payment attempts yet";

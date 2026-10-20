@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import { getRazorpayConfig } from "@/lib/razorpay-config";
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { verifyRazorpayCheckout } from "@/lib/razorpay-checkout";
+import { checkoutTotals } from "@/lib/payment-fees";
 import { recordInvoicePaid } from "@/lib/invoice-payments";
 import { projectTransaction, projectEmails, revalidateProjectViews } from "@/lib/project-service";
 
@@ -49,22 +50,25 @@ export async function createRazorpayOrderAction(invoiceId: string): Promise<Chec
   if (!Number.isSafeInteger(invoice.amount) || invoice.amount <= 0) return { ok: false, message: "This invoice has no payable amount." };
   const config = await getRazorpayConfig();
   if (!config) return { ok: false, message: "Online payment is not available right now. Please contact us." };
+  // The gateway charges subtotal + processing fee (+ GST on the fee for INR);
+  // verification and webhook reconciliation expect exactly this total.
+  const totals = checkoutTotals(invoice);
   let order;
   try {
     order = await createRazorpayOrder({
-      amount: invoice.amount,
+      amount: totals.total,
       currency: invoice.currency,
       receipt: invoice.number,
-      notes: { invoiceId: invoice.id, invoiceNumber: invoice.number },
+      notes: { invoiceId: invoice.id, invoiceNumber: invoice.number, subtotal: String(totals.subtotal), fee: String(totals.fee), gst: String(totals.gst), total: String(totals.total) },
     });
   } catch (error) {
     logger.warn("razorpay.order_create_failed", { message: error instanceof Error ? error.message : "unknown" });
     return { ok: false, message: error instanceof Error ? error.message : "Razorpay could not start this payment. Try again." };
   }
   await prisma.invoice.update({ where: { id: invoice.id }, data: { razorpayOrderId: order.id } });
-  await audit(null, "razorpay.order.create", "Invoice", invoice.id, { number: invoice.number, orderId: order.id, clientId: client.id });
+  await audit(null, "razorpay.order.create", "Invoice", invoice.id, { number: invoice.number, orderId: order.id, clientId: client.id, fee: totals.fee, gst: totals.gst, total: totals.total });
   return {
-    ok: true, orderId: order.id, keyId: config.keyId, amount: invoice.amount, currency: invoice.currency,
+    ok: true, orderId: order.id, keyId: config.keyId, amount: totals.total, currency: invoice.currency,
     invoiceNumber: invoice.number, name: client.name, email: client.email,
   };
 }

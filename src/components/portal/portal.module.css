@@ -1712,3 +1712,134 @@
   line-height: 1.6;
   color: var(--muted);
 }
+
+/* ── Payment method chooser (PayPal-style) ────────────────────────────── */
+
+.methodCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  max-width: 560px;
+  overflow: hidden;
+  display: grid;
+}
+
+.methodOption {
+  border-bottom: 1px solid var(--border);
+}
+
+.methodOption:last-child {
+  border-bottom: none;
+}
+
+.methodOption.methodActive {
+  background: #fbfbfb;
+}
+
+.methodLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.methodLabel input[type="radio"] {
+  accent-color: var(--accent);
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.methodLogoOnline {
+  height: 15px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.methodLogoBank {
+  height: 20px;
+  width: 20px;
+  color: #02042b;
+  flex-shrink: 0;
+}
+
+.methodName {
+  font-weight: 700;
+}
+
+.methodSub {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.methodBody {
+  padding: 4px 20px 20px;
+  border-top: 1px dashed var(--border);
+  margin: 0 14px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.methodOption .payCta {
+  margin-top: 14px;
+  width: 100%;
+}
+
+.feeRows,
+.bankRows {
+  margin: 12px 0 0;
+  display: grid;
+  gap: 7px;
+}
+
+.feeRows div,
+.bankRows div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 0.8438rem;
+}
+
+.feeRows dt,
+.bankRows dt {
+  color: var(--muted);
+}
+
+.feeRows dd,
+.bankRows dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.feeTotal {
+  padding-top: 7px;
+  border-top: 1px solid var(--border);
+}
+
+.feeTotal dt {
+  font-weight: 700 !important;
+  color: #111 !important;
+}
+
+.feeTotal dd {
+  font-size: 0.9375rem;
+  font-weight: 700 !important;
+}
+
+@media (max-width: 540px) {
+  .methodSub {
+    display: none;
+  }
+  .methodBody {
+    margin: 0 6px;
+  }
+}

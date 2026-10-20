@@ -9,6 +9,7 @@ import { audit } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import { saveRazorpayConfig, clearRazorpayConfig, recordRazorpayVerification, getRazorpayConfig } from "@/lib/razorpay-config";
 import { secretBoxConfigured } from "@/lib/secret-box";
+import { saveBankDetails } from "@/lib/bank-details";
 import { sendMail } from "@/lib/mail";
 import { stepUpCode } from "@/lib/mail/templates";
 import {
@@ -214,4 +215,40 @@ export async function clearRazorpayConfigAction(): Promise<void> {
   }
   revalidatePath(BACK);
   redirect(`${BACK}?cleared=1`);
+}
+
+// ── bank transfer details (manual payment option) ───────────────────────
+
+const bankSchema = z.object({
+  bankName: z.string().trim().max(80),
+  accountName: z.string().trim().max(120),
+  accountNumber: z.string().trim().max(40),
+  ifsc: z.string().trim().max(20),
+  swift: z.string().trim().max(20),
+  branch: z.string().trim().max(80),
+  instructions: z.string().trim().max(400),
+});
+
+export async function saveBankDetailsAction(form: FormData): Promise<void> {
+  const user = await requireAdmin();
+  if (user.role !== "admin") redirect("/admin?denied=Payment%20credentials%20are%20admin-only");
+  if (!(await stepUpVerified(user.id, STEP_UP_PURPOSE_PAYMENTS))) {
+    failed(new Error("Email verification required. Open the payment settings page and verify with a code first."));
+  }
+  const parsed = bankSchema.safeParse(Object.fromEntries(["bankName", "accountName", "accountNumber", "ifsc", "swift", "branch", "instructions"].map(k => [k, String(form.get(k) ?? "").trim()])));
+  if (!parsed.success) failed(new Error(parsed.error.issues[0]?.message ?? "Check the bank fields."));
+  try {
+    await saveBankDetails(parsed.data);
+  } catch (error) {
+    failed(error);
+  }
+  await audit(user.id, "bank.details.save", "SiteSetting", "bank", {
+    bankName: parsed.data.bankName || "cleared",
+    accountNumberSet: !!parsed.data.accountNumber,
+    ifscSet: !!parsed.data.ifsc,
+    swiftSet: !!parsed.data.swift,
+  });
+  revalidatePath(BACK);
+  revalidatePath("/portal/invoices/[id]/pay");
+  redirect(`${BACK}?bankSaved=1`);
 }

@@ -112,7 +112,14 @@ const context = async (cookie, owner) => {
   if (cookie === "savo_admin") await p.adminSession.create({ data: { userId: owner, tokenHash, expiresAt: new Date(Date.now() + 3_600_000) } });
   else await p.clientSession.create({ data: { clientId: owner, tokenHash, expiresAt: new Date(Date.now() + 3_600_000) } });
   await c.addCookies([{ name: cookie, value: token, url: base, httpOnly: true, sameSite: "Lax" }]);
-  await c.route("**/*", r => { const u = new URL(r.request().url()); return u.origin === new URL(base).origin ? r.continue() : r.abort(); });
+  await c.route("**/*", r => {
+    const u = new URL(r.request().url());
+    if (u.origin === new URL(base).origin) return r.continue();
+    // checkout.js is fulfilled empty: the init script already provides the
+    // scripted Razorpay class, and the empty body fires onload (scriptReady).
+    if (u.hostname === "checkout.razorpay.com") return r.fulfill({ status: 200, contentType: "application/javascript", body: "/* scripted checkout */" });
+    return r.abort();
+  });
   return c;
 };
 const visit = async (page, path) => { await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded", timeout: 60_000 }); await page.locator("main h1").first().waitFor(); };
@@ -146,6 +153,26 @@ try {
   await payA.click();
   await page.waitForURL(/\/portal\/invoices\/.+\/pay$/, { timeout: 30_000 });
   ok(await page.getByText("Pay your invoice.", { exact: false }).first().isVisible(), "pay page shows the invoice summary");
+  ok(await page.getByRole("radio", { name: /Pay Online/ }).isChecked(), "Pay Online (Razorpay) is selected by default");
+  ok(await page.getByText("Processing fee (2%)").first().isVisible(), "fee breakdown shows the 2% processing fee");
+  ok(await page.getByText("GST on processing fee (18%)").first().isVisible(), "GST on the fee is itemised for INR");
+  ok(await page.getByText("₹1,023.60").first().isVisible(), "total to pay includes fee + GST (₹1,000 → ₹1,023.60)");
+  // Bank option: unconfigured fallback first, then the configured details.
+  await p.siteSetting.deleteMany({ where: { key: { in: ["bank_name", "bank_account_name", "bank_account_number", "bank_ifsc", "bank_swift", "bank_branch", "bank_instructions"] } } });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.getByRole("radio", { name: /Bank Deposit/ }).check();
+  ok(await page.getByText("Bank transfer details are available on request", { exact: false }).first().isVisible(), "unconfigured bank option falls back to a contact note");
+  ok(await page.getByText("₹1,000", { exact: false }).first().isVisible(), "bank option shows the invoice amount with no online fees");
+  for (const [key, value] of Object.entries({ bank_name: "Stub Bank", bank_account_name: "Savo Technologies Test", bank_account_number: "50200012345678", bank_ifsc: "HDFC0000123", bank_instructions: "Include the invoice number in the transfer reference." })) {
+    await p.siteSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
+  }
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.getByRole("radio", { name: /Bank Deposit/ }).check();
+  ok(await page.getByText("50200012345678").first().isVisible(), "configured account number is shown");
+  ok(await page.getByText("HDFC0000123").first().isVisible(), "configured IFSC is shown");
+  ok(await page.getByText("Include the invoice number", { exact: false }).first().isVisible(), "bank instructions are shown");
+  await page.screenshot({ path: `${dir}/2b-bank-option.png`, fullPage: true });
+  await page.getByRole("radio", { name: /Pay Online/ }).check();
   await page.getByRole("button", { name: /Pay .* securely/ }).click();
   await page.waitForURL(/paid=1/, { timeout: 60_000 });
   ok(await page.getByText("Payment successful.", { exact: false }).first().isVisible(), "redirected back with the success heading");
@@ -153,7 +180,7 @@ try {
   ok(await page.getByText(PAYMENT_ID).first().isVisible(), "payment reference is shown on our page");
   const paidRow = await p.invoice.findUnique({ where: { id: invoiceA.id } });
   ok(paidRow.status === "paid" && paidRow.paidAt && paidRow.razorpayPaymentId === PAYMENT_ID, "invoice recorded as paid with the provider payment id");
-  ok(orders.length === 1 && orders[0].amount === 100000 && orders[0].receipt === invoiceA.number, "exactly one server-side order, for the stored amount");
+  ok(orders.length === 1 && orders[0].amount === 102360 && Number(orders[0].notes.fee) === 2000 && Number(orders[0].notes.gst) === 360 && orders[0].receipt === invoiceA.number, "one order for the fee-inclusive total (2% + GST) with a full breakdown in notes");
   await page.screenshot({ path: `${dir}/2-success.png`, fullPage: true });
   const audits = await p.auditLog.count({ where: { action: "razorpay.checkout.paid", entityId: invoiceA.id } });
   ok(audits === 1, "checkout payment audited");
@@ -167,14 +194,14 @@ try {
   // ── 4. webhook payment.captured reconciles independently (webhook-first race) ──
   const order = await p.invoice.findUnique({ where: { id: invoiceB.id } });
   await p.invoice.update({ where: { id: invoiceB.id }, data: { razorpayOrderId: "order_WEBHOOK1234" } });
-  const delivered = await webhook({ id: "pay_WEBHOOK12345", order_id: "order_WEBHOOK1234", amount: 100000, currency: "INR", status: "captured", method: "upi", notes: { invoiceId: invoiceB.id } });
+  const delivered = await webhook({ id: "pay_WEBHOOK12345", order_id: "order_WEBHOOK1234", amount: 102360, currency: "INR", status: "captured", method: "upi", notes: { invoiceId: invoiceB.id } });
   ok(delivered.status === 200, "signed payment.captured accepted");
   await new Promise(r => setTimeout(r, 600));
   const bRow = await p.invoice.findUnique({ where: { id: invoiceB.id } });
   ok(bRow.status === "paid" && bRow.razorpayPaymentId === "pay_WEBHOOK12345", "webhook alone marks the invoice paid");
 
   // ── 5. forged signature and replay change nothing ──
-  const body = JSON.stringify({ event: "payment.captured", payload: { payment: { entity: { id: "pay_FORGED1", order_id: "order_WEBHOOK1234", amount: 100000, currency: "INR", status: "captured" } } } });
+  const body = JSON.stringify({ event: "payment.captured", payload: { payment: { entity: { id: "pay_FORGED1", order_id: "order_WEBHOOK1234", amount: 102360, currency: "INR", status: "captured" } } } });
   const forged = { ...sign(body), "x-razorpay-signature": "0".repeat(64) };
   ok((await fetch(`${base}/api/webhooks/razorpay`, { method: "POST", body, headers: forged })).status === 400, "forged signature rejected");
   const replayHeaders = sign(body);
@@ -188,7 +215,7 @@ try {
   const adminPage = await a.newPage();
   const invoiceD = await mkInvoice("D");
   // Give the invoice a checkout session (as the portal would on payment start).
-  const orderResp = await fetch(`http://127.0.0.1:${stubPort}/v1/orders`, { method: "POST", body: JSON.stringify({ amount: 100000, currency: "INR", receipt: invoiceD.number, notes: { invoiceId: invoiceD.id } }) });
+  const orderResp = await fetch(`http://127.0.0.1:${stubPort}/v1/orders`, { method: "POST", body: JSON.stringify({ amount: 102360, currency: "INR", receipt: invoiceD.number, notes: { invoiceId: invoiceD.id } }) });
   const orderD = await orderResp.json();
   await p.invoice.update({ where: { id: invoiceD.id }, data: { razorpayOrderId: orderD.id } });
   await visit(adminPage, `/admin/invoices/${invoiceD.id}`);
@@ -208,6 +235,7 @@ try {
   if (project) await p.clientProject.delete({ where: { id: project.id } }).catch(() => {});
   for (const inv of [invoiceA, invoiceB, invoiceC]) if (inv) await p.invoice.delete({ where: { id: inv.id } }).catch(() => {});
   await p.webhookEvent.deleteMany({});
+  await p.siteSetting.deleteMany({ where: { key: { in: ["bank_name", "bank_account_name", "bank_account_number", "bank_ifsc", "bank_swift", "bank_branch", "bank_instructions"] } } });
   stub.close(); await browser.close(); await p.$disconnect();
 }
 await writeFile(`${dir}/report.txt`, [`checks: ${checks.length}`, ...checks.map(c => `✓ ${c}`), errors.length ? `errors: ${errors.length}` : "errors: 0", ...errors.map(e => `✗ ${e}`), ""].join("\n"));

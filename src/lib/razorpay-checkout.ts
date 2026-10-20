@@ -2,6 +2,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getRazorpayConfig } from "@/lib/razorpay-config";
 import { fetchRazorpayPayment } from "@/lib/razorpay";
+import { checkoutTotals } from "@/lib/payment-fees";
 
 /**
  * Razorpay Standard Checkout verification — the server-side half of the
@@ -57,8 +58,11 @@ export async function verifyRazorpayCheckout(input: {
   if (!payment) return { ok: false, reason: "payment_not_found", message: "Razorpay has no record of this payment. If money left your account it will be refunded automatically." };
   if (payment.status !== "captured") return { ok: false, reason: "not_captured", message: `Razorpay reports this payment as "${payment.status ?? "unknown"}". Nothing was recorded; contact us if you were charged.` };
   if (payment.order_id !== input.orderId) return { ok: false, reason: "order_not_paid", message: "This payment belongs to a different checkout session. No payment was recorded." };
-  if (!Number.isSafeInteger(payment.amount) || payment.amount !== input.invoice.amount || (payment.currency ?? input.invoice.currency) !== input.invoice.currency) {
-    return { ok: false, reason: "amount_mismatch", message: "The paid amount does not match this invoice. No payment was recorded — our team will review." };
+  // Orders are created for subtotal + processing fee (+ GST on fee, INR only)
+  // — the paid amount must equal exactly that total for THIS invoice.
+  const expected = checkoutTotals(input.invoice).total;
+  if (!Number.isSafeInteger(payment.amount) || payment.amount !== expected || (payment.currency ?? input.invoice.currency) !== input.invoice.currency) {
+    return { ok: false, reason: "amount_mismatch", message: "The paid amount does not match this checkout total. No payment was recorded — our team will review." };
   }
   return { ok: true, paymentId: payment.id, amount: payment.amount, currency: payment.currency ?? input.invoice.currency, method: payment.method ?? null };
 }

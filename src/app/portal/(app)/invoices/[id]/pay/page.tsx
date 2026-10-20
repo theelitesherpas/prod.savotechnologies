@@ -4,8 +4,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getClientUser } from "@/lib/client-auth";
 import { getRazorpayConfig } from "@/lib/razorpay-config";
+import { getBankDetails } from "@/lib/bank-details";
+import { checkoutTotals } from "@/lib/payment-fees";
 import { money } from "@/components/portal/ui";
-import { RazorpayCheckout } from "@/components/portal/razorpay-checkout";
+import { PaymentMethodChooser } from "@/components/portal/payment-method-chooser";
 import { createRazorpayOrderAction, verifyCheckoutAction } from "./actions";
 import styles from "@/components/portal/portal.module.css";
 
@@ -40,6 +42,9 @@ export default async function PayInvoicePage({
   const verifiedPaid = invoice.status === "paid";
   const payable = ["sent", "overdue"].includes(invoice.status) && invoice.amount > 0 && !invoice.paymentLink;
   const gateway = await getRazorpayConfig().catch(() => null);
+  const bank = await getBankDetails().catch(() => null);
+  const totals = checkoutTotals(invoice);
+  const fmtMoney = (minor: number) => money(minor, invoice.currency);
 
   return (
     <div className={styles.content}>
@@ -99,19 +104,42 @@ export default async function PayInvoicePage({
 
         {verifiedPaid ? (
           <p className={styles.payNote}>This invoice is already paid in full. Thank you.</p>
-        ) : invoice.paymentLink ? (
-          <div className={styles.payActionArea}>
-            <a className={styles.payCta} href={invoice.paymentLink} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">
-              Continue to the payment provider
-            </a>
-            <p className={styles.payHint}>This invoice uses a provider-hosted payment page. Complete the payment there; the status here updates after confirmation by the Savo team.</p>
+        ) : null}
+      </div>
+
+      {verifiedPaid || invoice.paymentLink || payable ? (
+        invoice.paymentLink ? (
+          <div className={styles.payCard}>
+            <div className={styles.payActionArea}>
+              <a className={styles.payCta} href={invoice.paymentLink} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">
+                Continue to the payment provider
+              </a>
+              <p className={styles.payHint}>This invoice uses a provider-hosted payment page. Complete the payment there; the status here updates after confirmation by the Savo team.</p>
+            </div>
           </div>
         ) : payable ? (
-          <RazorpayCheckout invoiceId={invoice.id} invoiceNumber={invoice.number} amountLabel={money(invoice.amount, invoice.currency)} providerUnavailable={!gateway} createOrder={createRazorpayOrderAction} verifyPayment={verifyCheckoutAction} />
-        ) : (
+          <PaymentMethodChooser
+            invoiceId={invoice.id}
+            invoiceNumber={invoice.number}
+            currencyLabel={invoice.currency}
+            labels={{
+              subtotal: fmtMoney(totals.subtotal),
+              fee: fmtMoney(totals.fee),
+              gst: totals.gst > 0 ? fmtMoney(totals.gst) : null,
+              total: fmtMoney(totals.total),
+            }}
+            totals={totals}
+            bank={bank}
+            providerUnavailable={!gateway}
+            createOrder={createRazorpayOrderAction}
+            verifyPayment={verifyCheckoutAction}
+          />
+        ) : null
+      ) : (
+        <div className={styles.payCard}>
           <p className={styles.payNote}>This invoice is not open for online payment. If this looks wrong, contact us at hello@savotechnologies.com.</p>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className={styles.payFooterNote}>
         <p>Payments are processed by Razorpay. Savo never stores your card, UPI or bank details. If a payment fails, no amount is recorded and you can safely retry.</p>

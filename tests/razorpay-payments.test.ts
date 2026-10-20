@@ -71,6 +71,18 @@ async function freshModule(path: string) {
   return await import(path);
 }
 
+// ── fee policy ───────────────────────────────────────────────────────────
+describe("checkout fee policy", () => {
+  it("charges 2% + 18% GST on the fee for INR, 3% flat for other currencies", async () => {
+    const { checkoutTotals } = await import("@/lib/payment-fees");
+    expect(checkoutTotals({ amount: 100000, currency: "INR" })).toMatchObject({ subtotal: 100000, fee: 2000, gst: 360, total: 102360, domestic: true });
+    expect(checkoutTotals({ amount: 250000, currency: "INR" })).toMatchObject({ fee: 5000, gst: 900, total: 255900 });
+    expect(checkoutTotals({ amount: 100, currency: "USD" })).toMatchObject({ subtotal: 100, fee: 3, gst: 0, total: 103, domestic: false });
+    expect(checkoutTotals({ amount: 999, currency: "EUR" })).toMatchObject({ fee: Math.round(999 * 0.03), gst: 0 });
+    expect(checkoutTotals({ amount: 0, currency: "INR" }).total).toBe(0);
+  });
+});
+
 // ── pay-target precedence ───────────────────────────────────────────────
 describe("invoicePayTarget precedence", () => {
   it("a manual provider link always wins and stays external", async () => {
@@ -106,9 +118,9 @@ describe("verifyRazorpayCheckout", () => {
   const verify = () => import("@/lib/razorpay-checkout").then(m => m.verifyRazorpayCheckout);
 
   it("accepts a genuine captured payment for the bound order with matching amount", async () => {
-    gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: orderId, amount: 250000, currency: "INR", status: "captured", method: "upi" });
+    gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: orderId, amount: 255900, currency: "INR", status: "captured", method: "upi" });
     const result = await (await verify())(input());
-    expect(result).toMatchObject({ ok: true, paymentId, amount: 250000, currency: "INR", method: "upi" });
+    expect(result).toMatchObject({ ok: true, paymentId, amount: 255900, currency: "INR", method: "upi" });
   });
 
   it("rejects forged signatures, wrong orders, unbound orders, uncaptured and mismatched payments", async () => {
@@ -123,11 +135,11 @@ describe("verifyRazorpayCheckout", () => {
     expect(await reason(input({ invoice: { ...invoice, razorpayOrderId: null } }))).toBe("order_mismatch");
     gateway.fetchRazorpayPayment.mockResolvedValueOnce(null);
     expect(await reason(input())).toBe("payment_not_found");
-    gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: orderId, amount: 250000, currency: "INR", status: "authorized" });
+    gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: orderId, amount: 255900, currency: "INR", status: "authorized" });
     expect(await reason(input())).toBe("not_captured");
-    gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: "order_SOMEOTHER12", amount: 250000, currency: "INR", status: "captured" });
+    gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: "order_SOMEOTHER12", amount: 255900, currency: "INR", status: "captured" });
     expect(await reason(input())).toBe("order_not_paid");
-    gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: orderId, amount: 999999, currency: "INR", status: "captured" });
+    gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: orderId, amount: 250000, currency: "INR", status: "captured" }); // subtotal only — must fail
     expect(await reason(input())).toBe("amount_mismatch");
     config.getRazorpayConfig.mockResolvedValueOnce(null);
     expect(await reason(input())).toBe("not_configured");
@@ -144,7 +156,10 @@ describe("portal checkout actions", () => {
     const start = await a.createRazorpayOrderAction(invoice.id);
     expect(start.ok).toBe(true);
     if (!start.ok) return;
-    expect(gateway.createRazorpayOrder).toHaveBeenCalledWith(expect.objectContaining({ amount: 250000, currency: "INR", receipt: "STPLIN00042", notes: { invoiceId: invoice.id, invoiceNumber: "STPLIN00042" } }));
+    expect(gateway.createRazorpayOrder).toHaveBeenCalledWith(expect.objectContaining({
+    amount: 255900, currency: "INR", receipt: "STPLIN00042",
+    notes: expect.objectContaining({ invoiceId: invoice.id, invoiceNumber: "STPLIN00042", subtotal: "250000", fee: "5000", gst: "900", total: "255900" }),
+  }));
     expect(start.keyId).toBe(CONFIG.keyId); // public key id reaches the browser, never the secret
     expect(db.invoice.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ razorpayOrderId: "order_NEWORDER12345" }) }));
   });
@@ -173,7 +188,7 @@ describe("portal checkout actions", () => {
     const a = await actions();
     const orderId = "order_NEWORDER12345", paymentId = "pay_PAID12345678";
     db.invoice.findFirst.mockResolvedValue({ ...invoice, razorpayOrderId: orderId });
-    gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: orderId, amount: 250000, currency: "INR", status: "captured", method: "upi" });
+    gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: orderId, amount: 255900, currency: "INR", status: "captured", method: "upi" });
     const verdict = await a.verifyCheckoutAction({ invoiceId: invoice.id, orderId, paymentId, signature: createHmac("sha256", KEY_SECRET).update(`${orderId}|${paymentId}`).digest("hex") });
     expect(verdict.ok).toBe(true);
     expect(db.invoice.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "paid", paidAt: expect.any(Date), razorpayPaymentId: paymentId }) }));
@@ -199,7 +214,7 @@ describe("POST /api/webhooks/razorpay", () => {
   });
   const capturedBody = (over: Record<string, unknown> = {}) => JSON.stringify({
     event: "payment.captured",
-    payload: { payment: { entity: { id: "pay_CAP123456789", order_id: "order_WEBHOOK1234", amount: 250000, currency: "INR", status: "captured", method: "upi", notes: { invoiceId: invoice.id } , ...over } } },
+    payload: { payment: { entity: { id: "pay_CAP123456789", order_id: "order_WEBHOOK1234", amount: 255900, currency: "INR", status: "captured", method: "upi", notes: { invoiceId: invoice.id } , ...over } } },
   });
 
   it("marks the invoice paid from the provider order binding", async () => {
@@ -215,7 +230,7 @@ describe("POST /api/webhooks/razorpay", () => {
   it("rejects captured payments whose amount does not match the invoice", async () => {
     const { POST } = await route();
     db.invoice.findFirst.mockResolvedValueOnce({ ...invoice, razorpayOrderId: "order_WEBHOOK1234", client: CLIENT });
-    const body = capturedBody({ amount: 100 });
+    const body = capturedBody({ amount: 100 }); // wrong total
     const response = await POST(new Request("https://savo.test/api/webhooks/razorpay", { method: "POST", body, headers: sign(body) }));
     expect(response.status).toBe(200);
     expect(db.invoice.update).not.toHaveBeenCalled();

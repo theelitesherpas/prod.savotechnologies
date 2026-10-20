@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { audit } from "@/lib/audit";
 import { getRazorpayConfig } from "@/lib/razorpay-config";
 import { recordInvoicePaid } from "@/lib/invoice-payments";
+import { checkoutTotals } from "@/lib/payment-fees";
 import { projectEmails, projectTransaction, revalidateProjectViews, type ProjectEmail } from "@/lib/project-service";
 
 /**
@@ -107,7 +108,8 @@ export async function POST(request: Request): Promise<Response> {
           await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "ignored", detail: `no invoice for payment ${paymentEntity.id}` } });
           return { kind: "ignored" as const };
         }
-        if (Number.isSafeInteger(paymentEntity.amount) && (paymentEntity.amount !== invoice.amount || (paymentEntity.currency ?? invoice.currency) !== invoice.currency)) {
+        const expectedTotal = checkoutTotals(invoice).total; // subtotal + fee (+ GST on fee, INR)
+        if (Number.isSafeInteger(paymentEntity.amount) && (paymentEntity.amount !== expectedTotal || (paymentEntity.currency ?? invoice.currency) !== invoice.currency)) {
           await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "rejected", detail: `amount/currency mismatch on ${invoice.number}` } });
           return { kind: "mismatch" as const, invoiceId: invoice.id, number: invoice.number };
         }
