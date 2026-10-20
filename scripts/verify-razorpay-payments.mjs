@@ -22,6 +22,7 @@ import { createHash, createHmac, randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import http from "node:http";
 import assert from "node:assert";
+import { PDFDocument } from "pdf-lib";
 
 const base = process.env.BASE_URL ?? "http://localhost:4312";
 const stubPort = Number(process.env.STUB_PORT ?? 4390);
@@ -36,6 +37,10 @@ const browser = await chromium.launch({ executablePath: "/Applications/Google Ch
 const dir = "tmp/razorpay-payments";
 const key = `RZPCO-${randomBytes(4).toString("hex")}`;
 const checks = [], errors = [];
+const bankKeys = ["bank_name", "bank_account_name", "bank_account_number", "bank_ifsc", "bank_swift", "bank_branch", "bank_instructions"];
+const originalBankRows = await p.siteSetting.findMany({ where: { key: { in: bankKeys } } });
+const originalEventCount = await p.webhookEvent.count();
+const eventIds = [];
 const ok = (condition, label) => { assert(condition, label); checks.push(label); };
 await mkdir(dir, { recursive: true });
 
@@ -77,11 +82,15 @@ const stub = http.createServer((req, res) => {
 await new Promise(resolve => stub.listen(stubPort, "127.0.0.1", resolve));
 const settle = (order) => fetch(`http://127.0.0.1:${stubPort}/__e2e/settle`, { method: "POST", body: JSON.stringify({ order }) });
 
-const sign = (body, secret = webhookSecret) => ({
-  "content-type": "application/json",
-  "x-razorpay-signature": createHmac("sha256", secret).update(body, "utf8").digest("hex"),
-  "x-razorpay-event-id": `evt_${randomBytes(6).toString("hex")}`,
-});
+const sign = (body, secret = webhookSecret) => {
+  const id = `evt_${randomBytes(6).toString("hex")}`;
+  eventIds.push(id);
+  return {
+    "content-type": "application/json",
+    "x-razorpay-signature": createHmac("sha256", secret).update(body, "utf8").digest("hex"),
+    "x-razorpay-event-id": id,
+  };
+};
 const webhook = async (entity, headers) => {
   const body = JSON.stringify({ event: "payment.captured", payload: { payment: { entity } } });
   const response = await fetch(`${base}/api/webhooks/razorpay`, { method: "POST", body, headers: headers ?? sign(body) });
@@ -117,12 +126,17 @@ const context = async (cookie, owner) => {
     if (u.origin === new URL(base).origin) return r.continue();
     // checkout.js is fulfilled empty: the init script already provides the
     // scripted Razorpay class, and the empty body fires onload (scriptReady).
-    if (u.hostname === "checkout.razorpay.com") return r.fulfill({ status: 200, contentType: "application/javascript", body: "/* scripted checkout */" });
+    if (u.hostname === "checkout.razorpay.com") return r.fulfill({ status: 200, contentType: "application/javascript", body: initScript });
     return r.abort();
   });
   return c;
 };
 const visit = async (page, path) => { await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded", timeout: 60_000 }); await page.locator("main h1").first().waitFor(); };
+const capture = async (page, name) => {
+  await page.evaluate(async () => { await document.fonts.ready; window.scrollTo(0, 0); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); });
+  await page.waitForTimeout(250); // settle responsive/sticky compositor after viewport changes
+  await page.screenshot({ path: `${dir}/${name}.png`, fullPage: true, animations: "disabled" });
+};
 
 try {
   // ── fixtures ──
@@ -136,7 +150,6 @@ try {
 
   const c = await context("savo_client", client.id);
   const page = await c.newPage();
-  await page.addInitScript(initScript);
   page.on("pageerror", e => errors.push(e.message));
 
   // ── 1. portal list shows Pay now for unlinked invoices, and keeps the manual one external ──
@@ -146,13 +159,13 @@ try {
   ok((await payButtons.count()) >= 2, "both unlinked invoices offer checkout");
   const manual = page.getByRole("link", { name: /Pay now for invoice .* via PayPal/ });
   ok(await manual.first().isVisible(), "manual-link invoice keeps its external PayPal action");
-  await page.screenshot({ path: `${dir}/1-portal-list.png`, fullPage: true });
+  await capture(page, "1-portal-list");
 
   // ── 2. the checkout journey: pay page → scripted Razorpay → verified success ──
   const payA = page.getByRole("link", { name: new RegExp(`Pay invoice ${invoiceA.number} securely`) });
   await payA.click();
   await page.waitForURL(/\/portal\/invoices\/.+\/pay$/, { timeout: 30_000 });
-  ok(await page.getByText("Pay your invoice.", { exact: false }).first().isVisible(), "pay page shows the invoice summary");
+  ok(await page.getByRole("heading", { name: "Complete your payment", exact: true }).isVisible(), "pay page shows the invoice summary");
   ok(await page.getByRole("radio", { name: /Pay Online/ }).isChecked(), "Pay Online (Razorpay) is selected by default");
   ok(await page.getByText("Processing fee", { exact: true }).first().isVisible(), "fee breakdown shows the processing fee without an inline percentage");
   ok(await page.getByText("GST on processing fee", { exact: true }).first().isVisible(), "GST line itemised without an inline percentage");
@@ -166,6 +179,16 @@ try {
   await page.getByRole("button", { name: /GST is charged at 18%/ }).hover();
   ok(await page.getByRole("tooltip").getByText("GST is charged at 18% on the processing fee.").isVisible(), "INR invoice: GST popup states only the 18%-on-fee rule");
 
+  // Batched visual evidence: reference-pinned paired panels, desktop + phone.
+  await page.mouse.move(0, 0);
+  await capture(page, "checkout-desktop");
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `checkout fits ${width}px without overflow`);
+    await capture(page, `checkout-${width}`);
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+
   // Bank option: unconfigured fallback first, then the configured details.
   await p.siteSetting.deleteMany({ where: { key: { in: ["bank_name", "bank_account_name", "bank_account_number", "bank_ifsc", "bank_swift", "bank_branch", "bank_instructions"] } } });
   await page.reload({ waitUntil: "domcontentloaded" });
@@ -173,6 +196,7 @@ try {
   ok(true, "checkout ready again after reload without toggling");
   await page.getByRole("radio", { name: /Bank Deposit/ }).check();
   ok(await page.getByText("Bank transfer details are available on request", { exact: false }).first().isVisible(), "unconfigured bank option falls back to a contact note");
+  ok(await page.getByRole("link", { name: /Request bank details/ }).isVisible(), "missing bank details cannot be presented as ready to transfer");
   ok(await page.getByText("₹1,000", { exact: false }).first().isVisible(), "bank option shows the invoice amount with no online fees");
   for (const [key, value] of Object.entries({ bank_name: "Stub Bank", bank_account_name: "Savo Technologies Test", bank_account_number: "50200012345678", bank_ifsc: "HDFC0000123", bank_instructions: "Include the invoice number in the transfer reference." })) {
     await p.siteSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
@@ -180,20 +204,44 @@ try {
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: /Pay .* securely/ }).waitFor({ timeout: 30_000 });
   await page.getByRole("radio", { name: /Bank Deposit/ }).check();
+  ok(await page.getByText("50200012345678").count() === 0, "bank details are not shown before confirming instructions");
+  ok(await page.getByText("GST on processing fee", { exact: true }).count() === 0, "bank review has no online tax line");
+  await capture(page, "bank-review-desktop");
+  await page.getByRole("button", { name: /Get bank deposit instructions/ }).click();
+  ok(await page.getByRole("heading", { name: "Your bank deposit instructions" }).isVisible(), "bank confirmation advances to a dedicated instructions screen");
   ok(await page.getByText("50200012345678").first().isVisible(), "configured account number is shown");
   ok(await page.getByText("HDFC0000123").first().isVisible(), "configured IFSC is shown");
   ok(await page.getByText("Include the invoice number", { exact: false }).first().isVisible(), "bank instructions are shown");
-  await page.screenshot({ path: `${dir}/2b-bank-option.png`, fullPage: true });
+  ok(await page.getByRole("button", { name: "Copy payment reference" }).isVisible(), "invoice reference is copyable");
+  ok(await page.getByText("This is not a payment confirmation.").isVisible(), "bank instructions explicitly distinguish unpaid from paid");
+  ok(await page.getByRole("link", { name: "Send transfer reference" }).isVisible(), "transfer reference can be sent to the real support inbox");
+  ok((await p.invoice.findUnique({ where: { id: invoiceA.id } })).status === "sent" && orders.length === 0, "bank confirmation neither marks paid nor starts the gateway");
+  await capture(page, "bank-instructions-desktop");
+  const instructionPdf = await page.pdf({ format: "A4", printBackground: true });
+  await writeFile(`${dir}/bank-instructions.pdf`, instructionPdf);
+  ok((await PDFDocument.load(instructionPdf)).getPageCount() === 1, "bank instructions print as one page without blank workspace pages");
+  await page.setViewportSize({ width: 390, height: 900 });
+  ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "bank instructions fit a phone");
+  await capture(page, "bank-instructions-mobile");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole("button", { name: "Change payment method" }).click();
   await page.getByRole("radio", { name: /Pay Online/ }).check();
   await page.getByRole("button", { name: /Pay .* securely/ }).click();
   await page.waitForURL(/paid=1/, { timeout: 60_000 });
   ok(await page.getByText("Payment successful.", { exact: false }).first().isVisible(), "redirected back with the success heading");
-  ok(await page.getByText("Payment received", { exact: false }).first().isVisible(), "verified success panel renders");
+  ok(await page.getByText("Paid in full", { exact: true }).isVisible(), "verified success panel renders");
+  ok(await page.getByText("Outstanding balance", { exact: true }).isVisible(), "receipt shows the remaining balance");
+  ok(await page.getByText("UPI via Razorpay", { exact: true }).isVisible(), "receipt shows the actual provider payment method");
+  ok(await page.getByRole("button", { name: /Pay .* securely/ }).count() === 0, "paid page never offers a second payment");
   ok(await page.getByText(PAYMENT_ID).first().isVisible(), "payment reference is shown on our page");
   const paidRow = await p.invoice.findUnique({ where: { id: invoiceA.id } });
   ok(paidRow.status === "paid" && paidRow.paidAt && paidRow.razorpayPaymentId === PAYMENT_ID, "invoice recorded as paid with the provider payment id");
   ok(orders.length === 1 && orders[0].amount === 102360 && Number(orders[0].notes.fee) === 2000 && Number(orders[0].notes.gst) === 360 && orders[0].receipt === invoiceA.number, "one order for the fee-inclusive total (2% + GST) with a full breakdown in notes");
-  await page.screenshot({ path: `${dir}/2-success.png`, fullPage: true });
+  await capture(page, "receipt-desktop");
+  await page.setViewportSize({ width: 390, height: 900 });
+  ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "receipt fits a phone");
+  await capture(page, "receipt-mobile");
+  await page.setViewportSize({ width: 1440, height: 1000 });
   const audits = await p.auditLog.count({ where: { action: "razorpay.checkout.paid", entityId: invoiceA.id } });
   ok(audits === 1, "checkout payment audited");
   // ── 2b. USD invoice: 3% structure only — no GST row, currency-specific popup ──
@@ -204,7 +252,7 @@ try {
   ok(await page.getByText("$1.03").first().isVisible(), "USD total is $1.00 + 3% fee ($1.03)");
   await page.getByRole("button", { name: /Calculated as 3% of the invoice amount/ }).hover();
   ok(await page.getByRole("tooltip").getByText("Calculated as 3% of the invoice amount.").isVisible(), "USD invoice: processing-fee popup states only the 3% rule");
-  await page.screenshot({ path: `${dir}/1b-usd-fees.png`, fullPage: true });
+  await capture(page, "1b-usd-fees");
   await p.invoice.delete({ where: { id: invoiceE.id } }).catch(() => {});
 
 
@@ -213,6 +261,23 @@ try {
   ok(await page.getByRole("link", { name: "Continue to the payment provider" }).first().isVisible(), "manual-link invoice uses the provider path");
   ok((await p.invoice.findUnique({ where: { id: invoiceC.id } })).paymentLink === "https://paypal.me/savomanual/100", "manual link untouched");
   ok(orders.length === 1, "no gateway order was created for the manual-link invoice");
+
+  // Loading failures are recoverable without toggling methods or creating orders.
+  const recovery = await c.newPage();
+  await recovery.route("https://checkout.razorpay.com/**", r => r.abort());
+  await visit(recovery, `/portal/invoices/${invoiceB.id}/pay`);
+  await recovery.getByRole("button", { name: "Try loading again" }).waitFor();
+  ok(true, "script failure offers a real retry");
+  await recovery.unroute("https://checkout.razorpay.com/**");
+  await recovery.getByRole("button", { name: "Try loading again" }).click();
+  await recovery.getByRole("button", { name: /Pay .* securely/ }).waitFor();
+  ok(true, "retry recovers the checkout loader without a radio toggle");
+  await recovery.goto(`${base}/portal/invoices/${invoiceB.id}/pay?paid=1`, { waitUntil: "domcontentloaded" });
+  await recovery.getByRole("heading", { name: "Checking your payment" }).waitFor();
+  ok(await recovery.getByRole("button", { name: /Pay .* securely/ }).count() === 0, "unverified return has no second-payment button");
+  await recovery.setViewportSize({ width: 390, height: 900 });
+  await capture(recovery, "pending-mobile");
+  await recovery.close();
 
   // ── 4. webhook payment.captured reconciles independently (webhook-first race) ──
   const order = await p.invoice.findUnique({ where: { id: invoiceB.id } });
@@ -231,7 +296,7 @@ try {
   await fetch(`${base}/api/webhooks/razorpay`, { method: "POST", body, headers: replayHeaders });
   const replay = await fetch(`${base}/api/webhooks/razorpay`, { method: "POST", body, headers: replayHeaders });
   ok(replay.status === 200, "replayed delivery acknowledged");
-  ok((await p.webhookEvent.count()) === 2, "replay created no second event");
+  ok((await p.webhookEvent.count()) === originalEventCount + 2, "replay created no second event");
 
   // ── 6. admin sync reconciles an order the webhook missed ──
   const a = await context("savo_admin", admin.id);
@@ -257,8 +322,11 @@ try {
   for (const [name, id] of [["adminUser", admin?.id], ["clientUser", client?.id]]) if (id) await p[name].delete({ where: { id } }).catch(() => {});
   if (project) await p.clientProject.delete({ where: { id: project.id } }).catch(() => {});
   for (const inv of [invoiceA, invoiceB, invoiceC]) if (inv) await p.invoice.delete({ where: { id: inv.id } }).catch(() => {});
-  await p.webhookEvent.deleteMany({});
-  await p.siteSetting.deleteMany({ where: { key: { in: ["bank_name", "bank_account_name", "bank_account_number", "bank_ifsc", "bank_swift", "bank_branch", "bank_instructions"] } } });
+  await p.webhookEvent.deleteMany({ where: { id: { in: eventIds } } });
+  await p.$transaction([
+    p.siteSetting.deleteMany({ where: { key: { in: bankKeys } } }),
+    ...originalBankRows.map(({ key, value }) => p.siteSetting.create({ data: { key, value } })),
+  ]);
   stub.close(); await browser.close(); await p.$disconnect();
 }
 await writeFile(`${dir}/report.txt`, [`checks: ${checks.length}`, ...checks.map(c => `✓ ${c}`), errors.length ? `errors: ${errors.length}` : "errors: 0", ...errors.map(e => `✗ ${e}`), ""].join("\n"));

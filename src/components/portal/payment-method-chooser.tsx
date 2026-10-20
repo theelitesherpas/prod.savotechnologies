@@ -1,254 +1,186 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import type { CheckoutStart, CheckoutVerify } from "@/app/portal/(app)/invoices/[id]/pay/types";
-import styles from "./portal.module.css";
+import type { BankDetails } from "@/lib/bank-details";
+import { CheckoutHelp, CheckoutIcon, PaymentTrust, RazorpayLogo } from "./checkout-ui";
+import { CopyValue, PrintPayment } from "./checkout-actions";
+import styles from "./checkout.module.css";
 
-/**
- * PayPal-style payment method chooser for the portal pay page.
- *
- *   ● Pay Online (default) — Razorpay checkout with a transparent fee
- *     breakdown: subtotal, processing fee (2% INR / 3% others) and GST
- *     (18% on the fee, INR only). The gateway order is created for the
- *     TOTAL; verification and webhook reconciliation expect exactly it.
- *   ○ Bank Deposit — the company's bank transfer details; the invoice
- *     amount only (no online fees), recorded by the Savo team after the
- *     transfer is confirmed.
- *
- * Server actions arrive as props (codebase pattern); amounts and fee
- * figures arrive precomputed from the server — the browser never decides
- * money.
- */
-
-type RazorpayHandlerResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
+/** Operate / reference-pinned: methods on the left, an exact amount review on
+ * the right. Bank confirmation reveals instructions, never records payment.
+ * The existing owner-scoped server actions remain the only money boundary. */
+type RazorpayResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
 type RazorpayOptions = {
   key: string; order_id: string; amount: number; currency: string; name: string; description: string;
   prefill?: { name?: string; email?: string }; theme?: { color?: string };
-  handler: (response: RazorpayHandlerResponse) => void; modal?: { ondismiss?: () => void };
+  handler: (response: RazorpayResponse) => void; modal?: { ondismiss?: () => void };
 };
-type RazorpayConstructor = new (options: RazorpayOptions) => { open: () => void; on: (event: string, cb: (payload: unknown) => void) => void };
-
+type RazorpayConstructor = new (options: RazorpayOptions) => { open: () => void; on: (event: string, cb: () => void) => void };
 declare global { interface Window { Razorpay?: RazorpayConstructor } }
-
 const CHECKOUT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
+let checkoutScript: Promise<void> | null = null;
 
-function RazorpayMark({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 116 24" role="img" aria-label="Razorpay" fill="none">
-      <path d="M10.6 3 4.4 21h4.3l1.3-4.1h5L12.8 21h4.4L23.4 3h-4.3l-4.4 13.4h-4.6L14.9 3h-4.3Z" fill="#02042b"/>
-      <path d="m13.6 12.6 3.6-11h4.2l-6.1 18.7-1.7-7.7Z" fill="#3395ff"/>
-      <text x="27" y="17" fontFamily="Inter, system-ui, sans-serif" fontWeight="700" fontSize="13.5" fill="#02042b">Razorpay</text>
-    </svg>
-  );
+/** Shared, bounded loader. Remounts reuse it; failed loads can really retry. */
+function loadCheckout(): Promise<void> {
+  if (window.Razorpay) return Promise.resolve();
+  if (checkoutScript) return checkoutScript;
+  checkoutScript = new Promise<void>((resolve, reject) => {
+    const script = document.querySelector<HTMLScriptElement>("script[data-rzp-checkout]") ?? document.createElement("script");
+    const cleanup = () => { clearTimeout(timer); script.removeEventListener("load", ready); script.removeEventListener("error", fail); };
+    const fail = () => { cleanup(); script.remove(); reject(new Error("Checkout could not load. Check your connection and try again.")); };
+    const ready = () => { if (!window.Razorpay) { fail(); return; } cleanup(); resolve(); };
+    script.addEventListener("load", ready);
+    script.addEventListener("error", fail);
+    const timer = setTimeout(fail, 15000);
+    if (!script.isConnected) { script.src = CHECKOUT_SRC; script.async = true; script.dataset.rzpCheckout = "1"; document.body.appendChild(script); }
+  }).catch(error => { checkoutScript = null; throw error; });
+  return checkoutScript;
 }
 
 function FeeInfo({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
-  return (
-    <span className={styles.feeInfoWrap}>
-      <button type="button" className={styles.feeInfoButton} aria-label={`About this fee: ${text}`}
-        aria-expanded={open} onClick={() => setOpen(v => !v)} onBlur={() => setOpen(false)}
-        onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-        <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="10" cy="10" r="8.2" /><path d="M10 13.6V9.4" /><path d="M10 6.5h.01" strokeWidth="2.2" />
-        </svg>
-      </button>
-      {open ? <span role="tooltip" className={styles.feePopup}>{text}</span> : null}
-    </span>
-  );
+  const id = useId();
+  return <span className={styles.feeInfoWrap}>
+    <button type="button" className={styles.infoButton} aria-label={`About this fee: ${text}`} aria-expanded={open} aria-describedby={open ? id : undefined}
+      onClick={() => setOpen(v => !v)} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)}
+      onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); } }}><CheckoutIcon name="info"/></button>
+    {open ? <span id={id} role="tooltip" className={styles.feePopup}>{text}</span> : null}
+  </span>;
 }
 
-function BankMark({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" role="img" aria-label="Bank" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9.5 12 4l9 5.5" /><path d="M5 10v9" /><path d="M9.7 10v9" /><path d="M14.3 10v9" /><path d="M19 10v9" /><path d="M3 20h18" />
-    </svg>
-  );
-}
-
-export function PaymentMethodChooser({
-  invoiceId, invoiceNumber, currencyLabel, labels, totals, bank, providerUnavailable,
-  createOrder, verifyPayment,
-}: {
-  invoiceId: string;
-  invoiceNumber: string;
-  currencyLabel: string;
-  /** Preformatted money strings from the server (never functions across the boundary). */
+export function PaymentMethodChooser({ invoiceId, invoiceNumber, currencyLabel, labels, totals, bank, providerUnavailable, createOrder, verifyPayment, invoiceDetails }: {
+  invoiceId: string; invoiceNumber: string; currencyLabel: string;
   labels: { subtotal: string; fee: string; gst: string | null; total: string };
   totals: { subtotal: number; feeRate: number; fee: number; gstRate: number; gst: number; total: number; domestic: boolean };
-  bank: {
-    bankName: string; accountName: string; accountNumber: string; ifsc: string; swift: string; branch: string; instructions: string;
-  } | null;
-  providerUnavailable?: boolean;
+  bank: BankDetails | null; providerUnavailable?: boolean; invoiceDetails?: ReactNode;
   createOrder: (invoiceId: string) => Promise<CheckoutStart>;
   verifyPayment: (input: { invoiceId: string; orderId: string; paymentId: string; signature: string }) => Promise<CheckoutVerify>;
 }) {
+  const router = useRouter();
   const [method, setMethod] = useState<"online" | "bank">("online");
-  const [scriptReady, setScriptReady] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [instructions, setInstructions] = useState(false);
+  const [scriptState, setScriptState] = useState<"loading" | "ready" | "failed">("loading");
+  const [busy, setBusy] = useState<"starting" | "verifying" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const inFlight = useRef(false);
+  const confirming = useRef(false);
+  const instructionHeading = useRef<HTMLHeadingElement>(null);
+  const bankReady = !!(bank?.accountName && bank?.accountNumber && bank?.bankName && (currencyLabel === "INR" ? bank?.ifsc : bank?.swift));
 
-  // Primary loader: start fetching checkout.js the moment the chooser mounts
-  // (Pay Online is the default selection — waiting for a radio click would
-  // leave the button in "Loading…" forever). setState only fires from the
-  // async load/error callbacks, never synchronously in the effect body.
   useEffect(() => {
     if (providerUnavailable) return;
-    const markReady = () => setScriptReady(true);
-    const markFailed = () => setError("Razorpay checkout could not be loaded. Check your connection and retry.");
-    const existing = document.querySelector<HTMLScriptElement>("script[data-rzp-checkout]");
-    if (existing) {
-      if (window.Razorpay) {
-        const settled = setTimeout(markReady, 0); // already loaded on a prior mount
-        return () => clearTimeout(settled);
-      }
-      existing.addEventListener("load", markReady);  // still in flight
-      existing.addEventListener("error", markFailed);
-      return () => { existing.removeEventListener("load", markReady); existing.removeEventListener("error", markFailed); };
-    }
-    const script = document.createElement("script");
-    script.src = CHECKOUT_SRC;
-    script.async = true;
-    script.dataset.rzpCheckout = "1";
-    script.addEventListener("load", markReady);
-    script.addEventListener("error", markFailed);
-    document.body.appendChild(script);
-    return () => { script.removeEventListener("load", markReady); script.removeEventListener("error", markFailed); };
+    let active = true;
+    void loadCheckout().then(() => { if (active) setScriptState("ready"); }).catch(() => { if (active) setScriptState("failed"); });
+    return () => { active = false; };
   }, [providerUnavailable]);
+  useEffect(() => { if (instructions) { instructionHeading.current?.focus(); instructionHeading.current?.scrollIntoView({ block: "start" }); } }, [instructions]);
 
-  // Retry path only (e.g. after a failed load); the mount effect above is the
-  // primary loader.
-  const loadScript = () => {
-    if (scriptReady || typeof document === "undefined") return;
-    if (document.querySelector("script[data-rzp-checkout]")) {
-      if (window.Razorpay) setScriptReady(true);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = CHECKOUT_SRC;
-    script.async = true;
-    script.dataset.rzpCheckout = "1";
-    script.addEventListener("load", () => setScriptReady(true));
-    script.addEventListener("error", () => setError("Razorpay checkout could not be loaded. Check your connection and retry."));
-    document.body.appendChild(script);
+  const retryScript = () => {
+    setScriptState("loading");
+    void loadCheckout().then(() => setScriptState("ready")).catch(() => setScriptState("failed"));
   };
-
   const startPayment = async () => {
-    setBusy(true); setError(null);
+    if (inFlight.current) return;
+    inFlight.current = true; setBusy("starting"); setError(null);
+    const release = () => { inFlight.current = false; setBusy(null); };
     try {
       const start = await createOrder(invoiceId);
-      if (!start.ok) { setError(start.message); return; }
-      if (!window.Razorpay) { setError("Razorpay checkout is still loading — try again in a second."); return; }
+      if (!start.ok) { setError(start.message); release(); return; }
+      if (!window.Razorpay) { setScriptState("failed"); release(); return; }
       const checkout = new window.Razorpay({
-        key: start.keyId,
-        order_id: start.orderId,
-        amount: start.amount,
-        currency: start.currency,
-        name: "Savo Technologies",
-        description: `Invoice ${start.invoiceNumber}${start.amount > totals.subtotal ? " (incl. processing fee)" : ""}`,
-        prefill: { name: start.name, email: start.email },
-        theme: { color: "#b82222" },
-        handler: (response) => {
+        key: start.keyId, order_id: start.orderId, amount: start.amount, currency: start.currency,
+        name: "Savo Technologies", description: `Invoice ${start.invoiceNumber}`, prefill: { name: start.name, email: start.email }, theme: { color: "#b82222" },
+        handler: response => {
+          confirming.current = true;
+          setBusy("verifying");
           void (async () => {
-            const verdict = await verifyPayment({ invoiceId, orderId: response.razorpay_order_id, paymentId: response.razorpay_payment_id, signature: response.razorpay_signature });
-            const url = verdict.ok
-              ? `/portal/invoices/${invoiceId}/pay?paid=1`
-              : `/portal/invoices/${invoiceId}/pay?payError=${encodeURIComponent(verdict.message)}`;
-            window.location.assign(url);
+            try {
+              const verdict = await verifyPayment({ invoiceId, orderId: response.razorpay_order_id, paymentId: response.razorpay_payment_id, signature: response.razorpay_signature });
+              router.replace(`/portal/invoices/${invoiceId}/pay?${verdict.ok ? "paid=1" : `payError=${encodeURIComponent(verdict.message)}`}`);
+            } catch {
+              // A lost response is not evidence of failure: webhook confirmation may arrive.
+              router.replace(`/portal/invoices/${invoiceId}/pay?paid=1`);
+            }
           })();
         },
-        modal: { ondismiss: () => setBusy(false) },
+        modal: { ondismiss: () => { if (inFlight.current && !confirming.current) release(); } },
       });
-      checkout.on("payment.failed", () => {
-        setError("The payment attempt failed. No amount was recorded — you can retry safely.");
-        setBusy(false);
-      });
+      checkout.on("payment.failed", () => { setError("The payment attempt was not completed. If your bank shows a debit, check the invoice status or contact us before trying again."); release(); });
       checkout.open();
-    } catch {
-      setError("Payment could not be started. Please try again.");
-      setBusy(false);
-    }
+    } catch { setError("We couldn’t open checkout. Please try again, or choose bank deposit."); release(); }
   };
 
-  return (
-    <div className={styles.methodCard} role="radiogroup" aria-label="Payment method">
-      <div className={`${styles.methodOption} ${method === "online" ? styles.methodActive : ""}`}>
-        <label className={styles.methodLabel}>
-          <input type="radio" name="payment-method" value="online" checked={method === "online"}
-            onChange={() => setMethod("online")} onClick={loadScript} disabled={providerUnavailable} />
-          <span className={styles.methodName}>Pay Online</span>
-          <RazorpayMark className={styles.methodLogoOnline} />
-          <span className={styles.methodSub}>Cards · UPI · Netbanking · Wallets</span>
-        </label>
-        {method === "online" ? (
-          <div className={styles.methodBody}>
-            {providerUnavailable ? (
-              <p className={styles.payError}>Online payment is temporarily unavailable. Choose Bank Deposit below, or contact us at hello@savotechnologies.com.</p>
-            ) : (
-              <>
-                <dl className={styles.feeRows}>
-                  <div><dt>Subtotal</dt><dd>{labels.subtotal}</dd></div>
-                  <div>
-                    <dt>Processing fee <FeeInfo text={`Calculated as ${Math.round(totals.feeRate * 100)}% of the invoice amount.`} /></dt>
-                    <dd>{labels.fee}</dd>
-                  </div>
-                  {labels.gst ? (
-                    <div>
-                      <dt>GST on processing fee <FeeInfo text={`GST is charged at ${Math.round(totals.gstRate * 100)}% on the processing fee.`} /></dt>
-                      <dd>{labels.gst}</dd>
-                    </div>
-                  ) : null}
-                  <div className={styles.feeTotal}><dt>Total to pay ({currencyLabel})</dt><dd>{labels.total}</dd></div>
-                </dl>
-                <button type="button" className={styles.payCta} onClick={() => { loadScript(); void startPayment(); }} disabled={busy || !scriptReady}>
-                  {busy ? "Opening checkout…" : scriptReady ? `Pay ${labels.total} securely` : "Loading secure checkout…"}
-                </button>
-                <p className={styles.payHint}>
-                  Opens Razorpay checkout for invoice {invoiceNumber}. You return here automatically and the status updates
-                  once the payment is verified on our servers. Failed attempts record nothing and can be retried safely.
-                </p>
-                {error ? <p className={styles.payError} role="alert">{error}</p> : null}
-              </>
-            )}
-          </div>
-        ) : null}
+  if (instructions && bank && bankReady) {
+    return <section className={`${styles.instructionSheet} ${styles.printSheet}`} aria-labelledby="bank-instructions-title">
+      <div className={styles.documentHeader}><span className={styles.documentIcon}><CheckoutIcon name="bank"/></span><span className={styles.pendingPill}>Awaiting your transfer</span></div>
+      <h1 id="bank-instructions-title" ref={instructionHeading} tabIndex={-1}>Your bank deposit instructions</h1>
+      <p className={styles.lead}>Transfer <strong>{labels.subtotal} {currencyLabel}</strong> using the details below. Include your invoice reference so we can match the payment to your account.</p>
+      <div className={styles.referenceBlock}><div><span>Payment reference</span><CopyValue value={invoiceNumber} label="payment reference"/></div><CheckoutIcon name="info"/><p>Use this exact reference in your bank’s transfer description.</p></div>
+      <h3>Beneficiary details</h3>
+      <dl className={styles.bankDetails}>
+        {([
+          ["Account name", bank.accountName], ["Account number", bank.accountNumber], ["Bank name", bank.bankName],
+          ["Branch", bank.branch], ["IFSC", bank.ifsc], ["SWIFT / BIC", bank.swift],
+        ] as const).filter(([, value]) => !!value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd><CopyValue value={value} label={label}/></dd></div>)}
+        <div><dt>Transfer amount</dt><dd>{labels.subtotal} {currencyLabel}</dd></div>
+      </dl>
+      {bank.instructions ? <p className={styles.bankNote}>{bank.instructions}</p> : null}
+      <div className={styles.notice}><CheckoutIcon name="clock"/><div><strong>This is not a payment confirmation.</strong><p>Your invoice stays unpaid until Savo verifies receipt of funds. We do not add online-processing fees to bank deposits; your bank may apply transfer charges. Send in {currencyLabel}; contact us before transferring if your bank cannot send that currency.</p></div></div>
+      <div className={styles.documentActions}>
+        <PrintPayment/>
+        <a className={styles.primary} href={`mailto:hello@savotechnologies.com?subject=${encodeURIComponent(`Bank transfer: ${invoiceNumber}`)}&body=${encodeURIComponent(`Invoice: ${invoiceNumber}\nAmount: ${labels.subtotal} ${currencyLabel}\nTransfer / UTR reference:\nTransfer date:\n`)}`}><CheckoutIcon name="mail"/>Send transfer reference</a>
       </div>
+      <button type="button" className={`${styles.backLink} ${styles.noPrint}`} onClick={() => { setInstructions(false); setMethod("bank"); }}><CheckoutIcon name="back"/>Change payment method</button>
+    </section>;
+  }
 
-      <div className={`${styles.methodOption} ${method === "bank" ? styles.methodActive : ""}`}>
-        <label className={styles.methodLabel}>
-          <input type="radio" name="payment-method" value="bank" checked={method === "bank"} onChange={() => setMethod("bank")} />
-          <span className={styles.methodName}>Bank Deposit</span>
-          <BankMark className={styles.methodLogoBank} />
-          <span className={styles.methodSub}>NEFT · RTGS · IMPS · Wire transfer</span>
-        </label>
-        {method === "bank" ? (
-          <div className={styles.methodBody}>
-            <dl className={styles.bankRows}>
-              <div className={styles.feeTotal}><dt>Amount to transfer ({currencyLabel})</dt><dd>{labels.subtotal}</dd></div>
-            </dl>
-            {bank && (bank.accountNumber || bank.ifsc || bank.swift) ? (
-              <>
-                <dl className={styles.bankRows}>
-                  {bank.accountName ? <div><dt>Account name</dt><dd>{bank.accountName}</dd></div> : null}
-                  {bank.bankName ? <div><dt>Bank</dt><dd>{bank.bankName}</dd></div> : null}
-                  {bank.accountNumber ? <div><dt>Account number</dt><dd className="tnum">{bank.accountNumber}</dd></div> : null}
-                  {bank.ifsc ? <div><dt>IFSC</dt><dd className="tnum">{bank.ifsc}</dd></div> : null}
-                  {bank.swift ? <div><dt>SWIFT / BIC</dt><dd className="tnum">{bank.swift}</dd></div> : null}
-                  {bank.branch ? <div><dt>Branch</dt><dd>{bank.branch}</dd></div> : null}
-                </dl>
-                <p className={styles.payHint}>
-                  {bank.instructions || `Transfer the invoice amount and include ${invoiceNumber} in the payment reference. Your invoice is marked paid after our team confirms the transfer — usually within one business day.`}
-                </p>
-              </>
-            ) : (
-              <p className={styles.payHint}>
-                Bank transfer details are available on request. Write to hello@savotechnologies.com with invoice {invoiceNumber}
-                and we will share our account details and confirm your transfer.
-              </p>
-            )}
-          </div>
-        ) : null}
-      </div>
+  return <div className={styles.checkoutGrid}>
+    <div className={styles.methodColumn}>
+      <section className={styles.panel} aria-labelledby="payment-method-title">
+        <div className={styles.panelHeading}><h2 id="payment-method-title">Select payment method</h2><span>Two ways to pay</span></div>
+        <fieldset className={styles.methodList} disabled={!!busy}><legend className={styles.srOnly}>Payment method</legend>
+          <label className={`${styles.methodOption} ${method === "online" ? styles.selected : ""}`}>
+            <span className={styles.methodTop}><input type="radio" name="payment-method" value="online" checked={method === "online"} onChange={() => { setMethod("online"); setError(null); }}/><span className={styles.methodName}>Pay Online</span><RazorpayLogo/></span>
+            <span className={styles.methodDescription}>Cards, UPI, netbanking and wallets</span><span className={styles.methodDetail}>Pay securely and get an instant confirmation after verification.</span>
+          </label>
+          <label className={`${styles.methodOption} ${method === "bank" ? styles.selected : ""}`}>
+            <span className={styles.methodTop}><input type="radio" name="payment-method" value="bank" checked={method === "bank"} onChange={() => { setMethod("bank"); setError(null); }}/><span className={styles.methodName}>Bank Deposit</span><CheckoutIcon name="bank" className={styles.bankIcon}/></span>
+            <span className={styles.methodDescription}>{currencyLabel === "INR" ? "NEFT, RTGS or IMPS" : "International bank transfer"}</span><span className={styles.methodDetail}>Transfer directly to our bank. Confirmed manually after receipt.</span>
+          </label>
+        </fieldset>
+        {method === "bank" ? <div className={styles.methodExplanation}><CheckoutIcon name="info"/><p>{bankReady ? "Review the amount, then continue to receive our bank details and your invoice reference. No payment is taken on this page." : "Bank transfer details are available on request. Contact our team before sending funds; we’ll confirm the correct account and transfer currency."}</p></div> : null}
+      </section>
+      {invoiceDetails}
+      <CheckoutHelp invoiceNumber={invoiceNumber}/>
     </div>
-  );
+    <section className={`${styles.panel} ${styles.summary}`} aria-labelledby="payment-summary-title">
+      <div className={styles.panelHeading}><h2 id="payment-summary-title">Payment summary</h2><span className={styles.currency}>{currencyLabel}</span></div>
+      <div className={styles.summaryBody}>
+        <div className={styles.invoiceReference}><span>Invoice</span><strong>{invoiceNumber}</strong></div>
+        <dl className={styles.feeRows}>
+          <div><dt>Subtotal</dt><dd>{labels.subtotal}</dd></div>
+          {method === "online" ? <>
+            <div><dt>Processing fee <FeeInfo text={`Calculated as ${Math.round(totals.feeRate * 100)}% of the invoice amount.`}/></dt><dd>{labels.fee}</dd></div>
+            {labels.gst ? <div><dt>GST on processing fee <FeeInfo text={`GST is charged at ${Math.round(totals.gstRate * 100)}% on the processing fee.`}/></dt><dd>{labels.gst}</dd></div> : null}
+          </> : <div><dt>Online processing fee</dt><dd>Not applicable</dd></div>}
+        </dl>
+        <div className={styles.total}><span>{method === "online" ? "Total to pay" : "Amount to transfer"}<small>{method === "online" ? "Including applicable fees" : "Invoice amount only"}</small></span><strong>{method === "online" ? labels.total : labels.subtotal}<small>{currencyLabel}</small></strong></div>
+        {method === "online" ? <>
+          <button type="button" className={styles.primary} onClick={() => void startPayment()} disabled={!!busy || scriptState !== "ready" || providerUnavailable}>
+            <CheckoutIcon name="lock"/>{busy === "verifying" ? "Verifying your payment…" : busy ? "Opening checkout…" : scriptState === "loading" ? "Loading secure checkout…" : scriptState === "failed" ? "Checkout unavailable" : `Pay ${labels.total} securely`}<CheckoutIcon name="arrow"/>
+          </button>
+          {scriptState === "failed" ? <div className={styles.inlineError} role="alert">Checkout couldn’t load. <button type="button" onClick={retryScript}>Try loading again</button> or choose Bank Deposit.</div> : null}
+          {providerUnavailable ? <p className={styles.inlineError}>Online payment is temporarily unavailable. Choose Bank Deposit or contact our team.</p> : null}
+          <p className={styles.actionNote}>You’ll return here after checkout. Your invoice is marked paid only after we verify the payment.</p>
+        </> : <>
+          {bankReady ? <button type="button" className={styles.primary} onClick={() => setInstructions(true)}>Get bank deposit instructions<CheckoutIcon name="arrow"/></button> : <a className={styles.primary} href={`mailto:hello@savotechnologies.com?subject=${encodeURIComponent(`Bank details for ${invoiceNumber}`)}`}>Request bank details<CheckoutIcon name="arrow"/></a>}
+          <p className={styles.actionNote}>No charge is made by continuing. Bank deposits are verified by our team before the invoice is marked paid.</p>
+        </>}
+        {error ? <p className={styles.inlineError} role="alert">{error}</p> : null}
+        <PaymentTrust/>
+      </div>
+    </section>
+  </div>;
 }

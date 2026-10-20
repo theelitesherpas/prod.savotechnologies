@@ -2063,3 +2063,45 @@ browser checks with no failures/page errors, desktop/phone visual review inline,
 typecheck/scoped lint and 1,129 tests. No managed-content/database writes in this
 refinement; no production deployment. One detector scan: 68 documentation
 advisories, the inherited Outfit warning, no severity-error findings.
+
+## Client checkout override — reference-pinned 2026-10-20
+
+Applies only to `/portal/invoices/[id]/pay`, its bank instructions and payment
+confirmation. Inherits the client portal; `checkout.module.css` owns the local
+rules rather than changing other workspace pages.
+
+- **Layout:** paired white panels — payment methods on the left, exact amount
+  review/action on the right. At 920px and below, methods → amount/action →
+  invoice details → help. Full content width up to 1200px; no horizontal scroll
+  at 320/390px. Bank confirmation changes the task to a centered instruction
+  document; a paid invoice becomes a centered receipt, not an accordion or
+  duplicate payment form.
+- **Palette/type:** existing Inter UI, neutral canvas, white paper, ink
+  `#171a20`, muted `#606773`, lines `#e3e5e9`, primary/focus `#b82222`.
+  Task headings 30px desktop / 25px phone; panel headings 17px; record text
+  13–14px; tabular monetary values. White-on-red actions, native radios,
+  single-circle info icons; percentages live in currency-specific tooltips.
+- **Shape/depth:** 10px panels with a low 2px/4px neutral shadow; 6px actions,
+  7px selection rows. Selected radios use a red outline and very pale red
+  field; status green/amber is reserved for actual paid/pending meaning.
+- **Flow:** online is selected and the checkout loader starts on arrival.
+  Bank review has no online fee; confirmation reveals configured beneficiary
+  details, copyable invoice reference and print/save actions. Instructions
+  explicitly are not proof of payment. No fake country choices or bank data.
+- **Truth:** payment success comes from the stored paid state. Receipt totals
+  and method use a bound captured provider record when available; historic
+  charges are never recomputed from current rates. Pending returns suppress
+  a second-pay button and offer bounded status refresh. Manual payment links
+  retain priority and remain validated external actions.
+- **Trust:** self-hosted official Razorpay mark and sourced Visa/Mastercard
+  network marks; an original HTTPS lock and a provider-attributed PCI DSS
+  information link. No Savo PCI certification or blanket Visa Secure /
+  SecureCode claim. The provider's linked certificate was expired at review,
+  so no certification seal was canonized (see `docs/PAYMENT-ASSETS.md`).
+
+Evidence: `tmp/razorpay-payments/` and `.impeccable/review/checkout/`; 55 local
+browser checks including a one-page bank-instructions PDF, 9 page/receipt
+unit tests, full suite 1671 passed / 16 skipped, typecheck/lint clean. Review
+performed inline, not independently; no physical-device or live-card claim.
+The 72 detector advisories concern older global design records; no global
+identity rewrite or unrelated artifact migration is part of this override.

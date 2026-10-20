@@ -109,35 +109,64 @@ masked status, connection-test failure path, danger-zone clear, lock-now,
 editor lockout — 28 assertions, synthetic fixtures cleaned up in `finally`,
 refuses non-local databases. Evidence screenshots in `tmp/razorpay-settings/`.
 
-## Invoice pipeline (v7.6+)
+## Current invoice pipeline (Standard Checkout)
 
-- **Payment links:** `src/lib/razorpay.ts` (server-only, no SDK) creates
-  Payment Links for unpaid invoices with the exact minor-unit amount,
-  `reference_id` = invoice number, provider notifications off. **Precedence:
-  a manual payment link always wins — the gateway is consulted only when no
-  link was provided** (invoice created payable, or first transitioning into
-  payable; cleared links are never auto-recreated). Admin actions:
-  create/replace (`razorpay.link.create`), stored in `paymentLink` +
-  `razorpayLinkId`. Replacing, editing out of sent/overdue, deleting or
-  manually overriding an invoice cancels the provider link (best-effort) and
-  detaches the managed id. Creation failure never fails the save: the email
-  is sent without Pay now and the operator is told why.
-- **Webhook:** `POST /api/webhooks/razorpay` — signature-verified
-  (constant-time HMAC-SHA256 vs the panel-stored secret), replay-safe
-  (`webhook_events` unique event id, effects + dedupe row commit together),
-  amount/currency must match exactly or the delivery is recorded `rejected`.
-  Payment recording goes through `recordInvoicePaid` (lib/invoice-payments.ts)
-  — one transactional routine shared by manual marking, admin sync and the
-  webhook: status + `paidAt` + `razorpayPaymentId`, receipt email, project and
-  milestone reconciliation.
-- **Reconciliation:** Sync status with Razorpay (per invoice) reads the
-  provider's own record; `razorpay.sync.paid` audit entry. Webhook audits:
-  `razorpay.webhook.paid` / `.mismatch`.
-- **Dashboard setup:** Razorpay → Settings → Webhooks → add
-  `https://savotechnologies.com/api/webhooks/razorpay`, set a secret, save
-  the same secret in the panel, subscribe to `payment_link.paid` and
-  `payment_link.cancelled`.
-- **Local verification:** `scripts/verify-razorpay-payments.mjs` drives the
-  full path against a stub gateway (link creation through the UI, portal Pay
-  now, signed webhook, replay, bad signature, mismatch, sync, cancellation) —
-  23 browser checks. Unit coverage in `tests/razorpay-payments.test.ts`.
+- **Manual link wins:** a validated manually supplied payment link stays an
+  external payment action. The gateway is not started for that invoice;
+  unsafe stored URLs fail closed. Otherwise Pay now in portal/email/PDF
+  opens the owner-scoped `/portal/invoices/[id]/pay` page.
+- **Online payment:** an owner-authenticated, rate-limited server action
+  creates a Razorpay order on demand using stored invoice amounts. The client
+  receives only the public key ID. Signature verification, the stored order
+  binding and a captured provider payment must agree before recording paid.
+- **Fees (unchanged by the redesign):** `lib/payment-fees.ts` computes 2%
+  processing fee for INR plus 18% GST on that fee; other currencies have a
+  3% processing fee and no GST row. The same total is used for orders,
+  checkout verification, webhook matching and sync. Labels omit percentages;
+  accessible info popups describe only the current currency's rule.
+- **Webhook:** `POST /api/webhooks/razorpay` accepts `payment.captured` and
+  legacy `payment_link.paid`; signature verification, event-ID deduplication
+  and transactional invoice/project reconciliation remain in place. Keep
+  these events on the existing dashboard webhook. This redesign needs no
+  keys, webhook URL, secret, schema or event changes.
+- **Reconciliation:** admin Sync status with Razorpay reads provider order
+  payments (or legacy links), then uses shared `recordInvoicePaid`.
+
+## Checkout redesign (v7.9.0)
+
+- Two-panel reference-pinned checkout: methods left, fee/amount review and
+  action right. Online is selected by default; script loading begins on
+  arrival and supports bounded failure/retry. Phones reflow without horizontal
+  scrolling. The existing workspace shell is not redesigned.
+- **Bank deposit:** choose Bank Deposit → review invoice amount (no online
+  fee) → Get bank deposit instructions → dedicated beneficiary/reference
+  document. Bank details remain managed under Settings → Payment gateway;
+  incomplete details produce a contact-us path, not invented beneficiary data.
+  International instructions require a configured SWIFT code. No currency
+  conversion or bank support is fabricated.
+- Copyable values, invoice number as the stable unique transfer reference,
+  print/save-as-PDF and email of the transfer reference to the real team.
+  The last action opens an email draft; it does not claim evidence was
+  submitted or mark paid. Invoice status stays unchanged until staff verify
+  funds using the existing admin workflow.
+- **Confirmation:** every stored paid invoice gets a dedicated receipt page,
+  even without a return query. Captured provider amount/method are displayed
+  only when bound to the stored payment/order/currency; historical fees are
+  never recomputed. If provider retrieval is unavailable, the page shows the
+  invoice amount credited without inventing the total charged. Paid/cancelled
+  invoices cannot expose old Pay now links. Draft/foreign IDs stay private.
+- **Pending/error:** a return flag alone cannot show success; checking states
+  suppress a second-pay button and refresh for a bounded minute. Failure text
+  is escaped without double decoding. Lost verification responses are treated
+  as pending, not proof that nothing was charged.
+- **Trust:** HTTPS lock, provider-attributed PCI DSS information and network
+  identification marks. No Savo certification, expired certificate seal or
+  blanket card-authentication guarantee. Provenance: `docs/PAYMENT-ASSETS.md`.
+
+Verification: `tests/checkout-page.test.tsx` adds 9 page/receipt/access tests.
+`scripts/verify-razorpay-payments.mjs` runs 55 local synthetic browser checks,
+including online payment/verified receipt, currency fees, both bank states,
+confirm-to-instructions without payment, one-page instruction PDF, 320/390px
+layouts, loader retry, pending, signature/replay and sync. It restores existing
+local bank settings and cleans only its own webhook events. Evidence is in
+`tmp/razorpay-payments/`; no live charges or real test emails are part of QA.

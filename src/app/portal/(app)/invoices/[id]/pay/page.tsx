@@ -6,25 +6,22 @@ import { getClientUser } from "@/lib/client-auth";
 import { getRazorpayConfig } from "@/lib/razorpay-config";
 import { getBankDetails } from "@/lib/bank-details";
 import { checkoutTotals } from "@/lib/payment-fees";
-import { money } from "@/components/portal/ui";
+import { invoicePaymentLink } from "@/lib/payment-links";
+import { verifiedReceiptPayment } from "@/lib/payment-receipt";
+import { fetchRazorpayPayment } from "@/lib/razorpay";
 import { PaymentMethodChooser } from "@/components/portal/payment-method-chooser";
+import { CheckoutHelp, CheckoutIcon } from "@/components/portal/checkout-ui";
+import { CopyValue, PaymentStatusRefresh, PrintPayment } from "@/components/portal/checkout-actions";
 import { createRazorpayOrderAction, verifyCheckoutAction } from "./actions";
-import styles from "@/components/portal/portal.module.css";
+import styles from "@/components/portal/checkout.module.css";
 
 export const metadata: Metadata = { title: "Pay invoice", robots: { index: false, follow: false } };
 
-/**
- * Portal checkout page — the destination of every gateway Pay now action.
- * Owner-scoped (a session can only ever see its own invoice), payable-only.
- * The success/failure banners after the checkout redirect are derived from
- * the DATABASE (invoice status / stored payment id), never from client-side
- * claims: ?paid=1 only renders a success banner when the invoice is
- * actually recorded as paid server-side.
- */
-export default async function PayInvoicePage({
-  params,
-  searchParams,
-}: {
+/** Reference-pinned Operate surface: paired payment-method / amount panels,
+ * bank review → instructions, then a document-style paid receipt. Savo's
+ * existing neutral/red portal identity and server-owned payment truth remain.
+ * No query flag can make an invoice paid; drafts and foreign IDs stay private. */
+export default async function PayInvoicePage({ params, searchParams }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ paid?: string; payError?: string }>;
 }) {
@@ -33,117 +30,94 @@ export default async function PayInvoicePage({
   const { id } = await params;
   const { paid, payError } = await searchParams;
   const invoice = await prisma.invoice.findFirst({
-    where: { id, clientId: client.id },
+    where: { id, clientId: client.id, status: { in: ["sent", "overdue", "paid", "cancelled"] } },
     include: { project: { where: { clientId: client.id }, select: { code: true, title: true } } },
   });
   if (!invoice) redirect("/portal/invoices");
 
-  const fmtDate = (d: Date) => d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" });
+  const fmtDate = (d: Date | null) => d ? d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" }) : "Not recorded";
+  const moneyFormat = new Intl.NumberFormat("en-IN", { style: "currency", currency: invoice.currency, minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtMoney = (minor: number) => moneyFormat.format(minor / 100);
   const verifiedPaid = invoice.status === "paid";
-  const payable = ["sent", "overdue"].includes(invoice.status) && invoice.amount > 0 && !invoice.paymentLink;
-  const gateway = await getRazorpayConfig().catch(() => null);
-  const bank = await getBankDetails().catch(() => null);
+  const payable = ["sent", "overdue"].includes(invoice.status) && invoice.amount > 0;
+  const external = invoicePaymentLink(invoice);
+  const gateway = payable && !invoice.paymentLink ? await getRazorpayConfig().catch(() => null) : null;
+  const bank = payable && !invoice.paymentLink ? await getBankDetails().catch(() => null) : null;
   const totals = checkoutTotals(invoice);
-  const fmtMoney = (minor: number) => money(minor, invoice.currency);
+  // Read only the safe provider facts for an already-paid invoice. Never
+  // infer a historic charge using current fee rates, or expose raw payloads.
+  const providerPayment = verifiedPaid && invoice.razorpayPaymentId
+    ? await fetchRazorpayPayment(invoice.razorpayPaymentId).catch(() => null) : null;
+  const receipt = verifiedReceiptPayment(invoice, providerPayment);
 
-  return (
-    <div className={styles.content}>
-      <header className={styles.pageHeader}>
-        <p className={styles.eyebrow}>{invoice.project ? invoice.project.code : "Invoice"}</p>
-        <h1>{verifiedPaid ? "Payment successful." : payable ? "Pay your invoice." : "Invoice."}</h1>
+  if (verifiedPaid) return <div className={styles.page}>
+    <Link className={`${styles.backLink} ${styles.noPrint}`} href="/portal/invoices"><CheckoutIcon name="back"/>All invoices</Link>
+    <article className={`${styles.receipt} ${styles.printSheet}`}>
+      <div className={styles.documentHeader}><strong>Payment confirmation</strong><span className={styles.paidPill}><CheckoutIcon name="check" className={styles.srOnly}/>Paid in full</span></div>
+      <header className={styles.receiptHero}>
+        <span className={styles.successMark}><CheckoutIcon name="check"/></span>
+        <h1>Payment successful.</h1>
+        <p>Thank you, {client.name}. Your payment has been recorded and invoice <strong>{invoice.number}</strong> is paid in full.</p>
+        <div className={styles.receiptAmount}><span>{receipt ? "Total payment received" : "Invoice amount paid"}</span><strong>{fmtMoney(receipt?.total ?? invoice.amount)} <small>{invoice.currency}</small></strong></div>
       </header>
+      <dl className={styles.metaRows}>
+        <div><dt>Invoice</dt><dd>{invoice.number}</dd></div>
+        <div><dt>Paid by</dt><dd>{client.name}{client.company ? ` · ${client.company}` : ""}</dd></div>
+        <div><dt>Account email</dt><dd>{client.email}</dd></div>
+        {invoice.project ? <div><dt>Project</dt><dd>{invoice.project.title}</dd></div> : null}
+        <div><dt>Payment date</dt><dd>{fmtDate(invoice.paidAt)}</dd></div>
+        {invoice.razorpayPaymentId ? <div><dt>Payment reference</dt><dd><CopyValue value={invoice.razorpayPaymentId} label="payment reference"/></dd></div> : null}
+        {invoice.razorpayOrderId ? <div><dt>Order reference</dt><dd>{invoice.razorpayOrderId}</dd></div> : null}
+        {receipt?.method ? <div><dt>Payment method</dt><dd>{receipt.method} via Razorpay</dd></div> : null}
+        <div><dt>Applied to invoice</dt><dd>{fmtMoney(invoice.amount)}</dd></div>
+        {receipt && receipt.extra > 0 ? <div><dt>Processing fees &amp; taxes paid</dt><dd>{fmtMoney(receipt.extra)}</dd></div> : null}
+        <div><dt>Outstanding balance</dt><dd>{fmtMoney(0)}</dd></div>
+      </dl>
+      <div className={styles.notice}><CheckoutIcon name="check"/><div><strong>You’re all set. No further payment is due.</strong><p>This confirmation stays in your portal. Download the updated invoice for your records, or quote the payment reference if you contact our team.</p></div></div>
+      <div className={styles.documentActions}><a className={styles.primary} href={`/portal/invoices/${invoice.id}/pdf`} download><CheckoutIcon name="download"/>Download paid invoice</a><PrintPayment label="Print confirmation"/></div>
+      <CheckoutHelp invoiceNumber={invoice.number}/>
+    </article>
+  </div>;
 
-      {/* ── Post-redirect banners (server-verified truth) ─────────────── */}
-      {paid && verifiedPaid ? (
-        <div className={styles.paySuccess} role="status">
-          <h2>Payment received — thank you.</h2>
-          <p>
-            Invoice <strong>{invoice.number}</strong> · <strong>{money(invoice.amount, invoice.currency)}</strong> was paid in full and is
-            recorded in your portal. A receipt email is on its way{client.email ? ` to ${client.email}` : ""}.
-          </p>
-          <dl className={styles.payDetails}>
-            <div><dt>Payment reference</dt><dd className="tnum">{invoice.razorpayPaymentId ?? "—"}</dd></div>
-            <div><dt>Paid on</dt><dd>{invoice.paidAt ? fmtDate(invoice.paidAt) : fmtDate(new Date())}</dd></div>
-            <div><dt>Invoice</dt><dd>{invoice.number}</dd></div>
-            <div><dt>Amount</dt><dd>{money(invoice.amount, invoice.currency)}</dd></div>
-          </dl>
-          <div className={styles.payAfterLinks}>
-            <Link href={`/portal/invoices/${invoice.id}/pdf?view=1`} target="_blank" rel="noopener noreferrer">View / print the PDF</Link>
-            <Link href="/portal/invoices">Back to your invoices</Link>
-          </div>
-        </div>
-      ) : null}
-      {paid && !verifiedPaid ? (
-        <div className={styles.payPending} role="status">
-          <h2>Payment confirmation is being verified.</h2>
-          <p>Your payment is being confirmed with the payment gateway. This page updates automatically once verification
-            completes — usually within a minute. Nothing needs to be paid twice; if you were charged, the payment is
-            matched to this invoice.</p>
-        </div>
-      ) : null}
-      {payError ? (
-        <div className={styles.payFailed} role="alert">
-          <h2>Payment not completed.</h2>
-          <p>{decodeURIComponent(payError)}</p>
-        </div>
-      ) : null}
+  if (!payable || paid) return <div className={styles.page}>
+    <Link className={styles.backLink} href="/portal/invoices"><CheckoutIcon name="back"/>All invoices</Link>
+    <section className={styles.resultPanel}>
+      <span className={styles.documentIcon}><CheckoutIcon name={payable ? "clock" : "info"}/></span>
+      <h1>{payable ? "Checking your payment" : invoice.status === "cancelled" ? "This invoice is cancelled" : "No payment is due"}</h1>
+      <p>{payable ? "Your invoice is not yet marked paid. If your bank shows a debit, don’t pay again while we check the confirmation. This page checks for a status update for up to one minute." : "This invoice is not open for payment. Contact our team if you need a replacement or have already sent funds."}</p>
+      <dl className={styles.metaRows}><div><dt>Invoice</dt><dd>{invoice.number}</dd></div><div><dt>Invoice amount</dt><dd>{fmtMoney(invoice.amount)} {invoice.currency}</dd></div></dl>
+      <div className={styles.resultActions}>{payable ? <PaymentStatusRefresh/> : null}<Link className={styles.secondary} href="/portal/invoices">Back to invoices</Link></div>
+      <CheckoutHelp invoiceNumber={invoice.number}/>
+    </section>
+  </div>;
 
-      {/* ── Invoice summary ───────────────────────────────────────────── */}
-      <div className={styles.payCard}>
-        <div className={styles.paySummaryHead}>
-          <div>
-            <p className={styles.payNumber}>{invoice.number}</p>
-            <p className={styles.payMeta}>
-              {invoice.project ? `${invoice.project.title} · ` : ""}Issued {fmtDate(invoice.issuedAt)}
-              {invoice.dueDate ? ` · Due ${fmtDate(invoice.dueDate)}` : ""}
-            </p>
-          </div>
-          <p className={styles.payAmount}>{money(invoice.amount, invoice.currency)}</p>
-        </div>
-        {invoice.notes ? <p className={styles.payNotes}>{invoice.notes}</p> : null}
+  const details = <section className={styles.invoiceDetails} aria-labelledby="invoice-details-title">
+    <h2 id="invoice-details-title">Invoice details</h2>
+    <dl className={styles.metaRows}>
+      <div><dt>Billed to</dt><dd>{client.company || client.name}</dd></div>
+      {invoice.project ? <div><dt>Project</dt><dd>{invoice.project.title}</dd></div> : null}
+      <div><dt>Issued on</dt><dd>{fmtDate(invoice.issuedAt)}</dd></div>
+      <div><dt>Due date</dt><dd>{invoice.dueDate ? fmtDate(invoice.dueDate) : "On receipt"}</dd></div>
+      <div><dt>Invoice currency</dt><dd>{invoice.currency}</dd></div>
+    </dl>
+    {invoice.notes ? <p className={styles.notes}>{invoice.notes}</p> : null}
+    <a className={styles.backLink} href={`/portal/invoices/${invoice.id}/pdf?view=1`} target="_blank" rel="noopener noreferrer">View invoice PDF<CheckoutIcon name="arrow"/></a>
+  </section>;
 
-        {verifiedPaid ? (
-          <p className={styles.payNote}>This invoice is already paid in full. Thank you.</p>
-        ) : null}
+  return <div className={styles.page}>
+    <Link className={styles.backLink} href="/portal/invoices"><CheckoutIcon name="back"/>All invoices</Link>
+    <header className={styles.heading}><div><h1>Complete your payment</h1><p>Choose how you’d like to pay invoice {invoice.number}. Review the total before you continue.</p></div><span className={styles.secureLabel}><CheckoutIcon name="lock"/>Secure payment</span></header>
+    {payError ? <div className={styles.notice} role="alert"><CheckoutIcon name="info"/><div><strong>We couldn’t confirm your payment.</strong><p>{payError.slice(0, 500)} If you were charged, contact us with your payment reference before trying again.</p></div></div> : null}
+    {invoice.paymentLink ? <div className={styles.checkoutGrid}><div>{details}<CheckoutHelp invoiceNumber={invoice.number}/></div><section className={styles.panel}>
+      <div className={styles.panelHeading}><h2>Payment summary</h2><span className={styles.currency}>{invoice.currency}</span></div>
+      <div className={styles.summaryBody}><div className={styles.invoiceReference}><span>Invoice</span><strong>{invoice.number}</strong></div><div className={styles.total}><span>Invoice amount</span><strong>{fmtMoney(invoice.amount)}</strong></div>
+        {external ? <a className={styles.primary} href={external} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">Continue to the payment provider<CheckoutIcon name="arrow"/></a> : <p className={styles.inlineError}>The payment link is unavailable. Please contact our team.</p>}
+        <p className={styles.actionNote}>This invoice uses a payment link supplied by Savo. You’ll complete payment on the provider’s website. Razorpay checkout is not used for this invoice.</p>
       </div>
-
-      {verifiedPaid || invoice.paymentLink || payable ? (
-        invoice.paymentLink ? (
-          <div className={styles.payCard}>
-            <div className={styles.payActionArea}>
-              <a className={styles.payCta} href={invoice.paymentLink} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">
-                Continue to the payment provider
-              </a>
-              <p className={styles.payHint}>This invoice uses a provider-hosted payment page. Complete the payment there; the status here updates after confirmation by the Savo team.</p>
-            </div>
-          </div>
-        ) : payable ? (
-          <PaymentMethodChooser
-            invoiceId={invoice.id}
-            invoiceNumber={invoice.number}
-            currencyLabel={invoice.currency}
-            labels={{
-              subtotal: fmtMoney(totals.subtotal),
-              fee: fmtMoney(totals.fee),
-              gst: totals.gst > 0 ? fmtMoney(totals.gst) : null,
-              total: fmtMoney(totals.total),
-            }}
-            totals={totals}
-            bank={bank}
-            providerUnavailable={!gateway}
-            createOrder={createRazorpayOrderAction}
-            verifyPayment={verifyCheckoutAction}
-          />
-        ) : null
-      ) : (
-        <div className={styles.payCard}>
-          <p className={styles.payNote}>This invoice is not open for online payment. If this looks wrong, contact us at hello@savotechnologies.com.</p>
-        </div>
-      )}
-
-      <div className={styles.payFooterNote}>
-        <p>Payments are processed by Razorpay. Savo never stores your card, UPI or bank details. If a payment fails, no amount is recorded and you can safely retry.</p>
-      </div>
-    </div>
-  );
+    </section></div> : <PaymentMethodChooser
+      invoiceId={invoice.id} invoiceNumber={invoice.number} currencyLabel={invoice.currency}
+      labels={{ subtotal: fmtMoney(totals.subtotal), fee: fmtMoney(totals.fee), gst: totals.gst > 0 ? fmtMoney(totals.gst) : null, total: fmtMoney(totals.total) }}
+      totals={totals} bank={bank} providerUnavailable={!gateway} createOrder={createRazorpayOrderAction} verifyPayment={verifyCheckoutAction} invoiceDetails={details}
+    />}
+  </div>;
 }
