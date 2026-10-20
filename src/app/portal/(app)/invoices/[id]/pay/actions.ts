@@ -98,7 +98,7 @@ export async function verifyCheckoutAction(input: { invoiceId: string; orderId: 
       const fresh = await tx.invoice.findFirst({ where: { id: invoice.id, clientId: client.id } });
       if (!fresh) throw new Error("Invoice not found.");
       if (fresh.razorpayOrderId && fresh.razorpayOrderId !== parsed.data.orderId) throw new Error("The checkout session for this invoice changed. No payment was recorded.");
-      return await recordInvoicePaid(tx, fresh.id, { source: "razorpay.checkout", paymentId: verification.paymentId });
+      return await recordInvoicePaid(tx, fresh.id, { source: "razorpay.checkout", paymentId: verification.paymentId, chargedAmount: verification.amount, method: verification.method });
     });
   } catch (error) {
     logger.error("razorpay.checkout_record_failed", { message: error instanceof Error ? error.message : "unknown" });

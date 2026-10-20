@@ -10,6 +10,7 @@ const destinations: { href: string; label: string; icon: PortalIconName }[] = [
   { href: "/portal/dashboard", label: "Overview", icon: "overview" },
   { href: "/portal/projects", label: "Projects", icon: "projects" },
   { href: "/portal/invoices", label: "Invoices", icon: "invoice" },
+  { href: "/portal/transactions", label: "Transactions", icon: "transactions" },
 ];
 export function WorkspaceNav() {
   const pathname = usePathname();

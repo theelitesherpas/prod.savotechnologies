@@ -50,7 +50,7 @@ export function projectEmails(events: ProjectEmail[]) {
   });
 }
 export function revalidateProjectViews(id?: string) {
-  for (const path of ["/admin/projects", "/admin/invoices", "/admin/clients", "/portal/dashboard", "/portal/projects", "/portal/invoices"]) revalidatePath(path);
+  for (const path of ["/admin/projects", "/admin/invoices", "/admin/clients", "/portal/dashboard", "/portal/projects", "/portal/invoices", "/portal/transactions"]) revalidatePath(path);
   if (id) { revalidatePath(`/admin/projects/${id}`); revalidatePath(`/admin/projects/${id}/edit`); revalidatePath(`/portal/projects/${id}`); }
 }
 export function projectError(error: unknown) {

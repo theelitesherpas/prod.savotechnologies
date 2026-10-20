@@ -70,7 +70,7 @@ const stub = http.createServer((req, res) => {
   const orderPayments = url.pathname.match(/^\/v1\/orders\/([^/]+)\/payments$/);
   if (orderPayments && req.method === "GET") {
     const order = orders.find(o => o.id === orderPayments[1]);
-    const captured = settled.has(orderPayments[1]) ? [{ id: PAYMENT_ID, order_id: orderPayments[1], amount: order?.amount, currency: order?.currency, status: "captured", method: "upi" }] : [];
+    const captured = settled.has(orderPayments[1]) ? [{ id: `pay_SYNC${orderPayments[1].replace(/^order_/, "")}`,  order_id: orderPayments[1], amount: order?.amount, currency: order?.currency, status: "captured", method: "upi" }] : [];
     return send(200, { items: captured });
   }
   if (req.method === "POST" && url.pathname === "/__e2e/settle") {
@@ -131,8 +131,9 @@ const context = async (cookie, owner) => {
   });
   return c;
 };
-const visit = async (page, path) => { await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded", timeout: 60_000 }); await page.locator("main h1").first().waitFor(); };
+const visit = async (page, path) => { await page.goto(`${base}${path}`, { waitUntil: "networkidle", timeout: 60_000 }); await page.locator("main h1").first().waitFor(); };
 const capture = async (page, name) => {
+  if (process.env.SKIP_SCREENSHOTS === "1") return;
   await page.evaluate(async () => { await document.fonts.ready; window.scrollTo(0, 0); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); });
   await page.waitForTimeout(250); // settle responsive/sticky compositor after viewport changes
   await page.screenshot({ path: `${dir}/${name}.png`, fullPage: true, animations: "disabled" });
@@ -216,6 +217,7 @@ try {
   ok(await page.getByText("This is not a payment confirmation.").isVisible(), "bank instructions explicitly distinguish unpaid from paid");
   ok(await page.getByRole("link", { name: "Send transfer reference" }).isVisible(), "transfer reference can be sent to the real support inbox");
   ok((await p.invoice.findUnique({ where: { id: invoiceA.id } })).status === "sent" && orders.length === 0, "bank confirmation neither marks paid nor starts the gateway");
+  ok(await p.paymentTransaction.count({ where: { invoiceId: invoiceA.id } }) === 0, "bank instructions do not create a transaction-history entry");
   await capture(page, "bank-instructions-desktop");
   const instructionPdf = await page.pdf({ format: "A4", printBackground: true });
   await writeFile(`${dir}/bank-instructions.pdf`, instructionPdf);
@@ -236,6 +238,8 @@ try {
   ok(await page.getByText(PAYMENT_ID).first().isVisible(), "payment reference is shown on our page");
   const paidRow = await p.invoice.findUnique({ where: { id: invoiceA.id } });
   ok(paidRow.status === "paid" && paidRow.paidAt && paidRow.razorpayPaymentId === PAYMENT_ID, "invoice recorded as paid with the provider payment id");
+  const aHistory = await p.paymentTransaction.findMany({ where: { invoiceId: invoiceA.id } });
+  ok(aHistory.length === 1 && aHistory[0].paymentId === PAYMENT_ID && aHistory[0].chargedAmount === 102360 && aHistory[0].method === "upi", "verified checkout atomically records one history row with actual charge and method");
   ok(orders.length === 1 && orders[0].amount === 102360 && Number(orders[0].notes.fee) === 2000 && Number(orders[0].notes.gst) === 360 && orders[0].receipt === invoiceA.number, "one order for the fee-inclusive total (2% + GST) with a full breakdown in notes");
   await capture(page, "receipt-desktop");
   await page.setViewportSize({ width: 390, height: 900 });
@@ -296,6 +300,8 @@ try {
   await fetch(`${base}/api/webhooks/razorpay`, { method: "POST", body, headers: replayHeaders });
   const replay = await fetch(`${base}/api/webhooks/razorpay`, { method: "POST", body, headers: replayHeaders });
   ok(replay.status === 200, "replayed delivery acknowledged");
+  ok(await p.paymentTransaction.count({ where: { invoiceId: invoiceB.id } }) === 2, "different genuine signed capture IDs are retained, while replaying the same capture adds no history row");
+  ok((await p.paymentTransaction.findUnique({ where: { recordKey: "payment:pay_FORGED1" } }))?.amount === 0, "a second real capture is retained without falsely crediting the invoice twice");
   ok((await p.webhookEvent.count()) === originalEventCount + 2, "replay created no second event");
 
   // ── 6. admin sync reconciles an order the webhook missed ──
@@ -315,6 +321,9 @@ try {
   await adminPage.getByRole("button", { name: "Sync status with Razorpay" }).click();
   await adminPage.waitForURL(/saved=paid&via=razorpay/, { timeout: 30_000 });
   ok((await p.invoice.findUnique({ where: { id: invoiceD.id } })).status === "paid", "admin sync records payment from the provider's own record");
+  ok(await p.paymentTransaction.count({ where: { invoiceId: invoiceD.id } }) === 1, "admin sync records the confirmed gateway transaction in history");
+  await visit(page, "/portal/transactions");
+  ok(await page.locator("tbody tr").count() === 4 && await page.getByText(PAYMENT_ID, { exact: true }).isVisible(), "Transactions page shows checkout, webhook and synchronized captures with invoice downloads");
   await p.invoice.delete({ where: { id: invoiceD.id } }).catch(() => {});
 } catch (error) {
   errors.push(String(error?.message ?? error));

@@ -10,6 +10,8 @@ export type PortalIconName =
   | "overview"
   | "projects"
   | "invoice"
+  | "transactions"
+  | "pdf"
   | "arrow"
   | "back"
   | "logout"
@@ -43,6 +45,17 @@ const paths: Record<PortalIconName, ReactNode> = {
     <>
       <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
       <path d="M9 7h6M9 11h6M9 15h3" />
+    </>
+  ),
+  transactions: (
+    <>
+      <path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4" />
+    </>
+  ),
+  pdf: (
+    <>
+      <path d="M13 3H5v18h14V9l-6-6Z" />
+      <path d="M13 3v6h6M8 13h8M8 16h5" />
     </>
   ),
   arrow: (

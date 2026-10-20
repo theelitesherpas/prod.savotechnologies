@@ -11,6 +11,7 @@ import { createHmac } from "node:crypto";
 
 const db = vi.hoisted(() => ({
   invoice: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  paymentTransaction: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
   webhookEvent: { create: vi.fn(), update: vi.fn() },
   clientProject: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
   projectUpdate: { create: vi.fn() },
@@ -52,6 +53,8 @@ beforeEach(() => {
   auth.getAdminUser.mockResolvedValue(ADMIN);
   auth.getClientUser.mockResolvedValue(CLIENT);
   config.getRazorpayConfig.mockResolvedValue(CONFIG);
+  db.paymentTransaction.findUnique.mockResolvedValue(null);
+  db.paymentTransaction.findFirst.mockResolvedValue(null);
   db.invoice.findFirst.mockResolvedValue(null);
   db.invoice.findUnique.mockImplementation(async ({ where }: { where: { id?: string } }) => (where?.id === invoice.id ? { ...invoice } : null));
   db.invoice.update.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ ...invoice, ...data }));
@@ -66,7 +69,7 @@ beforeEach(() => {
 async function freshModule(path: string) {
   vi.resetModules();
   const businessIds = await import("@/lib/business-ids");
-  const tx = { invoice: db.invoice, webhookEvent: db.webhookEvent, clientProject: db.clientProject, projectUpdate: db.projectUpdate, clientUser: db.clientUser };
+  const tx = { invoice: db.invoice, paymentTransaction: db.paymentTransaction, webhookEvent: db.webhookEvent, clientProject: db.clientProject, projectUpdate: db.projectUpdate, clientUser: db.clientUser };
   vi.doMock("@/lib/business-ids", () => ({ ...businessIds, businessTransaction: (work: (t: unknown) => Promise<unknown>) => work(tx) }));
   return await import(path);
 }
@@ -191,6 +194,7 @@ describe("portal checkout actions", () => {
     gateway.fetchRazorpayPayment.mockResolvedValueOnce({ id: paymentId, order_id: orderId, amount: 255900, currency: "INR", status: "captured", method: "upi" });
     const verdict = await a.verifyCheckoutAction({ invoiceId: invoice.id, orderId, paymentId, signature: createHmac("sha256", KEY_SECRET).update(`${orderId}|${paymentId}`).digest("hex") });
     expect(verdict.ok).toBe(true);
+    expect(db.paymentTransaction.create).toHaveBeenCalledWith({ data: expect.objectContaining({ recordKey: `payment:${paymentId}`, chargedAmount: 255900, method: "upi", clientId: CLIENT.id }) });
     expect(db.invoice.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "paid", paidAt: expect.any(Date), razorpayPaymentId: paymentId }) }));
   });
 
@@ -201,6 +205,7 @@ describe("portal checkout actions", () => {
     expect(verdict.ok).toBe(false);
     expect(db.invoice.update).not.toHaveBeenCalled();
     expect(auditLog.audit.mock.calls.at(-1)![1]).toBe("razorpay.checkout.rejected");
+    expect(db.paymentTransaction.create).not.toHaveBeenCalled();
   });
 });
 
@@ -227,14 +232,15 @@ describe("POST /api/webhooks/razorpay", () => {
     expect(db.webhookEvent.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "processed" }) }));
   });
 
-  it("rejects captured payments whose amount does not match the invoice", async () => {
+  it.each([{ amount: 100 }, { amount: undefined }, { currency: undefined }, { status: "authorized" }])("rejects incomplete or mismatched capture evidence: %j", async evidence => {
     const { POST } = await route();
     db.invoice.findFirst.mockResolvedValueOnce({ ...invoice, razorpayOrderId: "order_WEBHOOK1234", client: CLIENT });
-    const body = capturedBody({ amount: 100 }); // wrong total
+    const body = capturedBody(evidence);
     const response = await POST(new Request("https://savo.test/api/webhooks/razorpay", { method: "POST", body, headers: sign(body) }));
     expect(response.status).toBe(200);
     expect(db.invoice.update).not.toHaveBeenCalled();
     expect(db.webhookEvent.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "rejected" }) }));
+    expect(db.paymentTransaction.create).not.toHaveBeenCalled();
   });
 
   it("ignores unknown orders, rejects bad signatures, and stays idempotent on replays", async () => {

@@ -109,11 +109,11 @@ export async function POST(request: Request): Promise<Response> {
           return { kind: "ignored" as const };
         }
         const expectedTotal = checkoutTotals(invoice).total; // subtotal + fee (+ GST on fee, INR)
-        if (Number.isSafeInteger(paymentEntity.amount) && (paymentEntity.amount !== expectedTotal || (paymentEntity.currency ?? invoice.currency) !== invoice.currency)) {
+        if (!Number.isSafeInteger(paymentEntity.amount) || paymentEntity.amount !== expectedTotal || paymentEntity.currency !== invoice.currency || paymentEntity.status !== "captured") {
           await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "rejected", detail: `amount/currency mismatch on ${invoice.number}` } });
           return { kind: "mismatch" as const, invoiceId: invoice.id, number: invoice.number };
         }
-        const paid = await recordInvoicePaid(tx, invoice.id, { source: "razorpay.webhook", paymentId: paymentEntity.id });
+        const paid = await recordInvoicePaid(tx, invoice.id, { source: "razorpay.webhook", paymentId: paymentEntity.id, chargedAmount: paymentEntity.amount, method: paymentEntity.method });
         if (!paid.ok) {
           await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "rejected", detail: `invoice ${invoice.number} not payable (${paid.reason})` } });
           return { kind: "rejected" as const };
@@ -133,11 +133,11 @@ export async function POST(request: Request): Promise<Response> {
         await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "ignored", detail: `no invoice for link ${linkEntity.id}` } });
         return { kind: "ignored" as const };
       }
-      if (Number.isSafeInteger(linkEntity.amount) && (linkEntity.amount !== invoice.amount || (linkEntity.currency ?? invoice.currency) !== invoice.currency)) {
+      if (!Number.isSafeInteger(linkEntity.amount) || linkEntity.amount !== invoice.amount || linkEntity.currency !== invoice.currency || linkEntity.status !== "paid") {
         await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "rejected", detail: `amount/currency mismatch on ${invoice.number}` } });
         return { kind: "mismatch" as const, invoiceId: invoice.id, number: invoice.number };
       }
-      const paid = await recordInvoicePaid(tx, invoice.id, { source: "razorpay.webhook", paymentId: body.payload?.payment?.entity?.id });
+      const paid = await recordInvoicePaid(tx, invoice.id, { source: "razorpay.webhook", paymentId: paymentEntity.id, chargedAmount: linkEntity.amount, method: paymentEntity.method });
       if (!paid.ok) {
         await tx.webhookEvent.update({ where: { id: eventId }, data: { status: "rejected", detail: `invoice ${invoice.number} not payable (${paid.reason})` } });
         return { kind: "rejected" as const };

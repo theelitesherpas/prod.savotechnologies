@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { invoiceMoney, invoiceDate } from "@/lib/invoice-document";
 import { invoicePaymentLink } from "@/lib/payment-links";
 import { reconcileProject, type ProjectEmail } from "@/lib/project-service";
+import { recordPaymentTransaction, type PaymentEvidence } from "@/lib/payment-transactions";
 
 /**
  * Single authoritative routine for recording an invoice as paid, shared by
@@ -36,11 +37,12 @@ export type RecordPaidOutcome =
 export async function recordInvoicePaid(
   tx: Prisma.TransactionClient,
   invoiceId: string,
-  opts: { source: "admin" | "razorpay.webhook" | "razorpay.sync" | "razorpay.checkout"; paymentId?: string },
+  opts: PaymentEvidence & { source: "admin" | "razorpay.webhook" | "razorpay.sync" | "razorpay.checkout" },
 ): Promise<RecordPaidOutcome> {
   const invoice = await tx.invoice.findUnique({ where: { id: invoiceId } });
   if (!invoice) return { ok: false, reason: "not_found" };
   if (invoice.status === "paid") {
+    await recordPaymentTransaction(tx, invoice, opts, opts.source === "admin" ? "manual" : "razorpay");
     // Idempotent confirmation (e.g. webhook after manual marking). Keep any
     // missing provider payment reference for the audit trail.
     if (opts.paymentId && !invoice.razorpayPaymentId) {
@@ -55,6 +57,7 @@ export async function recordInvoicePaid(
     where: { id: invoiceId },
     data: { status: "paid", paidAt: new Date(), ...(opts.paymentId ? { razorpayPaymentId: opts.paymentId } : {}) },
   });
+  await recordPaymentTransaction(tx, updated, opts, opts.source === "admin" ? "manual" : "razorpay");
   const events = [...invoiceNotification(client, updated), ...(invoice.projectId ? await reconcileProject(tx, invoice.projectId) : [])];
   return { ok: true, alreadyPaid: false, events, projectId: invoice.projectId, invoiceNumber: updated.number };
 }

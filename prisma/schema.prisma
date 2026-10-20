@@ -289,6 +289,7 @@ model ClientUser {
   meetings Meeting[] @relation("MeetingClient")
   projects ClientProject[]
   invoices Invoice[]
+  paymentTransactions PaymentTransaction[]
 
   @@map("client_users")
 }
@@ -415,10 +416,42 @@ model Invoice {
   createdAt DateTime       @default(now()) @map("created_at")
   updatedAt DateTime       @updatedAt @map("updated_at")
 
+  paymentTransactions PaymentTransaction[]
+
   @@index([clientId])
   @@index([milestoneId])
   @@index([razorpayOrderId])
   @@map("invoices")
+}
+
+/// Confirmed invoice payments only; never a browser callback or an unconfirmed
+/// bank transfer. Snapshots preserve history when invoice details change.
+model PaymentTransaction {
+  id            String     @id @default(cuid())
+  /// payment:<provider id>, or invoice:<id> for a manual/historical record.
+  recordKey     String     @unique @map("record_key")
+  clientId      String     @map("client_id")
+  client        ClientUser @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  invoiceId     String?    @map("invoice_id")
+  invoice       Invoice?   @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  invoiceNumber String     @map("invoice_number")
+  projectTitle  String     @default("") @map("project_title")
+  /// Credit to the invoice, not a reconstruction of the provider's charge.
+  amount        Int
+  currency      String
+  /// Only populated from verified provider evidence. Null means unknown.
+  chargedAmount Int?       @map("charged_amount")
+  paymentId     String?    @unique @map("payment_id")
+  method        String?
+  /// razorpay | manual | legacy. Manual does not imply a specific bank method.
+  source        String
+  /// Known payment/confirmation date. Never guess a missing historical date.
+  occurredAt    DateTime?  @map("occurred_at")
+  recordedAt    DateTime   @default(now()) @map("recorded_at")
+
+  @@index([clientId, occurredAt, id])
+  @@index([invoiceId])
+  @@map("payment_transactions")
 }
 
 /// Server-side payment gateway credentials (Razorpay first). Secrets are

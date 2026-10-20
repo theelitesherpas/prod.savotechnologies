@@ -164,9 +164,69 @@ refuses non-local databases. Evidence screenshots in `tmp/razorpay-settings/`.
   blanket card-authentication guarantee. Provenance: `docs/PAYMENT-ASSETS.md`.
 
 Verification: `tests/checkout-page.test.tsx` adds 9 page/receipt/access tests.
-`scripts/verify-razorpay-payments.mjs` runs 55 local synthetic browser checks,
+`scripts/verify-razorpay-payments.mjs` runs 61 local synthetic browser checks,
 including online payment/verified receipt, currency fees, both bank states,
 confirm-to-instructions without payment, one-page instruction PDF, 320/390px
 layouts, loader retry, pending, signature/replay and sync. It restores existing
 local bank settings and cleans only its own webhook events. Evidence is in
 `tmp/razorpay-payments/`; no live charges or real test emails are part of QA.
+
+## Client transaction history (v7.10.0)
+
+`/portal/transactions`, immediately after Invoices in workspace navigation, lists
+**confirmed invoice payments**, not checkout launches, failed attempts, pending
+bank transfers or an arbitrary bank-account statement. Search invoice number,
+provider reference or project; filter by source/currency; paginate 25 records at
+a time. Dates are UTC, amounts keep their original currency and fixed two-decimal
+precision. No mixed-currency aggregate is fabricated. Desktop uses a native
+aligned table; smaller screens reflow each record with labeled amounts and a
+44px-minimum PDF action. Empty/search-empty and loading/error recovery inherit
+the workspace conventions.
+
+### Recording and privacy
+
+- Additive `payment_transactions` table snapshots client, invoice number,
+  project title, invoice credit, currency and known confirmation date. Stores an
+  actual total/method only from verified gateway evidence. Unknown historical
+  totals and dates are explicitly **Not recorded**, never today's fee estimate.
+- `recordPaymentTransaction` runs inside the same serializable transaction as
+  `recordInvoicePaid`; checkout, webhook, admin sync and manual mark-paid share
+  it. Admin create/edit transitions directly to paid are also covered. No
+  transaction record is written merely by viewing bank instructions.
+- Unique provider/payment keys deduplicate callbacks/replays. A later gateway
+  confirmation enriches the corresponding unbound manual/historical invoice
+  record rather than duplicating it. Distinct genuine provider payment IDs are
+  preserved, including another captured payment on an already-paid invoice;
+  this does not generate another receipt, and the new capture shows zero
+  additional invoice credit rather than pretending the invoice was credited twice.
+- Money, owner and original invoice snapshots are not changed by ordinary
+  invoice edits. Missing provider facts may be filled, not overwritten. Invoice
+  deletion leaves history with an unavailable PDF; deleting a client follows
+  the existing client-data cascade policy.
+- Authentication and clientId scope are server-derived for rows, counts,
+  currencies and search. PDF links are offered only if the currently linked
+  invoice still belongs to that client and is published; the PDF endpoint
+  independently checks owner/status. A reassigned invoice cannot leak through
+  an old ledger link. No provider API call or gateway secret is needed to list
+  history, and the list has no mutation action.
+
+### Safe historical import / deployment
+
+After `prisma db push`, run
+`node scripts/backfill-payment-transactions.mjs --apply`. The updater runs this
+before building/restarting. This batched, repeatable import inserts snapshots
+for existing paid invoices without history. It never changes an invoice, sends
+mail, contacts Razorpay, guesses a date/method/charge, or resets existing history.
+Without `--apply`, it reports only a count. Review additive SQL and retain a DB
+and prior-build backup before production deployment; no reset/data-loss flags.
+When deploying this updater change, check out the promoted release **before**
+invoking the new updater, so the new import step is actually executed.
+
+Verification: `tests/payment-transactions.test.ts`,
+`tests/portal-transactions.test.tsx`, and extended invoice/payment regression
+tests. `scripts/verify-portal-transactions.mjs` refuses non-local app/DB URLs and
+checks import idempotency, owner scope, real PDF content and denial, filters,
+pagination, 320/390/760/900/1024px layouts, and retained snapshots after invoice
+reassignment/deletion. Its synthetic clients are cleaned up in `finally`.
+Evidence: `.impeccable/review/transactions/` (gitignored). No physical-device or
+live-card test is implied by these browser checks.

@@ -1,0 +1,114 @@
+/* Confirmed-payment ledger: incumbent Operate palette and typography. */
+.filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px 140px auto;
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.filters > div { min-width: 0; }
+.filters label { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 600; }
+.filters input, .filters select {
+  width: 100%; min-height: 44px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 5px;
+  background: var(--surface); color: var(--foreground); font: inherit; font-size: 13px;
+  caret-color: var(--accent);
+}
+.filters input::placeholder { color: var(--muted); opacity: 1; }
+.filters button {
+  min-height: 44px; padding: 10px 17px; border: 1px solid var(--foreground);
+  border-radius: 5px; background: var(--foreground); color: var(--surface);
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.filters button:hover { background: #333; }
+.results { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
+.results a { color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; }
+.tableWrap { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; background: var(--surface); }
+.table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+.table th { padding: 14px 16px; background: #f0f0f0; color: #555; font-size: 11px; font-weight: 600; text-align: left; }
+.table th:nth-child(1) { width: 25%; }
+.table th:nth-child(2) { width: 22%; }
+.table th:nth-child(3) { width: 15%; }
+.table th:nth-child(4), .table th:nth-child(5) { width: 15%; }
+.table th:nth-child(6) { width: 8%; }
+.table td { padding: 20px 16px; vertical-align: top; border-top: 1px solid #e9e9e9; overflow-wrap: anywhere; }
+.table tbody tr:hover { background: #fcfcfc; }
+.table .money { text-align: right; font-variant-numeric: tabular-nums; }
+.money > span:not(.mobileLabel), .money > strong { display: block; }
+.money strong { font-weight: 600; }
+.money > span:first-of-type:not(.mobileLabel), .money > strong { white-space: nowrap; }
+/* impeccable-disable-next-line design-system-font -- Payment IDs are data, not display typography; same native monospace stack as checkout references. */
+.reference { display: block; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; line-height: 1.6; }
+.invoiceNumber { display: block; font-weight: 600; font-size: 13px; }
+.secondary { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.confirmed { display: flex; align-items: center; gap: 5px; margin-top: 7px; color: #27633e; font-size: 11px; font-weight: 500; }
+.confirmed svg { width: 13px; height: 13px; }
+.date { font-size: 12px; font-variant-numeric: tabular-nums; }
+.zone { display: block; font-size: 10px; font-weight: 400; }
+.table .downloadHead { text-align: center; }
+.downloadCell { text-align: center; }
+.pdf { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 44px; min-height: 48px; gap: 2px; color: var(--accent-hover); border: 1px solid var(--border); border-radius: 5px; background: var(--surface); font-size: 9px; font-weight: 700; }
+.pdf svg { width: 20px; height: 20px; }
+.pdf:hover { background: #fdf2f2; border-color: var(--accent); }
+.pdf .mobileDownload { display: none; }
+.unavailable { color: var(--muted); font-size: 10px; }
+.note { max-width: 90ch; margin-top: 16px; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.pagination { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 24px; font-size: 13px; }
+.pagination a { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--foreground); }
+.pagination a:hover { border-color: var(--foreground); }
+.pagination svg { width: 16px; height: 16px; }
+.pagination > span { color: var(--muted); }
+.pagination [aria-disabled] { color: #707070; }
+.empty { padding: 48px 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; }
+.empty > svg { width: 28px; height: 28px; margin-bottom: 16px; color: var(--muted); }
+.empty h2 { font-family: var(--font-outfit); font-size: 24px; font-weight: 500; }
+.empty p { max-width: 60ch; margin-top: 8px; font-size: 14px; color: var(--muted); }
+.empty a { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; margin-top: 16px; color: var(--foreground); font-size: 13px; font-weight: 600; }
+.empty a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.empty a svg { width: 17px; height: 17px; }
+.mobileLabel { display: none; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (max-width: 1200px) {
+  .filters { grid-template-columns: minmax(180px, 1fr) 165px 125px; }
+  .search { grid-column: 1 / -1; }
+  .table th, .table td { padding-inline: 12px; }
+  .table th:nth-child(1) { width: 24%; }
+  .table th:nth-child(2) { width: 20%; }
+  .table th:nth-child(3) { width: 15%; }
+  .table th:nth-child(4), .table th:nth-child(5) { width: 16%; }
+  .table th:nth-child(6) { width: 9%; }
+}
+@media (max-width: 760px), (min-width: 901px) and (max-width: 1100px) {
+  .table, .table tbody { display: block; }
+  .table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, .65fr); grid-template-areas: "transaction transaction" "invoice download" "date date" "credit charged"; gap: 16px 12px; padding: 22px; }
+  .table tbody tr + tr { border-top: 1px solid var(--border); }
+  .table td { display: block; padding: 0; border: 0; }
+  .transaction { grid-area: transaction; }
+  .invoice { grid-area: invoice; }
+  .table .date { grid-area: date; display: flex; align-items: baseline; gap: 8px; }
+  .credit { grid-area: credit; }
+  .charged { grid-area: charged; }
+  .table .credit { text-align: left; }
+  .table .charged { text-align: right; }
+  .mobileLabel { display: block; margin-bottom: 4px; color: var(--muted); font-size: 11px; font-weight: 400; }
+  .date .mobileLabel { margin-bottom: 0; }
+  .reference { font-size: 13px; }
+  .confirmed { margin-top: 6px; }
+  .downloadCell { grid-area: download; text-align: right; align-self: start; }
+  .pdf { padding: 8px 10px; }
+  .pdf .mobileDownload { display: inline; font-size: 11px; font-weight: 500; }
+  .pdf > span:not(.mobileDownload) { display: none; }
+  .pdf { flex-direction: row; gap: 7px; }
+}
+@media (max-width: 540px) {
+  .filters { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  .filters button { grid-column: 1 / -1; }
+  .filters input, .filters select { font-size: 16px; }
+  .table tbody tr { padding: 20px 16px; }
+  .pdf { flex-direction: column; gap: 3px; }
+  .pdf .mobileDownload { font-size: 10px; }
+  .pagination { gap: 8px; font-size: 12px; }
+  .pagination a { padding: 8px; gap: 5px; }
+  .empty { padding: 32px 22px; }
+}

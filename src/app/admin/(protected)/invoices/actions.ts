@@ -12,6 +12,7 @@ import { audit } from "@/lib/audit";
 import { calendarDate, minorUnits, PROJECT_CURRENCIES } from "@/lib/project-finance";
 import { normalizePaymentLink } from "@/lib/payment-links";
 import { recordInvoicePaid, invoiceNotification } from "@/lib/invoice-payments";
+import { recordPaymentTransaction } from "@/lib/payment-transactions";
 import { cancelRazorpayPaymentLink, fetchRazorpayPaymentLink, fetchRazorpayOrderPayments } from "@/lib/razorpay";
 import { getRazorpayConfig } from "@/lib/razorpay-config";
 import { portalPayPath } from "@/lib/payment-targets";
@@ -80,6 +81,7 @@ export async function createInvoiceAction(form: FormData): Promise<void> {
       number = await claimBusinessId(form, "IN", user.id, tx) ?? await generateBusinessId("IN", tx);
       const invoice = { ...d, number, businessId: number };
       const created = await tx.invoice.create({ data: invoice });
+      if (created.status === "paid") await recordPaymentTransaction(tx, created);
       return [...notification(client, { ...invoice, payUrl: wantsCheckout ? absoluteUrl(portalPayPath(created.id)) : null }), ...await sync(tx, [d.projectId])];
     });
   } catch (error) { failed("/admin/invoices", error); }
@@ -109,7 +111,8 @@ export async function updateInvoiceAction(form: FormData): Promise<void> {
       const managedDetached = !!before.razorpayLinkId && (leavesPayable || (before.paymentLink ?? null) !== d.paymentLink);
       if (managedDetached) staleLinkId = before.razorpayLinkId;
       const client = await owner(tx, d);
-      await tx.invoice.update({ where: { id }, data: { ...d, ...(managedDetached ? { razorpayLinkId: null } : {}) } });
+      const updated = await tx.invoice.update({ where: { id }, data: { ...d, ...(managedDetached ? { razorpayLinkId: null } : {}) } });
+      if (d.status === "paid" && before.status !== "paid") await recordPaymentTransaction(tx, updated);
       const changed = before.status !== d.status || before.amount !== d.amount || before.number !== d.number || before.currency !== d.currency || before.clientId !== d.clientId || before.dueDate?.getTime() !== d.dueDate?.getTime() || (before.paymentLink ?? null) !== d.paymentLink;
       // Email pay target: manual link wins; otherwise portal checkout when the
       // gateway is configured (orders are created on demand at payment time).
@@ -178,7 +181,7 @@ export async function syncInvoiceRazorpayAction(form: FormData): Promise<void> {
         providerStatus = payments.length ? `latest attempt ${payments[0].status ?? "unknown"}` : "no payment attempts yet";
       } else {
         const result = await projectTransaction(async tx => {
-          const outcome = await recordInvoicePaid(tx, id, { source: "razorpay.sync", paymentId: captured.id });
+          const outcome = await recordInvoicePaid(tx, id, { source: "razorpay.sync", paymentId: captured.id, chargedAmount: captured.amount, method: captured.method });
           if (!outcome.ok) throw new Error(outcome.reason === "not_payable" ? "Only issued, non-cancelled invoices can be marked paid." : "Invoice not found.");
           return outcome;
         });
@@ -196,7 +199,7 @@ export async function syncInvoiceRazorpayAction(form: FormData): Promise<void> {
           throw new Error(`Razorpay reports a paid amount that does not match invoice ${invoice.number}. Review it manually before recording payment.`);
         }
         const result = await projectTransaction(async tx => {
-          const outcome = await recordInvoicePaid(tx, id, { source: "razorpay.sync" });
+          const outcome = await recordInvoicePaid(tx, id, { source: "razorpay.sync", chargedAmount: entity.amount });
           if (!outcome.ok) throw new Error(outcome.reason === "not_payable" ? "Only issued, non-cancelled invoices can be marked paid." : "Invoice not found.");
           return outcome;
         });
