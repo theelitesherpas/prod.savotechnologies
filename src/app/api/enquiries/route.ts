@@ -6,8 +6,8 @@ import { serverEnv } from "@/lib/server-env";
 import { apiOk, apiError, isJsonRequest, clientIp, readJsonBody } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { enquirySchema } from "@/schemas/enquiry";
-import { CAREERS_TYPES } from "@/constants/careers";
-import { careerApplicationSchema, careerApplicationErrors } from "@/schemas/career-application";
+import { CAREERS_TYPES, careerProjectType } from "@/constants/careers";
+import { careerApplicationSchema, careerApplicationErrors, careerPhoneSchema } from "@/schemas/career-application";
 import { enforceCaptcha } from "@/lib/captcha";
 import { sendTemplateNow, teamEmail } from "@/lib/mail";
 import { publish } from "@/lib/livechat/pubsub";
@@ -92,8 +92,12 @@ export async function POST(req: Request) {
   if (isCareer) {
     const application = careerApplicationSchema.safeParse(raw.details);
     if (!application.success) {
-      return Response.json({ ok: false, error: "Please check your skills and availability.", careerFieldErrors: careerApplicationErrors(application.error) }, { status: 400 });
+      return Response.json({ ok: false, error: "Please check your application details.", careerFieldErrors: careerApplicationErrors(application.error) }, { status: 400 });
     }
+    // Ownership is assigned by validated application intent, not an inconsistent caller-supplied sales category.
+    data.projectType = careerProjectType(application.data.role);
+    const mobile = careerPhoneSchema.safeParse(data.phone ?? "");
+    if (!mobile.success) return Response.json({ ok: false, error: "A valid mobile number is required for job applications.", fieldErrors: { phone: mobile.error.issues[0]?.message } }, { status: 400 });
   }
 
   if (!prisma) {

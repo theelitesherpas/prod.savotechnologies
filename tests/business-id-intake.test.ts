@@ -26,7 +26,7 @@ describe("business identification at intake boundaries",()=>{
   await enquiry(req({name:"Test Lead",email:"lead@example.invalid",projectType:"Website",message:"Valid message length.",website:"bot"}));await callback(req({phone:"bad"}));expect(m.id).not.toHaveBeenCalled();
  });
  it("does not number HR applications as sales leads or change employee IDs",async()=>{
-  expect((await enquiry(req({name:"Applicant Test",email:"applicant@example.invalid",projectType:"General application",source:"careers:hr-intern",message:"A sufficient introduction.",details:{form:"careers",role:"HR Intern",city:"Test City",skills:["CV screening"],experience:"Fresher",notice:"To be discussed",consent:true}}))).status).toBe(200);
+  expect((await enquiry(req({name:"Applicant Test",phone:"+919876543210",email:"applicant@example.invalid",projectType:"General application",source:"careers:hr-intern",message:"A sufficient introduction.",details:{form:"careers",role:"HR Intern",city:"Test City",skills:["CV screening"],experience:"Fresher",notice:"To be discussed",consent:true}}))).status).toBe(200);
   expect(m.id).not.toHaveBeenCalled();expect(m.enquiry.mock.calls[0][0].data.businessId).toBeNull();
  });
  it("assigns TK only to human support requests, not automatic telemetry",async()=>{

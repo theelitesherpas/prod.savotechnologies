@@ -27,6 +27,7 @@ export function PhoneField({
   onFocus,
   onValidity,
   autoComplete = "tel",
+  required = false,
 }: {
   name?: string;
   label?: string;
@@ -40,6 +41,7 @@ export function PhoneField({
   /** Reports whether the current value satisfies the country rules. */
   onValidity?: (ok: boolean) => void;
   autoComplete?: string;
+  required?: boolean;
 }) {
   const inputId = id ?? name;
 
@@ -232,6 +234,8 @@ export function PhoneField({
           autoComplete={autoComplete}
           disabled={!country}
           value={digits}
+          required={required}
+          aria-required={required}
           onFocus={onFocus}
           onBlur={() => setTouched(true)}
           onChange={(e) => setDigits(e.target.value)}

@@ -1,4 +1,6 @@
 import { requireAdminPage } from "@/lib/permissions";
+import { Pagination } from "@/components/admin/pagination";
+import { parseAdminPage, adminPageUrl, type PageSearch } from "@/lib/admin-pagination";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -17,13 +19,17 @@ export const metadata: Metadata = { title: "Payments" };
 export default async function AdminInvoicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; deleted?: string; e?: string; client?: string }>;
+  searchParams: Promise<{ saved?: string; deleted?: string; e?: string; client?: string } & PageSearch>;
 }) {
   await requireAdminPage("/admin/invoices");
   const sp = await searchParams;
+  const where = sp.client ? { clientId: sp.client } : {};
+  const total = prisma ? await prisma.invoice.count({ where }).catch(() => 0) : 0;
+  const paging = parseAdminPage(sp, total);
+  const reservationCount = sp.client && prisma ? await prisma.invoice.count().catch(() => total) : total;
   const [invoices, clients, projects, milestones] = prisma
     ? await Promise.all([
-        prisma.invoice.findMany({ orderBy: { issuedAt: "desc" }, include: { client: { select: { name: true } }, project: { select: { code: true } }, milestone: { select: { title: true } } } }).catch(() => []),
+        prisma.invoice.findMany({ where, take: paging.take, skip: paging.skip, orderBy: [{ issuedAt: "desc" }, { id: "desc" }], include: { client: { select: { name: true } }, project: { select: { code: true } }, milestone: { select: { title: true } } } }).catch(() => []),
         prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, businessId: true } }).catch(() => []),
         prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true, clientId: true, currency: true, budget: true } }).catch(() => []),
         prisma.projectMilestone.findMany({ orderBy: [{ projectId: "asc" }, { order: "asc" }, { createdAt: "asc" }], select: { id: true, projectId: true, title: true, scope: true, amount: true, project: { select: { currency: true } } } }).catch(() => []),
@@ -89,11 +95,13 @@ export default async function AdminInvoicesPage({
         <EmptyState title="No invoices yet" message="Create the first invoice below." />
       )}
 
+      <Pagination {...paging} total={total} href={(page, size) => adminPageUrl("/admin/invoices", sp, page, size)} label="invoices" />
+      <div className="mt-8" />
       <FormGuard action={createInvoiceAction} className="adm-card space-y-5 p-5">
         <p className="adm-label">New invoice</p>
         <div className="grid gap-5 sm:grid-cols-2">
           <InvoiceLinkFields clients={clients} projects={projects} initialClient={sp.client} milestones={milestones.map(m => ({ id: m.id, projectId: m.projectId, label: `${m.title}${m.amount != null ? ` · ${money(m.amount, m.project.currency)}` : ""}${m.scope === "additional" ? " · additional" : ""}` }))}/>
-          <BusinessIdField type="IN" label="Invoice ID" id="invoice-reference" resetKey={invoices.length}/>
+          <BusinessIdField type="IN" label="Invoice ID" id="invoice-reference" resetKey={reservationCount}/>
 
           <div>
             <label className="adm-label mb-1.5 block">Amount *</label>

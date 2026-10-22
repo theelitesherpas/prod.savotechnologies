@@ -1,3 +1,4 @@
+import { parseAdminPage } from "@/lib/admin-pagination";
 import { apiOk, apiError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
@@ -72,11 +73,13 @@ export async function GET(req: Request) {
     delete where.OR;
   }
 
+  const total = await prisma.chatConversation.count({ where });
+  const paging = parseAdminPage(Object.fromEntries(url.searchParams), total);
   const [rows, allCounts, agentsRows, agentsOnline, hoursOpen] = await Promise.all([
     prisma.chatConversation.findMany({
       where,
-      orderBy: [{ lastMessageAt: "desc" }],
-      take: 80,
+      orderBy: [{ lastMessageAt: "desc" }, { id: "desc" }],
+      take: paging.take, skip: paging.skip,
       include: { visitor: true, assigned: { select: { id: true, name: true } }, tags: { include: { tag: true } } },
     }),
     prisma.chatConversation.groupBy({ by: ["status"], _count: { _all: true } }),
@@ -128,6 +131,7 @@ export async function GET(req: Request) {
 
   return apiOk({
     conversations,
+    paging: { page: paging.page, pageSize: paging.pageSize, total },
     counts: {
       inbox: (statusCount.waiting_for_agent ?? 0) + (statusCount.active ?? 0) + (statusCount.waiting_follow_up ?? 0) + (statusCount.visitor_left ?? 0),
       waiting: statusCount.waiting_for_agent ?? 0,

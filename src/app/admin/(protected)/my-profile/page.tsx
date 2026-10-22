@@ -1,3 +1,4 @@
+import { PagedContent } from "@/components/admin/paged-content";
 import { requireAdminPage } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { leaveSummary, fmtDate, EMPLOYEE_STATUS_META } from "@/lib/employees";
@@ -111,8 +112,8 @@ export default async function MyProfilePage() {
           {employee.leaves.length === 0 ? (
             <p className="t-sm text-muted">No leave records yet.</p>
           ) : (
-            <ul className="space-y-2">
-              {employee.leaves.slice(0, 10).map((l) => (
+            <PagedContent as="ul" label="leave records" className="space-y-2">
+              {employee.leaves.map((l) => (
                 <li key={l.id} className="flex items-center gap-3 text-[0.8125rem]">
                   <span className="min-w-0 flex-1">
                     <strong className="capitalize">{l.type}</strong> · {l.days}d · {fmtDate(l.fromDate)}
@@ -122,7 +123,7 @@ export default async function MyProfilePage() {
                   </Chip>
                 </li>
               ))}
-            </ul>
+            </PagedContent>
           )}
         </section>
 
@@ -148,7 +149,7 @@ export default async function MyProfilePage() {
                   <th className="hidden px-2 py-2 text-right text-[0.75rem] font-semibold text-muted sm:table-cell">Updated</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <PagedContent as="tbody" colSpan={4} label="authored content" className="divide-y divide-border">
                 {authored.map((item) => {
                   const st = statusLabel(item.contentStatus);
                   return (
@@ -173,7 +174,7 @@ export default async function MyProfilePage() {
                     </tr>
                   );
                 })}
-              </tbody>
+              </PagedContent>
             </table>
           )}
         </section>

@@ -15,19 +15,23 @@ import { cn } from "@/lib/utils";
 type Result = { href: string; title: string; hint: string };
 type Group = { label: string; icon: string; results: Result[] };
 
-export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function SearchPalette({ open, onOpenChange, sections = [] }: { open: boolean; onOpenChange: (v: boolean) => void; sections?: Result[] }) {
   const router = useRouter();
   const [q, setQ] = useState("");
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [remoteGroups, setGroups] = useState<Group[]>([]);
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const query = q.trim().toLowerCase();
+  const routes = query.length >= 2 ? sections.filter(s => `${s.title} ${s.hint}`.toLowerCase().includes(query)).slice(0, 8) : [];
+  const groups: Group[] = [...(routes.length ? [{ label: "Admin sections", icon: "folder", results: routes }] : []), ...remoteGroups];
   const flat = groups.flatMap((g) => g.results);
 
   // Debounced search
   useEffect(() => {
     if (!open) return;
+    const controller = new AbortController();
     const t = setTimeout(async () => {
       if (q.trim().length < 2) {
         setGroups([]);
@@ -35,17 +39,16 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
       }
       setLoading(true);
       try {
-        const res = await fetch(`/api/admin/search?q=${encodeURIComponent(q.trim())}`);
+        const res = await fetch(`/api/admin/search?q=${encodeURIComponent(q.trim())}`, { signal: controller.signal });
         const json = (await res.json()) as { groups: Group[] };
-        setGroups(json.groups ?? []);
-        setActive(0);
+        if (!controller.signal.aborted) { setGroups(json.groups ?? []); setActive(0); }
       } catch {
-        setGroups([]);
+        if (!controller.signal.aborted) setGroups([]);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }, 180);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); controller.abort(); };
   }, [q, open]);
 
   // Focus + reset on open (deferred until after paint)
@@ -102,7 +105,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
             type="text"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search enquiries, articles, roles, services…"
+            placeholder="Search admin sections, enquiries and content…"
             aria-label="Search query"
             className="h-12 w-full bg-transparent text-[0.9375rem] text-foreground outline-none placeholder:text-muted"
           />
@@ -114,7 +117,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
             <p className="px-3 py-6 text-center text-[0.8125rem] text-muted">Searching…</p>
           ) : q.trim().length < 2 ? (
             <p className="px-3 py-6 text-center text-[0.8125rem] text-muted">
-              Type at least two characters - searches every collection and the inbox.
+              Type at least two characters to find your admin sections, enquiries and content.
             </p>
           ) : flat.length === 0 ? (
             <p className="px-3 py-6 text-center text-[0.8125rem] text-muted">No matches for “{q.trim()}”.</p>

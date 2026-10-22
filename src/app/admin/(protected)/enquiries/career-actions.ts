@@ -6,229 +6,145 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { canAccess } from "@/lib/permissions";
-import { audit } from "@/lib/audit";
 import { sendTemplateNow } from "@/lib/mail";
-import { CAREERS_TYPES } from "@/constants/careers";
+import { CAREER_PROJECT_TYPES, CAREER_ENQUIRY_WHERE } from "@/lib/admin-enquiries";
+import type { Prisma, ProjectEnquiry } from "@prisma/client";
+import { candidateProfile, candidateProfileSchema, candidateReturnPath, safeCandidateUrl } from "@/lib/hr-candidates";
+import { canRecruit, contactOutcomeSchema, parseCallbackIST, type RecruitmentAction } from "@/lib/hr-contact";
 
-/**
- * Career enquiry pipeline actions - triggered from the enquiry detail
- * page and the HR portal. Each action updates the career status and
- * sends the appropriate email automatically.
- */
-
-const back = (id: string, e: string): never =>
-  redirect(`/admin/enquiries/${id}?e=${encodeURIComponent(e)}`);
-
+const idSchema = z.string().min(10).max(40).regex(/^[a-zA-Z0-9_-]+$/);
+const candidatePath = (user: { role: string; permissions?: unknown }, id: string) =>
+  canAccess(user, "hr-portal") ? `/admin/hr-portal/applications/${id}` : `/admin/enquiries/${id}`;
+function candidateActionUrl(user: { role: string; permissions?: unknown }, id: string, form: FormData, key: string, value: string) {
+  const params = new URLSearchParams({ [key]: value });
+  if (form.get("returnTo")) params.set("returnTo", candidateReturnPath(form.get("returnTo")));
+  return `${candidatePath(user, id)}?${params}`;
+}
+function back(_id: string, error: string): never { redirect(`/admin?denied=${encodeURIComponent(error)}`); }
 async function requireCareerAccess() {
   const user = await requireAdmin();
-  if (!canAccess(user, "enquiries") && !canAccess(user, "hr-portal")) {
-    redirect("/admin?denied=Recruitment");
-  }
+  if (!canAccess(user, "enquiries") && !canAccess(user, "hr-portal")) redirect("/admin?denied=Recruitment");
   return user;
 }
-
 async function getEnquiry(id: string) {
   if (!prisma) return null;
   const enquiry = await prisma.projectEnquiry.findUnique({ where: { id } });
-  // Recruitment grants must never authorize unrelated sales enquiries.
-  if (!enquiry || !CAREERS_TYPES.some(type => type === enquiry.projectType)) return null;
+  return enquiry && CAREER_PROJECT_TYPES.includes(enquiry.projectType) ? enquiry : null;
+}
+function refreshCandidate(id: string) {
+  for (const path of ["/admin", "/admin/enquiries", "/admin/hr-portal", "/admin/hr-portal/applications", `/admin/hr-portal/applications/${id}`, `/admin/enquiries/${id}`]) revalidatePath(path);
+}
+const staleMessage = "This application changed while you were editing. Reload and review before saving.";
+function extractRole(enquiry: ProjectEnquiry) { return candidateProfile(enquiry.data, enquiry.projectType).role || "the position"; }
+
+/** Stage transitions and revision checks are enforced here, not merely hidden in the UI. */
+async function careerAction(form: FormData, action: RecruitmentAction, user: Awaited<ReturnType<typeof requireCareerAccess>>) {
+  const parsed = idSchema.safeParse(form.get("id"));
+  if (!parsed.success) back("", "Invalid application.");
+  const enquiry = await getEnquiry(parsed.data);
+  if (!enquiry) back(parsed.data, "Enquiry not found.");
+  if (!canRecruit(action, enquiry.careerStatus, enquiry.status)) redirect(candidateActionUrl(user, enquiry.id, form, "e", "This action is not available at the current recruitment stage. Restore archived applications before changing the pipeline."));
+  // Already-open legacy forms may lack revision; writes still compare the freshly-read revision atomically.
+  if (form.get("revision") && form.get("revision") !== enquiry.updatedAt.toISOString()) redirect(candidateActionUrl(user, enquiry.id, form, "e", staleMessage));
   return enquiry;
 }
-
-function extractRole(data: unknown): string {
-  if (data && typeof data === "object" && "role" in data) {
-    return String((data as Record<string, unknown>).role ?? "the position");
-  }
-  return "the position";
-}
-
-/** Shortlist a career candidate - sends shortlist acknowledgment email. */
-export async function shortlistEnquiryAction(formData: FormData): Promise<void> {
-  const user = await requireCareerAccess();
-  const id = z.string().min(10).max(32).parse(formData.get("id"));
-  const enquiry = await getEnquiry(id);
-  if (!enquiry) back(id, "Enquiry not found.");
-  const eq = enquiry!;
-
-  await prisma!.projectEnquiry.update({
-    where: { id },
-    data: { careerStatus: "shortlisted", status: "in_progress" },
+async function commitCareer(user: Awaited<ReturnType<typeof requireCareerAccess>>, enquiry: ProjectEnquiry, form: FormData, data: Prisma.ProjectEnquiryUpdateManyMutationInput, action: string, meta: Prisma.InputJsonObject = {}) {
+  const saved = await prisma!.$transaction(async tx => {
+    const result = await tx.projectEnquiry.updateMany({ where: { AND: [CAREER_ENQUIRY_WHERE, { id: enquiry.id, updatedAt: enquiry.updatedAt }] }, data });
+    if (!result.count) return false;
+    await tx.auditLog.create({ data: { userId: user.id, action, entity: "ProjectEnquiry", entityId: enquiry.id, meta } });
+    return true;
   });
-  await audit(user.id, "enquiry.shortlisted", "ProjectEnquiry", id, { candidate: enquiry!.name, role: extractRole(enquiry!.data), emailSent: "shortlistAck", emailTo: enquiry!.email ?? "" });
-
-  if (eq.email) {
-    sendTemplateNow("shortlistAck", eq.email, {
-      candidateName: eq.name,
-      position: extractRole(enquiry!.data),
-    });
-  }
-
-  revalidatePath(`/admin/enquiries/${id}`);
-  revalidatePath("/admin/hr-portal");
-  redirect(`/admin/enquiries/${id}?career=shortlisted`);
+  if (!saved) redirect(candidateActionUrl(user, enquiry.id, form, "e", staleMessage));
+  refreshCandidate(enquiry.id);
+}
+function notifyCandidate(form: FormData) { return form.get("emailPreference") !== "explicit" || form.get("notifyCandidate") === "yes"; }
+function emailMeta(enquiry: ProjectEnquiry, template: string, form: FormData): Prisma.InputJsonObject {
+  const requested = Boolean(enquiry.email && notifyCandidate(form));
+  return { candidate: enquiry.name, role: extractRole(enquiry), emailRequested: requested, ...(requested ? { emailSent: template, emailTo: enquiry.email! } : {}) };
 }
 
-/** Reject a career candidate - sends rejection email. */
-export async function rejectEnquiryAction(formData: FormData): Promise<void> {
+/** HR-confirmed facts remain separate from applicant-supplied answers and contact history. */
+export async function saveCandidateProfileAction(formData: FormData): Promise<void> {
   const user = await requireCareerAccess();
-  const id = z.string().min(10).max(32).parse(formData.get("id"));
-  const enquiry = await getEnquiry(id);
-  if (!enquiry) back(id, "Enquiry not found.");
-  const eq = enquiry!;
-
-  await prisma!.projectEnquiry.update({
-    where: { id },
-    data: { careerStatus: "rejected", status: "closed" },
-  });
-  await audit(user.id, "enquiry.rejected", "ProjectEnquiry", id, { candidate: enquiry!.name, role: extractRole(enquiry!.data), emailSent: "candidateRejection", emailTo: enquiry!.email ?? "" });
-
-  if (eq.email) {
-    sendTemplateNow("candidateRejection", eq.email, {
-      candidateName: eq.name,
-      position: extractRole(enquiry!.data),
-    });
-  }
-
-  revalidatePath(`/admin/enquiries/${id}`);
-  revalidatePath("/admin/hr-portal");
-  redirect(`/admin/enquiries/${id}?career=rejected`);
+  const parsed = candidateProfileSchema.safeParse(Object.fromEntries(["id", "revision", "city", "hometown", "role", "years", "months"].map(key => [key, String(formData.get(key) ?? "")])));
+  if (!parsed.success) redirect("/admin/hr-portal?e=Check%20the%20candidate%20profile%20fields.");
+  const d = parsed.data;
+  const enquiry = await getEnquiry(d.id);
+  if (!enquiry || !prisma) back(d.id, "Candidate not found.");
+  if (d.revision !== enquiry.updatedAt.toISOString()) redirect(candidateActionUrl(user, d.id, formData, "e", staleMessage));
+  const profile = candidateProfile(enquiry.data);
+  const total = d.years === "" && d.months === "" ? null : Number(d.years || 0) * 12 + Number(d.months || 0);
+  const data = { ...profile.original, hrProfile: { ...profile.reviewed, city: d.city, hometown: d.hometown, role: d.role, totalExperienceMonths: total, reviewedAt: new Date().toISOString(), reviewedBy: user.id } } as Prisma.InputJsonObject;
+  await commitCareer(user, enquiry, formData, { data }, "enquiry.profileUpdated", { fields: ["city", "hometown", "role", "totalExperienceMonths"] });
+  redirect(candidateActionUrl(user, d.id, formData, "saved", "profile"));
 }
 
+/** Internal contact tracking: no emails, hiring decisions or inbox-state changes. */
+export async function saveCandidateContactAction(form: FormData): Promise<void> {
+  const user = await requireCareerAccess();
+  const parsed = contactOutcomeSchema.safeParse(Object.fromEntries(["id", "revision", "outcome", "channel", "callbackAt", "note"].map(key => [key, String(form.get(key) ?? "")])));
+  const id = idSchema.safeParse(form.get("id"));
+  if (!id.success) back("", "Invalid application.");
+  if (!parsed.success) redirect(candidateActionUrl(user, id.data, form, "e", parsed.error.issues[0]?.message ?? "Check the contact details."));
+  const d = parsed.data;
+  const enquiry = await getEnquiry(d.id);
+  if (!enquiry) back(d.id, "Candidate not found.");
+  if (d.revision !== enquiry.updatedAt.toISOString()) redirect(candidateActionUrl(user, d.id, form, "e", staleMessage));
+  const callbackAt = d.outcome === "callback_requested" ? parseCallbackIST(d.callbackAt)!.toISOString() : null;
+  const original = candidateProfile(enquiry.data).original;
+  const previous = original.hrContact && typeof original.hrContact === "object" && !Array.isArray(original.hrContact) ? original.hrContact as Record<string, unknown> : {};
+  const data = { ...original, hrContact: { outcome: d.outcome, channel: d.channel, callbackAt, note: d.note, updatedAt: new Date().toISOString(), updatedBy: user.id } } as Prisma.InputJsonObject;
+  await commitCareer(user, enquiry, form, { data }, "enquiry.contactUpdated", { from: typeof previous.outcome === "string" ? previous.outcome : "not_recorded", to: d.outcome, channel: d.channel, callbackAt, note: d.note });
+  redirect(candidateActionUrl(user, d.id, form, "saved", "contact"));
+}
+
+export async function shortlistEnquiryAction(form: FormData): Promise<void> {
+  const user = await requireCareerAccess(), enquiry = await careerAction(form, "shortlist", user);
+  await commitCareer(user, enquiry, form, { careerStatus: "shortlisted", status: "in_progress" }, "enquiry.shortlisted", emailMeta(enquiry, "shortlistAck", form));
+  if (enquiry.email && notifyCandidate(form)) sendTemplateNow("shortlistAck", enquiry.email, { candidateName: enquiry.name, position: extractRole(enquiry) });
+  redirect(candidateActionUrl(user, enquiry.id, form, "career", "shortlisted"));
+}
+export async function rejectEnquiryAction(form: FormData): Promise<void> {
+  const user = await requireCareerAccess(), enquiry = await careerAction(form, "reject", user);
+  await commitCareer(user, enquiry, form, { careerStatus: "rejected", status: "closed" }, "enquiry.rejected", emailMeta(enquiry, "candidateRejection", form));
+  if (enquiry.email && notifyCandidate(form)) sendTemplateNow("candidateRejection", enquiry.email, { candidateName: enquiry.name, position: extractRole(enquiry) });
+  redirect(candidateActionUrl(user, enquiry.id, form, "career", "rejected"));
+}
 const interviewSchema = z.object({
-  id: z.string().min(10).max(32),
-  interviewDate: z.string().trim().min(4),
-  interviewTime: z.string().trim().min(3),
-  meetingLink: z.string().trim().url().max(500),
-  interviewer: z.string().trim().min(2).max(80),
-  duration: z.string().trim().max(20).optional().or(z.literal("")),
+  id: idSchema, interviewDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), interviewTime: z.string().regex(/^(0?[1-9]|1[0-2]):[0-5]\d (AM|PM)$/i),
+  meetingLink: z.string().trim().url().max(500).refine(link => safeCandidateUrl(link) !== null, "Enter an http or https meeting link."),
+  interviewer: z.string().trim().min(2).max(80), duration: z.string().trim().max(20).optional().or(z.literal("")),
 });
-
-/** Schedule an interview - sends the interview invitation with link. */
-export async function scheduleInterviewAction(formData: FormData): Promise<void> {
+export async function scheduleInterviewAction(form: FormData): Promise<void> {
   const user = await requireCareerAccess();
-  const parsed = interviewSchema.safeParse({
-    id: formData.get("id"),
-    interviewDate: formData.get("interviewDate"),
-    interviewTime: formData.get("interviewTime"),
-    meetingLink: formData.get("meetingLink"),
-    interviewer: formData.get("interviewer"),
-    duration: formData.get("duration") ?? "45 minutes",
-  });
-  if (!parsed.success) back(String(formData.get("id") ?? ""), parsed.error.issues[0]?.message ?? "Check the interview fields.");
-  const d = parsed.data!;
-
-  const enquiry = await getEnquiry(d!.id);
-  if (!enquiry) back(d!.id, "Enquiry not found.");
-  const eq2 = enquiry!;
-
-  // Convert "10:00 AM" / "02:30 PM" to 24-hour "10:00" / "14:30" for Date parsing
-  const to24h = (t: string): string => {
-    const match = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (!match) return t.includes(":") ? t : t + ":00";
-    let h = parseInt(match[1], 10);
-    const m = match[2];
-    const ap = match[3].toUpperCase();
-    if (ap === "PM" && h < 12) h += 12;
-    if (ap === "AM" && h === 12) h = 0;
-    return `${String(h).padStart(2, "0")}:${m}:00`;
-  };
-  const time24 = to24h(d!.interviewTime);
-  const date = new Date(`${d!.interviewDate}T${time24}`);
-  if (isNaN(date.getTime())) back(d!.id, "Enter a valid date and time.");
-
-  await prisma!.projectEnquiry.update({
-    where: { id: d!.id },
-    data: {
-      careerStatus: "interview_scheduled",
-      status: "in_progress",
-      interviewDate: date,
-      meetingLink: d!.meetingLink,
-      interviewer: d!.interviewer,
-    },
-  });
-  await audit(user.id, "enquiry.interviewScheduled", "ProjectEnquiry", d!.id, { candidate: enquiry!.name, role: extractRole(enquiry!.data), date: date.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }), time: d!.interviewTime, interviewer: d!.interviewer, meetingLink: d!.meetingLink, emailSent: "interviewInvite", emailTo: enquiry!.email ?? "" });
-
-  if (eq2.email) {
-    sendTemplateNow("interviewInvite", eq2.email, {
-      candidateName: eq2.name,
-      position: extractRole(enquiry!.data),
-      interviewDate: date.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }),
-      interviewTime: d!.interviewTime,
-      timezone: "IST",
-      duration: d!.duration || "45 minutes",
-      mode: "Google Meet / Microsoft Teams",
-      interviewer: d!.interviewer,
-      meetingLink: d!.meetingLink,
-    });
-  }
-
-  revalidatePath(`/admin/enquiries/${d!.id}`);
-  revalidatePath("/admin/hr-portal");
-  redirect(`/admin/enquiries/${d!.id}?career=interview`);
+  const parsed = interviewSchema.safeParse(Object.fromEntries(["id", "interviewDate", "interviewTime", "meetingLink", "interviewer", "duration"].map(key => [key, form.get(key) ?? ""])));
+  if (!parsed.success) back(String(form.get("id") ?? ""), parsed.error.issues[0]?.message ?? "Check the interview fields.");
+  const d = parsed.data, enquiry = await careerAction(form, "interview", user);
+  const match = d.interviewTime.match(/(\d{1,2}):(\d{2}) (AM|PM)/i)!;
+  const hours = Number(match[1]) % 12 + (match[3].toUpperCase() === "PM" ? 12 : 0);
+  const date = parseCallbackIST(`${d.interviewDate}T${String(hours).padStart(2, "0")}:${match[2]}`);
+  if (!date || date.getTime() <= Date.now()) redirect(candidateActionUrl(user, d.id, form, "e", "Choose a future interview date and time in IST."));
+  const dateLabel = date.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  await commitCareer(user, enquiry, form, { careerStatus: "interview_scheduled", status: "in_progress", interviewDate: date, meetingLink: d.meetingLink, interviewer: d.interviewer }, "enquiry.interviewScheduled", { ...emailMeta(enquiry, "interviewInvite", form), date: dateLabel, time: d.interviewTime, interviewer: d.interviewer, meetingLink: d.meetingLink });
+  if (enquiry.email && notifyCandidate(form)) sendTemplateNow("interviewInvite", enquiry.email, { candidateName: enquiry.name, position: extractRole(enquiry), interviewDate: dateLabel, interviewTime: d.interviewTime, timezone: "IST", duration: d.duration || "45 minutes", mode: "Google Meet / Microsoft Teams", interviewer: d.interviewer, meetingLink: d.meetingLink });
+  redirect(candidateActionUrl(user, enquiry.id, form, "career", "interview"));
 }
-
-/** Request documents from a shortlisted candidate. */
-export async function requestDocumentsAction(formData: FormData): Promise<void> {
-  const user = await requireCareerAccess();
-  const id = z.string().min(10).max(32).parse(formData.get("id"));
-  const enquiry = await getEnquiry(id);
-  if (!enquiry) back(id, "Enquiry not found.");
-
-  await audit(user.id, "enquiry.docsRequested", "ProjectEnquiry", id, { candidate: enquiry!.name, emailSent: "documentVerification", emailTo: enquiry!.email ?? "" });
-
-  if (enquiry!.email) {
-    sendTemplateNow("documentVerification", enquiry!.email, {
-      candidateName: enquiry!.name,
-      position: extractRole(enquiry!.data),
-      documents: "- Government photo ID\n- Highest qualification certificate\n- Relieving letter from previous employer\n- Last three salary slips",
-      deadline: new Date(Date.now() + 7 * 86400000).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
-    });
-  }
-
-  revalidatePath(`/admin/enquiries/${id}`);
-  redirect(`/admin/enquiries/${id}?career=docs_requested`);
+export async function requestDocumentsAction(form: FormData): Promise<void> {
+  const user = await requireCareerAccess(), enquiry = await careerAction(form, "documents", user);
+  if (!enquiry.email) redirect(candidateActionUrl(user, enquiry.id, form, "e", "A candidate email address is required to request documents."));
+  await commitCareer(user, enquiry, form, { updatedAt: new Date() }, "enquiry.docsRequested", { ...emailMeta(enquiry, "documentVerification", form), emailRequested: true, emailSent: "documentVerification", emailTo: enquiry.email });
+  if (enquiry.email) sendTemplateNow("documentVerification", enquiry.email, { candidateName: enquiry.name, position: extractRole(enquiry), documents: "- Government photo ID\n- Highest qualification certificate\n- Relieving letter from previous employer\n- Last three salary slips", deadline: new Date(Date.now() + 7 * 86400000).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" }) });
+  redirect(candidateActionUrl(user, enquiry.id, form, "career", "docs_requested"));
 }
-
-/** Mark a candidate as hired - moves to employee creation. */
-export async function markHiredAction(formData: FormData): Promise<void> {
-  const user = await requireCareerAccess();
-  const id = z.string().min(10).max(32).parse(formData.get("id"));
-  const enquiry = await getEnquiry(id);
-  if (!enquiry) back(id, "Enquiry not found.");
-
-  await prisma!.projectEnquiry.update({
-    where: { id },
-    data: { careerStatus: "hired", status: "closed" },
-  });
-  await audit(user.id, "enquiry.hired", "ProjectEnquiry", id, { candidate: enquiry!.name, role: extractRole(enquiry!.data), emailSent: "offerLetter", emailTo: enquiry!.email ?? "" });
-
-  if (enquiry!.email) {
-    sendTemplateNow("offerLetter", enquiry!.email, {
-      candidateName: enquiry!.name,
-      position: extractRole(enquiry!.data),
-      ctc: "To be discussed",
-      joiningDate: "To be confirmed",
-      reportTo: "To be confirmed",
-      validUntil: new Date(Date.now() + 7 * 86400000).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
-    });
-  }
-
-  revalidatePath(`/admin/enquiries/${id}`);
-  revalidatePath("/admin/hr-portal");
-  redirect(`/admin/enquiries/${id}?career=hired`);
+export async function markHiredAction(form: FormData): Promise<void> {
+  const user = await requireCareerAccess(), enquiry = await careerAction(form, "hire", user);
+  await commitCareer(user, enquiry, form, { careerStatus: "hired", status: "closed" }, "enquiry.hired", emailMeta(enquiry, "offerLetter", form));
+  if (enquiry.email && notifyCandidate(form)) sendTemplateNow("offerLetter", enquiry.email, { candidateName: enquiry.name, position: extractRole(enquiry), ctc: "To be discussed", joiningDate: "To be confirmed", reportTo: "To be confirmed", validUntil: new Date(Date.now() + 7 * 86400000).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" }) });
+  redirect(candidateActionUrl(user, enquiry.id, form, "career", "hired"));
 }
-
-/** Reset career status back to pipeline start. */
-export async function resetCareerStatusAction(formData: FormData): Promise<void> {
-  const user = await requireCareerAccess();
-  const id = z.string().min(10).max(32).parse(formData.get("id"));
-  if (!await getEnquiry(id)) back(id, "Enquiry not found.");
-  await prisma!.projectEnquiry.update({
-    where: { id },
-    data: { careerStatus: null, status: "new", interviewDate: null, meetingLink: null, interviewer: null },
-  });
-  await audit(user.id, "enquiry.careerReset", "ProjectEnquiry", id);
-  revalidatePath(`/admin/enquiries/${id}`);
-  revalidatePath("/admin/hr-portal");
-  redirect(`/admin/enquiries/${id}?career=reset`);
+export async function resetCareerStatusAction(form: FormData): Promise<void> {
+  const user = await requireCareerAccess(), enquiry = await careerAction(form, "reset", user);
+  await commitCareer(user, enquiry, form, { careerStatus: null, status: "in_progress", interviewDate: null, meetingLink: null, interviewer: null }, "enquiry.careerReset");
+  redirect(candidateActionUrl(user, enquiry.id, form, "career", "reset"));
 }

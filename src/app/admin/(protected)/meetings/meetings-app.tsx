@@ -5,9 +5,10 @@
  * List view, create drawer, detail with client link sharing, calendar.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/admin/ui";
 import { cn } from "@/lib/utils";
+import { ClientPager } from "@/components/admin/paged-content";
 
 /* ───────────────────────── types ───────────────────────── */
 
@@ -101,21 +102,27 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
   const [toast, setToast] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [createdLink, setCreatedLink] = useState<string | null>(null);
+  const [page, setPage] = useState(1), [pageSize, setPageSize] = useState(25);
+  const [total, setTotal] = useState(0), [serverCounts, setServerCounts] = useState<Record<string, number>>({});
+  const [month, setMonth] = useState(new Date());
+  const requestSequence = useRef(0);
 
   const flash = useCallback((msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3500); }, []);
 
   const load = useCallback(async () => {
+    const sequence = ++requestSequence.current;
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/meetings", { cache: "no-store" });
-      const json = (await res.json()) as { ok: boolean; meetings?: Meeting[] };
-      if (json.ok && json.meetings) setMeetings(json.meetings);
-    } catch { /* ignore */ }
-    setLoading(false);
-  }, []);
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), q: search, status: filterStatus });
+      if (view === "calendar") { params.set("calendar", "1"); params.set("month", `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}`); }
+      const res = await fetch(`/api/admin/meetings?${params}`, { cache: "no-store" });
+      const json = (await res.json()) as { ok: boolean; meetings?: Meeting[]; counts?: Record<string, number>; paging?: { total: number } };
+      if (sequence === requestSequence.current && json.ok && json.meetings) { setMeetings(json.meetings); setTotal(json.paging?.total ?? json.meetings.length); setServerCounts(json.counts ?? {}); }
+    } catch { /* retain the previous view; a subsequent filter/refresh retries */ }
+    if (sequence === requestSequence.current) setLoading(false);
+  }, [page, pageSize, search, filterStatus, view, month]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 150); return () => clearTimeout(timer); }, [load]);
 
   const loadDetail = useCallback(async (id: string) => {
     setSelected(id); setDetail(null);
@@ -146,12 +153,9 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
   }), [meetings, filterStatus, search]);
 
   const counts = useMemo(() => ({
-    upcoming: meetings.filter((m) => ["awaiting_client", "availability_received", "confirmed", "reschedule_requested"].includes(m.status)).length,
-    awaiting: meetings.filter((m) => m.status === "awaiting_client").length,
-    confirmed: meetings.filter((m) => m.status === "confirmed").length,
-    completed: meetings.filter((m) => m.status === "completed").length,
-    trash: meetings.filter((m) => m.status === "trash").length,
-  }), [meetings]);
+    upcoming: ["awaiting_client", "availability_received", "confirmed", "reschedule_requested"].reduce((sum, key) => sum + (serverCounts[key] ?? 0), 0),
+    awaiting: serverCounts.awaiting_client ?? 0, confirmed: serverCounts.confirmed ?? 0, completed: serverCounts.completed ?? 0, trash: serverCounts.trash ?? 0,
+  }), [serverCounts]);
 
   if (editMeetingId) {
     return (
@@ -189,13 +193,13 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
 
       {/* Toolbar */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search client, company, ref…" className="adm-input h-9 w-56" />
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="adm-select h-9 w-44">
+        <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search client, company, ref…" className="adm-input h-9 w-56" />
+        <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }} className="adm-select h-9 w-44">
           <option value="">All statuses</option>
           <option value="trash">🗑 Trash</option>
           {Object.keys(STATUS_CHIP).map((s) => <option key={s} value={s}>{sLabel(s)}</option>)}
         </select>
-        <button onClick={() => setView(view === "list" ? "calendar" : "list")} className="adm-btn-secondary h-9 px-3 text-[0.8125rem]">
+        <button onClick={() => { setView(view === "list" ? "calendar" : "list"); setPage(1); }} className="adm-btn-secondary h-9 px-3 text-[0.8125rem]">
           {view === "list" ? "📅 Calendar View" : "☰ List View"}
         </button>
         <button
@@ -212,9 +216,9 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
 
       {/* Content */}
       {view === "calendar" ? (
-        <CalendarView meetings={filtered} onSelect={loadDetail} />
+        <CalendarView meetings={filtered} onSelect={loadDetail} month={month} setMonth={setMonth} />
       ) : (
-        <div className="adm-card overflow-hidden">
+        <div className="adm-card overflow-x-auto">
           <table className="adm-hairline-table w-full text-left">
             <thead>
               <tr className="border-b border-border">
@@ -302,6 +306,7 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
               ))}
             </tbody>
           </table>
+          <div className="border-t border-border p-4"><ClientPager total={total} page={Math.min(page, Math.max(1, Math.ceil(total / pageSize)))} pageSize={pageSize} onPage={value => { setPage(value); window.scrollTo({ top: 0, behavior: "auto" }); }} onPageSize={size => { setPageSize(size); setPage(1); window.scrollTo({ top: 0, behavior: "auto" }); }} label="meetings" /></div>
         </div>
       )}
 
@@ -814,8 +819,7 @@ function EditMeetingDrawer({ meetingId, onClose, onSaved, flash }: {
 
 /* ───────────────────────── calendar ───────────────────────── */
 
-function CalendarView({ meetings, onSelect }: { meetings: Meeting[]; onSelect: (id: string) => void }) {
-  const [month, setMonth] = useState(new Date());
+function CalendarView({ meetings, onSelect, month, setMonth }: { meetings: Meeting[]; onSelect: (id: string) => void; month: Date; setMonth: (month: Date) => void }) {
   const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
   const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0);
   const startPad = firstDay.getDay();

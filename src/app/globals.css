@@ -1091,6 +1091,32 @@ div:has(> .adm-select[aria-invalid="true"]) > label {
   background: color-mix(in oklab, var(--foreground) 3%, transparent);
 }
 
+/* Shared admin actions; use console tokens in both light and dark themes. */
+:is(.chapter-admin, .chapter-admin-dark) :is(.adm-btn-primary, .adm-btn-ghost) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+:is(.chapter-admin, .chapter-admin-dark) .adm-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+:is(.chapter-admin, .chapter-admin-dark) .adm-btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+:is(.chapter-admin, .chapter-admin-dark) .adm-btn-ghost:hover { border-color: var(--input-border-hover); }
+:is(.chapter-admin, .chapter-admin-dark) :is(.adm-btn-primary, .adm-btn-ghost):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
 /* Sidebar scroll rail */
 .adm-rail {
   scrollbar-width: thin;

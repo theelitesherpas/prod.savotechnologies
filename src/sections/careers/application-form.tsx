@@ -26,8 +26,9 @@ import { PhoneField } from "@/components/shared/phone-field";
 import { SuccessDialog, type SuccessStep } from "@/components/shared/success-dialog";
 import { cn, withBasePath } from "@/lib/utils";
 import { CareerSkillPicker } from "./skill-picker";
-import { careerApplicationSchema, careerApplicationErrors, type CareerApplicationErrors } from "@/schemas/career-application";
+import { careerApplicationSchema, careerApplicationErrors, careerPhoneSchema, type CareerApplicationErrors } from "@/schemas/career-application";
 import s from "./careers.module.css";
+import { CityPicker } from "./city-picker";
 
 type Status = "idle" | "submitting" | "success" | "error";
 const subscribe = () => () => {};
@@ -88,6 +89,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
 
   function focusField(name: string) {
     const field = formRef.current?.querySelector<HTMLElement>(name === "phone" ? "#cr-phone" : name === "skills" ? "#cr-skill-options button, #cr-other-skill" : `[name="${name}"]`);
+    if (name === "phone" && field instanceof HTMLInputElement && field.disabled) { field.parentElement?.querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]')?.focus(); return; }
     const disclosure = field?.closest("details");
     if (disclosure) disclosure.open = true;
     field?.focus();
@@ -98,15 +100,20 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
     if (status === "submitting") return;
     setServerMessage("");
     setCaptchaErr(null);
-    if (!phoneOk) {
-      setErrors({ phone: "Check the phone number - it does not match the selected country's format." });
+    if (!phoneOk && phone.trim()) {
+      setErrors({ phone: "Check the mobile number - it does not match the selected country's format." });
+      focusField("phone");
       return;
     }
     const data = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
+    const mobile = careerPhoneSchema.safeParse(data.phone ?? "");
+    if (!mobile.success) { setErrors({ phone: mobile.error.issues[0]?.message ?? "Enter your mobile number." }); focusField("phone"); return; }
+    const extraDetails = { hometown: data.hometown?.trim() ?? "", currentCtc: data.currentCtc ?? "", currentCompany: data.company?.trim() ?? "", currentDesignation: data.currentDesignation?.trim() ?? "", workPreference: data.workPreference ?? "", linkedin: data.linkedin?.trim() ?? "", links: data.links?.trim() ?? "", resume: data.resume?.trim() ?? "" };
 
     // Same career-only requirements are enforced by the shared API.
-    const qualification = careerApplicationSchema.safeParse({ form: "careers", role, city: data.city, skills, experience: data.experience, notice: data.notice, consent: data.consent === "on" });
+    const qualification = careerApplicationSchema.safeParse({ form: "careers", role, city: data.city, skills, experience: data.experience, notice: data.notice, consent: data.consent === "on", ...extraDetails });
     const local: CareerApplicationErrors = qualification.success ? {} : careerApplicationErrors(qualification.error);
+    if (!extraDetails.hometown) local.hometown = "Enter your hometown.";
     if (!data.consent) local.consent = "Please confirm we may process your application.";
     setLocalErrors(local);
 
@@ -114,6 +121,12 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
     const details = [
       `Role: ${role}`,
       `City: ${data.city?.trim() ?? ""}`,
+      `Hometown: ${extraDetails.hometown}`,
+      extraDetails.currentCtc ? `Current annual CTC: ${extraDetails.currentCtc}` : "",
+      extraDetails.currentCompany ? `Current employer: ${extraDetails.currentCompany}` : "",
+      extraDetails.currentDesignation ? `Current designation: ${extraDetails.currentDesignation}` : "",
+      extraDetails.workPreference ? `Work preference: ${extraDetails.workPreference}` : "",
+      extraDetails.linkedin ? `LinkedIn: ${extraDetails.linkedin}` : "",
       data.experience ? `Experience: ${data.experience}` : "",
       data.notice ? `Start availability: ${data.notice}` : "",
       data.ctc ? `Expected CTC: ${data.ctc}` : "",
@@ -162,6 +175,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           source: `careers:${roleSlug(role)}`,
           // Structured payload - rendered as its own panel in the admin inbox.
           details: {
+            ...extraDetails,
             form: "careers",
             role,
             city: data.city?.trim() ?? "",
@@ -191,7 +205,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
       }
       if (res.status === 400 && json.careerFieldErrors) {
         setLocalErrors(json.careerFieldErrors);
-        const firstField = Object.keys(json.careerFieldErrors).find(key => ["city", "skills", "experience", "notice", "consent"].includes(key));
+        const firstField = Object.keys(json.careerFieldErrors).find(key => ["city", "hometown", "skills", "experience", "notice", "consent", "currentCtc", "currentCompany", "currentDesignation", "workPreference", "linkedin", "links", "resume"].includes(key));
         if (firstField) {
           setStatus("idle");
           focusField(firstField);
@@ -276,7 +290,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} noValidate className={s.applicationForm}>
-      <p>Fields marked * are required. Your resume and work links are optional.</p>
+      <p>Fields marked * are required, including your mobile number and hometown. Compensation, resume and work links are optional.</p>
       {/* Role */}
       <fieldset>
         <legend className="t-label mb-3 block text-muted">Role</legend>
@@ -298,15 +312,10 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           autoComplete="email"
           placeholder="you@email.com"
         />
-        <div className={s.phoneEntry}><label htmlFor="cr-phone" className="t-label mb-1 block">Phone (optional)</label><PhoneField id="cr-phone" value={phone} onChange={setPhone} error={errors.phone} onValidity={setPhoneOk} onFocus={onStarted} /></div>
-        <Field
-          label="Current city"
-          name="city"
-          error={localErrors.city}
-          onFocus={onStarted}
-          autoComplete="address-level2"
-          placeholder="Indore"
-        />
+        <div className={s.phoneEntry}><label htmlFor="cr-phone" className="t-label mb-1 block">Mobile number <span aria-hidden="true" className="text-accent">*</span></label><PhoneField id="cr-phone" required label="Mobile number" value={phone} onChange={value => { setPhone(value); if (value.trim()) setErrors(current => ({ ...current, phone: undefined })); }} error={errors.phone} onValidity={setPhoneOk} onFocus={onStarted} /></div>
+        <CityPicker label="Current city" name="city" required error={localErrors.city} onStarted={onStarted} onValueChange={() => setLocalErrors(current => ({ ...current, city: undefined }))} />
+        <CityPicker label="Hometown" name="hometown" required error={localErrors.hometown} onStarted={onStarted} onValueChange={() => setLocalErrors(current => ({ ...current, hometown: undefined }))} />
+        <p className="t-caption text-muted">City/town directory: <a href="https://github.com/dr5hn/countries-states-cities-database" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Countries States Cities Database</a> · <a href="/data/licenses/india-cities-ODbL.txt" className="underline underline-offset-2">ODbL</a> · <a href="/data/india-cities.json" download className="underline underline-offset-2">Download directory</a>. If your location is missing, enter it manually.</p>
       </div>
 
       <section id="availability" className={s.qualifications} aria-labelledby="availability-heading">
@@ -319,8 +328,12 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
         </div>
         <div className="grid gap-x-8 gap-y-7 sm:grid-cols-2">
           <Field label="Current employer (optional)" name="company" errors={errors} onFocus={onStarted} autoComplete="organization" placeholder="Company name" required={false} />
+          <Field label="Current designation (optional)" name="currentDesignation" error={localErrors.currentDesignation} onFocus={onStarted} autoComplete="organization-title" placeholder="Your current job title" required={false} />
+          <div><SelectField label="Current annual CTC (optional)" name="currentCtc" options={[...CTC_OPTIONS, "Not applicable (Fresher)", "Prefer not to disclose"]} defaultValue="" error={localErrors.currentCtc} onFocus={onStarted} /><p className={s.payHelp}>Total annual pay in INR. Freshers can choose Not applicable; you may prefer not to disclose.</p></div>
           <div><SelectField label="Expected annual CTC (optional)" name="ctc" options={CTC_OPTIONS} defaultValue="" onFocus={onStarted} /><p className={s.payHelp}>Total annual pay in INR. L means lakh.</p></div>
+          <SelectField label="Work preference (optional)" name="workPreference" options={["On-site", "Hybrid", "Remote", "Open to discussion"]} defaultValue="" error={localErrors.workPreference} onFocus={onStarted} />
         </div>
+        <p className={s.payHelp}>Your work preference is not a promise of a particular working arrangement.</p>
       </section>
       <h3 id="your-work">Your work</h3>
       <div className="grid gap-x-8 gap-y-7 sm:grid-cols-2">
@@ -328,20 +341,23 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           label="Portfolio / GitHub"
           name="links"
           type="url"
+          error={localErrors.links}
           errors={errors}
           onFocus={onStarted}
           placeholder="Link to your work (optional)"
           required={false}
         />
-        <Field
+        <div><Field
           label="Resume link"
           name="resume"
           type="url"
+          error={localErrors.resume}
           errors={errors}
           onFocus={onStarted}
-          placeholder="Drive / Dropbox link (optional)"
+          placeholder="Public Drive / Dropbox link (optional)"
           required={false}
-        />
+        /><p className={s.payHelp}>Use a public viewing link, not a private or sign-in-only link. Set sharing to “Anyone with the link can view” so our HR team can open your resume.</p></div>
+        <Field label="LinkedIn profile (optional)" name="linkedin" type="url" error={localErrors.linkedin} onFocus={onStarted} placeholder="https://www.linkedin.com/in/your-profile" required={false} />
       </div>
 
       <Field

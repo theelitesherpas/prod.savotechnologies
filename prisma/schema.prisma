@@ -93,6 +93,7 @@ model ProjectEnquiry {
   /// Reference code preserved from production career applications.
   reference   String?  @unique
   emailReplies EmailReply[] @relation("EmailReplies")
+  operationalRecords AdminOperationalRecord[] @relation("CandidateOperations")
   /// new | in_progress | closed | archived (app-level enum, see lib/enquiry-status.ts)
   status      String   @default("new")
   adminNotes  String?  @map("admin_notes")
@@ -285,6 +286,7 @@ model ClientUser {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  operationalRecords AdminOperationalRecord[] @relation("ClientOperations")
   sessions ClientSession[]
   meetings Meeting[] @relation("MeetingClient")
   projects ClientProject[]
@@ -588,6 +590,7 @@ model Employee {
   bondExpiry    DateTime?       @map("bond_expiry")
   createdAt     DateTime        @default(now()) @map("created_at")
   updatedAt     DateTime        @updatedAt @map("updated_at")
+  operationalRecords AdminOperationalRecord[] @relation("EmployeeOperations")
   leaves        EmployeeLeave[]
   panelUsers    AdminUser[]     @relation("PanelUserEmployee")
   authoredItems ContentItem[]   @relation("ContentAuthor")
@@ -877,6 +880,40 @@ model ChatSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("chat_settings")
+}
+
+/// Admin-only operational registers. Module-specific payloads are allowlisted
+/// and validated in lib/admin-records.ts; never published to frontend portals.
+/// Subject links retain a display snapshot when a master record is deleted.
+model AdminOperationalRecord {
+  id          String @id @default(cuid())
+  portal      String
+  module      String
+  title       String
+  status      String
+  owner       String @default("")
+  startDate   DateTime? @map("start_date")
+  dueDate     DateTime? @map("due_date")
+  notes       String @default("") @db.Text
+  data        Json
+  clientId    String? @map("client_id")
+  client      ClientUser? @relation("ClientOperations", fields: [clientId], references: [id], onDelete: SetNull)
+  employeeId  String? @map("employee_id")
+  employee    Employee? @relation("EmployeeOperations", fields: [employeeId], references: [id], onDelete: SetNull)
+  candidateId String? @map("candidate_id")
+  candidate   ProjectEnquiry? @relation("CandidateOperations", fields: [candidateId], references: [id], onDelete: SetNull)
+  subjectLabel String @default("") @map("subject_label")
+  createdBy   String @map("created_by")
+  updatedBy   String @map("updated_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  version     Int @default(1)
+
+  @@index([portal, module, updatedAt])
+  @@index([clientId])
+  @@index([employeeId])
+  @@index([candidateId])
+  @@map("admin_operational_records")
 }
 
 // ─────────────────────── Client Meeting Scheduling ───────────────────────

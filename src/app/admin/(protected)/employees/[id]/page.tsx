@@ -1,4 +1,6 @@
+import { PagedContent } from "@/components/admin/paged-content";
 import { requireAdminPage } from "@/lib/permissions";
+import { SubjectRegisters } from "@/components/admin/portal-directory";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -22,7 +24,7 @@ export default async function EmployeeRecordPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ created?: string; saved?: string; e?: string; leave?: string }>;
 }) {
-  await requireAdminPage("/admin/employees/[id]");
+  const user = await requireAdminPage("/admin/employees/[id]");
   const { id } = await params;
   const { created, saved, e, leave } = await searchParams;
   if (!prisma) notFound();
@@ -49,6 +51,7 @@ export default async function EmployeeRecordPage({
       />
       {created ? <Notice>Employee created. The welcome email with their employee ID has been sent.</Notice> : null}
       {saved ? <Notice>Record updated.</Notice> : null}
+      <SubjectRegisters portal="employee" user={user} subjectId={id} />
       {leave === "added" ? <Notice>Leave request recorded.</Notice> : null}
       {leave === "approved" ? <Notice>Leave approved - balance updated, email sent.</Notice> : null}
       {leave === "rejected" ? <Notice>Leave declined - email sent.</Notice> : null}
@@ -98,7 +101,7 @@ export default async function EmployeeRecordPage({
             {pending.length > 0 ? (
               <div className="pt-4">
                 <p className="adm-label mb-2">Awaiting decision</p>
-                <ul className="space-y-2">
+                <PagedContent as="ul" label="pending leave requests" className="space-y-2">
                   {pending.map((l) => (
                     <li key={l.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-accent/30 bg-accent/[0.04] px-3.5 py-2.5">
                       <span className="min-w-0 flex-1 text-[0.8125rem]">
@@ -130,7 +133,7 @@ export default async function EmployeeRecordPage({
                       />
                     </li>
                   ))}
-                </ul>
+                </PagedContent>
               </div>
             ) : null}
 
@@ -149,7 +152,7 @@ export default async function EmployeeRecordPage({
                       <th className="py-2 text-right text-[0.75rem] font-semibold text-muted">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <PagedContent as="tbody" colSpan={4} label="leave history" className="divide-y divide-border">
                     {history.map((l) => (
                       <tr key={l.id}>
                         <td className="py-2.5 text-[0.8125rem] capitalize">{l.type}</td>
@@ -164,7 +167,7 @@ export default async function EmployeeRecordPage({
                         </td>
                       </tr>
                     ))}
-                  </tbody>
+                  </PagedContent>
                 </table>
               )}
             </div>

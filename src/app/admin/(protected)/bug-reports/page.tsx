@@ -1,4 +1,6 @@
 import { requireAdminPage } from "@/lib/permissions";
+import { Pagination } from "@/components/admin/pagination";
+import { parseAdminPage, adminPageUrl, type PageSearch } from "@/lib/admin-pagination";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { fmtIST } from "@/lib/datetime";
@@ -29,10 +31,11 @@ const STATUS_META: Record<string, { label: string; tone: "default" | "accent" | 
 export default async function BugReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; type?: string; e?: string }>;
+  searchParams: Promise<{ status?: string; type?: string; e?: string } & PageSearch>;
 }) {
   await requireAdminPage("/admin/bug-reports");
-  const { status, type, e } = await searchParams;
+  const sp = await searchParams;
+  const { status, type, e } = sp;
   if (!prisma) {
     return (
       <div className="max-w-5xl">
@@ -46,11 +49,13 @@ export default async function BugReportsPage({
   if (status && ["new", "acknowledged", "resolved", "ignored"].includes(status)) where.status = status;
   if (type && ["error", "404", "api_error", "user_report"].includes(type)) where.type = type;
 
+  const total = await prisma.bugReport.count({ where });
+  const paging = parseAdminPage(sp, total);
   const [reports, counts] = await Promise.all([
     prisma.bugReport.findMany({
       where,
-      orderBy: { createdAt: "desc" },
-      take: 100,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: paging.take, skip: paging.skip,
     }),
     prisma.bugReport.groupBy({ by: ["status"], _count: { _all: true } }),
   ]);
@@ -64,13 +69,13 @@ export default async function BugReportsPage({
         title="Bug reports"
         description="Captured errors, 404s, API failures and user-submitted issues - everything that goes wrong, in one place."
       />
-      {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
+      {e ? <Notice kind="alert">{e}</Notice> : null}
 
       <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
         <StatTile label="New" value={newCount} icon="alert" accent={newCount > 0} href="/admin/bug-reports?status=new" />
         <StatTile label="Acknowledged" value={countFor("acknowledged")} icon="gauge" href="/admin/bug-reports?status=acknowledged" />
         <StatTile label="Resolved" value={countFor("resolved")} icon="check" href="/admin/bug-reports?status=resolved" />
-        <StatTile label="Total" value={reports.length} icon="trail" />
+        <StatTile label="Total" value={counts.reduce((sum, row) => sum + row._count._all, 0)} icon="trail" />
       </div>
 
       {/* Filters */}
@@ -84,7 +89,7 @@ export default async function BugReportsPage({
         {Object.entries(STATUS_META).map(([k, m]) => (
           <Link
             key={k}
-            href={`/admin/bug-reports?status=${k}`}
+            href={adminPageUrl("/admin/bug-reports", { ...sp, status: k }, 1, paging.pageSize)}
             className={`inline-flex h-8 items-center rounded-md border px-3 text-[0.75rem] font-semibold transition-colors ${status === k ? "border-foreground bg-foreground text-background" : "border-border text-muted hover:border-foreground/40"}`}
           >
             {m.label} ({countFor(k)})
@@ -93,7 +98,7 @@ export default async function BugReportsPage({
         {Object.entries(TYPE_META).map(([k, m]) => (
           <Link
             key={k}
-            href={`/admin/bug-reports?type=${k}`}
+            href={adminPageUrl("/admin/bug-reports", { ...sp, type: k }, 1, paging.pageSize)}
             className={`inline-flex h-8 items-center rounded-md border px-3 text-[0.75rem] font-semibold transition-colors ${type === k ? "border-foreground bg-foreground text-background" : "border-border text-muted hover:border-foreground/40"}`}
           >
             {m.label}
@@ -181,6 +186,7 @@ export default async function BugReportsPage({
           })
         )}
       </div>
+      <Pagination {...paging} total={total} href={(page, size) => adminPageUrl("/admin/bug-reports", sp, page, size)} label="reports" />
     </div>
   );
 }

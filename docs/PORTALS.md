@@ -1,5 +1,9 @@
 # Savo portal access
 
+## Admin organization
+
+The admin console groups recruitment under HR Portal, client relationships/delivery/billing under Client Portal, and employment operations under Employee Portal. Sixteen new admin-only operational registers require the additive SQL in `prisma/admin-portals.sql` before deployment. See **[ADMIN-PORTALS.md](ADMIN-PORTALS.md)** for menu ownership/order, record fields, permission boundaries, migration and verification. Public frontend portal functionality is unchanged.
+
 ## Surfaces
 
 - Client entrance: `/portal`; workspace: dashboard, projects, project details and invoices.
@@ -45,7 +49,7 @@ Both forms retain visible labels, password-manager autocomplete, show/hide passw
 
 - Client pages independently validate the current client and query by its ID. Private drafts stay excluded; interactive record DTOs remain allowlisted.
 - Employee dashboard preserves expiration, active-employment and linked-panel-user checks, querying authored content by that employee's ID.
-- No new HR edits, leave-request submission, card processing, automatic payment verification, support inbox or account-reset capability was invented. Authorized invoice extensions add real PDF download/native printing and optional trusted-provider **Pay now** links. Status changes still require confirmed admin recording; see `docs/INVOICES.md`.
+- The public frontend portals still introduce no self-service HR edits, leave-request submission, support inbox or account-reset capability. The new admin-only operational registers are separate from these public surfaces; see `docs/ADMIN-PORTALS.md`. Authorized invoice extensions add real PDF download/native printing and optional trusted-provider **Pay now** links. Status changes still require confirmed admin recording; see `docs/INVOICES.md`.
 - Normal session/password/rate-limit behavior remains intact; existing admin access permissions do not change.
 
 ## Verification

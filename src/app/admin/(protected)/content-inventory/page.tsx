@@ -1,3 +1,4 @@
+import { PagedContent } from "@/components/admin/paged-content";
 import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
@@ -86,7 +87,7 @@ export default async function ContentInventoryPage() {
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <PagedContent as="tbody" colSpan={1} label="content items" >
               {rows.map((r) => (
                 <tr key={`${r.collection}:${r.slug}`} className="border-b border-border last:border-b-0">
                   <td className="px-4 py-3 text-[0.8125rem]">{COLLECTION_LABELS[r.collection] ?? r.collection}</td>
@@ -104,7 +105,7 @@ export default async function ContentInventoryPage() {
                   <td className="px-4 py-3 text-[0.8125rem] text-muted">{fmtISTFull(r.updatedAt)}</td>
                 </tr>
               ))}
-            </tbody>
+            </PagedContent>
           </table>
         </div>
       )}

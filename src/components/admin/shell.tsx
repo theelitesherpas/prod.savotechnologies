@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useId, useRef, useState } from "react";
+import { activeAdminHref } from "@/lib/admin-nav-state";
 import { AdminIcon, type AdminIconName } from "./icons";
 import { logoutAction } from "@/app/admin/(protected)/actions";
 import { SearchPalette } from "./search-palette";
@@ -21,6 +22,7 @@ export type AdminNavItem = {
   icon: AdminIconName;
   /** Item count rendered in a neutral chip at the row end. */
   count?: number;
+  group?: string;
   /** Attention count (e.g. new enquiries) rendered as an accent chip. */
   badge?: number;
 };
@@ -51,9 +53,8 @@ function SavoMark({ className }: { className?: string }) {
   );
 }
 
-function isActive(pathname: string, href: string): boolean {
-  if (href === "/admin") return pathname === "/admin";
-  return pathname === href || pathname.startsWith(`${href}/`);
+function isActive(activeHref: string, href: string): boolean {
+  return activeHref === href;
 }
 
 function CountChip({ count }: { count: number }) {
@@ -162,7 +163,7 @@ function SidebarLink({
       ) : (
         <IconTile icon={icon} active={active} />
       )}
-      <span className={cn("min-w-0 flex-1 truncate text-[0.875rem]", active ? "font-semibold" : "font-medium")}>
+      <span className={cn("min-w-0 flex-1 text-[0.875rem] leading-tight", active ? "font-semibold" : "font-medium")}>
         {label}
       </span>
       {online ? (
@@ -195,6 +196,7 @@ function NavNode({
   onNavigate: () => void;
   collapsed: boolean;
 }) {
+  const submenuId = useId();
   const childActive = node.items?.some((it) => isActive(pathname, it.href)) ?? false;
 
   if (!node.items) {
@@ -221,7 +223,7 @@ function NavNode({
         aria-label={`${node.label} - expand menu`}
         onClick={() => onToggle(node.key)}
         className={cn(
-          "group flex h-11 w-full items-center justify-center rounded-lg transition-colors duration-200",
+          "group relative flex h-11 w-full items-center justify-center rounded-lg transition-colors duration-200",
           childActive ? "bg-accent/10 text-accent" : "text-muted hover:bg-foreground/[0.05] hover:text-foreground",
         )}
       >
@@ -239,8 +241,9 @@ function NavNode({
         type="button"
         onClick={() => onToggle(node.key)}
         aria-expanded={open}
+        aria-controls={submenuId}
         className={cn(
-          "group mb-0.5 flex h-8 w-full items-center gap-2 rounded-md px-2.5 transition-colors duration-200",
+          "group mb-0.5 flex h-11 w-full items-center gap-2 rounded-md px-2.5 transition-colors duration-200",
           childActive ? "text-accent" : "text-muted hover:bg-foreground/[0.05] hover:text-foreground",
         )}
       >
@@ -262,10 +265,11 @@ function NavNode({
           open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
       >
-        <ul className="overflow-hidden">
+        <ul id={submenuId} inert={!open} className="overflow-hidden">
           <li className="ml-6 mt-0.5 border-l border-border">
             {node.items.map((it) => (
               <div key={it.href} className="p-0.5">
+                {it.group ? <p className="px-4 pb-1 pt-3 text-[0.6875rem] font-semibold text-muted">{it.group}</p> : null}
                 <SidebarLink
                   {...it}
                   active={isActive(pathname, it.href)}
@@ -410,13 +414,23 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const search = useSearchParams().toString();
+  const activeHref = activeAdminHref(nav.flatMap(n => n.items ?? (n.href ? [{ href: n.href }] : [])), pathname, search) ?? "";
+  const activeNode = nav.find(n => n.items?.some(item => item.href === activeHref));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [dark, setDark] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Set<string>>(
-    () => new Set(nav.filter((n) => n.items).map((n) => n.key)),
+    () => new Set(activeNode ? [activeNode.key] : []),
   );
+  const activeKey = activeNode?.key;
+  useEffect(() => {
+    if (!activeKey) return;
+    const id = requestAnimationFrame(() => setOpenGroups(previous => new Set(previous).add(activeKey)));
+    return () => cancelAnimationFrame(id);
+  }, [activeKey]);
 
   // Restore the rail-collapse + theme preferences after first paint
   // (deferred so hydration matches the server render, then they settle).
@@ -450,29 +464,43 @@ export function AdminShell({
       return !c;
     });
 
-  // Esc closes the mobile drawer.
+  // Keep keyboard focus and scrolling inside mobile navigation, then restore the opener.
   useEffect(() => {
     if (!drawerOpen) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const targets = () => Array.from(drawerRef.current?.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), input:not(:disabled), [tabindex="0"]') ?? []).filter(el => !el.closest("[inert]") && el.getClientRects().length > 0);
+    targets()[0]?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDrawerOpen(false);
+      if (e.key === "Escape") { e.preventDefault(); setDrawerOpen(false); }
+      if (e.key === "Tab") {
+        const elements = targets(), first = elements[0], last = elements.at(-1);
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+      requestAnimationFrame(() => opener?.focus());
+    };
   }, [drawerOpen]);
 
   const toggleGroup = (key: string) => {
     // Expanding from the rail also un-collapses the sidebar.
-    if (collapsed) setCollapsed(false);
+    if (collapsed) { setCollapsed(false); window.localStorage.setItem("adm-rail", "0"); }
     setOpenGroups((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      if (collapsed || !next.has(key)) next.add(key);
+      else next.delete(key);
       return next;
     });
   };
 
-  const newCount =
-    nav.find((n) => n.key === "leads")?.badge ?? nav.find((n) => n.key === "leads")?.items?.[0]?.badge ?? 0;
+  const enquiryLink = nav.flatMap(n => n.items ?? []).find(item => item.href === "/admin/enquiries?type=Client");
+  const newCount = enquiryLink?.badge ?? 0;
 
   const crumbs = (() => {
     const segs = pathname.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
@@ -480,10 +508,15 @@ export function AdminShell({
     let acc = "/admin";
     for (const seg of segs) {
       acc = `${acc}/${seg}`;
+      // Virtual register groupings have no index route; do not create dead breadcrumb links.
+      if (seg === "records" || (seg === "content" && activeNode?.key === "hr" && pathname.startsWith("/admin/content/careers"))) continue;
       const known = crumbLabels[seg];
       if (known) out.push({ href: acc, label: known });
       else if (/^[a-zA-Z0-9]{20,}$/.test(seg)) out.push({ href: acc, label: "Detail" });
       else out.push({ href: acc, label: seg.charAt(0).toUpperCase() + seg.slice(1) });
+    }
+    if (activeNode && !out.some(c => c.label.toLowerCase() === activeNode.label.toLowerCase() || c.href === activeNode.items?.[0]?.href)) {
+      out.splice(1, 0, { href: activeNode.items?.[0]?.href ?? "/admin", label: activeNode.label });
     }
     return out;
   })();
@@ -491,17 +524,18 @@ export function AdminShell({
   return (
     <div
       className={`${dark ? "chapter-admin-dark" : "chapter-admin"} min-h-dvh bg-background`}
-      style={{ "--rail-w": collapsed ? "76px" : "272px" } as React.CSSProperties}
+      style={{ "--rail-w": collapsed ? "76px" : "304px" } as React.CSSProperties}
     >
       {/* ── Spine (desktop) ─────────────────────────────── */}
       <aside
+        inert={drawerOpen}
         className="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-border bg-surface lg:flex"
-        style={{ width: "var(--rail-w)", transition: "width 0.3s cubic-bezier(0.16,1,0.3,1)" }}
+        style={{ width: "var(--rail-w)" }}
       >
         <Brand collapsed={collapsed} />
         <SidebarBody
           nav={nav}
-          pathname={pathname}
+          pathname={activeHref}
           openGroups={openGroups}
           onToggle={toggleGroup}
           onNavigate={() => undefined}
@@ -511,10 +545,11 @@ export function AdminShell({
       </aside>
 
       {/* ── Canvas ──────────────────────────────────────── */}
-      <div className="flex min-h-dvh min-w-0 flex-col transition-[padding] duration-300 ease-[var(--ease-out-expo)] lg:pl-[var(--rail-w)]">
+      <div inert={drawerOpen} className="flex min-h-dvh min-w-0 flex-col lg:pl-[var(--rail-w)]">
         <TopBar
           crumbs={crumbs}
           newCount={newCount}
+          enquiryHref={enquiryLink?.href}
           user={user}
           dark={dark}
           onToggleDark={toggleDark}
@@ -532,18 +567,18 @@ export function AdminShell({
         </footer>
       </div>
 
-      <SearchPalette open={searchOpen} onOpenChange={setSearchOpen} />
+      <SearchPalette open={searchOpen} onOpenChange={setSearchOpen} sections={nav.flatMap(node => node.items?.map(item => ({ href: item.href, title: item.label, hint: node.label })) ?? (node.href ? [{ href: node.href, title: node.label, hint: "Administration" }] : []))} />
 
       {/* ── Spine (mobile drawer) ──────────────────────────── */}
       {drawerOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Admin navigation">
+        <div ref={drawerRef} className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Admin navigation">
           <button
             type="button"
             aria-label="Close navigation"
             onClick={() => setDrawerOpen(false)}
             className="absolute inset-0 h-full w-full cursor-default bg-foreground/40 backdrop-blur-sm"
           />
-          <aside className="absolute inset-y-0 left-0 flex w-[288px] max-w-[86vw] flex-col border-r border-border bg-surface shadow-2xl">
+          <aside className="absolute inset-y-0 left-0 flex w-[320px] max-w-[86vw] flex-col border-r border-border bg-surface shadow-2xl">
             <div className="flex items-center justify-between border-b border-border pr-3">
               <Brand />
               <button
@@ -557,7 +592,7 @@ export function AdminShell({
             </div>
             <SidebarBody
               nav={nav}
-              pathname={pathname}
+              pathname={activeHref}
               openGroups={openGroups}
               onToggle={toggleGroup}
               onNavigate={() => setDrawerOpen(false)}
@@ -642,6 +677,7 @@ function ProfileMenu({ user }: { user: AdminUserChip }) {
 function TopBar({
   crumbs,
   newCount,
+  enquiryHref,
   user,
   dark,
   onToggleDark,
@@ -651,6 +687,7 @@ function TopBar({
 }: {
   crumbs: { href: string; label: string }[];
   newCount: number;
+  enquiryHref?: string;
   user: AdminUserChip;
   dark: boolean;
   onToggleDark: () => void;
@@ -715,8 +752,8 @@ function TopBar({
       >
         <AdminIcon name="search" className="h-[18px] w-[18px]" />
       </button>
-      <Link
-        href="/admin/enquiries?status=new"
+      {enquiryHref ? <Link
+        href={`${enquiryHref}${enquiryHref.includes("?") ? "&" : "?"}status=new`}
         aria-label={newCount > 0 ? `${newCount} new enquiries` : "Enquiries"}
         title="New enquiries"
         className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
@@ -727,7 +764,7 @@ function TopBar({
             {newCount > 9 ? "9+" : newCount}
           </span>
         ) : null}
-      </Link>
+      </Link> : null}
       <button
         type="button"
         onClick={onToggleDark}

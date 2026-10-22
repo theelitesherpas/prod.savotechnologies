@@ -1943,6 +1943,27 @@ reserved for primary actions, active states and attention. The public
 site's paper/ink/vermilion system is untouched — the console borrows only
 the accent.
 
+The console now groups navigation by HR, Client and Employee portals, with
+shared Website content and Administration kept separate. Subsections follow
+the operational lifecycle; only granted destinations appear. The active portal
+opens automatically, long labels wrap rather than disappearing, and mobile
+navigation traps/restores focus with hidden groups removed from tab order.
+Directory and subject-profile shortcuts use the same menu registry. New
+operational forms inherit the existing console inputs/cards, with manual
+recording boundaries stated in context rather than implying automation.
+See `docs/ADMIN-PORTALS.md` for ownership, schema, permissions and review scope.
+This is an information-architecture extension, not a new visual identity.
+
+The HR refinement uses one candidate workspace for overview, interviews and
+applications: visible combined filters, concise qualification/location summaries,
+explicit recruitment stages, and separate submitted versus HR-confirmed facts.
+Record pagination follows the owner's October 22 reference: first/previous,
+five consecutive page numbers, next/last, with the console accent on the active
+page; long lists also offer a direct page jump and per-page choices. Preserve
+this pattern in both URL-driven lists and complete client-side collections.
+Website analytics is a direct item after Dashboard. See `docs/HR-WORKSPACE.md`
+for scoped implementation and verification; no marketing identity changes.
+
 ## Components
 
 - **Wordmark** — the official SAVO logo (ported from v1): single-color

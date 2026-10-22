@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { ClientPager } from "./paged-content";
 
 /**
  * DragOrderList - drag-to-reorder rows for admin content lists.
@@ -29,10 +30,24 @@ export function DragOrderList({
   disabled?: boolean;
 }) {
   const [order, setOrder] = useState<string[]>(() => rows.map((r) => r.id));
+  const [requestedPage, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const membership = rows.map(row => row.id).sort().join("|");
+  const [knownMembership, setKnownMembership] = useState(membership);
+  // A create/delete/filter refresh must not strand rows outside the paginated order.
+  if (membership !== knownMembership) {
+    setKnownMembership(membership);
+    setOrder(rows.map(row => row.id));
+    setPage(1);
+  }
+  const page = Math.min(requestedPage, Math.max(1, Math.ceil(order.length / pageSize)));
+  const start = (page - 1) * pageSize;
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const rowRefs = useRef(new Map<string, HTMLLIElement>());
+  const listRef = useRef<HTMLDivElement>(null);
+  const changePage = (target: number) => { setPage(target); requestAnimationFrame(() => { if (listRef.current) window.scrollTo({ top: Math.max(0, scrollY + listRef.current.getBoundingClientRect().top - 80), behavior: "auto" }); }); };
 
   const byId = new Map(rows.map((r) => [r.id, r]));
 
@@ -52,6 +67,7 @@ export function DragOrderList({
     const next = [...order];
     [next[idx], next[to]] = [next[to], next[idx]];
     setOrder(next);
+    setPage(Math.floor(to / pageSize) + 1);
     persist(next);
   };
 
@@ -72,12 +88,13 @@ export function DragOrderList({
   if (rows.length === 0) return null;
 
   return (
-    <div className={cn("relative", pending && "pointer-events-none opacity-70")}>
+    <div ref={listRef} className={cn("relative", pending && "pointer-events-none opacity-70")}>
       {pending ? (
         <p className="t-caption absolute -top-7 right-0 font-semibold text-accent">Saving order…</p>
       ) : null}
       <ul className="adm-card divide-y divide-border" aria-label="Drag to reorder">
-        {order.map((id, i) => {
+        {order.slice(start, start + pageSize).map((id, index) => {
+          const i = start + index;
           const row = byId.get(id);
           if (!row) return null;
           return (
@@ -171,6 +188,7 @@ export function DragOrderList({
           );
         })}
       </ul>
+      <ClientPager total={order.length} page={page} pageSize={pageSize} onPage={changePage} onPageSize={size => { setPageSize(size); changePage(1); }} label="content items" />
     </div>
   );
 }

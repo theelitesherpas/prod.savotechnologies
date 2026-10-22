@@ -13,11 +13,16 @@ vi.mock("@/lib/auth", () => ({
   hashPassword: vi.fn(), verifyPassword: vi.fn(),
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: new Proxy({}, {
-  get: (_, model: string) => new Proxy({}, { get: (_, method: string) => {
+  get: (_, model: string) => {
+    if (model === "$queryRaw") {
+      if (!m.queries.has(model)) m.queries.set(model, vi.fn(async () => []));
+      return m.queries.get(model);
+    }
+    return new Proxy({}, { get: (_, method: string) => {
     const key = `${model}.${method}`;
     if (!m.queries.has(key)) m.queries.set(key, vi.fn(async () => method === "count" ? 0 : method.startsWith("find") && method !== "findMany" ? null : []));
     return m.queries.get(key);
-  } }),
+  } }); },
 }) }));
 vi.mock("next/navigation", () => ({ redirect: (p: string) => { throw Error(`REDIRECT:${p}`); }, notFound: () => { throw Error("NOT_FOUND"); } }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-pathname": "/admin/my-profile" }) }));
@@ -39,14 +44,14 @@ function noQueries() { for (const query of m.queries.values()) expect(query).not
 beforeEach(() => {
   m.user = actor();
   for (const [key, query] of m.queries) {
-    const method = key.split(".")[1];
+    const method = key.split(".")[1] ?? key;
     query.mockReset().mockResolvedValue(method === "count" ? 0 : method.startsWith("find") && method !== "findMany" ? null : []);
   }
 });
 
 describe("all protected admin leaves authorize independently of their layout", () => {
   it("covers all protected leaves and keeps an awaited page-owned guard before data work", () => {
-    expect(pages).toHaveLength(42);
+    expect(pages).toHaveLength(48);
     for (const { file, path } of pages) {
       const source = readFileSync(file.replace(/^\.\.\//, ""), "utf8");
       const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -123,10 +128,14 @@ describe("department DTOs and protected data readers", () => {
     m.user = actor(["clients", "employees"]); await Compose({ searchParams: Promise.resolve({}) });
     expect(m.queries.get("employee.findMany")).toHaveBeenCalledOnce(); expect(m.queries.get("clientUser.findMany")).toHaveBeenCalledOnce();
   });
-  it("recruitment query requires the canonical category as well as its JSON marker", async () => {
+  it("recruitment query requires the canonical category and paginates before rendering",  async () => {
     m.user = actor(["hr-portal"]);
     const { default: HR } = await import("@/app/admin/(protected)/hr-portal/page"); await HR({ searchParams: Promise.resolve({}) });
-    expect(m.queries.get("projectEnquiry.findMany")!.mock.calls[0][0].where).toMatchObject({ projectType: { in: expect.any(Array) }, data: { path: ["form"], equals: "careers" } });
+    const query = m.queries.get("$queryRaw")!;
+    expect(query).toHaveBeenCalledTimes(4);
+    expect(query.mock.calls[3][0].sql).toContain("project_type IN (");
+    expect(query.mock.calls[3][0].sql).toMatch(/LIMIT \? OFFSET \?/);
+    expect(query.mock.calls[3][0].values.slice(-2)).toEqual([25, 0]);
   });
   it("an ungranted shell neither queries private counts nor mounts a chat subscription", async () => {
     const { default: Layout } = await import("@/app/admin/(protected)/layout");

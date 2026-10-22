@@ -7,8 +7,8 @@ import s from "./careers.module.css";
 
 export const CAREERS_QUESTIONS = [
   { q: "Can I apply if no role fits?", a: "Yes. Choose General application and tell us about your skills and the work you want to do." },
-  { q: "What do I need to include?", a: "Your name, email, current city, key skills, experience and start availability are required. Your resume, work links and introduction are optional." },
-  { q: "Do I need a resume or portfolio link?", a: "Both are optional. If you share links, check that they are accessible and do not contain confidential work." },
+  { q: "What do I need to include?", a: "Your name, email, mobile number, current city, hometown, key skills, experience, start availability and consent are required. Compensation details, resume, work links and introduction are optional." },
+  { q: "Do I need a resume or portfolio link?", a: "Both are optional. Resume links must allow public viewing: choose “Anyone with the link can view”, not a private or sign-in-only link. Do not share confidential work." },
 ];
 
 export function CareersHero({ count }: { count: number }) {

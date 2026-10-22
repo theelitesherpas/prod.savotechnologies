@@ -1,4 +1,7 @@
 import { requireAdminPage } from "@/lib/permissions";
+import { PortalDirectory } from "@/components/admin/portal-directory";
+import { Pagination } from "@/components/admin/pagination";
+import { parseAdminPage, adminPageUrl, type PageSearch } from "@/lib/admin-pagination";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -12,10 +15,11 @@ export const dynamic = "force-dynamic";
 export default async function EmployeesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; e?: string; deleted?: string; created?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; e?: string; deleted?: string; created?: string } & PageSearch>;
 }) {
-  await requireAdminPage("/admin/employees");
-  const { q, status, e, deleted } = await searchParams;
+  const user = await requireAdminPage("/admin/employees");
+  const sp = await searchParams;
+  const { q, status, e, deleted } = sp;
   if (!prisma) {
     return (
       <div className="max-w-6xl">
@@ -43,6 +47,8 @@ export default async function EmployeesPage({
     return matchesQ && matchesS;
   });
 
+  const paging = parseAdminPage(sp, filtered.length);
+  const displayed = filtered.slice(paging.skip, paging.skip + paging.take);
   const active = employees.filter((em) => ["active", "probation", "notice"].includes(em.status)).length;
   const onProbation = employees.filter((em) => em.status === "probation").length;
   const joining = employees.filter((em) => em.status === "joining").length;
@@ -61,6 +67,7 @@ export default async function EmployeesPage({
       {deleted ? <Notice>Employee record deleted.</Notice> : null}
       {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
 
+      <PortalDirectory portal="employee" user={user} />
       {/* Stat tiles */}
       <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-5">
         <StatTile label="Total employees" value={employees.length} icon="crew" href="/admin/employees" />
@@ -78,7 +85,7 @@ export default async function EmployeesPage({
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Pending leaves */}
-        <section className="lg:col-span-1">
+        <section className="min-w-0 lg:col-span-1">
           <h2 className="adm-label mb-3">Leave requests awaiting decision</h2>
           <div className="adm-card overflow-hidden">
             {pendingLeaves.length === 0 ? (
@@ -128,7 +135,7 @@ export default async function EmployeesPage({
         </section>
 
         {/* Roster */}
-        <section className="lg:col-span-2">
+        <section className="min-w-0 lg:col-span-2">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <form action="/admin/employees" method="get" className="flex min-w-0 flex-1 gap-2">
               <input
@@ -138,6 +145,7 @@ export default async function EmployeesPage({
                 className="adm-input h-10 min-w-0 flex-1"
                 aria-label="Search employees"
               />
+              <input type="hidden" name="pageSize" value={paging.pageSize} />
               {status ? <input type="hidden" name="status" value={status} /> : null}
               <button type="submit" className="btn-ghost h-10 rounded-lg border border-border px-4 text-[0.8125rem] font-semibold text-muted hover:border-foreground/40 hover:text-foreground">
                 Search
@@ -151,7 +159,7 @@ export default async function EmployeesPage({
             </Link>
           </div>
 
-          <div className="adm-card overflow-hidden">
+          <div className="adm-card overflow-x-auto">
             {filtered.length === 0 ? (
               <div className="p-6 text-center">
                 <p className="t-sm text-muted">
@@ -173,7 +181,7 @@ export default async function EmployeesPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filtered.map((emp) => {
+                  {displayed.map((emp) => {
                     const lv = leaveSummary(emp, emp.leaves);
                     const meta = EMPLOYEE_STATUS_META[emp.status] ?? EMPLOYEE_STATUS_META.active;
                     return (
@@ -202,6 +210,7 @@ export default async function EmployeesPage({
               </table>
             )}
           </div>
+          <Pagination {...paging} total={filtered.length} href={(page, size) => adminPageUrl("/admin/employees", sp, page, size)} label="employees" />
           <p className="t-caption mt-2 text-muted">
             Leave balance = months of service credited − approved days. One leave per completed month, unused months carry forward automatically.
           </p>

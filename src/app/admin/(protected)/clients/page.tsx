@@ -1,4 +1,6 @@
 import { requireAdminPage } from "@/lib/permissions";
+import { Pagination } from "@/components/admin/pagination";
+import { parseAdminPage, adminPageUrl, type PageSearch } from "@/lib/admin-pagination";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -15,15 +17,17 @@ export const metadata: Metadata = { title: "Clients" };
 export default async function AdminClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ created?: string; reset?: string; saved?: string; deleted?: string; e?: string }>;
+  searchParams: Promise<{ created?: string; reset?: string; saved?: string; deleted?: string; e?: string } & PageSearch>;
 }) {
   await requireAdminPage("/admin/clients");
   const sp = await searchParams;
   const passwordReceiptAvailable = await hasClientPasswordReceipt();
+  const total = prisma ? await prisma.clientUser.count().catch(() => 0) : 0;
+  const paging = parseAdminPage(sp, total);
   const clients = prisma
     ? await prisma.clientUser
         .findMany({
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: paging.take, skip: paging.skip,
           include: { projects: { select: { id: true, status: true } } },
         })
         .catch(() => [])
@@ -95,9 +99,11 @@ export default async function AdminClientsPage({
         <EmptyState title="No clients yet" message="Create the first portal account below." />
       )}
 
+      <Pagination {...paging} total={total} href={(page, size) => adminPageUrl("/admin/clients", sp, page, size)} label="clients" />
+      <div className="mt-8" />
       {/* Create */}
       <form action={"../clients/create"} className="hidden" />
-      <CreateClientCard resetKey={clients.length} />
+      <CreateClientCard resetKey={total} />
     </div>
   );
 }

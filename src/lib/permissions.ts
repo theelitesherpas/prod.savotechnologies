@@ -30,16 +30,16 @@ export type SectionKey =
 
 export const SECTIONS: { key: SectionKey; label: string; hint: string }[] = [
   { key: "live-chat", label: "Live Chat", hint: "Real-time visitor chat inbox" },
-  { key: "enquiries", label: "Enquiries", hint: "Lead inbox + detail" },
+  { key: "enquiries", label: "Enquiries", hint: "Sales enquiries and legacy application inbox access" },
   { key: "analytics", label: "Analytics", hint: "Traffic, funnels, GA note" },
-  { key: "employees", label: "Employee portal", hint: "Records, leaves, HR email (hr@)" },
+  { key: "employees", label: "Employee portal", hint: "Employee records, leave, onboarding, payroll, documents, assets and HR email (hr@)" },
   { key: "clients", label: "Client portal", hint: "Clients, projects, payments, client email (hello@)" },
   { key: "content", label: "Content", hint: "Services, industries, case studies, articles" },
   { key: "email-templates", label: "Email templates", hint: "Customise the template library" },
   { key: "settings", label: "Site settings", hint: "Contact overrides, announcements" },
   { key: "audit", label: "Audit log", hint: "Action history" },
   { key: "bug-reports", label: "Bug reports", hint: "Captured errors and user reports" },
-  { key: "hr-portal", label: "HR portal", hint: "Shortlisted candidates, recruitment pipeline" },
+  { key: "hr-portal", label: "HR portal", hint: "Applications, candidates, interviews, hiring requests, offers and candidate documents; job publishing requires Content" },
   { key: "emails", label: "Emails", hint: "Inbound reply inbox" },
 ];
 
@@ -68,7 +68,7 @@ export function pathToSection(path: string): SectionKey | "dashboard" | "users" 
   if (under("enquiries")) return "enquiries";
   if (under("analytics")) return "analytics";
   if (under("employees")) return "employees";
-  if (["clients", "projects", "invoices", "meetings"].some(under)) return "clients";
+  if (["client-portal", "clients", "projects", "invoices", "meetings"].some(under)) return "clients";
   if (["services", "industries", "case-studies", "content"].some(under)) return "content";
   if (under("email-templates")) return "email-templates";
   if (under("email-compose")) return "compose";

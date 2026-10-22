@@ -8,6 +8,7 @@ import { AdminIcon } from "@/components/admin/icons";
 import { ENQUIRY_STATUSES, ENQUIRY_STATUS_META } from "@/lib/enquiry-status";
 import { fmtIST } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
+import { PortalLaunchpad } from "@/components/admin/portal-directory";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -115,6 +116,7 @@ export default async function AdminDashboard() {
   if (user.role !== "admin") {
     return <>
       <PageHeader title="Your workspace" description="Open a section you have permission to manage." />
+      <PortalLaunchpad user={user} />
       <ul className="adm-card divide-y divide-border">
         {SECTIONS.filter(section => canAccess(user, section.key)).map(section =>
           <li key={section.key}><Link className="flex min-h-11 items-center px-5 py-3 font-semibold" href={`/admin/${section.key === "content" ? "content" : section.key}`}>{section.label}</Link></li>,
@@ -227,8 +229,9 @@ export default async function AdminDashboard() {
     <>
       <PageHeader
         title={`Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, ${user?.name.split(" ")[0] ?? "operator"}.`}
-        description="Lead inbox health and content status at a glance."
+        description="Choose a department portal, or review shared business activity below."
       />
+      <PortalLaunchpad user={user} />
 
       {/* Stat tiles */}
       <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">

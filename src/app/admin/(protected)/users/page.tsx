@@ -1,3 +1,4 @@
+import { PagedContent } from "@/components/admin/paged-content";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -73,7 +74,7 @@ export default async function UsersPage({
               <th scope="col" className=" w-40 px-4 py-3 align-end">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <PagedContent as="tbody" colSpan={4} label="panel users" className="divide-y divide-border">
             {users.map((u) => (
               <tr key={u.id}>
                 <td className="px-4 py-3">
@@ -214,7 +215,7 @@ export default async function UsersPage({
                 </td>
               </tr>
             ))}
-          </tbody>
+          </PagedContent>
         </table>
       </div>
 

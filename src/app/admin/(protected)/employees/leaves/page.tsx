@@ -1,3 +1,4 @@
+import { PagedContent } from "@/components/admin/paged-content";
 import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -62,7 +63,7 @@ export default async function LeaveManagementPage({
           {pending.length === 0 ? (
             <p className="t-sm p-5 text-muted">No pending requests.</p>
           ) : (
-            <ul className="divide-y divide-border">
+            <PagedContent as="ul" label="pending leave requests" className="divide-y divide-border">
               {pending.map((l) => {
                 const bal = leaveSummary(l.employee, l.employee.leaves);
                 return (
@@ -103,7 +104,7 @@ export default async function LeaveManagementPage({
                   </li>
                 );
               })}
-            </ul>
+            </PagedContent>
           )}
         </div>
       </section>
@@ -126,7 +127,7 @@ export default async function LeaveManagementPage({
                   <th className="px-4 py-2.5 text-right text-[0.75rem] font-semibold text-muted">By</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <PagedContent as="tbody" colSpan={6} label="leave history" className="divide-y divide-border">
                 {decided.map((l) => (
                   <tr key={l.id}>
                     <td className="px-4 py-3">
@@ -146,7 +147,7 @@ export default async function LeaveManagementPage({
                     <td className="px-4 py-3 text-right text-[0.8125rem] text-muted">{l.actedBy ?? "-"}</td>
                   </tr>
                 ))}
-              </tbody>
+              </PagedContent>
             </table>
           )}
         </div>
@@ -169,7 +170,7 @@ export default async function LeaveManagementPage({
                   <th className="px-4 py-2.5 text-right text-[0.75rem] font-semibold text-muted">Balance</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <PagedContent as="tbody" colSpan={5} label="employee balances" className="divide-y divide-border">
                 {employees.map((emp) => {
                   const lv = leaveSummary(emp, emp.leaves);
                   return (
@@ -187,7 +188,7 @@ export default async function LeaveManagementPage({
                     </tr>
                   );
                 })}
-              </tbody>
+              </PagedContent>
             </table>
           )}
         </div>

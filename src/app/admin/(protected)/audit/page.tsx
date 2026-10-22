@@ -1,4 +1,6 @@
 import { requireAdminPage } from "@/lib/permissions";
+import { Pagination } from "@/components/admin/pagination";
+import { parseAdminPage, adminPageUrl, type PageSearch } from "@/lib/admin-pagination";
 import type { Metadata } from "next";
 import { fmtISTFull } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
@@ -6,12 +8,10 @@ import { PageHeader, Chip, EmptyState } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Audit log" };
 
-const PAGE_SIZE = 30;
-
 export default async function AuditLogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string } & PageSearch>;
 }) {
   await requireAdminPage("/admin/audit");
   const sp = await searchParams;
@@ -26,7 +26,6 @@ export default async function AuditLogPage({
   }
 
   const q = (sp.q ?? "").trim().slice(0, 60);
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
 
   const where = q
     ? {
@@ -37,13 +36,14 @@ export default async function AuditLogPage({
       }
     : {};
 
-  const [total, entries, users] = await Promise.all([
-    prisma.auditLog.count({ where }),
+  const total = await prisma.auditLog.count({ where });
+  const paging = parseAdminPage(sp, total);
+  const [entries, users] = await Promise.all([
     prisma.auditLog.findMany({
       where,
-      orderBy: { createdAt: "desc" },
-      take: PAGE_SIZE,
-      skip: (page - 1) * PAGE_SIZE,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: paging.take,
+      skip: paging.skip,
       select: {
         id: true,
         action: true,
@@ -57,16 +57,7 @@ export default async function AuditLogPage({
     prisma.adminUser.findMany({ select: { id: true, name: true } }),
   ]);
 
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const userName = (id: string | null) => users.find((u) => u.id === id)?.name ?? "system";
-  const qs = (over: Record<string, string | undefined>) => {
-    const merged = { q, page: String(page), ...over };
-    const params = new URLSearchParams();
-    if (merged.q) params.set("q", merged.q);
-    if (merged.page && merged.page !== "1") params.set("page", merged.page);
-    const s = params.toString();
-    return s ? `/admin/audit?${s}` : "/admin/audit";
-  };
 
   return (
     <>
@@ -76,6 +67,7 @@ export default async function AuditLogPage({
       />
 
       <form action="/admin/audit" method="get" className="mb-6 flex max-w-md items-center gap-2">
+        <input type="hidden" name="pageSize" value={paging.pageSize} />
         <input
           type="search"
           name="q"
@@ -137,31 +129,7 @@ export default async function AuditLogPage({
         </div>
       )}
 
-      {pages > 1 ? (
-        <nav aria-label="Pagination" className="mt-6 flex items-center justify-between">
-          <p className="t-caption tnum text-muted">
-            Page {page} of {pages} · {total} entries
-          </p>
-          <div className="flex gap-2">
-            {page > 1 ? (
-              <a
-                href={qs({ page: String(page - 1) })}
-                className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
-              >
-                Previous
-              </a>
-            ) : null}
-            {page < pages ? (
-              <a
-                href={qs({ page: String(page + 1) })}
-                className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[0.8125rem] font-semibold text-muted transition-colors hover:border-foreground/40 hover:text-foreground"
-              >
-                Next
-              </a>
-            ) : null}
-          </div>
-        </nav>
-      ) : null}
+      <Pagination {...paging} total={total} href={(page, size) => adminPageUrl("/admin/audit", sp, page, size)} label="audit entries" />
     </>
   );
 }

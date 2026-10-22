@@ -1,0 +1,14 @@
+.field { min-width: 0; }
+.anchor { position: relative; }
+.popup { position: absolute; inset-inline: 0; top: calc(100% + 6px); z-index: 30; overflow: hidden; border: 1px solid #949494; border-radius: 6px; background: #fff; color: #111; box-shadow: 0 8px 24px rgb(0 0 0 / 12%); }
+.above { top: auto; bottom: calc(100% + 6px); }
+.status { padding: 10px 12px; border-bottom: 1px solid #e8e8e8; font-size: 12px; line-height: 1.6; color: #555; }
+.options { max-height: 240px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #949494 #f7f7f7; }
+.option { display: flex; width: 100%; min-height: 52px; flex-direction: column; align-items: flex-start; padding: 9px 12px; text-align: left; border-bottom: 1px solid #e8e8e8; background: #fff; font-size: 14px; }
+.option span:last-child { margin-top: 2px; font-size: 12px; color: #555; }
+.option:hover, .active { background: #f7f7f7; color: #b82222; }
+.manual { display: block; width: 100%; min-height: 44px; padding: 10px 12px; text-align: left; font-size: 13px; font-weight: 600; color: #b82222; border-top: 1px solid #e8e8e8; }
+.manual:hover { background: #f7f7f7; }
+.help { margin-top: 8px; font-size: 12px; line-height: 1.6; color: #555; }
+.anchor :is(input, button):focus-visible { outline: 2px solid #b82222; outline-offset: 2px; }
+@media (max-width: 480px) { .options { max-height: 200px; } }

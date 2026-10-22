@@ -4,6 +4,7 @@ import { getAdminUser } from "@/lib/auth";
 import { canAccess } from "@/lib/permissions";
 import { rateLimit } from "@/lib/rate-limit";
 import { COLLECTION_KEYS, CONTENT_COLLECTIONS } from "@/lib/content-registry";
+import { CAREER_ENQUIRY_WHERE, isCareerEnquiry } from "@/lib/admin-enquiries";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export async function GET(req: Request) {
   if (q.length < 2) return NextResponse.json({ ok: true, groups: [] }, { headers });
   const contentAllowed = canAccess(user, "content");
   const enquiriesAllowed = canAccess(user, "enquiries");
+  const recruitmentAllowed = canAccess(user, "hr-portal");
 
   const contains = { contains: q, mode: "insensitive" as const };
   type ItemRow = { id: string; collection: string; title: string; slug: string };
@@ -48,8 +50,8 @@ export async function GET(req: Request) {
       take: 5,
       select: { id: true, title: true, slug: true },
     }) : Promise.resolve(empty.industries),
-    enquiriesAllowed ? prisma.projectEnquiry.findMany({
-      where: { OR: [{ name: contains }, { email: contains }, { company: contains }] },
+    enquiriesAllowed || recruitmentAllowed ? prisma.projectEnquiry.findMany({
+      where: { AND: [...(!enquiriesAllowed ? [CAREER_ENQUIRY_WHERE] : []), { OR: [{ name: contains }, { email: contains }, { company: contains }] }] },
       orderBy: { createdAt: "desc" },
       take: 6,
       select: { id: true, name: true, email: true, projectType: true },
@@ -59,7 +61,7 @@ export async function GET(req: Request) {
   const groups: { label: string; icon: string; results: { href: string; title: string; hint: string }[] }[] = [];
 
   const enquiriesHits = (enquiries as EnqRow[]).map((e) => ({
-    href: `/admin/enquiries/${e.id}`,
+    href: recruitmentAllowed && isCareerEnquiry(e) ? `/admin/hr-portal/applications/${e.id}` : `/admin/enquiries/${e.id}`,
     title: e.name,
     hint: `${e.projectType}${e.email ? ` · ${e.email}` : ""}`,
   }));

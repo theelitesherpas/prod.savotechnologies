@@ -14,10 +14,11 @@ vi.mock("@/lib/auth", () => ({
   requireAdmin: async () => { if (!state.user) throw new Error("UNAUTHORIZED"); return state.user; },
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
-  meeting: { findMany: state.meetingList, findUnique: state.meetingFind, update: state.meetingUpdate, delete: state.meetingDelete },
+  meeting: { count: vi.fn(async () => 0), groupBy: vi.fn(async () => []), findMany: state.meetingList, findUnique: state.meetingFind, update: state.meetingUpdate, delete: state.meetingDelete },
   clientUser: { findMany: state.clients }, contentItem: { findMany: state.content },
   service: { findMany: state.services }, industry: { findMany: state.industries },
   projectEnquiry: { findMany: state.enquiries, findUnique: state.enquiryFind, update: state.enquiryUpdate },
+  $transaction: async (fn: (tx: unknown) => unknown) => fn({ projectEnquiry: { updateMany: state.enquiryUpdate }, auditLog: { create: state.audit } }),
 } }));
 vi.mock("@/lib/rate-limit", () => ({ rateLimit: () => ({ ok: true, remaining: 10, retryAfterSeconds: 0 }) }));
 vi.mock("@/lib/meeting/service", () => ({
@@ -51,6 +52,7 @@ const queries = () => [state.meetingList, state.meetingFind, state.meetingUpdate
 beforeEach(() => {
   vi.clearAllMocks(); state.user = user();
   for (const mock of queries()) mock.mockResolvedValue([]);
+  state.enquiryUpdate.mockResolvedValue({ count: 1 });
   state.sendInvitation.mockResolvedValue({ ok: true });
   state.createMeeting.mockResolvedValue({ meeting: { id: "meeting-created" } });
 });
@@ -149,7 +151,7 @@ describe("search, dashboard and notifications", () => {
 });
 
 describe("career Server Actions", () => {
-  const actions = [career.shortlistEnquiryAction, career.rejectEnquiryAction, career.scheduleInterviewAction, career.requestDocumentsAction, career.markHiredAction, career.resetCareerStatusAction];
+  const actions = [career.shortlistEnquiryAction, career.rejectEnquiryAction, career.scheduleInterviewAction, career.requestDocumentsAction, career.markHiredAction, career.resetCareerStatusAction, career.saveCandidateContactAction];
   function form() { const data = new FormData(); data.set("id", "enquiry-test-id"); return data; }
   it.each(actions)("denies unrelated editors before any read/write/email", async action => {
     state.user = user("editor", ["content"]);
@@ -159,7 +161,7 @@ describe("career Server Actions", () => {
   });
   it.each(["enquiries", "hr-portal"])("preserves authorised shortlist via %s grant", async section => {
     state.user = user("editor", [section]);
-    state.enquiryFind.mockResolvedValue({ id: "enquiry-test-id", projectType: CAREERS_TYPES[0], name: "Applicant", email: "applicant@example.test", data: { role: "Engineer" } });
+    state.enquiryFind.mockResolvedValue({ id: "enquiry-test-id", updatedAt: new Date(), status: "new", careerStatus: null, projectType: CAREERS_TYPES[0], name: "Applicant", email: "applicant@example.test", data: { role: "Engineer" } });
     await expect(career.shortlistEnquiryAction(form())).rejects.toThrow("career=shortlisted");
     expect(state.enquiryUpdate).toHaveBeenCalledOnce(); expect(state.mail).toHaveBeenCalledOnce();
   });

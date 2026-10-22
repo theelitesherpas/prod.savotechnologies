@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+import { parseAdminPage } from "@/lib/admin-pagination";
 import { apiOk, apiError, isJsonRequest, readJsonBody } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getAdminUser } from "@/lib/auth";
@@ -17,11 +19,21 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const includeClients = url.searchParams.get("clients") === "1";
-
+  const q = (url.searchParams.get("q") ?? "").trim().slice(0, 100);
+  const status = (url.searchParams.get("status") ?? "").slice(0, 40);
+  const calendar = url.searchParams.get("calendar") === "1";
+  const month = url.searchParams.get("month") ?? "";
+  if (calendar && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return apiError("Choose a valid calendar month.", 400);
+  const where: Prisma.MeetingWhereInput = { ...(status ? { status } : {}),
+    ...(q ? { OR: [{ clientName: { contains: q, mode: "insensitive" } }, { clientCompany: { contains: q, mode: "insensitive" } }, { title: { contains: q, mode: "insensitive" } }, { reference: { contains: q, mode: "insensitive" } }] } : {}),
+    ...(calendar ? { AND: [{ OR: [{ confirmedDate: { startsWith: month } }, { confirmedDate: null, preferredDate: { startsWith: month } }] }] } : {}),
+  };
+  const [total, counts] = await Promise.all([prisma.meeting.count({ where }), prisma.meeting.groupBy({ by: ["status"], _count: { _all: true } })]);
+  const paging = parseAdminPage(Object.fromEntries(url.searchParams), total);
   const [meetings, clients] = await Promise.all([
     prisma.meeting.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 200,
+      where, orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      ...(calendar ? {} : { take: paging.take, skip: paging.skip }),
       select: {
         id: true, reference: true, clientName: true, clientCompany: true,
         title: true, meetingType: true, durationMin: true, locationType: true,
@@ -41,6 +53,8 @@ export async function GET(req: Request) {
   return apiOk({
     meetings: meetings.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() })),
     clients,
+    paging: { page: paging.page, pageSize: paging.pageSize, total },
+    counts: Object.fromEntries(counts.map(row => [row.status, row._count._all])),
   });
 }
 

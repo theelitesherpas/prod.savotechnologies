@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Pagination } from "@/components/admin/pagination";
+import { parseAdminPage, adminPageUrl, type PageSearch } from "@/lib/admin-pagination";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdminPage } from "@/lib/permissions";
@@ -10,18 +12,21 @@ import { archiveProjectAction, restoreProjectAction } from "./actions";
 import styles from "./projects.module.css";
 
 export const metadata: Metadata = { title: "Projects" };
-type Query = { saved?: string; e?: string; archived?: string; showArchived?: string };
+type Query = { saved?: string; e?: string; archived?: string; showArchived?: string; client?: string } & PageSearch;
 
 export default async function AdminProjectsPage({ searchParams }: { searchParams: Promise<Query> }) {
   await requireAdminPage("/admin/projects");
   const query = await searchParams;
   const showArchived = query.showArchived === "1";
+  const where = { archivedAt: showArchived ? { not: null } : null, ...(query.client ? { clientId: query.client } : {}) };
+  const matchingTotal = prisma ? await prisma.clientProject.count({ where }) : 0;
+  const paging = parseAdminPage(query, matchingTotal);
   const projects = prisma ? await prisma.clientProject.findMany({
-    where: { archivedAt: showArchived ? { not: null } : null },
-    orderBy: { updatedAt: "desc" },
+    where, take: paging.take, skip: paging.skip,
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     include: { client: { select: { name: true, company: true } }, _count: { select: { milestones: true, invoices: true } } },
   }) : [];
-  const total = prisma ? await prisma.clientProject.count({ where: { archivedAt: null } }) : 0;
+  const total = matchingTotal;
 
   return <div className="max-w-6xl">
     <PageHeader title="Projects" description="A clear view of every client engagement, its delivery progress and agreed budget." actions={<Link className={styles.primaryAction} href="/admin/projects/new"><span aria-hidden="true">＋</span> Add new project</Link>} />
@@ -29,7 +34,7 @@ export default async function AdminProjectsPage({ searchParams }: { searchParams
     {query.e ? <Notice kind="alert">{query.e}</Notice> : null}
 
     <div className={styles.toolbar}>
-      <div><strong>{showArchived ? "Archived projects" : "Active projects"}</strong><span>{showArchived ? `${projects.length} archived` : `${total} ${total === 1 ? "project" : "projects"}`}</span></div>
+      <div><strong>{showArchived ? "Archived projects" : "Active projects"}</strong><span>{showArchived ? `${matchingTotal} archived` : `${total} ${total === 1 ? "project" : "projects"}`}</span></div>
       <Link className={styles.toggle} href={showArchived ? "/admin/projects" : "/admin/projects?showArchived=1"}>
         {showArchived ? "View active projects" : "View archived projects"}
       </Link>
@@ -52,6 +57,7 @@ export default async function AdminProjectsPage({ searchParams }: { searchParams
       </tr>)}</tbody>
     </table></div> : <EmptyState title={showArchived ? "No archived projects" : "No projects yet"} message={showArchived ? "Projects you archive will be kept here, along with their invoices and delivery history." : "Create the first project to set its scope, budget and milestones."} actions={!showArchived ? <Link className={styles.primaryAction} href="/admin/projects/new">Add new project</Link> : undefined}/>}
 
+    <Pagination {...paging} total={matchingTotal} href={(page, size) => adminPageUrl("/admin/projects", query, page, size)} label="projects" />
     {!showArchived && projects.length === 0 && total > 0 ? <p className={styles.emptyNote}>There are active projects, but none are available in this view.</p> : null}
   </div>;
 }

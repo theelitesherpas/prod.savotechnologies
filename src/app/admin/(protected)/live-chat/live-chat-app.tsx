@@ -10,6 +10,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { ClientPager } from "@/components/admin/paged-content";
 import { LEAD_STATUS_LABELS } from "@/lib/livechat/summary";
 import {
   chimeReady,
@@ -74,6 +75,7 @@ type Settings = {
 };
 
 type Bootstrap = {
+  paging?: { page: number; pageSize: number; total: number };
   conversations: (Summary & { id: string })[];
   counts: Record<string, number>;
   agents: Agent[];
@@ -122,6 +124,8 @@ function clock(iso: string): string {
 export function LiveChatApp({ me }: { me: { id: string; name: string; role: string } }) {
   const [view, setView] = useState("inbox");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [data, setData] = useState<Bootstrap | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -149,6 +153,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
   }, []);
 
   const threadRef = useRef<HTMLDivElement | null>(null);
+  const bootstrapSequence = useRef(0);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const detailRef = useRef<Detail | null>(null);
@@ -164,15 +169,16 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
   /* ── data loading ── */
   const loadBootstrap = useCallback(
     async (v = view, q = query) => {
+      const sequence = ++bootstrapSequence.current;
       try {
-        const res = await fetch(`/api/admin/live-chat/bootstrap?view=${encodeURIComponent(v)}&q=${encodeURIComponent(q)}`, { cache: "no-store" });
+        const res = await fetch(`/api/admin/live-chat/bootstrap?view=${encodeURIComponent(v)}&q=${encodeURIComponent(q)}&page=${page}&pageSize=${pageSize}`, { cache: "no-store" });
         const json = (await res.json()) as Bootstrap & { ok: boolean };
-        if (json.ok) setData(json);
+        if (json.ok && sequence === bootstrapSequence.current) setData(json);
       } catch {
         /* retried by SSE counts.changed */
       }
     },
-    [view, query],
+    [view, query, page, pageSize],
   );
 
   const loadDetail = useCallback(async (id: string) => {
@@ -194,8 +200,10 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
   useEffect(() => {
  // Data fetch on view/query change, setState happens in the promise,
     // not synchronously in the effect body.
+    if (refreshTimer.current) clearTimeout(refreshTimer.current);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadBootstrap();
+    return () => { if (refreshTimer.current) clearTimeout(refreshTimer.current); };
   }, [view, query, loadBootstrap]);
 
   const scheduleBootstrap = useCallback(() => {
@@ -466,7 +474,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
           <div className="border-b border-border px-3 py-2.5">
             <input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
               placeholder="Search name, phone, message…"
               aria-label="Search conversations"
               className="t-sm w-full rounded-[4px] border border-border bg-white px-2.5 py-2 outline-none focus:border-accent"
@@ -477,7 +485,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
                 return (
                   <button
                     key={v.key}
-                    onClick={() => setView(v.key)}
+                    onClick={() => { setView(v.key); setPage(1); }}
                     aria-current={view === v.key}
                     className={cn(
                       "t-caption rounded-[4px] border px-2 py-1 transition-colors",
@@ -491,7 +499,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
               })}
             </nav>
           </div>
-          <ul className="min-h-0 flex-1 divide-y divide-border overflow-y-auto" aria-label="Conversations">
+          <ul key={`${view}-${query}-${page}-${pageSize}`} className="min-h-0 flex-1 divide-y divide-border overflow-y-auto" aria-label="Conversations">
             {(data?.conversations ?? []).map((c) => (
               <li key={c.id}>
                 <button
@@ -521,6 +529,7 @@ export function LiveChatApp({ me }: { me: { id: string; name: string; role: stri
             ))}
             {data && data.conversations.length === 0 ? <li className="t-caption px-4 py-8 text-center text-muted">Nothing here right now.</li> : null}
           </ul>
+          <div className="border-t border-border p-3"><ClientPager total={data?.paging?.total ?? data?.conversations.length ?? 0} page={data?.paging?.page ?? page} pageSize={pageSize} onPage={setPage} onPageSize={size => { setPageSize(size); setPage(1); }} label="conversations" /></div>
         </aside>
 
         {/* CENTER, thread */}

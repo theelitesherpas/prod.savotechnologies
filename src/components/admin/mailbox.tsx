@@ -14,6 +14,7 @@
 import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ConfirmButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
@@ -101,32 +102,48 @@ export function Mailbox({
   templates,
   notice,
   error,
+  dept,
+  initialFolder = "inbox",
+  initialQuery = "",
+  totalUnread,
+  paginationControl,
 }: {
+  initialFolder?: "inbox" | "sent";
+  initialQuery?: string;
+  totalUnread?: number;
+  paginationControl?: React.ReactNode;
+  dept?: "hello" | "hr";
   replies: MailboxReply[];
   sent: MailboxSent[];
   templates: MailboxTemplate[];
   notice?: string;
   error?: string;
 }) {
-  const [folder, setFolder] = useState<"inbox" | "sent">("inbox");
-  const [deptFilter, setDeptFilter] = useState<"all" | "hello" | "hr">("all");
-  const [query, setQuery] = useState("");
+  const router = useRouter();
+  const folder = initialFolder;
+  const mailboxHref = (targetFolder: "inbox" | "sent", q = initialQuery) => {
+    const params = new URLSearchParams({ folder: targetFolder });
+    if (dept) params.set("dept", dept);
+    if (q.trim()) params.set("q", q.trim());
+    return `/admin/emails?${params}`;
+  };
+  const deptFilter = dept ?? "all";
+  const [query, setQuery] = useState(initialQuery);
   const [selected, setSelected] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
-  const [composeDept, setComposeDept] = useState<"hello" | "hr">("hello");
+  const [composeDept, setComposeDept] = useState<"hello" | "hr">(dept ?? "hello");
   const [composeTo, setComposeTo] = useState("");
   const [readIds, setReadIds] = useState<Set<string>>(
     () => new Set(replies.filter((r) => r.isRead).map((r) => r.id)),
   );
 
-  const unread = replies.filter((r) => !readIds.has(r.id)).length;
+  const unread = totalUnread === undefined ? replies.filter((r) => !readIds.has(r.id)).length : Math.max(0, totalUnread - replies.filter(r => !r.isRead && readIds.has(r.id)).length);
 
   const list = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const match = (s: string) => !q || s.toLowerCase().includes(q);
+    // Search is applied by the server across the complete mailbox, including message bodies.
     if (folder === "inbox") {
       return replies
-        .filter((r) => (deptFilter === "all" || r.dept === deptFilter) && match(`${r.fromEmail} ${r.fromName ?? ""} ${r.subject}`))
+        .filter((r) => deptFilter === "all" || r.dept === deptFilter)
         .map((r) => ({
           id: r.id,
           dept: r.dept,
@@ -138,7 +155,7 @@ export function Mailbox({
         }));
     }
     return sent
-      .filter((s) => (deptFilter === "all" || s.dept === deptFilter) && match(`${s.toEmail} ${s.subject} ${s.templateKey ?? ""}`))
+      .filter((s) => deptFilter === "all" || s.dept === deptFilter)
       .map((s) => ({
         id: s.id,
         dept: s.dept,
@@ -148,7 +165,7 @@ export function Mailbox({
         snippet: s.templateKey ? `Template · ${s.templateKey}` : "Custom email",
         createdAt: s.createdAt,
       }));
-  }, [folder, deptFilter, query, replies, sent, readIds]);
+  }, [folder, deptFilter, replies, sent, readIds]);
 
   const activeReply = folder === "inbox" ? replies.find((r) => r.id === selected) : undefined;
   const activeSent = folder === "sent" ? sent.find((s) => s.id === selected) : undefined;
@@ -187,7 +204,7 @@ export function Mailbox({
     <div>
       <div className="mb-4 flex items-center justify-between gap-4">
         <p className="t-caption text-muted">
-          {folder === "inbox" ? `${list.length} message${list.length === 1 ? "" : "s"}` : `${list.length} sent`} · {unread} unread
+          {folder === "inbox" ? `${list.length} message${list.length === 1 ? "" : "s"} on this page` : `${list.length} sent on this page`} · {unread} unread
         </p>
         <button
           type="button"
@@ -236,14 +253,10 @@ export function Mailbox({
         {/* ── Folder rail ─────────────────────────────── */}
         <aside className="space-y-1.5" aria-label="Mail folders">
           {(["inbox", "sent"] as const).map((key) => (
-            <button
+            <Link
               key={key}
-              type="button"
-              onClick={() => {
-                setFolder(key);
-                setSelected(null);
-                setComposing(false);
-              }}
+              href={mailboxHref(key)}
+              aria-current={folder === key ? "page" : undefined}
               className={cn(
                 "flex h-10 w-full items-center justify-between rounded-lg border px-3.5 text-[0.875rem] font-semibold transition-colors",
                 folder === key
@@ -255,7 +268,7 @@ export function Mailbox({
               {key === "inbox" && unread > 0 ? (
                 <span className="tnum rounded-full bg-accent px-1.5 text-[0.6875rem] font-bold text-on-accent">{unread}</span>
               ) : null}
-            </button>
+            </Link>
           ))}
 
           <div className="pt-3">
@@ -265,33 +278,34 @@ export function Mailbox({
               ["hello", "Clients · hello@"],
               ["hr", "HR · hr@"],
             ] as const).map(([key, label]) => (
-              <button
+              <Link
                 key={key}
-                type="button"
-                onClick={() => setDeptFilter(key)}
+                href={key === "all" ? "/admin/emails" : `/admin/emails?dept=${key}`}
+                aria-current={deptFilter === key ? "page" : undefined}
                 className={cn(
                   "block w-full rounded-lg px-3.5 py-2 text-left text-[0.8125rem] font-medium transition-colors",
                   deptFilter === key ? "bg-accent/10 text-accent" : "text-muted hover:bg-surface-2/60 hover:text-foreground",
                 )}
               >
                 {label}
-              </button>
+              </Link>
             ))}
           </div>
         </aside>
 
         {/* ── Message list ────────────────────────────── */}
         <div className="adm-card flex max-h-[78vh] flex-col overflow-hidden">
-          <div className="border-b border-border p-3">
+          <form className="flex gap-2 border-b border-border p-3" onSubmit={event => { event.preventDefault(); router.push(mailboxHref(folder, query)); }}>
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={`Search ${folder === "inbox" ? "inbox" : "sent mail"}…`}
+              placeholder={`Search all ${folder === "inbox" ? "inbox" : "sent mail"}…`}
               aria-label="Search mail"
-              className="adm-input h-9"
+              className="adm-input h-9 min-w-0"
             />
-          </div>
+            <button className="adm-btn-ghost" type="submit">Search</button>
+          </form>
           <ul className="adm-rail divide-y divide-border overflow-y-auto">
             {list.length === 0 ? (
               <li className="p-6 text-center text-[0.8125rem] text-muted">
@@ -327,6 +341,7 @@ export function Mailbox({
               ))
             )}
           </ul>
+          {paginationControl ? <div className="border-t border-border px-3 pb-3">{paginationControl}</div> : null}
         </div>
 
         {/* ── Reading pane / Compose ──────────────────── */}

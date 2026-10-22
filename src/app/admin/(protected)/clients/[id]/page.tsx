@@ -1,4 +1,6 @@
+import { PagedContent } from "@/components/admin/paged-content";
 import { requireAdminPage } from "@/lib/permissions";
+import { SubjectRegisters } from "@/components/admin/portal-directory";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -16,7 +18,7 @@ export default async function EditClientPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ e?: string }>;
 }) {
-  await requireAdminPage("/admin/clients/[id]");
+  const user = await requireAdminPage("/admin/clients/[id]");
   const { id } = await params;
   const { e } = await searchParams;
   if (!prisma) notFound();
@@ -36,6 +38,7 @@ export default async function EditClientPage({
       {e === "invalid" ? <Notice kind="alert">Check the fields - name and a valid email are required.</Notice> : null}
       {e === "dup" ? <Notice kind="alert">That email is already used by another client.</Notice> : null}
 
+      <SubjectRegisters portal="client" user={user} subjectId={client.id} />
       <FormGuard action={updateClientAction} className="adm-card mb-6 space-y-5 p-5">
         <input type="hidden" name="id" value={client.id} />
         <div className="grid gap-5 sm:grid-cols-2">
@@ -71,7 +74,7 @@ export default async function EditClientPage({
       {client.projects.length > 0 ? (
         <div className="adm-card p-5">
           <p className="adm-label mb-3">Their projects</p>
-          <ul className="divide-y divide-border">
+          <PagedContent as="ul" label="client projects" className="divide-y divide-border">
             {client.projects.map((p) => (
               <li key={p.id} className="flex items-center justify-between gap-4 py-3">
                 <span className="t-sm">
@@ -82,7 +85,7 @@ export default async function EditClientPage({
                 </a>
               </li>
             ))}
-          </ul>
+          </PagedContent>
         </div>
       ) : null}
     </div>
