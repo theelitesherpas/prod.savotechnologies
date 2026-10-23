@@ -141,14 +141,21 @@ export async function POST(req: Request) {
     });
 
     /* Transactional mail - never blocks the response, never fails the
-       request. Careers applications acknowledge the candidate only; the
-       application itself is reviewed in the admin inbox (no automated email
-       to hr@). Assistant handoffs promise a one-business-day reply; client
-       forms continue to notify the hello@ team inbox. */
+       request. Newly stored careers applications acknowledge the candidate
+       and notify HR. No historical applications are replayed. Client forms
+       continue to notify the hello@ team inbox. */
     const form = (details as { form?: string } | null)?.form ?? "";
     const det = (details ?? {}) as Record<string, string>;
     if (form === "careers") {
       if (data.email) sendTemplateNow("applicationAck", data.email, { name: data.name, role: det.role ?? "the role" });
+      sendTemplateNow("teamApplication", process.env.HR_EMAIL?.trim() || "hr@savotechnologies.com", {
+        name: data.name,
+        email: data.email ?? "-",
+        role: det.role ?? "General application",
+        experience: det.experience,
+        links: det.links,
+        message: data.message,
+      });
     } else if (form === "callback") {
       if (data.email) sendTemplateNow("callbackAck", data.email, { name: data.name, country: det.country ?? "your" });
       sendTemplateNow("teamCallback", teamEmail(), {
