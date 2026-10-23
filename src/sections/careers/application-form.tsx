@@ -290,7 +290,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} noValidate className={s.applicationForm}>
-      <p>Fields marked * are required, including your mobile number and hometown. Compensation, resume and work links are optional.</p>
+      <p>Fields marked * are required. Compensation and links are optional.</p>
       {/* Role */}
       <fieldset>
         <legend className="t-label mb-3 block text-muted">Role</legend>
@@ -355,7 +355,7 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
           onFocus={onStarted}
           placeholder="Public Drive / Dropbox link (optional)"
           required={false}
-        /><p className={s.payHelp}>Use a public viewing link, not a private or sign-in-only link. Set sharing to “Anyone with the link can view” so our HR team can open your resume.</p></div>
+        /><p className={s.payHelp}>Use “Anyone with the link can view” access.</p></div>
         <Field label="LinkedIn profile (optional)" name="linkedin" type="url" error={localErrors.linkedin} onFocus={onStarted} placeholder="https://www.linkedin.com/in/your-profile" required={false} />
       </div>
 

@@ -14,13 +14,15 @@ export default async function CareersApplyPage({ searchParams }: { searchParams:
   const { role } = await searchParams;
   const roles = await getManagedRoles();
   const publicRoles = roles.map(toPublicRole);
-  const match = publicRoles.find(item => roleSlug(item.title) === (role ?? "").replace(/^\/|\/$/g, ""));
-  const initialRole = role === roleSlug(GENERAL_APPLICATION) ? GENERAL_APPLICATION : match?.title;
+  const requested = typeof role === "string" ? role.replace(/^\/|\/$/g, "") : "";
+  const match = publicRoles.find(item => roleSlug(item.title) === requested);
+  const initialRole = role === roleSlug(GENERAL_APPLICATION) ? GENERAL_APPLICATION : match?.title ?? GENERAL_APPLICATION;
+  if (requested && requested !== roleSlug(GENERAL_APPLICATION) && !match) return <div className={s.page} data-careers-page="apply"><section className={s.applyIntro}><div className={s.rail}><h1>This opening is unavailable.</h1><p>Choose another current opening or send a general application.</p><div className={s.heroActions}><a href="/careers#openings" className={s.primary}>View open roles</a><Link href="/careers/apply?role=general-application" className={s.secondary}>General application</Link></div></div></section></div>;
   return <div className={s.page} data-careers-page="apply">
     <section className={s.applyIntro} aria-labelledby="apply-heading"><div className={s.rail}>
-      <Link href="/careers" className={s.backLink}><ClosingArrow /> Back to careers</Link>
-      <h1 id="apply-heading">Introduce yourself.</h1>
-      <p>{match ? `Apply for ${match.title}. Tell us about your experience and what you would bring to the role.` : "Tell us about your skills and the work you want to do. A short introduction is enough."}</p>
+      <a href="/careers#openings" className={s.backLink}><ClosingArrow /> Back to jobs</a>
+      <h1 id="apply-heading">Your application.</h1>
+      <p>Complete the form below. Review your selected role before submitting.</p>
     </div></section>
     <section className={s.applyBody} aria-label="Your application"><div className={s.rail}><div className={s.applyWorkspace}>
       <div className={s.workspaceBar}><span className={s.workspaceMark} aria-hidden="true">S</span><span>Your application</span><span className={s.path}>/careers/apply</span></div>
@@ -29,7 +31,8 @@ export default async function CareersApplyPage({ searchParams }: { searchParams:
         <h2>Before you send</h2><ul><li>Check your contact details.</li><li>Make shared links accessible.</li><li>Keep confidential work private.</li></ul>
         <h2>Need a hand?</h2><p>Ask HR about the role or your application.</p><a href={`mailto:${CAREERS_EMAIL}`}>{CAREERS_EMAIL}</a>
       </div></aside>
-      <div className={s.applyCanvas}><ApplicationForm initialRole={initialRole} roles={publicRoles} />
+      <div className={s.applyCanvas}><ApplicationForm key={initialRole} initialRole={initialRole} roles={publicRoles} />
+        <a href={`mailto:${CAREERS_EMAIL}`} className={s.mobileHelp}>Need help? Email HR</a>
         <noscript><p>JavaScript is needed to submit this form. You can also email HR at <a href={`mailto:${CAREERS_EMAIL}`}>{CAREERS_EMAIL}</a>.</p></noscript>
       </div>
     </div></div></section>

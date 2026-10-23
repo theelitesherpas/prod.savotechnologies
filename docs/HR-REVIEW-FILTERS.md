@@ -2,7 +2,7 @@
 
 ## Scope
 
-Owner-requested follow-up to v7.11.0: remove repeated location instructions, prefer common cities, distinguish viewed/unviewed applications, remove redundant HR shortcut panels, collapse filters, and select multiple locations/skills. These changes are **local and verified, not deployed**. No schema migration or existing-record backfill is needed.
+Owner-requested follow-up to v7.11.0: remove repeated location instructions, prefer common cities, distinguish viewed/unviewed applications, remove redundant HR shortcut panels, collapse filters, and select multiple locations/skills. These changes are prepared for **v7.12.0 promotion**; deployment is verified separately from source QA. No schema migration or existing-record backfill is needed.
 
 ## List first, filters when needed
 
@@ -59,4 +59,4 @@ Required ODbL attribution is retained on `/data-sources#india-cities`, linked by
 - Nine private captures in `.impeccable/review/candidate-viewed/`: default desktop, user 1706px, mobile list, expanded selections, focused mobile city picker, application top at 390/320, desktop application and relocated credits. Public mobile overview shots are viewport captures, not claims to show the entire long form.
 - One scoped detector pass: **12 advisories, zero non-advisory findings**. The owner-requested smaller helper and incumbent typography are retained; no global token rewrite.
 - Review/documentation were performed inline; no independent review, physical-device/IME or whole-site accessibility certification is claimed.
-- Local preview: `http://localhost:4340/admin/hr-portal/applications`. Production still serves v7.11.0 until separately promoted.
+- Local preview: `http://localhost:4340/admin/hr-portal/applications`. See `docs/CAREERS-APPLICATION-FLOW.md` for the final public flow refinement and combined 277 browser checks; the final suite has 1,913 passing tests/16 skipped. Live-release evidence is recorded separately after dev → test → production promotion.

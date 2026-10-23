@@ -30,7 +30,7 @@
 .path { margin-left: auto; font-family: var(--font-mono),monospace; font-size: 11px; color: #b0b0b0; }
 .workspaceTabs { display: flex; background: #171717; padding: 0 16px; gap: 6px; }
 .workspaceTabs label { position: relative; flex: 1; }
-.workspaceTabs input,.roleFiles input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.workspaceTabs input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .workspaceTabs label > span { display: flex; justify-content: center; min-height: 48px; align-items: center; padding: 12px; color: #b0b0b0; font-size: 13px; border-radius: 8px 8px 0 0; cursor: pointer; }
 .workspaceTabs input:checked + span { background: #000; color: #fff; }
 .workspaceTabs input:focus-visible + span { outline: 2px solid #ff6b6b; outline-offset: -4px; }
@@ -63,35 +63,31 @@
 .filters button { min-height: 44px; padding: 10px 18px; border-radius: 6px; background: #f7f7f7; color: #555; font-size: 14px; font-weight: 500; }
 .filters button:hover { background: #e8e8e8; }
 .filters button[aria-pressed="true"] { background: #000; color: #fff; }
-.roleWorkspace { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); border: 1px solid #e8e8e8; border-radius: 12px; overflow: hidden; }
-.roleWorkspace[data-enhanced="false"] { grid-template-columns: minmax(0,1fr); }
-.nativeRoleFallback details { padding: 20px; border-bottom: 1px solid #e8e8e8; }
-.nativeRoleFallback :is(p,h3,ul) { margin-block: 16px; }
-.nativeRoleFallback ul,.preparationFallback { list-style: disc; padding-left: 20px; font-size: 14px; line-height: 1.75; }
+.roleList { border: 1px solid #e8e8e8; border-radius: 12px; overflow: hidden; }
+.roleList > li + li { border-top: 1px solid #e8e8e8; }
+.roleItem { padding: 28px 32px; }
+.roleHeader { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 16px; }
+.roleIdentity { min-width: 0; }
+.roleHeader h3 { font-size: 24px; overflow-wrap: anywhere; }
+.page .roleTrack { margin-top: 8px; font-size: 13px; line-height: 1.6; }
+.roleHeader .primary { min-height: 44px; gap: 10px; padding: 10px 16px; white-space: nowrap; }
+.roleHeader .primary svg { width: 16px; }
+.page .roleSummary { margin-top: 16px; font-size: 14px; line-height: 1.7; }
+.jobDetails { border-top: 1px solid #e8e8e8; }
+.jobDetailContent { padding-bottom: 20px; max-width: 75ch; }
+.jobDetailContent h4 { margin-top: 12px; font-size: 15px; font-weight: 600; }
+.jobDetailContent ul,.preparationFallback { list-style: disc; padding-left: 20px; font-size: 14px; line-height: 1.75; }
+.jobDetailContent ul { margin-top: 12px; color: #666; }
+.jobDetailContent li + li { margin-top: 8px; }
 .preparationFallback { margin-top: 24px; color: #b0b0b0; }
 .preparationFallback li + li { margin-top: 12px; }
-.roleFiles { background: #f7f7f7; padding: 16px; min-width: 0; }
-.roleFiles label { position: relative; display: block; }
-.roleFiles label > span { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 16px; align-items: center; padding: 20px; border-radius: 8px; cursor: pointer; }
-.roleFiles b { font-weight: 500; font-size: 18px; line-height: 1.35; }
-.roleFiles small { grid-row: 2; color: #666; font-size: 12px; }
-.roleFiles svg { grid-column: 2; grid-row: 1 / 3; width: 16px; }
-.roleFiles input:checked + span { background: #fff; }
-.roleFiles input:focus-visible + span { outline: 3px solid #b82222; outline-offset: -3px; }
-.roleContent { padding: 40px; min-width: 0; }
-.rolePath { color: #666; font: 11px/1.5 var(--font-mono),monospace; overflow-wrap: anywhere; margin-bottom: 24px; }
-.roleContent p { margin-top: 16px; }
 .roleFacts { display: flex; flex-wrap: wrap; gap: 16px 40px; margin-block: 24px; }
 .roleFacts dt { color: #666; font-size: 12px; margin-bottom: 4px; }
 .roleFacts dd { font-size: 14px; }
-.roleContent details { border-top: 1px solid #e8e8e8; }
 .page summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; font-size: 15px; font-weight: 600; }
 .page summary::-webkit-details-marker { display: none; }
 .page summary svg { flex-shrink: 0; }
 .page details[open] [data-plus-vertical] { display: none; }
-.roleContent details ul { padding: 0 0 20px 20px; list-style: disc; color: #666; font-size: 14px; line-height: 1.75; }
-.roleContent li + li { margin-top: 8px; }
-.roleContent .primary { margin-top: 24px; }
 .generalNote { margin-top: 24px; display: flex; gap: 12px 24px; align-items: center; flex-wrap: wrap; }
 .generalNote a { display: inline-flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; min-height: 44px; }
 .generalNote a:hover { color: #b82222; }
@@ -144,7 +140,10 @@
 .applySidebar li + li { margin-top: 10px; }
 .applySidebar > div > a { display: inline-flex; font-size: 12px; color: #000; margin-top: 20px; min-height: 44px; align-items: center; overflow-wrap: anywhere; }
 .applyCanvas { padding: 40px; min-width: 0; }
-.applicationForm { display: grid; gap: 32px; }
+.applicationForm { display: grid; grid-template-columns: minmax(0,1fr); min-width: 0; gap: 32px; }
+.applicationForm fieldset { min-width: 0; }
+.page .applicationForm > p:first-child { font-size: 14px; line-height: 1.6; }
+.mobileHelp { display: none; }
 .applicationForm > h3,.applicationForm .qualifications > h3 { font-size: 22px; margin-bottom: -12px; }
 .applicationForm label:not(:has(input[type="checkbox"])),.applicationForm legend { letter-spacing: 0; text-transform: none; font-family: var(--font-sans),sans-serif; font-size: 13px; color: #555; }
 .applicationForm :global(.field) { border: 1px solid #949494; border-radius: 5px; padding: 12px 14px; min-height: 48px; font-size: 16px; color: #000; background: #fff; }
@@ -201,7 +200,6 @@
   .steps { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 32px; }
   .emptyWorkspace { grid-template-columns: 160px minmax(0,1fr); gap: 32px; padding: 32px; }
   .applyWorkspace { grid-template-columns: 180px minmax(0,1fr); } .applySidebar { padding: 24px 16px; } .applyCanvas { padding: 28px; }
-  .roleWorkspace { grid-template-columns: minmax(0,1fr); } .roleFiles { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); } .roleFiles label > span { padding: 16px; }
 }
 @media (max-width: 639px) {
   .skillOptions { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -220,9 +218,10 @@
   .steps { grid-template-columns: minmax(0,1fr); gap: 24px; } .steps li { display: grid; grid-template-columns: 44px minmax(0,1fr); gap: 10px 20px; align-items: center; } .stepMark { grid-row: 1 / 3; margin-bottom: 0; align-self: start; } .steps p { grid-column: 2; margin-top: 0; }
   .questions { padding-top: 8px; } .questionsTitle { margin-bottom: 28px; } .questionsGrid { gap: 32px; }
   .questionList summary { min-height: 72px; padding-block: 20px; } .questionList details p { padding-right: 0; }
-  .roleFiles { grid-template-columns: minmax(0,1fr); } .roleContent { padding: 24px; } .roleFiles b { font-size: 16px; } .roleContent .primary { width: 100%; }
-  .applyIntro { padding-top: calc(var(--nav-h) + 24px); } .applyIntro h1 { font-size: 38.4px; } .backLink { margin-bottom: 16px; }
-  .applyWorkspace { grid-template-columns: minmax(0,1fr); } .applyCanvas { padding: 24px 20px; } .applySidebar { padding: 16px; } .applySidebar > div { position: static; } .applySidebar nav { display: flex; flex-wrap: wrap; gap: 4px 8px; } .applySidebar nav a { padding: 8px; font-size: 12px; } .applySidebar nav svg { display: none; } .applySidebar h2,.applySidebar ul { display: none; } .applySidebar p { display: none; } .applySidebar > div > a { display: inline-flex; margin-top: 8px; min-height: 36px; padding-inline: 8px; }
+  .roleItem { padding: 20px; } .roleHeader { gap: 12px; } .roleHeader h3 { font-size: 20px; } .roleHeader .primary { padding-inline: 12px; font-size: 13px; } .roleHeader .primary svg { display: none; }
+  .applyIntro { padding-top: calc(var(--nav-h) + 20px); padding-bottom: 28px; } .applyIntro h1 { font-size: 32px; } .applyIntro p { margin-top: 12px; font-size: 14px; line-height: 1.6; } .backLink { margin-bottom: 12px; }
+  .applyWorkspace { grid-template-columns: minmax(0,1fr); } .applyCanvas { padding: 24px 20px; } .applySidebar { display: none; }
+  .mobileHelp { display: inline-flex; align-items: center; min-height: 44px; margin-top: 20px; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
   .applicationForm { gap: 28px; } .applicationForm .submit { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .workspace { animation: none; } .page * { transition-property: none !important; scroll-behavior: auto !important; } }

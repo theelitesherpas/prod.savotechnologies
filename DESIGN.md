@@ -1134,8 +1134,9 @@ Surface contract: [.impeccable/surfaces/src-app-site-careers-page-tsx.md](.impec
   minimums. One650ms workspace arrival; reduced motion is static.
 - Real company introduction/preparation radio views and a local-only checklist;
   no dummy code, execution results, repositories, staff profiles or benefits.
-  Published vacancy directory has native radios/filters, complete hidden panels
-  and optional responsibility disclosures. The authorised local collection now
+  Published vacancies use a flat bordered list: each job has its own 44px
+  Apply now link to the separate application page and native inline Role details.
+  Team filters remain; no selected-role radio list or detached details pane. The authorised local collection now
   includes HR Intern, AI / ML Engineer and Full Stack AI Engineer; no additional
   legacy jobs or unconfirmed employment terms were imported. Empty collection offers a general
   application, not coded sample jobs. Native no-JS fallback content is explicit.
@@ -1145,7 +1146,11 @@ Surface contract: [.impeccable/surfaces/src-app-site-careers-page-tsx.md](.impec
   The panel uses an original conversation icon, 24px heading,16px explanation
   and explicit email/call/WhatsApp rows with aligned arrows and real destinations.
   Below900px, questions precede contacts in a stack.
-- Application: aligned black route bar, neutral guide rail, white form canvas;
+- Application: aligned black route bar, neutral desktop guide rail, white form canvas;
+  on phones the guide is replaced by a compact HR email link after the form.
+  The explicit one-column form grid and shrinkable fieldsets keep long role
+  selects inside the 320px canvas. The first personal field is above the fold;
+  mobile page heading is 32px. An unavailable job never defaults to another job;
   skills, experience and start availability are required and always visible.
   Role-specific native checkbox categories, search and custom skills support
   1–12 selections. General choices span technology, design/quality, people,

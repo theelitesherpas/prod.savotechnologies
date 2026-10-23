@@ -8,28 +8,26 @@ import { track } from "@/lib/analytics";
 import s from "./careers.module.css";
 
 const subscribe = () => () => {};
-/** Only published managed vacancies enter this directory. No coded role backfill. */
+/** Each published job owns its details and a direct link to the separate application page. */
 export function OpenRoles({ roles }: { roles: PublicRole[] }) {
-  const id = useId();
-  const enhanced = useSyncExternalStore(subscribe, () => true, () => false);
+  const id = useId(), enhanced = useSyncExternalStore(subscribe, () => true, () => false);
   const [filter, setFilter] = useState<"all" | RoleCategory>("all");
-  const [selected, setSelected] = useState(roles[0]?.title ?? "");
   const visible = roles.filter(role => filter === "all" || role.cat === filter);
-  const active = visible.find(role => role.title === selected)?.title ?? visible[0]?.title;
   return <section id="openings" className={s.section} aria-labelledby="openings-heading"><div className={s.rail}>
-    <div className={s.sectionHead}><h2 id="openings-heading">Find your place.</h2><p>{roles.length ? `Explore ${roles.length} current ${roles.length === 1 ? "opening" : "openings"}. Choose a role to see the details.` : "No vacancies are listed here right now. You can still send a general application."}</p></div>
+    <div className={s.sectionHead}><h2 id="openings-heading">Find your place.</h2><p>{roles.length ? `Explore ${roles.length} current ${roles.length === 1 ? "opening" : "openings"}. Choose Apply now to open a separate application page.` : "No vacancies are listed here right now. You can still send a general application."}</p></div>
     {roles.length ? <>
-      <div className={s.filters} hidden={!enhanced} role="group" aria-label="Filter roles by team">{ROLE_FILTERS.map(f => <button key={f.key} type="button" aria-pressed={filter === f.key} onClick={() => { setFilter(f.key); track("role_filter_click", { filter: f.key }); }}>{f.label}</button>)}</div>
-      <div className={s.roleWorkspace} data-enhanced={enhanced}>
-        <fieldset className={s.roleFiles} hidden={!enhanced}><legend className="sr-only">Choose an open role</legend>{visible.map(role => <label key={role.title}><input type="radio" name={`${id}-role`} checked={active === role.title} onChange={() => { setSelected(role.title); track("role_open", { role: role.title }); }} aria-controls={`${id}-${roleSlug(role.title)}`} /><span><b>{role.title}</b><small>{role.track}</small><ClosingArrow /></span></label>)}</fieldset>
-        <div className={s.roleContent}>{roles.map(role => <article key={role.title} id={`${id}-${roleSlug(role.title)}`} hidden={active !== role.title}>
-          <div className={s.rolePath}>/careers/apply?role={roleSlug(role.title)}</div><h3>{role.title}</h3><p>{role.blurb}</p><dl className={s.roleFacts}>{role.track && <div><dt>Focus</dt><dd>{role.track}</dd></div>}{role.exp && <div><dt>Experience</dt><dd>{role.exp}</dd></div>}{role.datePosted && <div><dt>Posted</dt><dd><time dateTime={role.datePosted}>{role.datePosted}</time></dd></div>}</dl>
-          {role.duties.length > 0 && <details><summary>What you will do <Plus /></summary><ul>{role.duties.map(d => <li key={d}>{d}</li>)}</ul></details>}
-          {role.brings.length > 0 && <details><summary>What you bring <Plus /></summary><ul>{role.brings.map(b => <li key={b}>{b}</li>)}</ul></details>}
-          <Link href={`/careers/apply?role=${roleSlug(role.title)}`} className={s.primary} onClick={() => track("apply_click", { role: role.title })}>Apply for this role <ClosingArrow /></Link>
-        </article>)}{!visible.length && <p className={s.filterEmpty} role="status">No openings in this team right now. Try All roles or send a general application.</p>}</div>
-      </div>
-      <noscript><div className={s.nativeRoleFallback}>{roles.slice(1).map(role => <details key={role.title}><summary>{role.title}<Plus /></summary><p>{role.blurb}</p><p>{[role.track, role.exp].filter(Boolean).join(" · ")}</p>{role.duties.length > 0 && <><h3>What you will do</h3><ul>{role.duties.map(text => <li key={text}>{text}</li>)}</ul></>}{role.brings.length > 0 && <><h3>What you bring</h3><ul>{role.brings.map(text => <li key={text}>{text}</li>)}</ul></>}<Link href={`/careers/apply?role=${roleSlug(role.title)}`} className={s.primary}>Apply for this role <ClosingArrow /></Link></details>)}</div></noscript>
+      <div className={s.filters} hidden={!enhanced} role="group" aria-label="Filter roles by team">{ROLE_FILTERS.map(item => <button key={item.key} type="button" aria-pressed={filter === item.key} onClick={() => { setFilter(item.key); track("role_filter_click", { filter: item.key }); }}>{item.label}</button>)}</div>
+      <ul className={s.roleList}>{visible.map(role => <li key={role.title}><article className={s.roleItem} aria-labelledby={`${id}-${roleSlug(role.title)}`}>
+        <header className={s.roleHeader}><div className={s.roleIdentity}><h3 id={`${id}-${roleSlug(role.title)}`}>{role.title}</h3>{role.track ? <p className={s.roleTrack}>{role.track}</p> : null}</div>
+          <Link href={`/careers/apply?role=${roleSlug(role.title)}`} className={s.primary} aria-label={`Apply now for ${role.title}`} onClick={() => track("apply_click", { role: role.title })}>Apply now <ClosingArrow /></Link>
+        </header>
+        <p className={s.roleSummary}>{role.blurb}</p>
+        {(role.exp || role.datePosted) ? <dl className={s.roleFacts}>{role.exp ? <div><dt>Experience</dt><dd>{role.exp}</dd></div> : null}{role.datePosted ? <div><dt>Posted</dt><dd><time dateTime={role.datePosted}>{role.datePosted}</time></dd></div> : null}</dl> : null}
+        {(role.duties.length || role.brings.length) ? <details className={s.jobDetails} onToggle={event => { if (event.currentTarget.open) track("role_open", { role: role.title }); }}><summary>Role details <Plus /></summary>
+          <div className={s.jobDetailContent}>{role.duties.length ? <><h4>What you will do</h4><ul>{role.duties.map(text => <li key={text}>{text}</li>)}</ul></> : null}{role.brings.length ? <><h4>What you bring</h4><ul>{role.brings.map(text => <li key={text}>{text}</li>)}</ul></> : null}</div>
+        </details> : null}
+      </article></li>)}</ul>
+      {!visible.length ? <p className={s.filterEmpty} role="status">No openings in this team right now. Try All roles or send a general application.</p> : null}
       <div className={s.generalNote}><p>Don’t see your role?</p><Link href="/careers/apply?role=general-application" onClick={() => track("apply_click", { role: "General application" })}>Send a general application <ClosingArrow /></Link></div>
     </> : <div className={s.emptyWorkspace}><div className={s.emptyArt} aria-hidden="true"><svg viewBox="0 0 160 128" fill="none"><path d="M22 30V16h48l12 14h56v82H22V30Z" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" /><rect x="48" y="49" width="70" height="46" rx="4" fill="#fff" /><path d="M83 60v24M71 72h24" stroke="#b82222" strokeWidth="3" strokeLinecap="round" /></svg></div><div><h3>Your skills can start the conversation.</h3><p>Tell us about your experience and the kind of work you’re looking for.</p><Link href="/careers/apply?role=general-application" className={s.primary} onClick={() => track("apply_click", { role: "General application" })}>Send a general application <ClosingArrow /></Link></div></div>}
   </div></section>;

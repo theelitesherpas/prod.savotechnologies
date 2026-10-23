@@ -57,7 +57,7 @@ export function CityPicker({ name, label, required = false, error, onStarted, on
           if (event.key === "Enter" && open) { event.preventDefault(); if (active >= 0) select(active); else setOpen(false); }
         }} />
       {open ? <div className={`${s.popup} ${above ? s.above : ""}`}>
-        <div role="status" className={s.status}>{state === "loading" ? "Loading India’s city/town directory…" : state === "failed" ? "Directory unavailable. You can still enter your city and state." : query.trim() ? `${matches.total.toLocaleString("en-IN")} matching places${matches.total > 40 ? " · keep typing to narrow" : ""}` : "Popular cities · Indore first"}</div>
+        <div role="status" className={s.status}>{state === "loading" ? "Loading India’s city/town directory…" : state === "failed" ? "Directory unavailable. You can still enter your city and state." : query.trim() ? `${matches.total.toLocaleString("en-IN")} matching places${matches.total > 40 ? " · keep typing to narrow" : ""}` : "Popular cities"}</div>
         <div id={listId} role="listbox" aria-label={`${label} suggestions`} className={s.options}>
           {matches.options.map(([city, region, cityId], index) => <button type="button" key={cityId} id={`${listId}-${index}`} role="option" aria-selected={index === active} tabIndex={-1} className={`${s.option} ${index === active ? s.active : ""}`} onPointerDown={event => event.preventDefault()} onClick={() => select(index)}><span>{city}</span><span>{region}</span></button>)}
         </div>
