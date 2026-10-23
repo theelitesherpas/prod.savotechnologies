@@ -1,0 +1,81 @@
+/** LOCAL ONLY: mail off in server and script. Disposable candidates/operators; no public submissions. */
+import assert from 'node:assert/strict';
+import {randomBytes,createHash} from 'node:crypto';
+import {mkdir,writeFile} from 'node:fs/promises';
+import {existsSync} from 'node:fs';
+import {PrismaClient} from '@prisma/client';
+import {chromium} from 'playwright-core';
+const base=process.env.BASE_URL??'http://localhost:4340',local=new Set(['localhost','127.0.0.1','[::1]']);
+assert(local.has(new URL(base).hostname)&&local.has(new URL(process.env.DATABASE_URL).hostname)&&process.env.MAIL_DELIVERY_MODE==='off','Local-only, mail-off verification');
+const db=new PrismaClient(),browser=await chromium.launch({executablePath:process.env.CHROME_PATH??'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
+const key=`QA-VIEW-${randomBytes(4).toString('hex')}`,out='.impeccable/review/candidate-viewed',users=[],records=[],checks=[],errors=[];
+await mkdir(out,{recursive:true});
+const check=(ok,label)=>{assert(ok,label);checks.push(label);};
+async function context(user){const token=randomBytes(32).toString('hex');await db.adminSession.create({data:{userId:user.id,tokenHash:createHash('sha256').update(token).digest('hex'),expiresAt:new Date(Date.now()+3600000)}});const ctx=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});await ctx.addCookies([{name:'savo_admin',value:token,url:base,httpOnly:true,sameSite:'Lax'}]);await ctx.addInitScript(()=>{if(window.top===window)try{localStorage.setItem('savo_livechat_banner_dismissed','1');}catch{}});ctx.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));return ctx;}
+async function visit(page,path){await page.goto(`${base}${path}`,{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>[...document.querySelectorAll('main form')].every(f=>Object.keys(f).some(k=>k.startsWith('__reactProps'))));if(await page.locator('[data-candidate-read]').count())await page.locator('[data-candidate-read="ready"]').waitFor();}
+async function shot(page,name,viewportOnly=true){await page.evaluate(()=>document.fonts.ready);if(!viewportOnly)await page.evaluate(()=>scrollTo(0,0));await page.waitForTimeout(200);check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${name}: no horizontal overflow`);if(process.env.REUSE_CAPTURES!=='1'||!existsSync(`${out}/${name}.png`))await page.screenshot({path:`${out}/${name}.png`,fullPage:!viewportOnly});}
+const original={form:'careers',role:'Backend Engineer',experience:'3 to 5 years',notice:'30 days'};
+try{
+ for(let i=0;i<2;i++)users.push(await db.adminUser.create({data:{name:'Synthetic HR reviewer',email:`${key}-${i}@example.invalid`,role:'editor',permissions:['hr-portal'],passwordHash:'local-session-only'}}));
+ for(let i=0;i<31;i++)records.push(await db.projectEnquiry.create({data:{name:`${key} candidate ${String(i).padStart(2,'0')}`,email:`${key}-${i}@example.invalid`,projectType:'General application',source:'careers:synthetic-view',message:'Synthetic candidate for local verification, not a real applicant.',status:i%2?'in_progress':'new',createdAt:new Date(Date.UTC(2026,9,22,0,i)),data:{...original,city:['Indore','Pune','Bengaluru'][i%3],hometown:i%2?'Delhi':'Jaipur',skills:i%3===0?['React','Node.js']:i%3===1?['React','Figma']:['Node.js']}}}));
+ const ctx=await context(users[0]),second=await context(users[1]),page=await ctx.newPage();
+ const path=`/admin/hr-portal/applications?q=${key}&stage=all&pageSize=10`;
+ await visit(page,path);
+ check(!await page.locator('#candidate-filter-panel').evaluate(el=>el.open),'filters are collapsed on entry');
+ check(!(await page.locator('main').innerText()).includes('Manage HR Portal'),'redundant portal shortcut directory is removed');
+ const firstRow=await page.locator('tr[data-view-state]').first().evaluate(el=>({top:el.getBoundingClientRect().top,viewport:innerHeight}));
+ await shot(page,'desktop');
+ check(firstRow.top<firstRow.viewport*0.6,`candidate records are visible in the first viewport ${JSON.stringify(firstRow)}`);
+ const nav=page.getByRole('navigation',{name:'Application view status'});check((await nav.innerText()).includes('Not viewed16')||(await nav.innerText()).includes('Not viewed\n16'),'shared view counters cover the entire filtered result');
+ const colors=await page.evaluate(()=>{const a=document.querySelector('tr[data-view-state="not_viewed"]'),b=document.querySelector('tr[data-view-state="viewed"]');return {a:getComputedStyle(a).backgroundColor,b:getComputedStyle(b).backgroundColor,unread:getComputedStyle(a.querySelector('a')).fontWeight,read:getComputedStyle(b.querySelector('a')).fontWeight};});
+ check(colors.a!==colors.b&&Number(colors.unread)>Number(colors.read),'unread rows have distinct tint, bold names and text labels');
+ await page.setViewportSize({width:1706,height:916});await shot(page,'user-1706');await page.setViewportSize({width:390,height:844});await shot(page,'mobile');await page.setViewportSize({width:1440,height:1000});
+ await ctx.request.get(`${base}/admin/hr-portal/applications/${records[0].id}`,{headers:{'next-router-prefetch':'1'}});
+ check((await db.projectEnquiry.findUnique({where:{id:records[0].id}})).status==='new','server GET/prefetch does not mark a candidate viewed');
+ await page.locator('tr[data-view-state="not_viewed"] a').first().hover();await page.waitForTimeout(400);
+ check((await db.projectEnquiry.findUnique({where:{id:records[30].id}})).status==='new','hovering list links does not count as opening an application');
+ await visit(page,`/admin/hr-portal/applications/${records[0].id}?returnTo=${encodeURIComponent(`${path}&read=not_viewed`)}`);
+ const viewed=await db.projectEnquiry.findUnique({where:{id:records[0].id}});check(viewed.status==='in_progress'&&viewed.careerStatus===null,'visible detail marks viewed without shortlisting or contacting');
+ assert.deepEqual(viewed.data,records[0].data);check(true,'view marking preserves original submitted answers');
+ await page.reload({waitUntil:'domcontentloaded'});await page.locator('[data-candidate-read="ready"]').waitFor();
+ check(await db.auditLog.count({where:{entityId:records[0].id,action:'enquiry.viewed'}})===1,'repeat openings do not duplicate a viewed transition audit');
+ const other=await second.newPage();await visit(other,`${path}&read=viewed&pageSize=100`);
+ check((await other.locator('main').innerText()).includes('candidate 00'),'a second HR user sees the shared viewed state');
+ await page.locator('section[aria-labelledby="candidate-actions"] summary').click();await page.getByRole('button',{name:'Mark as not viewed',exact:true}).click();await page.getByRole('dialog',{name:'Mark application as not viewed?',exact:true}).getByRole('button',{name:'Mark not viewed & return',exact:true}).click();await page.waitForURL(url=>url.searchParams.get('unread')==='1');
+ check((await db.projectEnquiry.findUnique({where:{id:records[0].id}})).status==='new'&&new URL(page.url()).searchParams.get('read')==='not_viewed','marking not viewed returns to the queue without immediately reopening it');
+ await page.getByRole('navigation',{name:'Application view status'}).getByRole('link',{name:/^Viewed/}).click();await page.waitForURL(/read=viewed/);check(await page.locator('tr[data-view-state="not_viewed"]').count()===0,'viewed queue excludes unread candidates');
+ await visit(page,path);await page.locator('#candidate-filter-panel summary').click();
+ const city=page.getByRole('group',{name:'Current cities',exact:true}),skills=page.getByRole('group',{name:'Skills',exact:true});
+ for(const name of ['Indore','Pune']){await city.getByRole('searchbox').fill(name);await city.getByRole('checkbox',{name:new RegExp(`^${name}$`,'i')}).check();}
+ await skills.getByRole('searchbox').fill('React');await skills.getByRole('checkbox',{name:/^React$/i}).check();await skills.getByRole('searchbox').fill('Node.js');await skills.getByRole('checkbox',{name:/^Node\.js$/i}).check();
+ check(/react/i.test(await skills.getByRole('list',{name:'Selected skills'}).innerText()),'selected skills remain visible when search changes');
+ await skills.getByRole('searchbox').press('Enter');check(new URL(page.url()).searchParams.getAll('skills').length===0,'Enter in checkbox search does not submit unexpectedly');
+ await page.getByRole('button',{name:'Apply filters',exact:true}).click();await page.waitForURL(url=>url.searchParams.getAll('skills').length===2);
+ check(new URL(page.url()).searchParams.getAll('city').length===2&&(await page.locator('main').innerText()).includes('21 matching applications'),'any-city plus any-skill selection filters before pagination');
+ check(!await page.locator('#candidate-filter-panel').evaluate(el=>el.open),'applying filters collapses the panel so results are visible');
+ await page.getByRole('navigation',{name:'candidates pagination'}).getByRole('link',{name:'Page 2',exact:true}).click();await page.waitForURL(/page=2/);
+ check(new URL(page.url()).searchParams.getAll('skills').length===2&&new URL(page.url()).searchParams.getAll('city').length===2,'numbered pages retain all selected cities and skills');
+ await page.locator('#candidate-filter-panel summary').click();await page.locator('[name="skillMatch"]').selectOption('all');await page.getByRole('button',{name:'Apply filters',exact:true}).click();await page.waitForURL(/skillMatch=all/);
+ check((await page.locator('main').innerText()).includes('11 matching applications'),'all-skill matching requires both selected skills, not either');
+ await page.locator('#candidate-filter-panel summary').click();await shot(page,'filters-expanded');
+ await page.locator('#candidate-filter-panel summary').click();await page.getByRole('link',{name:'Interview schedule',exact:true}).click();await page.waitForURL(/tab=scheduled/);check(!await page.locator('#candidate-filter-panel').evaluate(el=>el.open),'menu navigation starts with filters collapsed');
+ await page.locator('#candidate-filter-panel summary').click();check(await page.locator('[name="stage"]').inputValue()==='interview_scheduled','interview menu updates filter value rather than retaining the previous uncontrolled selection');
+ const publicCtx=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});publicCtx.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
+ await publicCtx.route('**/api/enquiries',route=>route.abort());await publicCtx.route('**/api/captcha/required*',route=>route.fulfill({json:{required:false,configured:false}}));
+ const form=await publicCtx.newPage(),requests=[];form.on('request',r=>{if(new URL(r.url()).pathname==='/data/india-cities.json')requests.push(r.url());});await visit(form,'/careers/apply?role=general-application');
+ check(!(await form.locator('main').innerText()).includes('City/town directory:'),'duplicate directory/source paragraph is removed from the application');
+ check(await form.locator('#cr-city-help').innerText()==='Search by city or state, or enter it manually.','city helper is concise and not repeated');
+ check(await form.locator('#cr-city-help').evaluate(el=>getComputedStyle(el).fontSize)==='11px','helper text is smaller while retaining contrast');
+ await form.locator('#cr-city').focus();let choices=form.getByRole('listbox',{name:'Current city suggestions'});await choices.getByRole('option').first().waitFor();
+ const popular=await choices.getByRole('option').allTextContents();check(popular.slice(0,4).map(value=>value.replace(/Madhya Pradesh|Delhi$|Maharashtra|Karnataka/g,'').trim()).every((value,i)=>value===['Indore','Delhi','Pune','Bengaluru'][i]),'popular shortcuts begin Indore, Delhi, Pune, Bengaluru');
+ await form.locator('#cr-city').press('Tab');await form.keyboard.press('Tab');await form.keyboard.press('Tab');check(await form.getByRole('link',{name:/City data credits/}).evaluate(el=>document.activeElement===el),'city data credit remains keyboard reachable without cluttering the form');
+ await form.keyboard.press('Shift+Tab');await form.keyboard.press('Enter');check(await form.locator('#cr-city').getAttribute('aria-expanded')==='false','keyboard manual-entry fallback closes without reopening suggestions');
+ await form.locator('#cr-city').press('Escape');await form.locator('#cr-hometown').focus();await form.getByRole('listbox',{name:'Hometown suggestions'}).getByRole('option').first().waitFor();check(requests.length===1,'both location controls share one lazy local directory fetch');
+ const response=await publicCtx.request.get(`${base}${new URL(requests[0]).pathname}${new URL(requests[0]).search}`);check((response.headers()['cache-control']??'').includes('immutable'),'versioned directory receives a browser-cacheable immutable response');
+ await form.locator('#cr-hometown').press('Escape');await form.setViewportSize({width:390,height:844});await form.locator('#cr-city').focus();await form.getByRole('listbox',{name:'Current city suggestions'}).getByRole('option').first().waitFor();await shot(form,'cities-mobile');
+ await form.locator('#cr-city').press('Escape');await form.evaluate(()=>scrollTo(0,0));await shot(form,'form-mobile');
+ await form.setViewportSize({width:320,height:740});await shot(form,'form-320');
+ await visit(form,'/data-sources#india-cities');check((await form.locator('main').innerText()).includes('Countries States Cities Database')&&(await form.locator('main').innerText()).includes('Open Database License'),'directory attribution/license/download remain discoverable away from the fields');
+ check(errors.length===0,`no browser errors: ${errors.join('; ')}`);
+}finally{const ids=users.map(user=>user.id);await db.auditLog.deleteMany({where:{userId:{in:ids}}});await db.projectEnquiry.deleteMany({where:{id:{in:records.map(record=>record.id)}}});await db.agentPresence.deleteMany({where:{userId:{in:ids}}});await db.adminUser.deleteMany({where:{id:{in:ids}}});await writeFile(`${out}/report.json`,JSON.stringify({checks,errors,fixturesCleaned:true},null,2));await browser.close();await db.$disconnect();}
+console.log(`Candidate viewed/city/filter verification: ${checks.length} checks passed; fixtures cleaned.`);

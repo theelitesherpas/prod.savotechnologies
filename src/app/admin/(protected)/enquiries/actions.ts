@@ -62,6 +62,10 @@ export async function updateEnquiryStatusAction(formData: FormData): Promise<voi
   const backTo = formData.get("backTo");
   const allowedBack = [`/admin/enquiries/${id}`, `/admin/hr-portal/applications/${id}`];
   const target = typeof backTo === "string" && allowedBack.includes(backTo) ? backTo : detailPath(user, id);
+  if (status === "new" && target === `/admin/hr-portal/applications/${id}`) {
+    const path = candidateReturnPath(formData.get("returnTo"));
+    redirect(`${path}${path.includes("?") ? "&" : "?"}unread=1`);
+  }
   const params = new URLSearchParams({ saved: "inbox" });
   if (formData.get("returnTo")) params.set("returnTo", candidateReturnPath(formData.get("returnTo")));
   redirect(`${target}?${params}`);

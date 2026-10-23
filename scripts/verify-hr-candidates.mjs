@@ -31,6 +31,7 @@ async function visit(page, path) {
   const response = await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => [...document.querySelectorAll("main form")].every(form => Object.keys(form).some(key => key.startsWith("__reactProps"))));
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  if (await page.locator("[data-candidate-read]").count()) await page.locator('[data-candidate-read="ready"]').waitFor();
   return response;
 }
 async function shot(page, name, viewportOnly = false) {
@@ -69,8 +70,12 @@ try {
   await page.getByRole("link", { name: "Last page", exact: true }).click(); await page.waitForURL(/page=4/);
   check((await page.locator("main").innerText()).includes("31–31 of 31 candidates"), "last-page arrow reaches remaining candidate without gaps");
   await page.getByRole("link", { name: "First page", exact: true }).click(); await page.waitForURL(url => !url.searchParams.has("page"));
-  await page.locator('input[name="city"]').fill("indore"); await page.locator('input[name="hometown"]').fill("jaipur"); await page.locator('input[name="role"]').fill("Backend"); await page.locator('select[name="experience"]').selectOption("3-5"); await page.locator('select[name="stage"]').selectOption("shortlisted");
-  await page.getByRole("button", { name: "Apply filters", exact: true }).click(); await page.waitForURL(/hometown=jaipur/);
+  await page.locator("#candidate-filter-panel summary").click();
+  await page.getByRole("group", { name: "Current cities", exact: true }).getByRole("searchbox").fill("Indore");
+  await page.getByRole("group", { name: "Current cities choices", exact: true }).getByRole("checkbox", { name: /^Indore$/i }).check();
+  await page.getByRole("group", { name: "Hometowns", exact: true }).getByRole("searchbox").fill("Jaipur");
+  await page.getByRole("group", { name: "Hometowns choices", exact: true }).getByRole("checkbox", { name: /^Jaipur$/i }).check(); await page.locator('input[name="role"]').fill("Backend"); await page.locator('select[name="experience"]').selectOption("3-5"); await page.locator('select[name="stage"]').selectOption("shortlisted");
+  await page.getByRole("button", { name: "Apply filters", exact: true }).click(); await page.waitForURL(/hometown=Jaipur/i);
   check((await page.locator("main").innerText()).includes("1 matching application"), "experience + current city + hometown + role + stage combine on server");
   const profileHref = await page.locator('main a[href*="/applications/"]').first().getAttribute("href");
   check(profileHref.includes(candidates[6].id), "combined filters return the correct candidate");
@@ -81,7 +86,7 @@ try {
   await editor.getByRole("button", { name: "Save HR profile", exact: true }).click(); await hr.waitForURL(/saved=profile/);
   const changed = await db.projectEnquiry.findUnique({ where: { id: candidates[6].id } });
   check(changed.data.hometown === "Jaipur" && changed.data.hrProfile.hometown === "Udaipur" && changed.data.hrProfile.totalExperienceMonths === 32, "HR profile updates preserve submitted data and exact total");
-  check(new URL(hr.url()).searchParams.get("returnTo").includes("hometown=jaipur"), "profile save retains filtered-list return state");
+  check(new URL(hr.url()).searchParams.get("returnTo").toLowerCase().includes("hometown=jaipur"), "profile save retains filtered-list return state");
   await shot(hr, "candidate-desktop");
   await visit(page, `/admin/hr-portal/applications?q=${key}&city=Indore&hometown=Udaipur&role=Backend&experience=1-3&stage=shortlisted`);
   check((await page.locator("main").innerText()).includes("1 matching application") && (await page.locator("main").innerText()).includes("2 years 8 months"), "reviewed experience and hometown are immediately filterable");

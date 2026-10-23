@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { INDIA_CITY_DIRECTORY_VERSION } from "./src/lib/india-cities";
 
 const isProd = process.env.NODE_ENV === "production";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -108,6 +109,12 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // Only the pinned, versioned extract is immutable; unversioned downloads can refresh.
+      {
+        source: "/data/india-cities.json",
+        has: [{ type: "query", key: "v", value: INDIA_CITY_DIRECTORY_VERSION }],
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
       // Brand fonts for email @font-face — CORS-open like fonts.gstatic,
       // so sandboxed preview iframes (and any client) can load them.
       // Filenames are content-hashed (see public/fonts), so they cache

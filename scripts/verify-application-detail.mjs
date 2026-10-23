@@ -23,6 +23,7 @@ async function context(user) {
 async function visit(page, path) {
   const response = await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded" });
   if (response.status() === 200) await page.waitForFunction(() => [...document.querySelectorAll("main form")].every(form => Object.keys(form).some(key => key.startsWith("__reactProps"))));
+  if (await page.locator("[data-candidate-read]").count()) await page.locator('[data-candidate-read="ready"]').waitFor();
   return response;
 }
 async function shot(page, name, viewportOnly = false) {

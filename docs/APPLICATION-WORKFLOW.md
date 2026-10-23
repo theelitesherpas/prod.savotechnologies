@@ -1,5 +1,7 @@
 # Application detail: contact and recruitment workflow
 
+Follow-up: [HR-REVIEW-FILTERS.md](HR-REVIEW-FILTERS.md) records the latest local viewed/unviewed lifecycle, mark-not-viewed return action, compact multi-select filters and city-picker refinement. In that follow-up, career read marking occurs after a visible detail mounts, not during server GET/prefetch.
+
 ## Scope
 
 The candidate detail at `/admin/hr-portal/applications/[id]` now groups management controls in a **top-right Manage application panel**, alongside the candidate facts. On smaller screens the panel stacks above the details. The legacy career detail under `/admin/enquiries/[id]` uses the same controls. Sales enquiry details retain their existing workflow.

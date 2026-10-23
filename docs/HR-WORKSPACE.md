@@ -1,6 +1,6 @@
 # HR candidate workspace, application fields and pagination
 
-For the latest **top-right application management panel, contact outcomes, callbacks and standard recruitment workflow**, see [APPLICATION-WORKFLOW.md](APPLICATION-WORKFLOW.md). Its current verification supersedes the initial release counts below.
+For the **top-right application management panel, contact outcomes, callbacks and recruitment workflow**, see [APPLICATION-WORKFLOW.md](APPLICATION-WORKFLOW.md). The latest local **viewed queues, collapsed multi-city/skill filters and quieter cached location picker** are documented in [HR-REVIEW-FILTERS.md](HR-REVIEW-FILTERS.md); that verification supersedes earlier counts below.
 
 ## Local entry points
 

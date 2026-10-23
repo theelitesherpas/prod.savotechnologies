@@ -131,6 +131,7 @@ export function SearchPalette({ open, onOpenChange, sections = [] }: { open: boo
                     <Link
                       key={r.href}
                       href={r.href}
+                      prefetch={false}
                       onClick={() => onOpenChange(false)}
                       onMouseEnter={() => setActive(idx)}
                       className={cn(

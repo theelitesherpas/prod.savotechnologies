@@ -64,6 +64,34 @@ function emailMeta(enquiry: ProjectEnquiry, template: string, form: FormData): P
   return { candidate: enquiry.name, role: extractRole(enquiry), emailRequested: requested, ...(requested ? { emailSent: template, emailTo: enquiry.email! } : {}) };
 }
 
+/** Called after a visible detail mounts, never during a GET or link prefetch. Team-wide and idempotent. */
+export async function markCandidateViewedAction(id: string): Promise<{ ok: boolean }> {
+  const user = await requireCareerAccess();
+  if (!idSchema.safeParse(id).success || !prisma) return { ok: false };
+  if (!await getEnquiry(id)) return { ok: false };
+  await prisma.$transaction(async tx => {
+    const result = await tx.projectEnquiry.updateMany({ where: { AND: [CAREER_ENQUIRY_WHERE, { id, status: "new" }] }, data: { status: "in_progress" } });
+    if (result.count) await tx.auditLog.create({ data: { userId: user.id, action: "enquiry.viewed", entity: "ProjectEnquiry", entityId: id } });
+  });
+  refreshCandidate(id);
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+/** Intentionally leave an application in the team's unread queue, then return to the list. */
+export async function markCandidateNotViewedAction(form: FormData): Promise<void> {
+  const user = await requireCareerAccess();
+  const id = idSchema.safeParse(form.get("id"));
+  if (!id.success) back("", "Invalid application.");
+  const enquiry = await getEnquiry(id.data);
+  if (!enquiry) back(id.data, "Candidate not found.");
+  if (form.get("revision") !== enquiry.updatedAt.toISOString()) redirect(candidateActionUrl(user, id.data, form, "e", staleMessage));
+  if (enquiry.status === "archived") redirect(candidateActionUrl(user, id.data, form, "e", "Restore this application before marking it not viewed."));
+  await commitCareer(user, enquiry, form, { status: "new" }, "enquiry.markedUnread");
+  const path = canAccess(user, "hr-portal") ? candidateReturnPath(form.get("returnTo")) : "/admin/enquiries?type=Careers";
+  redirect(`${path}${path.includes("?") ? "&" : "?"}unread=1`);
+}
+
 /** HR-confirmed facts remain separate from applicant-supplied answers and contact history. */
 export async function saveCandidateProfileAction(formData: FormData): Promise<void> {
   const user = await requireCareerAccess();

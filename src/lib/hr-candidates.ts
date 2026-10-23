@@ -7,32 +7,44 @@ export const STAGE_LABELS: Record<CandidateStage, string> = { all: "All candidat
 export const EXPERIENCE_FILTERS = [
   ["fresher", "Fresher"], ["under-1", "Under 1 year / 0–1 reported"], ["1-3", "1–3 years"], ["3-5", "3–5 years"], ["5-8", "5–8 years"], ["8-plus", "8+ years"], ["missing", "Not provided / unrecognized"],
 ] as const;
-export type CandidateSearch = { contact?: string; q?: string; city?: string; hometown?: string; role?: string; experience?: string; stage?: string; tab?: string; status?: string; page?: string; pageSize?: string; sort?: string; e?: string; deleted?: string; type?: string };
-export type CandidateFilters = { contact: ContactOutcome | ""; q: string; city: string; hometown: string; role: string; experience: string; stage: CandidateStage; page: number; pageSize: number; sort: "newest" | "oldest" | "name" | "interview" };
+export const CANDIDATE_READ_STATES = ["all", "not_viewed", "viewed"] as const;
+export type CandidateReadState = typeof CANDIDATE_READ_STATES[number];
+export const READ_LABELS: Record<CandidateReadState, string> = { all: "All applications", not_viewed: "Not viewed", viewed: "Viewed" };
+export type CandidateSearch = { read?: string; unread?: string; contact?: string; q?: string; city?: string | string[]; hometown?: string | string[]; skills?: string | string[]; skillMatch?: string; role?: string; experience?: string; stage?: string; tab?: string; status?: string; page?: string; pageSize?: string; sort?: string; e?: string; deleted?: string; type?: string };
+export type CandidateFilters = { read: CandidateReadState; contact: ContactOutcome | ""; q: string; city: string[]; hometown: string[]; skills: string[]; skillMatch: "any" | "all"; role: string; experience: string; stage: CandidateStage; page: number; pageSize: number; sort: "newest" | "oldest" | "name" | "interview" };
 const text = (value: unknown, max = 100) => typeof value === "string" ? value.trim().slice(0, max) : "";
+export const CANDIDATE_FILTER_SELECTION_LIMIT = 20;
+function selections(value: string | string[] | undefined, max: number) {
+  const values = Array.isArray(value) ? value : value ? [value] : [];
+  const unique = new Map<string, string>();
+  for (const item of values) { const clean = text(item, max); if (clean && !unique.has(clean.toLowerCase())) unique.set(clean.toLowerCase(), clean); if (unique.size >= CANDIDATE_FILTER_SELECTION_LIMIT) break; }
+  return [...unique.values()];
+}
 export function parseCandidateFilters(search: CandidateSearch, pipeline = false): CandidateFilters {
   const legacy = search.tab === "scheduled" ? "interview_scheduled" : search.tab === "pipeline" ? "active" : search.tab;
   const requested = search.stage ?? legacy ?? (search.status === "archived" ? "archived" : undefined);
   const stage = CANDIDATE_STAGES.includes(requested as CandidateStage) ? requested as CandidateStage : pipeline ? "active" : "all";
-  return { contact: CONTACT_OUTCOMES.includes(search.contact as ContactOutcome) ? search.contact as ContactOutcome : "", q: text(search.q), city: text(search.city), hometown: text(search.hometown), role: text(search.role, 120), experience: EXPERIENCE_FILTERS.some(([key]) => key === search.experience) ? search.experience! : "", stage,
+  return { read: CANDIDATE_READ_STATES.includes(search.read as CandidateReadState) ? search.read as CandidateReadState : "all", contact: CONTACT_OUTCOMES.includes(search.contact as ContactOutcome) ? search.contact as ContactOutcome : "", q: text(search.q), city: selections(search.city, 150), hometown: selections(search.hometown, 150), skills: selections(search.skills, 120), skillMatch: search.skillMatch === "all" ? "all" : "any", role: text(search.role, 120), experience: EXPERIENCE_FILTERS.some(([key]) => key === search.experience) ? search.experience! : "", stage,
     page: Math.max(1, Math.min(100000, Number.parseInt(search.page ?? "1", 10) || 1)), pageSize: [10, 25, 50, 100].includes(Number(search.pageSize)) ? Number(search.pageSize) : 25,
     sort: ["oldest", "name", "interview"].includes(search.sort ?? "") ? search.sort as CandidateFilters["sort"] : stage === "interview_scheduled" ? "interview" : "newest" };
 }
 export function candidateListUrl(base: string, filters: CandidateFilters, overrides: Partial<CandidateFilters> = {}) {
   const current = { ...filters, ...overrides };
   const params = new URLSearchParams();
-  for (const key of ["q", "city", "hometown", "role", "experience", "stage", "contact", "sort"] as const) if (current[key]) params.set(key, current[key]);
+  for (const key of ["q", "role", "experience", "stage", "contact", "read", "sort"] as const) if (current[key]) params.set(key, current[key]);
+  for (const key of ["city", "hometown", "skills"] as const) for (const value of current[key]) params.append(key, value);
+  if (current.skills.length && current.skillMatch === "all") params.set("skillMatch", "all");
   if (current.page > 1) params.set("page", String(current.page));
   if (current.pageSize !== 25) params.set("pageSize", String(current.pageSize));
   return `${base}${params.size ? `?${params}` : ""}`;
 }
 /** A detail page may return only to a known HR list, never a supplied external URL. */
 export function candidateReturnPath(value: unknown): string {
-  if (typeof value !== "string" || value.length > 2000 || !value.startsWith("/admin/")) return "/admin/hr-portal/applications";
+  if (typeof value !== "string" || value.length > 16000 || !value.startsWith("/admin/")) return "/admin/hr-portal/applications";
   try {
     const url = new URL(value, "https://admin.invalid");
     if (url.origin !== "https://admin.invalid" || !["/admin/hr-portal", "/admin/hr-portal/applications"].includes(url.pathname)) return "/admin/hr-portal/applications";
-    return candidateListUrl(url.pathname, parseCandidateFilters(Object.fromEntries(url.searchParams)));
+    return candidateListUrl(url.pathname, parseCandidateFilters({ ...Object.fromEntries(url.searchParams), city: url.searchParams.getAll("city"), hometown: url.searchParams.getAll("hometown"), skills: url.searchParams.getAll("skills") }));
   } catch { return "/admin/hr-portal/applications"; }
 }
 function object(value: unknown): Record<string, unknown> { return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {}; }

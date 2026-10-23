@@ -3,6 +3,7 @@ import { requireAdminPage } from "@/lib/permissions";
 import { CAREER_ENQUIRY_WHERE, isCareerEnquiry } from "@/lib/admin-enquiries";
 import { SubjectRegisters } from "@/components/admin/portal-directory";
 import { CandidateOverview } from "@/components/admin/hr/candidate-profile";
+import { CandidateReadBoundary } from "@/components/admin/hr/candidate-read-state";
 import { CandidateActions, ContactOutcomeChip } from "@/components/admin/hr/candidate-actions";
 import { candidateContact, isCallbackOverdue, CONTACT_LABELS, CONTACT_CHANNELS, type ContactOutcome } from "@/lib/hr-contact";
 import { CandidateStageChip } from "@/components/admin/hr/candidate-workspace";
@@ -128,9 +129,10 @@ export async function EnquiryDetail({ id, saved, career, error, returnTo, scope 
       : Promise.resolve([]),
   ]);
 
-  // Auto-read: opening a new enquiry marks it in_progress (reduces the
-  // sidebar badge count, matches email unread behaviour).
-  if (enquiry.status === "new" && prisma) {
+  const isCareer = isCareerEnquiry(enquiry);
+  // Careers mark viewed only after the visible detail mounts, not during a GET/prefetch.
+  // Preserve the existing sales inbox behavior separately.
+  if (!isCareer && enquiry.status === "new" && prisma) {
     try {
       const opened = await prisma.projectEnquiry.update({
         where: { id, status: "new", updatedAt: enquiry.updatedAt },
@@ -149,7 +151,6 @@ export async function EnquiryDetail({ id, saved, career, error, returnTo, scope 
   const mailto = `mailto:${enquiry.email ?? ""}?subject=${encodeURIComponent(
     `Re: your ${enquiry.projectType.toLowerCase()} enquiry - Savo Technologies`,
   )}`;
-  const isCareer = isCareerEnquiry(enquiry);
   const careerStage = enquiry.careerStatus || "new";
   const contact = candidateContact(enquiry.data);
   const careerMessages: Record<string, string> = { shortlisted: "Candidate shortlisted.", rejected: "Hiring rejection recorded.", interview: "Interview details saved.", docs_requested: "Document request submitted for email delivery.", hired: "Candidate marked hired. Complete the offer and onboarding records next.", reset: "Recruitment pipeline reset. Contact history and submitted answers are unchanged." };
@@ -266,7 +267,7 @@ export async function EnquiryDetail({ id, saved, career, error, returnTo, scope 
 
         {/* Side rail: status + danger */}
         <aside className={isCareer ? "order-first min-w-0 xl:order-last" : "min-w-0"}>
-          {isCareer ? <><CandidateActions key={`${enquiry.updatedAt.toISOString()}-${error ?? ""}`} candidate={enquiry} returnTo={resultsPath} base={base} admin={user.role === "admin"} /><div className="mt-4"><SubjectRegisters portal="hr" user={user} subjectId={enquiry.id} /></div></> : <>
+          {isCareer ? <><CandidateReadBoundary id={enquiry.id} viewed={enquiry.status !== "new"}><CandidateActions key={`${enquiry.updatedAt.toISOString()}-${error ?? ""}`} candidate={enquiry} returnTo={resultsPath} base={base} admin={user.role === "admin"} /></CandidateReadBoundary><div className="mt-4"><SubjectRegisters portal="hr" user={user} subjectId={enquiry.id} /></div></> : <>
           <section aria-labelledby="status-heading" className="mb-8">
             <h2 id="status-heading" className="adm-label mb-2.5">
               {isCareer ? "Inbox management" : "Status"}

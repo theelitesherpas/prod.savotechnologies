@@ -36,6 +36,7 @@ async function visit(page, path) {
   const response = await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForFunction(() => [...document.querySelectorAll("main form")].every(form => Object.keys(form).some(k => k.startsWith("__reactProps"))));
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  if (await page.locator("[data-candidate-read]").count()) await page.locator('[data-candidate-read="ready"]').waitFor();
   return response;
 }
 async function capture(page, name) {

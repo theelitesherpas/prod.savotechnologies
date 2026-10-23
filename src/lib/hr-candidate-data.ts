@@ -35,15 +35,27 @@ export function candidateSqlBase() {
     FROM normalized
   )`;
 }
+const skillArray = () => Prisma.sql`CASE jsonb_typeof(skills) WHEN 'array' THEN skills WHEN 'string' THEN to_jsonb(string_to_array(skills #>> '{}', ',')) ELSE '[]'::jsonb END`;
 const contains = (value: string) => `%${value.replace(/[\\%_]/g, "\\$&")}%`;
-export function candidateSqlFilter(filters: CandidateFilters, includeStage = true) {
+export function candidateSqlFilter(filters: CandidateFilters, includeStage = true, includeRead = true) {
   const conditions: Prisma.Sql[] = [Prisma.sql`TRUE`];
   if (filters.q) conditions.push(Prisma.sql`(name ILIKE ${contains(filters.q)} OR email ILIKE ${contains(filters.q)} OR phone ILIKE ${contains(filters.q)} OR reference ILIKE ${contains(filters.q)} OR role ILIKE ${contains(filters.q)})`);
   for (const key of ["city", "hometown"] as const) {
     const column = key === "city" ? Prisma.sql`city` : Prisma.sql`hometown`;
-    if (filters[key]) conditions.push(filters[key].toLowerCase() === "not provided" ? Prisma.sql`${column} = ''` : Prisma.sql`${column} ILIKE ${contains(filters[key])}`);
+    if (filters[key].length) {
+      const choices = filters[key].map(value => value.toLowerCase() === "not provided" ? Prisma.sql`${column} = ''` : Prisma.sql`${column} ILIKE ${contains(value)}`);
+      conditions.push(Prisma.sql`(${Prisma.join(choices, " OR ")})`);
+    }
+  }
+  if (filters.skills.length) {
+    const selected = Prisma.join(filters.skills.map(value => value.toLowerCase()));
+    const matching = Prisma.sql`SELECT lower(BTRIM(skill.value #>> '{}')) FROM jsonb_array_elements(${skillArray()}) AS skill(value)
+      WHERE jsonb_typeof(skill.value) = 'string' AND lower(BTRIM(skill.value #>> '{}')) IN (${selected})`;
+    conditions.push(filters.skillMatch === "all" ? Prisma.sql`(SELECT COUNT(DISTINCT matched.value) FROM (${matching}) AS matched(value)) = ${filters.skills.length}` : Prisma.sql`EXISTS (${matching})`);
   }
   if (filters.role) conditions.push(Prisma.sql`role ILIKE ${contains(filters.role)}`);
+  if (includeRead && filters.read === "not_viewed") conditions.push(Prisma.sql`"inboxStatus" = 'new'`);
+  if (includeRead && filters.read === "viewed") conditions.push(Prisma.sql`"inboxStatus" <> 'new'`);
   if (filters.contact) conditions.push(Prisma.sql`"contactOutcome" = ${filters.contact}`);
   if (filters.experience) conditions.push(Prisma.sql`"experienceBand" = ${filters.experience}`);
   if (includeStage && filters.stage !== "all") conditions.push(filters.stage === "active" ? Prisma.sql`stage IN ('new', 'shortlisted', 'interview_scheduled')` : Prisma.sql`stage = ${filters.stage}`);
@@ -57,17 +69,21 @@ export async function getCandidatePage(filters: CandidateFilters, path: "/admin/
   const base = candidateSqlBase(), where = candidateSqlFilter(filters), facetWhere = candidateSqlFilter(filters, false);
   const [counts, totals, options] = await Promise.all([
     prisma.$queryRaw<{ stage: string; count: number }[]>(Prisma.sql`${base} SELECT stage, COUNT(*)::int AS count FROM candidates WHERE ${facetWhere} GROUP BY stage`),
-    prisma.$queryRaw<{ count: number }[]>(Prisma.sql`${base} SELECT COUNT(*)::int AS count FROM candidates WHERE ${where}`),
+    prisma.$queryRaw<{ count: number; notViewed: number; viewed: number }[]>(Prisma.sql`${base} SELECT COUNT(*)::int AS count,
+      (COUNT(*) FILTER (WHERE "inboxStatus" = 'new'))::int AS "notViewed", (COUNT(*) FILTER (WHERE "inboxStatus" <> 'new'))::int AS viewed
+      FROM candidates WHERE ${candidateSqlFilter(filters, true, false)}`),
     prisma.$queryRaw<{ kind: string; value: string }[]>(Prisma.sql`${base}, options AS (
       SELECT DISTINCT 'city' AS kind, city AS value FROM candidates WHERE city <> '' UNION ALL
       SELECT DISTINCT 'hometown' AS kind, hometown AS value FROM candidates WHERE hometown <> '' UNION ALL
-      SELECT DISTINCT 'role' AS kind, role AS value FROM candidates WHERE role <> ''
-    ), ranked AS (SELECT kind, value, row_number() OVER (PARTITION BY kind ORDER BY lower(value), value) AS position FROM options)
-    SELECT kind, value FROM ranked WHERE position <= 250 ORDER BY kind, lower(value), value`),
+      SELECT DISTINCT 'role' AS kind, role AS value FROM candidates WHERE role <> '' UNION ALL
+      SELECT DISTINCT 'skill' AS kind, BTRIM(skill.value #>> '{}') AS value FROM candidates CROSS JOIN LATERAL jsonb_array_elements(${skillArray()}) AS skill(value)
+        WHERE jsonb_typeof(skill.value) = 'string' AND BTRIM(skill.value #>> '{}') <> ''
+    ) SELECT kind, MIN(value) AS value FROM options GROUP BY kind, lower(value) ORDER BY kind, lower(MIN(value)), MIN(value)`),
   ]);
-  const total = totals[0]?.count ?? 0, pages = Math.max(1, Math.ceil(total / filters.pageSize)), page = Math.min(filters.page, pages);
+  const readCounts = { all: totals[0]?.count ?? 0, not_viewed: totals[0]?.notViewed ?? 0, viewed: totals[0]?.viewed ?? 0 };
+  const total = readCounts[filters.read], pages = Math.max(1, Math.ceil(total / filters.pageSize)), page = Math.min(filters.page, pages);
   const order = filters.sort === "oldest" ? Prisma.sql`"createdAt" ASC, id ASC` : filters.sort === "name" ? Prisma.sql`lower(name) ASC, id ASC` : filters.sort === "interview" ? Prisma.sql`"interviewDate" ASC NULLS LAST, "createdAt" DESC, id DESC` : Prisma.sql`"createdAt" DESC, id DESC`;
   const rows = await prisma.$queryRaw<CandidateRow[]>(Prisma.sql`${base} SELECT id, name, email, phone, reference, role, city, hometown, experience, "experienceMonths", stage, "inboxStatus", "createdAt", "interviewDate", interviewer, "meetingLink", notice, skills, "contactOutcome", "callbackAt"
     FROM candidates WHERE ${where} ORDER BY ${order} LIMIT ${filters.pageSize} OFFSET ${(page - 1) * filters.pageSize}`);
-  return { rows, total, pages, page, counts, options };
+  return { rows, total, pages, page, counts, options, readCounts };
 }

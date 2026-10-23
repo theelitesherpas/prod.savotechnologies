@@ -315,7 +315,6 @@ export function ApplicationForm({ initialRole, roles: ROLES }: { initialRole?: s
         <div className={s.phoneEntry}><label htmlFor="cr-phone" className="t-label mb-1 block">Mobile number <span aria-hidden="true" className="text-accent">*</span></label><PhoneField id="cr-phone" required label="Mobile number" value={phone} onChange={value => { setPhone(value); if (value.trim()) setErrors(current => ({ ...current, phone: undefined })); }} error={errors.phone} onValidity={setPhoneOk} onFocus={onStarted} /></div>
         <CityPicker label="Current city" name="city" required error={localErrors.city} onStarted={onStarted} onValueChange={() => setLocalErrors(current => ({ ...current, city: undefined }))} />
         <CityPicker label="Hometown" name="hometown" required error={localErrors.hometown} onStarted={onStarted} onValueChange={() => setLocalErrors(current => ({ ...current, hometown: undefined }))} />
-        <p className="t-caption text-muted">City/town directory: <a href="https://github.com/dr5hn/countries-states-cities-database" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Countries States Cities Database</a> · <a href="/data/licenses/india-cities-ODbL.txt" className="underline underline-offset-2">ODbL</a> · <a href="/data/india-cities.json" download className="underline underline-offset-2">Download directory</a>. If your location is missing, enter it manually.</p>
       </div>
 
       <section id="availability" className={s.qualifications} aria-labelledby="availability-heading">
