@@ -45,6 +45,32 @@ describe("Insights editorial reading room", () => {
   it("preserves CTA sources and fail-closed consumers", () => { const source = readFileSync("src/app/(site)/insights/page.tsx", "utf8"), detail = readFileSync("src/app/(site)/insights/[slug]/page.tsx", "utf8"); expect(source).toContain('location="resources-cta"'); expect(detail).toContain('location={`article-${article.slug}-cta`}'); expect(readFileSync("src/sections/home-v2/sections.tsx", "utf8")).not.toContain('import { ARTICLES }'); expect(readFileSync("src/app/(site)/page.tsx", "utf8")).toContain("articles.slice(0, 3).map(articlePreview)"); });
   it("requires every insight field and uses fixed image and industry choices", () => { const fields = getCollection("insights").fields; expect(fields.map((field) => field.name)).not.toContain("date"); expect(fields.map((field) => field.name)).not.toContain("time"); expect(fields.filter((field) => field.required).map((field) => field.name)).toEqual(expect.arrayContaining(["title", "slug", "cat", "industrySlugs", "image", "excerpt", "body"])); expect(fields.find((field) => field.name === "industrySlugs")?.options).toHaveLength(10); expect(fields.find((field) => field.name === "image")).toMatchObject({ type: "image", required: true, altFieldRequired: true }); });
   it("renders the Insights editor with a fixed checkbox dropdown and required image crop", () => { const html = render(React.createElement(CollectionForm, { def: toFormDef(getCollection("insights")), action: async () => {}, onCancelHref: "/admin/content/insights", titleValue: "" })); expect(html).toContain('id="industrySlugs-selector"'); expect((html.match(/type="checkbox"/g) ?? []).length).toBeGreaterThanOrEqual(10); expect(html).toContain("Fixed size: 1600 × 900 px"); expect(html).toContain('id="image-alt"'); expect(html).toContain('role="toolbar" aria-label="Article formatting tools"'); expect(html).toContain('aria-label="Bold"'); expect(html).toContain('aria-label="Text size"'); expect(html).toContain('data-insight-rich-editor="true"'); expect(html).not.toContain('aria-label="Block 1 type"'); expect(html).not.toContain("Legacy display date"); expect(html).not.toContain("Reading time"); });
+  it("restores desktop reading columns only inside published article detail pages", () => {
+    const css = readFileSync("src/sections/insights/insights.module.css", "utf8");
+    const scoped = css.slice(css.indexOf("/* Published article sidebar only;"));
+    expect(scoped).toContain('@media screen and (min-width:900px)');
+    expect(scoped).toContain('.page[data-insights-page="article"] .readingBody{display:grid;grid-template-columns:240px minmax(0,720px);gap:80px;align-items:start}');
+    expect(scoped).toContain('@media screen and (min-width:900px) and (max-width:1100px)');
+    expect(scoped).toContain('grid-template-columns:190px minmax(0,720px);gap:48px');
+    const selectors = scoped.split("\n").filter(line => line.startsWith("."));
+    expect(selectors).toHaveLength(5);
+    expect(selectors.every(line => line.startsWith('.page[data-insights-page="article"] '))).toBe(true);
+    expect(scoped).not.toContain('article-preview');
+  });
+  it("keeps a long native contents list scrollable below the header without changing anchors or prose", async () => {
+    const css = readFileSync("src/sections/insights/insights.module.css", "utf8");
+    const scoped = css.slice(css.indexOf("/* Published article sidebar only;"));
+    expect(scoped).toContain('position:sticky;top:calc(var(--nav-h) + 24px)');
+    expect(scoped).toContain('max-height:calc(100dvh - var(--nav-h) - 48px);overflow-y:auto;padding:6px');
+    expect(scoped).toContain('.contents ol{display:block}');
+    articles.mockResolvedValue([{ ...fixtures[0], body: [{ html: Array.from({ length: 24 }, (_, i) => `<h2>Test section ${i}</h2><p>Preserved synthetic paragraph ${i}.</p>`).join("") }] }]);
+    const html = render(await ArticlePage({ params: Promise.resolve({ slug: fixtures[0].slug }) }));
+    expect(html).toContain('data-insights-page="article"');
+    expect(html).toContain('aria-label="Article contents"');
+    expect(html).toContain('href="#article-section-rich-0-12"');
+    expect(html).toContain('id="article-section-rich-0-12"');
+    expect(html).toContain('Preserved synthetic paragraph 23.');
+  });
   it("keeps the scoped Savo world, static reduced motion and no repeated card scaffolding", () => { const css = readFileSync("src/sections/insights/insights.module.css", "utf8"); expect(css).toContain("prefers-reduced-motion"); expect(css).toContain("animation:none!important"); expect(css).toContain("#f7f7f7"); expect(css).not.toMatch(/infinite|linear-gradient|box-shadow|perspective:|tilt/i); });
   it("writes test-only native fixtures without publishing to a database", async () => {
     if (process.env.INSIGHTS_FIXTURES !== "1") return;

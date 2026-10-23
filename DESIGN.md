@@ -1079,6 +1079,17 @@ two desktop columns and one phone column. Photographs, type and whitespace—not
 boxed containers or shadows—carry the composition. Category/search/pagination use native GET navigation,
 six entries per manual page. Article contents become a native list on phones.
 
+**Published detail sidebar restoration (2026-10-23):** At screen widths ≥900px,
+only `.page[data-insights-page="article"]` uses a 240px left contents rail,
+80px gap and up-to-720px article column; 900–1100px uses 190px/48px. Contents
+are sticky beneath navigation, a single vertical native list, with viewport-capped
+scrolling and focus clearance for long articles. Existing mobile/tablet layout,
+article typography/copy/heading IDs/title/cover, index, previews/print, shared
+chrome and Careers designs stay unchanged. Before/after browser metrics verified
+Careers/application and Insights index at desktop/phone; three published articles
+also work without JS. Evidence: `.impeccable/review/insights-sidebar/` and
+`tmp/insights-sidebar/`. This is a local detail-layout override, not a global reset.
+
 ### Elevation & Depth
 Flat reading surfaces, real photography and tonal section changes create depth;
 no new card shadows/glass/tilt. One already-visible 700ms clip arrival belongs
