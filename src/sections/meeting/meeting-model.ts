@@ -27,6 +27,22 @@ export function meetingTimeMinutes(value: string): number | null {
 export function meetingDateLabel(value: string): string {
   return validMeetingDate(value) ? new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "long", year: "numeric" }).format(new Date(`${value}T00:00:00Z`)) : "Not specified";
 }
+export function meetingDateParts(value: string) {
+  if (!validMeetingDate(value)) return null;
+  const date = new Date(`${value}T00:00:00Z`);
+  return {
+    weekday: new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short" }).format(date),
+    day: String(date.getUTCDate()),
+    month: new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", month: "short" }).format(date),
+    year: String(date.getUTCFullYear()),
+  };
+}
+export function meetingTimeGroups(times: string[]) {
+  return [
+    { label: "Before noon (AM)", times: times.filter(time => { const minutes = meetingTimeMinutes(time); return minutes !== null && minutes < 720; }) },
+    { label: "Noon onwards (PM)", times: times.filter(time => { const minutes = meetingTimeMinutes(time); return minutes !== null && minutes >= 720; }) },
+  ].filter(group => group.times.length);
+}
 export function meetingTimeLabel(value: string): string {
   const minutes = meetingTimeMinutes(value);
   if (minutes === null) return "Not specified";

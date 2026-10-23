@@ -435,9 +435,11 @@ all other current v7 scopes and shared chrome. The global missing-sidecar and
 legacy-token drift remain outside this task.
 
 ### Overview
-A precise Operate surface: actual invitation, IST preference, missing details,
-inline review, truthful receipt and authoritative recorded status. No extra
-marketing closing section, layout gate, speculative calendar proof or modal.
+A date-first Operate surface: compact actual-meeting header, large offered-date
+choices, explicit alternative calendar, day-linked IST start times, exact inline
+review, truthful receipt and authoritative status. Phone invitation details start
+collapsed so records do not push the scheduling task below the fold. No extra
+marketing close, speculative calendar proof or modal.
 
 ### Colors
 White (`#FFFFFF`) workspace, light grey (`#F7F7F7`) opening/status ground,
@@ -452,17 +454,21 @@ Real Outfit (`--font-serif`) headings, Inter (`--font-sans`) reading and
 controls. Compact task h1: `clamp(2.2rem,4.1vw,3.4rem)`, 500, 1.1, -.035em;
 h2: 1.875rem/1.2, 500, -.025em; h3: 1.25rem/1.3. Body 1rem/1.75,
 maximum 65ch; record/review values .9375rem/1.8; labels/help .8125rem/1.8.
-Native inputs are 1rem, never zoom-prone tiny phone type. Dates, times,
-phones and reference values use tabular figures. Long values wrap; agenda
+Native inputs are 1rem, never zoom-prone tiny phone type. Calendar day figures
+are Outfit 42px desktop/36px phone, with readable weekday/month/year context.
+Dates, times, phones and reference values use tabular figures. Long values wrap; agenda
 and message line breaks stay readable.
 
 ### Layout
-1280px maximum rail, 32px desktop/20px phone gutters. Grey opening uses
-1fr/1fr with 64px gap; white workspace .75fr/1.25fr with 80px gap. Sticky
-context is desktop-only; both areas stack below 900px. Native time choices
-use four columns, three below 1101px; contact fields stack below 640px.
-Primary section rhythm 48–88px, grouped fields 20–28px. Reserve 80px below
-form actions for inherited floating chrome. Header stays pinned on exact
+Compact scheduling header/workspace cap at 1120px, with 32px desktop/20px
+phone gutters; terminal/status pages retain 1280px. Scheduling form is left,
+320px sticky context right, 56px gap (288px/32px at smaller desktop widths).
+Below 900px only the native collapsed header disclosure presents invitation
+context; date choices come first in the form. Date and time grids use three
+columns; phone dates have 116px targets, desktop dates at least 128px.
+AM/PM groups and a full selected-day label anchor start-time choices. Alternative
+date entry is a separate native radio/disclosure-like form path, not another
+always-visible blank field. Reserve 80px below form actions for shared chrome. Header stays pinned on exact
 single-segment meeting routes.
 
 ### Elevation & Depth
@@ -472,23 +478,26 @@ animation delays a scheduling task. Control colour transitions are 160ms and
 removed with reduced motion.
 
 ### Shapes
-52px primary/secondary actions with 6px corners; native options 48px with
-6px corners; inputs/selects/textareas 48px minimum with 5px corners;
-12px invitation/status-sheet corners. Text/edit/contact actions are at least
+52px primary/secondary actions with 6px corners; start-time options 48px with
+6px corners; large calendar-date choices and the alternative control have 8px
+corners; inputs/selects/textareas 48px minimum with 5px corners. Invitation and
+status-sheet corners remain 12px. Text/edit/contact actions are at least
 44px. Focus uses a 3px `#B82222` outline with 4px offset; selected native
 radio focus is also drawn on its visible label. Selection is white on black;
 carets use focus red.
 
 ### Components
-Native date/time radio groups, optional native date suggestion, country
-select and phone/email/address/message inputs; exact inline review with
+Native calendar-style date radios with weekday/day/month/year and checked
+indicator, a separately selected alternative native date, grouped AM/PM time
+radios, country select and phone/email/address/message inputs; exact review with
 individual edit/focus return; focused error recovery and HTTP+ok receipt.
 Actual type, duration, location, agenda, reference and client identity remain
 records rather than decorative cards. Pending controls lock and duplicate
 posts are guarded synchronously. Genuine mail/WhatsApp/status links remain
 native. Safe supplied meeting URLs are links only for confirmed records.
-Generic static 1200×630 social art uses the same lettering, fields and an
-authored calendar symbol, never client details or occupancy evidence.
+The owner-supplied generic meeting PNG is used by OG and Twitter metadata,
+with its actual 1731×909 dimensions and hash-versioned URL, never client details
+or occupancy evidence. See docs/MEETING-MOBILE-WORKFLOW.md for current proof.
 
 ### Do's and Don'ts
 **The Preference Is Not Proof Rule.** A submit response with ok/reference

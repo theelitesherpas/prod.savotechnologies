@@ -8,7 +8,8 @@ vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND
 import MeetingPage, { metadata, dynamic } from "../src/app/(site)/meeting/[token]/page";
 import { MeetingScheduler } from "../src/app/(site)/meeting/[token]/scheduler";
 import { MeetingOutcome, MeetingUnavailable } from "../src/sections/meeting/meeting-views";
-import { emptyMeetingDraft, istClock, validMeetingDate, meetingTimeMinutes, meetingDateLabel, meetingTimeLabel, meetingSlots, meetingDates, meetingView, meetingPhone, meetingPayload, validateMeetingDraft, meetingSavedNotes, safeMeetingUrl, MEETING_CONTACT_NOTE } from "../src/sections/meeting/meeting-model";
+import { emptyMeetingDraft, istClock, validMeetingDate, meetingTimeMinutes, meetingDateLabel, meetingDateParts, meetingTimeGroups, meetingTimeLabel, meetingSlots, meetingDates, meetingView, meetingPhone, meetingPayload, validateMeetingDraft, meetingSavedNotes, safeMeetingUrl, MEETING_CONTACT_NOTE } from "../src/sections/meeting/meeting-model";
+import { MeetingAvailabilityPicker } from "../src/sections/meeting/availability-picker";
 import type { PublicMeetingData } from "../src/lib/meeting/service";
 
 const data = (overrides: Partial<PublicMeetingData> = {}): PublicMeetingData => ({ reference: "TEST-INVITATION", clientName: "Test Client", clientCompany: "Synthetic fixture", clientPhone: "+91 75029 00000", clientEmail: "client@example.test", title: "Synthetic scheduling test", agenda: "Discuss the fixture only. Not an actual meeting.", meetingType: "video", durationMin: 60, locationType: "google_meet", locationAddress: null, meetingUrl: "https://example.test/meeting", notes: "PRIVATE ADMIN NOTE", availableDates: ["2030-10-15", "2030-10-16"], availableFrom: "10:00", availableTo: "18:00", allowSuggest: true, status: "awaiting_client", expiresAt: null, preferredDate: null, preferredTime: null, altDate: null, altTime: null, locationPreference: null, clientAddress: null, attendeeCount: 1, clientNotes: null, specialReqs: null, attendees: [], confirmedDate: null, confirmedTime: null, ...overrides });
@@ -27,7 +28,28 @@ describe("Meeting task in the approved Savo world", () => {
   it("disables choice/submit controls before hydration with real email recovery", () => { const html = render(React.createElement(MeetingScheduler, { data: data(), token: "test-token", initialClock: clock })); expect(html).toMatch(/<fieldset disabled=""/); expect(html).toContain("Enable JavaScript"); expect(html).toContain("Email Savo instead"); expect(html).not.toContain("<dialog"); });
   it("retains optional date suggestions and admin allowSuggest=false", () => { const html = render(React.createElement(MeetingScheduler, { data: data(), token: "test-token", initialClock: clock })); expect(html).toContain('id="suggest-date"'); expect(html).toContain('min="2030-10-15"'); expect(render(React.createElement(MeetingScheduler, { data: data({ allowSuggest: false }), token: "test-token", initialClock: clock }))).not.toContain('id="suggest-date"'); });
   it("handles empty/past-only date lists honestly", () => { const html = render(React.createElement(MeetingScheduler, { data: data({ availableDates: ["2020-01-01"], allowSuggest: false }), token: "test-token", initialClock: clock })); expect(html).toContain("No invitation dates remain"); expect(html).toContain("updated invitation"); });
-  it("uses real native date/time radios instead of imitation buttons", () => { const html = render(React.createElement(MeetingScheduler, { data: data(), token: "test-token", initialClock: clock })); expect(html).toContain('type="radio" name="date"'); expect(html).not.toMatch(/role="radio"|aria-invalid="true"[^>]*type="radio"/); });
+  it("uses real native date/time radios instead of imitation buttons", () => { const html = render(React.createElement(MeetingScheduler, { data: data(), token: "test-token", initialClock: clock })); expect((html.match(/<input\b[^>]*>/g) ?? []).some(tag => tag.includes('type="radio"') && tag.includes('name="date"'))).toBe(true); expect(html).not.toMatch(/role="radio"|aria-invalid="true"[^>]*type="radio"/); });
+  it("presents calendar-style date parts in UTC without impossible dates", () => {
+    expect(meetingDateParts("2030-10-15")).toEqual({ weekday: "Tue", day: "15", month: "Oct", year: "2030" }); expect(meetingDateParts("2030-02-30")).toBeNull();
+  });
+  it("groups only valid start times at the exact noon boundary", () => {
+    expect(meetingTimeGroups(["00:00", "11:30", "12:00", "17:30", "wrong"])).toEqual([{ label: "Before noon (AM)", times: ["00:00", "11:30"] }, { label: "Noon onwards (PM)", times: ["12:00", "17:30"] }]);
+  });
+  it("makes the alternate date an explicit separate native choice", () => {
+    const html = render(React.createElement(MeetingScheduler, { data: data(), token: "test-token", initialClock: clock })); expect(html).toContain("Choose another date"); expect(html).toContain('value="other"'); expect(html).toMatch(/id="alternative-date-fields"[^>]*hidden=""/); expect(html).toContain("Choose a date"); expect(html).toContain("Choose a time");
+  });
+  it("opens the alternate-date field when no offered dates remain and suggestions are allowed", () => {
+    const html = render(React.createElement(MeetingAvailabilityPicker, { data: data({ availableDates: [] }), clock, date: "", time: "", onDateChange: vi.fn(), onTimeChange: vi.fn() }));
+    const input = html.match(/<input[^>]*id="suggest-date"[^>]*>/)?.[0] ?? ""; expect(input).not.toContain('disabled=""'); expect(html).not.toMatch(/id="alternative-date-fields"[^>]*hidden=""/);
+  });
+  it("distinguishes elapsed offered days from days that still have start times", () => {
+    const html = render(React.createElement(MeetingAvailabilityPicker, { data: data(), clock: { ...clock, minutes: 1080 }, date: "", time: "", onDateChange: vi.fn(), onTimeChange: vi.fn() }));
+    const inputs = html.match(/<input\b[^>]*>/g) ?? []; expect(inputs.find(tag => tag.includes('value="2030-10-15"'))).toContain('disabled=""'); expect(inputs.find(tag => tag.includes('value="2030-10-16"'))).not.toContain('disabled=""'); expect(html).toContain("No times left");
+  });
+  it("keeps phone invitation details inside a closed disclosure with unique IDs", () => {
+    const html = render(React.createElement(MeetingScheduler, { data: data(), token: "test-token", initialClock: clock })); expect(html).toMatch(/<details[^>]*><summary>View meeting details/);
+    const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]); expect(new Set(ids).size).toBe(ids.length); expect(html).not.toContain('href="#availability"');
+  });
   it("retains missing country phone/email/address fields with explicit account-update boundary", () => { const html = render(React.createElement(MeetingScheduler, { data: data({ clientPhone: null, clientEmail: null, locationType: "client_office" }), token: "test-token", initialClock: clock })); expect(html).toContain("Phone number"); expect(html).toContain("Email address"); expect(html).toContain("Meeting address"); expect(html).toContain("not as changes to the invitation"); expect(html).toContain("Vietnam"); });
   it("does not ask to replace already supplied contact/location data", () => { const html = render(React.createElement(MeetingScheduler, { data: data({ locationType: "savo_office", locationAddress: "Supplied meeting address" }), token: "test-token", initialClock: clock })); expect(html).not.toContain('id="meeting-phone"'); expect(html).not.toContain('id="meeting-email"'); expect(html).not.toContain('id="meeting-address"'); });
   it("keeps cancelled recovery including original WhatsApp without green costume", () => { const html = render(React.createElement(MeetingScheduler, { data: data({ status: "cancelled" }), token: "test-token", initialClock: clock })); expect(html).toContain("has been cancelled"); expect(html).toContain("https://wa.me/917502901234"); expect(html).not.toContain("Review availability"); });
