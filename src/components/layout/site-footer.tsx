@@ -121,7 +121,7 @@ export function SiteFooter({
             ))}
           </ul>
           <a
-            href="https://www.dmca.com/Protection/Status.aspx?ID=2223fed3-a5cc-497c-82bb-c20de7ce5720"
+            href="https://www.dmca.com/Protection/Status.aspx?id=2223fed3-a5cc-497c-82bb-c20de7ce5720&refurl=https%3a%2f%2fsavotechnologies.com%2f&rlo=true"
             title="DMCA.com Protection Status"
             className={`dmca-badge ${styles.dmcaBadge}`}
             target="_blank"
@@ -131,10 +131,10 @@ export function SiteFooter({
             {/* Official remotely served badge; preserve the provider URL without image optimization. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://images.dmca.com/Badges/dmca_protected_sml_120m.png?ID=2223fed3-a5cc-497c-82bb-c20de7ce5720"
+              src="https://images.dmca.com/Badges/dmca-badge-w150-5x1-06.png?ID=2223fed3-a5cc-497c-82bb-c20de7ce5720"
               alt="DMCA.com Protection Status"
-              width={121}
-              height={24}
+              width={150}
+              height={30}
               loading="lazy"
               decoding="async"
               referrerPolicy="no-referrer"

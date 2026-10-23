@@ -11,13 +11,15 @@ const id = "2223fed3-a5cc-497c-82bb-c20de7ce5720";
 const html = () => renderToStaticMarkup(<SiteFooter contact={{ email: "hello@example.test", phone: "+91 0000000000", phoneE164: "+910000000000" }} />);
 
 describe("Owner-supplied DMCA footer badge", () => {
-  it("renders exactly one official status link with the supplied registration ID", () => {
+  it("renders the preferred badge with the supplied ID and exact permanent certificate URL", () => {
     const markup = html();
     expect(markup.match(/class="dmca-badge /g)).toHaveLength(1);
-    expect(markup).toContain(`href="https://www.dmca.com/Protection/Status.aspx?ID=${id}"`);
-    expect(markup).toContain(`src="https://images.dmca.com/Badges/dmca_protected_sml_120m.png?ID=${id}"`);
+    expect(markup).toContain(`href="https://www.dmca.com/Protection/Status.aspx?id=${id}&amp;refurl=https%3a%2f%2fsavotechnologies.com%2f&amp;rlo=true"`);
+    expect(markup).not.toContain("dmca_protected_sml_120m.png");
+    expect(markup).not.toContain("dmca-badge-w100-2x1-01.png");
+    expect(markup).toContain(`src="https://images.dmca.com/Badges/dmca-badge-w150-5x1-06.png?ID=${id}"`);
     expect(markup).toContain('alt="DMCA.com Protection Status"');
-    expect(markup).toMatch(/<img[^>]+width="121" height="24" loading="lazy" decoding="async"/);
+    expect(markup).toMatch(/<img[^>]+width="150" height="30" loading="lazy" decoding="async"/);
     expect(markup).not.toContain("/_next/image");
   });
 
@@ -25,7 +27,8 @@ describe("Owner-supplied DMCA footer badge", () => {
     const markup = html();
     expect(markup).toMatch(/class="dmca-badge [^"]+" target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer"/);
     expect(markup.match(/referrerPolicy="no-referrer"/g)).toHaveLength(2);
-    expect(markup).not.toMatch(/DMCABadgeHelper|refurl|<script/);
+    expect(markup).not.toMatch(/DMCABadgeHelper|<script/);
+    expect(markup).not.toContain("document.location");
     expect(readFileSync("src/components/layout/site-footer.tsx", "utf8")).not.toContain("DMCABadgeHelper");
   });
 
@@ -48,7 +51,7 @@ describe("Owner-supplied DMCA footer badge", () => {
     for (const path of ["/privacy-policy", "/terms-and-conditions"]) expect(markup).toContain(`href="${path}"`);
     const css = readFileSync("src/components/layout/site-footer.module.css", "utf8");
     expect(css).toContain(".legal a { display: inline-flex; min-height: 44px;");
-    expect(css).toContain(".dmcaBadge img { display: block; width: 121px; height: 24px; }");
+    expect(css).toContain(".dmcaBadge img { display: block; width: 150px; height: 30px; }");
     expect(existsSync("public/dmca-validation.html")).toBe(false);
     expect(readFileSync("src/app/layout.tsx", "utf8")).not.toContain("dmca-site-verification");
   });

@@ -1879,9 +1879,10 @@ It uses a pure-black ground, white/neutral-gray text, restrained Savo-red lighti
 Outfit headings, Inter UI, an official SVG signature and a dark callback panel.
 All existing links, managed contact details and callback behavior are preserved.
 These styles are footer-scoped; legacy chapters elsewhere are not changed.
-The owner-supplied DMCA badge sits in the legal row at its native 121×24px,
-inside a 44px-minimum link target. Preserve its official artwork and HTTPS status
-link. No URL-appending helper script or visitor referrer; only the official image
+The owner's preferred slim DMCA badge (w150-5x1-06) sits in the legal row at
+its native 150×30px, keeping the 44px-minimum link target. Preserve its official artwork
+and supplied permanent certificate URL (status ID, fixed public-homepage refurl
+and rlo=true); it must never be rewritten to the current visitor's URL. No URL-appending helper script or visitor referrer; only the official image
 host is added to image CSP. No ownership-verification resource or metadata.
 
 ## Overview
