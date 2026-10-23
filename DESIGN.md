@@ -1115,6 +1115,17 @@ origin. Don't publish/import sample articles to fill a layout, invent authors,
 reply deadlines or engagement-derived claims, or turn this route's metaphor
 into a new global design identity.
 
+## Owner-supplied social preview artwork
+
+Sixteen owner-provided PNGs under `public/images/og/` supply page/section Open
+Graph and Twitter/X cards. Preserve original artwork and filenames; dimensions
+and SHA-derived URL versions come from the generated registry, not a presumed
+1200×630 crop. Each shipping PNG carries an owner-provenance sidecar. Named
+service cards precede general section art; meeting cards remain generic and
+never embed invitation/client information. These are link-preview assets, not
+new on-page heroes, photography claims or a replacement global visual world.
+Mapping/import/verification: `docs/SOCIAL-PREVIEW-IMAGES.md`.
+
 ## Current v7 Careers override
 
 `/careers` and `/careers/apply` use the approved Savo identity in a developer

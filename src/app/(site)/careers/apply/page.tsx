@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { openGraphFor } from "@/lib/seo";
 import { CAREERS_EMAIL, GENERAL_APPLICATION, roleSlug, toPublicRole } from "@/constants/careers";
 import { getManagedRoles } from "@/lib/content-items";
 import { ClosingArrow } from "@/components/shared/closing-cta";
 import { ApplicationForm } from "@/sections/careers/application-form";
 import s from "@/sections/careers/careers.module.css";
 
+const DESCRIPTION = "Introduce yourself to Savo Technologies. Share your skills, experience and the work you want to do.";
 export const metadata: Metadata = {
-  title: "Apply", description: "Introduce yourself to Savo Technologies. Share your skills, experience and the work you want to do.",
+  title: "Apply", description: DESCRIPTION,
+  openGraph: openGraphFor({ title: "Apply | Savo Technologies", description: DESCRIPTION, url: "/careers/apply" }),
   robots: { index: false, follow: false },
 };
 export default async function CareersApplyPage({ searchParams }: { searchParams: Promise<{ role?: string }> }) {

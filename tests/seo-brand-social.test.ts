@@ -33,21 +33,21 @@ describe("brand identity and page-specific share metadata", () => {
     expect(SITE.shortName).toBe("Savo");
   });
 
-  it("creates a distinct page-aware 1200×630 card URL and useful image alt text", () => {
+  it("uses supplied homepage artwork and keeps generated cards for unmatched pages", () => {
     const home = socialImageFor("Savo Technologies | Web, App & AI", "Digital products from Indore.", "/");
     const indore = socialImageFor("Web Development in Indore | Savo Technologies", "Website and app engineering.", "/locations/indore");
     const homeUrl = new URL(home.url, "https://savotechnologies.com");
     const localUrl = new URL(indore.url, "https://savotechnologies.com");
-    expect(homeUrl.pathname).toBe("/share-image");
+    expect(homeUrl.pathname).toBe("/images/og/savo-og-home.png");
     expect(localUrl.pathname).toBe("/share-image");
-    expect(homeUrl.searchParams.get("page")).toBe("/");
+    expect(homeUrl.searchParams.get("v")).toMatch(/^[a-f0-9]{12}$/);
     expect(localUrl.searchParams.get("page")).toBe("/locations/indore");
-    expect(homeUrl.searchParams.get("title")).not.toBe(localUrl.searchParams.get("title"));
-    expect(homeUrl.searchParams.get("v")).toBe("2");
-    expect(home.width).toBe(1200);
-    expect(home.height).toBe(630);
+    expect(localUrl.searchParams.get("title")).toContain("Indore");
+    expect(localUrl.searchParams.get("v")).toBe("2");
+    expect(home.width).toBe(1734);
+    expect(home.height).toBe(907);
     expect(indore.alt).toContain("Indore");
-    expect(openGraphFor({ title: "Services | Savo Technologies", description: "Web and app services.", url: "/services" }).images[0].url).toContain("/share-image?");
+    expect(openGraphFor({ title: "Services | Savo Technologies", description: "Web and app services.", url: "/services" }).images[0].url).toContain("/images/og/savo-og-services.png?v=");
   });
 
   it("preserves authored page artwork and meaningful alt text when supplied", () => {

@@ -17,12 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: d.metaTitle, description: d.metaDescription,
     alternates: { canonical: `/industries/${d.slug}` },
-    openGraph: {
-      ...openGraphFor({ title: `${d.metaTitle} | Savo Technologies`, description: d.metaDescription, url: `/industries/${d.slug}` }),
-      // Editorial assets and future CMS choices have different source ratios.
-      // Let crawlers read the actual dimensions instead of asserting a fixed crop.
-      ...(d.image ? { images: [{ url: d.image, alt: `${d.title} | Savo Technologies` }] } : {}),
-    },
+    openGraph: openGraphFor({ title: `${d.metaTitle} | Savo Technologies`, description: d.metaDescription, url: `/industries/${d.slug}` }),
   };
 }
 export default async function IndustryPage({ params }: { params: Promise<{ slug: string }> }) {

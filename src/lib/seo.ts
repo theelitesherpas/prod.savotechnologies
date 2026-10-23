@@ -1,4 +1,5 @@
 import { SITE } from "@/constants/site";
+import { providedSocialImageFor } from "@/lib/social-images";
 
 /**
  * Open Graph builder for page metadata.
@@ -9,8 +10,8 @@ import { SITE } from "@/constants/site";
  * here keeps og:* tags consistent across all routes.
  *
  * Pass `images` to use genuine page artwork (e.g. an insight cover or
- * industry image); otherwise a branded share card is generated from this
- * page's own title, description and canonical path.
+ * industry image). Otherwise matching routes use the owner's supplied OG
+ * artwork; routes without a supplied match retain their generated card.
  */
 function boundedText(value: string, max: number) {
   const chars = Array.from(value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim());
@@ -19,6 +20,8 @@ function boundedText(value: string, max: number) {
 }
 
 export function socialImageFor(title: string, description: string, pageUrl: string) {
+  const provided = providedSocialImageFor(pageUrl);
+  if (provided) return provided;
   const cardTitle = boundedText(title, 120);
   const cardDescription = boundedText(description, 180);
   const page = pageUrl.startsWith("/") ? pageUrl.split(/[?#]/, 1)[0] : "/";
