@@ -1134,9 +1134,16 @@ Surface contract: [.impeccable/surfaces/src-app-site-careers-page-tsx.md](.impec
   minimums. One650ms workspace arrival; reduced motion is static.
 - Real company introduction/preparation radio views and a local-only checklist;
   no dummy code, execution results, repositories, staff profiles or benefits.
-  Published vacancies use a flat bordered list: each job has its own 44px
-  Apply now link to the separate application page and native inline Role details.
-  Team filters remain; no selected-role radio list or detached details pane. The authorised local collection now
+  Published vacancies use a compact job board: 232px sticky team sidebar,
+  64px column gap, bordered directory, aligned 18px titles/experience/44px
+  outlined Apply now actions and independent native Details controls. Rows are
+  approximately 82px at desktop and 111px on phones with the current catalog.
+  Descriptions, dates and responsibilities appear only inside closed native
+  disclosures; their shared name permits one open role at a time. Details use
+  two columns on desktop, one on phones. Below 900px team filters move above
+  results; phones use a two-by-two team control grid and stack experience below
+  each title. General application follows the directory. No selected-role radio
+  list, detached pane or permanently exposed long job summaries. The authorised local collection now
   includes HR Intern, AI / ML Engineer and Full Stack AI Engineer; no additional
   legacy jobs or unconfirmed employment terms were imported. Empty collection offers a general
   application, not coded sample jobs. Native no-JS fallback content is explicit.

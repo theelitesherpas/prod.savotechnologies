@@ -6,7 +6,7 @@ import { chromium } from 'playwright-core';
 const base = process.env.BASE_URL ?? 'http://localhost:4340';
 const url = new URL(base);
 assert(['localhost', '127.0.0.1'].includes(url.hostname) || (process.env.PUBLIC_LIVE_SMOKE === '1' && url.origin === 'https://savotechnologies.com'), 'Use localhost, or explicitly opt into the canonical public GET-only smoke.');
-const output = process.env.CAPTURE_DIR ?? '.impeccable/review/careers-flow';
+const output = process.env.CAPTURE_DIR ?? '.impeccable/review/careers-compact';
 mkdirSync(output, { recursive: true });
 const checks = [], errors = [], blockedWrites = [];
 const check = (ok, label) => { assert(ok, label); checks.push(label); };
@@ -31,11 +31,18 @@ try {
     const hrefs = await jobs.getByRole('link', { name: /^Apply now for / }).evaluateAll(nodes => nodes.map(node => node.getAttribute('href')));
     check(hrefs.length === count && new Set(hrefs).size === count, `${width}: every job has a distinct Apply now destination`);
     const first = jobs.first();
+    check(await jobs.locator('details[open]').count() === 0, `${width}: job details start collapsed`);
+    const listHeight = await page.locator('#openings article').evaluateAll(nodes => nodes.reduce((height, node) => height + node.getBoundingClientRect().height, 0));
+    check(listHeight / count <= (width < 640 ? 155 : 125), `${width}: compact average row height ${Math.round(listHeight / count)}px`);
+    await capture(page, `jobs-${width}`);
     if (await first.locator('details').count()) {
       await first.locator('summary').click();
       check(await first.getByRole('heading', { name: /What you (will do|bring)/ }).first().isVisible(), `${width}: role details expand beside the same job`);
     }
-    await capture(page, `jobs-${width}`);
+    await capture(page, `details-${width}`);
+    await jobs.last().locator('summary').click();
+    check(await jobs.locator('details[open]').count() === 1, `${width}: opening another job closes the previous details`);
+    check(await first.getByRole('link', { name: /^Apply now for / }).isVisible(), `${width}: Apply now remains available without expanding details`);
     for (const index of [0, count - 1]) {
       await page.getByRole('link', { name: `Apply now for ${names[index]}`, exact: true }).click();
       await page.waitForURL(`${base}${hrefs[index]}`);
@@ -84,7 +91,7 @@ try {
   await page.goto(`${base}/careers/apply?role=unavailable-smoke-opening`);
   check(await page.getByRole('heading', { name: 'This opening is unavailable.' }).isVisible() && await page.locator('[data-careers-page="apply"] form').count() === 0, 'Unavailable job never silently selects a different vacancy');
   check(errors.length === 0, `No JavaScript errors: ${errors.join('; ')}`);
-  check(blockedWrites.every(value => ['/api/analytics/collect', '/g/collect'].includes(new URL(value).pathname)), 'Only automatic analytics writes intercepted; no application or message actions attempted');
+  check(blockedWrites.every(value => ['/api/analytics/collect', '/g/collect', '/cdn-cgi/rum'].includes(new URL(value).pathname)), 'Only automatic analytics writes intercepted; no application or message actions attempted');
 } finally {
   await browser.close();
   writeFileSync(`${output}/report.json`, JSON.stringify({ base, checks, errors, blockedWrites, createdAt: new Date().toISOString() }, null, 2));
