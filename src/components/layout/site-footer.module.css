@@ -172,6 +172,8 @@
 .legal ul { display: flex; flex-wrap: wrap; gap: 12px 28px; }
 .legal a { display: inline-flex; min-height: 44px; align-items: center; }
 .legal a:hover { color: #fff; }
+.dmcaBadge { flex: 0 0 auto; }
+.dmcaBadge img { display: block; width: 121px; height: 24px; }
 
 .signature { display: flex; justify-content: center; padding-block: 44px 96px; overflow: hidden; }
 .signature svg { width: min(100%, 860px); height: auto; color: rgb(255 255 255 / 0.055); }
