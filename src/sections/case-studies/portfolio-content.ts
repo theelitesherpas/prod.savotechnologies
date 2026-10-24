@@ -1,5 +1,5 @@
 import type { CaseStudy } from "@/lib/case-study-schema";
-import { resolveCaseImages } from "@/lib/case-study-schema";
+import { caseDisciplines, resolveCaseImages } from "@/lib/case-study-schema";
 import { caseImageSrc } from "@/lib/case-img";
 
 export const PORTFOLIO_CATEGORIES = [
@@ -9,13 +9,13 @@ export const PORTFOLIO_CATEGORIES = [
   { id: "growth", label: "Growth" },
 ] as const;
 export type PortfolioVisual = { src: string; alt: string; width: number; height: number; title: string; description: string };
-export type PortfolioCard = { slug: string; name: string; summary: string; discipline: string; industry: string; href: string; preview: boolean; visual: PortfolioVisual | null };
+export type PortfolioCard = { slug: string; name: string; summary: string; discipline: string; disciplines: string[]; industry: string; href: string; preview: boolean; visual: PortfolioVisual | null };
 export function casePreviewEnabled(environment: string | undefined, count: number) { return environment === "development" && count === 0; }
 export function casePreviewHref(slug: string) { return `/case-studies/preview/${slug}`; }
 export function portfolioCategory(value: unknown) { return typeof value === "string" && PORTFOLIO_CATEGORIES.some(c => c.id === value) ? value : "all"; }
 export function filterPortfolio(entries: PortfolioCard[], category: string, query: string) {
   const needle = query.trim().slice(0, 160).toLocaleLowerCase();
-  return entries.filter(e => (category === "all" || e.discipline === category) && (!needle || `${e.name} ${e.summary} ${e.industry}`.toLocaleLowerCase().includes(needle)));
+  return entries.filter(e => (category === "all" || e.disciplines.includes(category)) && (!needle || `${e.name} ${e.summary} ${e.industry}`.toLocaleLowerCase().includes(needle)));
 }
 export function portfolioHref(category = "all", query = "") {
   const params = new URLSearchParams();
@@ -25,7 +25,7 @@ export function portfolioHref(category = "all", query = "") {
 }
 export function publishedCard(study: CaseStudy): PortfolioCard {
   const image = resolveCaseImages(study).cardWide;
-  return { slug: study.slug, name: study.nda ? (study.displayClientName || "Confidential project") : (study.displayClientName || study.title), summary: study.summary, discipline: study.discipline, industry: study.industry, href: `/case-studies/${study.slug}`, preview: false,
+  return { slug: study.slug, name: study.nda ? (study.displayClientName || "Confidential project") : (study.displayClientName || study.title), summary: study.summary, discipline: study.discipline, disciplines: caseDisciplines(study), industry: study.industry, href: `/case-studies/${study.slug}`, preview: false,
     visual: image ? { src: caseImageSrc(study.slug, "cardWide", image.dataUrl), alt: image.alt || `${study.displayClientName || study.title} interface`, width: image.width, height: image.height, title: "Project overview", description: image.alt } : null };
 }
 export function safeProjectLiveHref(value: unknown): string | null {

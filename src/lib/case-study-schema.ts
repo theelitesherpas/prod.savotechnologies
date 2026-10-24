@@ -132,6 +132,10 @@ export const caseStudySchema = z.object({
   /** Name shown on the public card (anonymized engagements use this). */
   displayClientName: z.string().max(120).optional().default(""),
   discipline: z.enum(CASE_DISCIPLINE_IDS),
+  /** Every discipline this engagement covers; entry [0] mirrors `discipline`
+   *  (the primary used for ordering and single-value surfaces). Legacy
+   *  records without the list resolve to [discipline]. */
+  disciplines: z.array(z.enum(CASE_DISCIPLINE_IDS)).max(CASE_DISCIPLINE_IDS.length).optional(),
   /** e.g. "Ecommerce · Web Platform · Product Engineering". */
   industry: z.string().max(160).optional().default(""),
   /** Explicit many-to-many sector links; no inference from prose or discipline. */
@@ -206,8 +210,15 @@ export const caseStudySchema = z.object({
   clientLocation: z.string().max(120).optional().default(""),
   /** Business model - B2B / B2C / B2B2C / Marketplace / SaaS. */
   businessModel: z.string().max(80).optional().default(""),
-  /** Target platforms - e.g. "Web + iOS + Android". */
-  platforms: z.string().max(160).optional().default(""),
+  /** Target platforms - e.g. ["Web", "iOS"]. Legacy string rows
+   *  ("Web + iOS") are normalized to arrays on read. */
+  platforms: z.preprocess(
+    (value) =>
+      typeof value === "string"
+        ? value.split(/[+,·]/).map((part) => part.trim()).filter(Boolean)
+        : value,
+    z.array(z.string().min(1).max(60)).max(8).default([]),
+  ),
   /** Key features delivered: title + short description each. */
   keyFeatures: z
     .array(z.object({ title: z.string().min(2).max(80), text: z.string().max(300) }))
@@ -242,6 +253,15 @@ export const caseStudySchema = z.object({
 });
 
 export type CaseStudyRecord = z.infer<typeof caseStudySchema>;
+
+/** All disciplines of a study: the explicit list when present (primary
+ *  first), else the legacy single discipline. */
+export function caseDisciplines(study: {
+  discipline: CaseDisciplineId;
+  disciplines?: CaseDisciplineId[] | undefined;
+}): CaseDisciplineId[] {
+  return [...new Set([study.discipline, ...(study.disciplines ?? [])])];
+}
 
 /** Public shape: the record plus its slug. */
 export type CaseStudy = CaseStudyRecord & { slug: string };

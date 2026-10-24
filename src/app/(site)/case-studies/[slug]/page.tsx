@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCaseStudies, getCaseStudy } from "@/lib/case-studies";
+import { caseDisciplines } from "@/lib/case-study-schema";
 import { openGraphFor } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/env";
 import { ProjectStory } from "@/sections/case-studies/project-story";
@@ -19,7 +20,8 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
   const study = await getCaseStudy((await params).slug);
   if (!study) notFound();
   const all = await getCaseStudies();
-  const related = all.filter(s => s.slug !== study.slug).sort((a, b) => Number(b.discipline === study.discipline) - Number(a.discipline === study.discipline)).slice(0, 2).map(publishedCard);
+  const mine = caseDisciplines(study);
+  const related = all.filter(s => s.slug !== study.slug).sort((a, b) => Number(caseDisciplines(b).some(d => mine.includes(d))) - Number(caseDisciplines(a).some(d => mine.includes(d)))).slice(0, 2).map(publishedCard);
   const graph = { "@context": "https://schema.org", "@graph": [
     { "@type": "WebPage", name: publishedCard(study).name, url: absoluteUrl(`/case-studies/${study.slug}`), description: study.summary },
     { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") }, { "@type": "ListItem", position: 2, name: "Case Studies", item: absoluteUrl("/case-studies") }, { "@type": "ListItem", position: 3, name: publishedCard(study).name, item: absoluteUrl(`/case-studies/${study.slug}`) }] },

@@ -20,9 +20,10 @@ export type ExplorerEntry = {
   slug: string;
   name: string;
   discipline: string;
+  disciplines: string[];
   industry: string;
   technologies: string[];
-  platforms: string;
+  platforms: string[];
   level: string;
   isAi: boolean;
 };
@@ -47,10 +48,10 @@ export function CaseExplorer({ entries }: { entries: ExplorerEntry[] }) {
     const technologies = new Set<string>();
     const platforms = new Set<string>();
     for (const e of entries) {
-      disciplines.set(e.discipline, DISCIPLINE_LABELS[e.discipline] ?? e.discipline);
+      e.disciplines.forEach((d) => disciplines.set(d, DISCIPLINE_LABELS[d] ?? d));
       if (e.industry) e.industry.split("·").forEach((i) => i.trim() && industries.add(i.trim()));
       e.technologies.forEach((t) => technologies.add(t));
-      if (e.platforms) e.platforms.split(/[+,·]/).forEach((p) => p.trim() && platforms.add(p.trim()));
+      e.platforms.forEach((p) => platforms.add(p));
     }
     return {
       disciplines: [...disciplines.entries()],
@@ -63,7 +64,7 @@ export function CaseExplorer({ entries }: { entries: ExplorerEntry[] }) {
   const filtered = useMemo(() => {
     if (active.key === "all") return entries;
     if (active.key === "ai") return entries.filter((e) => e.isAi);
-    if (active.key === "discipline") return entries.filter((e) => e.discipline === active.value);
+    if (active.key === "discipline") return entries.filter((e) => e.disciplines.includes(active.value));
     if (active.key === "industry") return entries.filter((e) => e.industry.includes(active.value));
     if (active.key === "technology") return entries.filter((e) => e.technologies.includes(active.value));
     if (active.key === "platform") return entries.filter((e) => e.platforms.includes(active.value));
@@ -153,7 +154,7 @@ export function CaseExplorer({ entries }: { entries: ExplorerEntry[] }) {
                 onClick={() => track("case_study_open", { slug: e.slug })}
                 className="group grid grid-cols-[auto_1fr_auto] items-baseline gap-x-5 gap-y-1 py-5 transition-colors hover:bg-background sm:grid-cols-[auto_1fr_auto_auto]"
               >
-                <span className="t-label text-muted">{DISCIPLINE_LABELS[e.discipline] ?? e.discipline}</span>
+                <span className="t-label text-muted">{e.disciplines.map((d) => DISCIPLINE_LABELS[d] ?? d).join(" · ")}</span>
                 <span className="t-body font-medium underline-offset-4 group-hover:underline">{e.name}</span>
                 <span className="t-sm col-span-3 text-muted sm:col-span-1 sm:max-w-[36ch] sm:truncate">{e.industry}</span>
                 <span aria-hidden="true" className="t-label text-muted transition-transform group-hover:translate-x-0.5">

@@ -10,7 +10,7 @@ import type { Role } from "@/constants/careers";
 import { CASE_DISCIPLINES, CASE_DISCIPLINES_BASE, type CaseDiscipline } from "@/constants/case-studies";
 import { getCaseStudies } from "@/lib/case-studies";
 import { caseImageSrc } from "@/lib/case-img";
-import { resolveCaseImages } from "@/lib/case-study-schema";
+import { caseDisciplines, resolveCaseImages } from "@/lib/case-study-schema";
 import { insightRichHtmlToText, sanitizeInsightRichHtml } from "@/lib/insight-rich-text";
 import type { HireRole } from "@/constants/hire";
 import type { AiService } from "@/constants/ai-services";
@@ -251,7 +251,7 @@ export async function getManagedCaseDisciplines(): Promise<CaseDiscipline[]> {
   const studies = await getCaseStudies();
   if (studies.length === 0) return CASE_DISCIPLINES;
   return CASE_DISCIPLINES_BASE.map((d) => {
-    const mine = studies.filter((s) => s.discipline === d.id);
+    const mine = studies.filter((s) => caseDisciplines(s).includes(d.id));
     if (mine.length === 0) return d;
     /* Exactly ONE featured (wide) card per discipline - the layout is one
        big card + a two-up grid. If the admin flags several records

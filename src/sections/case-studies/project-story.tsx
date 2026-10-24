@@ -32,7 +32,7 @@ export function ProjectStory({ study, concept, related }: { study?: CaseStudy; c
   const palette = concept?.palette ?? study?.palette ?? [];
   const liveUrl = safeProjectLiveHref(study?.liveUrl);
   const facts: [string, string][] = concept?.layoutFacts ?? (preview ? [["Format", "Original design study"], ["Focus", concept!.industry]] : [
-    ["Client", name], ["Industry", study!.industry], ["Location", study!.clientLocation], ["Business Model", study!.businessModel], ["Platforms", study!.platforms], ["Year", study!.year], ["Duration", study!.duration], ["Team", study!.teamSize],
+    ["Client", name], ["Industry", study!.industry], ["Location", study!.clientLocation], ["Business Model", study!.businessModel], ["Platforms", study!.platforms.join(" + ")], ["Year", study!.year], ["Duration", study!.duration], ["Team", study!.teamSize],
   ]).filter(([, value]) => value) as [string, string][];
   return <div className={`${styles.page} ${details.page}`} data-case-studies-page={preview ? "project-preview" : "project"}>
     {study ? <TrackView event="case_study_viewed" data={{ slug: study.slug, level: study.level }}><span /></TrackView> : null}

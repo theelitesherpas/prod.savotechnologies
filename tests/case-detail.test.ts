@@ -185,7 +185,7 @@ describe("Concise visual case-study detail", () => {
 
   it("can create eight-image actual-component SSR fixtures without publication", () => {
     if (process.env.CASE_DETAIL_FIXTURES !== "1") return;
-    const s = record(); s.liveUrl = "https://example.invalid/test-only"; s.clientLocation = "Test-only location"; s.businessModel = "Test-only model"; s.platforms = "Web"; s.year = "2026"; s.duration = "Test-only duration"; s.teamSize = "Test-only team"; s.industry = "Test-only industry"; s.palette = concept.palette!; s.keyFeatures = concept.features!; s.testimonial = { quote: "Test-only quote, not an endorsement.", name: "Test-only name", role: "Test-only role" };
+    const s = record(); s.liveUrl = "https://example.invalid/test-only"; s.clientLocation = "Test-only location"; s.businessModel = "Test-only model"; s.platforms = ["Web"]; s.year = "2026"; s.duration = "Test-only duration"; s.teamSize = "Test-only team"; s.industry = "Test-only industry"; s.palette = concept.palette!; s.keyFeatures = concept.features!; s.testimonial = { quote: "Test-only quote, not an endorsement.", name: "Test-only name", role: "Test-only role" };
     const asset = (index: number) => ({ ...image, dataUrl: `data:image/svg+xml;base64,${Buffer.from(fs.readFileSync(`public${concept.visuals[index % 3].src}`)).toString("base64")}`, alt: `Test-only supplied screen ${index + 1}` });
     s.images = { showcase: asset(0) }; s.gallery = Array.from({ length: 8 }, (_, index) => asset(index));
     s.dossier = caseStudySchema.parse({ ...s, dossier: { discovery: "Test-only discovery", architecture: { backend: "Test-only backend rationale" } } }).dossier;

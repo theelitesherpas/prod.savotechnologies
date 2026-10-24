@@ -1,5 +1,5 @@
 import type { CaseStudy } from "@/lib/case-study-schema";
-import { resolveCaseImages } from "@/lib/case-study-schema";
+import { caseDisciplines, resolveCaseImages } from "@/lib/case-study-schema";
 import { caseImageSrc } from "@/lib/case-img";
 
 export type HomePortfolioView = "web" | "mobile" | "ai";
@@ -19,8 +19,8 @@ export function buildHomePortfolioFeatures(studies: CaseStudy[]): HomePortfolioF
   const features: HomePortfolioFeatures = {};
   for (const study of studies) {
     if (study.status !== "verified" || study.featured !== true || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(study.slug)) continue;
-    const view = study.discipline;
-    if (view !== "web" && view !== "mobile" && view !== "ai") continue;
+    const view = caseDisciplines(study).find((v): v is HomePortfolioView => v === "web" || v === "mobile" || v === "ai");
+    if (!view) continue;
     if (features[view]) continue;
     // Gallery-only records do not have a supplied cover photo.
     if (!study.images?.cardWide && !study.images?.showcase && !study.images?.card && !study.heroImage) continue;

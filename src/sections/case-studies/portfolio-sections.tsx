@@ -12,7 +12,7 @@ export function PortfolioImage({ visual, eager = false }: { visual: PortfolioVis
   return <img src={visual.src} alt={visual.alt} width={visual.width} height={visual.height} loading={eager ? "eager" : "lazy"} decoding="async" className={styles.image} data-image-guard />;
 }
 export function PortfolioCardView({ entry, eager = false }: { entry: PortfolioCard; eager?: boolean }) {
-  const discipline = PORTFOLIO_CATEGORIES.find(c => c.id === entry.discipline)?.label;
+  const discipline = entry.disciplines.map((id) => PORTFOLIO_CATEGORIES.find(c => c.id === id)?.label).filter(Boolean).join(" · ");
   return <article className={styles.card} data-portfolio-card={entry.slug}>
     <Link href={entry.href} className={styles.cardLink}>
       <div className={styles.stage}>

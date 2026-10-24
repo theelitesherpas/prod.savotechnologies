@@ -104,5 +104,5 @@ export const PREVIEW_PROJECTS: PreviewProject[] = [
 ];
 export function findPreviewProject(slug: string, environment = process.env.NODE_ENV) { return environment === "development" ? PREVIEW_PROJECTS.find(p => p.slug === slug) ?? null : null; }
 export function previewProjectCard(project: PreviewProject): PortfolioCard {
-  return { slug: project.slug, name: project.name, discipline: project.discipline, industry: project.industry, summary: project.summary, href: casePreviewHref(project.slug), preview: true, visual: project.visuals[0] };
+  return { slug: project.slug, name: project.name, discipline: project.discipline, disciplines: [project.discipline], industry: project.industry, summary: project.summary, href: casePreviewHref(project.slug), preview: true, visual: project.visuals[0] };
 }

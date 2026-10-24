@@ -30,7 +30,7 @@ import { CASE_DISCIPLINES } from "@/constants/case-studies";
 import { SubmitButton } from "./form";
 import { ImageCropField, type AttachedImage } from "./image-crop-field";
 import { GalleryUploader } from "./gallery-uploader";
-import { CASE_IMAGE_SLOTS, type SlotKey } from "@/lib/case-study-schema";
+import { CASE_IMAGE_SLOTS, caseDisciplines, type SlotKey } from "@/lib/case-study-schema";
 import {
   TECH_STACK_OPTIONS,
   INTEGRATION_OPTIONS,
@@ -205,7 +205,10 @@ export function CaseStudyForm({
 
   // Identity
   const [title, setTitle] = useState(r?.title ?? "");
-  const [discipline, setDiscipline] = useState<CaseStudyRecord["discipline"]>(r?.discipline ?? "web");
+  const [disciplines, setDisciplines] = useState<string[]>(
+    r?.disciplines?.length ? [...r.disciplines] : r?.discipline ? [r.discipline] : ["web"],
+  );
+  const discipline = (disciplines[0] ?? "web") as CaseStudyRecord["discipline"];
   const [clientName, setClientName] = useState(r?.clientName ?? "");
   const [displayClientName, setDisplayClientName] = useState(r?.displayClientName ?? "");
   const [industry, setIndustry] = useState(r?.industry ?? "");
@@ -213,7 +216,7 @@ export function CaseStudyForm({
   const sectorOptions = [...industryOptions, ...industrySlugs.filter(slug => !industryOptions.some(o => o.slug === slug)).map(slug => ({ slug, title: `${slug} (not publicly listed)` }))];
   const [clientLocation, setClientLocation] = useState(r?.clientLocation ?? "");
   const [businessModel, setBusinessModel] = useState(r?.businessModel ?? "");
-  const [platforms, setPlatforms] = useState(r?.platforms ?? "");
+  const [platforms, setPlatforms] = useState<string[]>(r?.platforms ?? []);
   const [year, setYear] = useState(r?.year ?? "");
   const [duration, setDuration] = useState(r?.duration ?? "");
   const [teamSize, setTeamSize] = useState(r?.teamSize ?? "");
@@ -264,7 +267,7 @@ export function CaseStudyForm({
 
   const payload = JSON.stringify({
     title: title.trim(),
-    clientName, displayClientName, discipline, industry, industrySlugs,
+    clientName, displayClientName, discipline, disciplines, industry, industrySlugs,
     clientLocation, businessModel, platforms,
     summary, introduction, challenge, solution,
     services, technologies,
@@ -295,13 +298,14 @@ export function CaseStudyForm({
     const errs: Record<string, string> = {};
 
     if (title.trim().length < 2) errs.title = "Project title is required (min 2 characters).";
+    if (disciplines.length === 0) errs.discipline = "Select at least 1 service type (discipline).";
     if (publishing && clientName.trim().length < 2) errs.client = "Client name is required.";
     if (publishing) {
       if (displayClientName.trim().length < 2) errs.display = "Display name is required (shown publicly on cards and the detail page).";
       if (industry.trim().length < 2) errs.industry = "Industry / engagement line is required.";
       if (clientLocation.trim().length < 2) errs.location = "Client location is required (e.g. Indore, India).";
       if (!businessModel) errs.bizmodel = "Select a business model.";
-      if (!platforms) errs.platforms = "Select the target platforms.";
+      if (!platforms.length) errs.platforms = "Select the target platforms.";
       if (year.trim().length < 2) errs.year = "Year is required.";
       if (duration.trim().length < 1) errs.duration = "Duration is required.";
       if (teamSize.trim().length < 1) errs.teamSize = "Team size is required.";
@@ -369,10 +373,10 @@ export function CaseStudyForm({
   const toggle = (list: string[], set: (v: string[]) => void, value: string) =>
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
-  const disciplineCaps = useMemo(
-    () => CASE_DISCIPLINES.find((d) => d.id === discipline)?.capabilities ?? [],
-    [discipline],
-  );
+  const disciplineCaps = useMemo(() => {
+    const ids = caseDisciplines({ discipline, disciplines: disciplines as CaseStudyRecord["disciplines"] });
+    return Array.from(new Set(ids.flatMap((id) => CASE_DISCIPLINES.find((d) => d.id === id)?.capabilities ?? [])));
+  }, [discipline, disciplines]);
 
   return (
     <FormGuard action={action} className="max-w-4xl space-y-6" validate={validateForm}>
@@ -425,12 +429,20 @@ export function CaseStudyForm({
             <input id="cs-title" className={cn(input, errors.title && "border-error/50")} value={title}
               onChange={(e) => setTitle(e.target.value)} placeholder="Fresh Art Club" required maxLength={120} />
           </Field>
-          <Field id="cs-discipline" label="Service type (discipline)" required>
-            <select id="cs-discipline" className="adm-select w-full" value={discipline}
-              onChange={(e) => setDiscipline(e.target.value as CaseStudyRecord["discipline"])}>
-              {CASE_DISCIPLINES.map((d) => (<option key={d.id} value={d.id}>{d.title}</option>))}
-            </select>
-          </Field>
+          <fieldset className="sm:col-span-2 space-y-2" id="cs-discipline">
+            <legend className={cn(label, errors.discipline && "text-error")}>Service type (discipline) <span className="text-error">*</span></legend>
+            {errors.discipline ? <p className={errorText}>{errors.discipline}</p> : null}
+            <p className="t-caption text-muted">Select every discipline this engagement covers. The first ticked box is the primary category (used for homepage ordering and single-label surfaces); a project filed under several disciplines appears under each of them.</p>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {CASE_DISCIPLINES.map((d) => (
+                <label key={d.id} className="flex min-h-11 items-center gap-3 text-sm">
+                  <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={disciplines.includes(d.id)} aria-label={d.title}
+                    onChange={(e) => setDisciplines(e.target.checked ? [...disciplines, d.id] : disciplines.filter((v) => v !== d.id))} />
+                  {d.title}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <Field id="cs-client" label="Client name (internal)" required={publishing} error={errors.client} hint="Not shown publicly, for your reference">
             <input id="cs-client" className={cn(input, errors.client && "border-error/50")} value={clientName} onChange={(e) => setClientName(e.target.value)}
               placeholder="Acme Trading Pvt Ltd" required={publishing} maxLength={120} />
@@ -464,12 +476,22 @@ export function CaseStudyForm({
               {BUSINESS_MODELS.map((m) => (<option key={m} value={m}>{m}</option>))}
             </select>
           </Field>
-          <Field id="cs-platforms" label="Platforms" required={publishing} error={errors.platforms}>
-            <select id="cs-platforms" className={cn("adm-select w-full", errors.platforms && "border-error/50")} value={platforms} onChange={(e) => setPlatforms(e.target.value)} required={publishing}>
-              <option value="">Select an option…</option>
-              {PLATFORM_OPTIONS.map((p) => (<option key={p} value={p}>{p}</option>))}
-            </select>
-          </Field>
+          <fieldset className="space-y-2" id="cs-platforms">
+            <legend className={cn(label, errors.platforms && "text-error")}>
+              Platforms {publishing ? <span className="text-error">*</span> : null}
+            </legend>
+            {errors.platforms ? <p className={errorText}>{errors.platforms}</p> : null}
+            <p className="t-caption text-muted">Tick every platform this project ships on, e.g. Web + iOS + Android.</p>
+            <div className="grid grid-cols-2 gap-2">
+              {PLATFORM_OPTIONS.map((p) => (
+                <label key={p} className="flex min-h-11 items-center gap-3 text-sm">
+                  <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={platforms.includes(p)} aria-label={p}
+                    onChange={(e) => setPlatforms(e.target.checked ? [...platforms, p] : platforms.filter((v) => v !== p))} />
+                  {p}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <Field id="cs-year" label="Year" required error={errors.year}>
             <input id="cs-year" className={cn(input, errors.year && "border-error/50")} value={year}
               onChange={(e) => setYear(e.target.value)} placeholder="2025" required={publishing} maxLength={20} />

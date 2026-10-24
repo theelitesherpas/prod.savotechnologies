@@ -78,7 +78,7 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
   if (!data.displayClientName?.trim()) missing.push("Display name");
   if (!data.clientLocation?.trim()) missing.push("Client location");
   if (!data.businessModel?.trim()) missing.push("Business model");
-  if (!data.platforms?.trim()) missing.push("Platforms");
+  if (!data.platforms?.length) missing.push("Platforms");
   if (!data.images?.showcase) missing.push("Showcase image");
   if (!data.images?.cardWide) missing.push("Featured card image");
   if (!data.images?.card) missing.push("Standard card image");
