@@ -72,7 +72,8 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
      in-progress record may always be saved as draft/review. A publish
      attempt with missing fields is downgraded to draft, SAVED, and the
      editor is redirected back with the list of gaps: work is never
-     lost. (Exceptions per owner: author credit and live URL.) */
+     lost. (Live project URL is optional per owner decision - the
+     "View live project" button simply hides when it is empty.) */
   const missing: string[] = [];
   if (!data.clientName?.trim()) missing.push("Client name");
   if (!data.displayClientName?.trim()) missing.push("Display name");
@@ -87,7 +88,6 @@ export async function saveCaseStudyAction(formData: FormData): Promise<void> {
   if (!data.integrations || data.integrations.length === 0) missing.push("Integrations (1 min)");
   if (!data.palette || data.palette.length === 0) missing.push("Palette (1 color min)");
   if (!data.testimonial) missing.push("Client testimonial");
-  if (!data.liveUrl) missing.push("Live project URL");
   if (!data.authorName?.trim()) missing.push("Author credit");
   if (!data.industrySlugs?.length) missing.push("Industry associations (1 min)");
   if (!data.keyFeatures?.length) missing.push("Key features (1 min)");

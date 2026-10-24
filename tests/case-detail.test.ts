@@ -139,7 +139,9 @@ describe("Concise visual case-study detail", () => {
     expect(sparse.success).toBe(true);
     const editor = fs.readFileSync("src/components/admin/case-study-form.tsx", "utf8");
     expect(editor).toContain('const publishing = contentStatus === "published"');
-    for (const gated of ["Live project URL is required to publish", "Author credit is required", "errs.industrySlugs"]) expect(editor).toContain(gated);
+    for (const gated of ["Author credit is required", "errs.industrySlugs"]) expect(editor).toContain(gated);
+    expect(editor).not.toContain("Live project URL is required"); // optional per owner decision
+    expect(editor).toContain("Optional: shows as the 'View live project' button");
     expect(editor).not.toContain("errs.dAbout"); // dossier editor removed per owner decision
     for (const control of ['id="cs-nda"', 'id="cs-level"']) expect(editor).toContain(control);
     expect(editor).not.toContain("Outcome Metrics"); // outcomes editor removed per owner decision
@@ -152,7 +154,8 @@ describe("Concise visual case-study detail", () => {
     expect(editor).toContain("showcase: next, cardWide: next, card: next, dossierCard: next");
     expect(editor).not.toContain("use a different image for a specific surface"); // per-surface overrides removed per owner decision
     const action = fs.readFileSync("src/app/admin/(protected)/case-studies/actions.ts", "utf8");
-    for (const gap of ['"Live project URL"', '"Author credit"', '"Industry associations (1 min)"']) expect(action).toContain(gap);
+    for (const gap of ['"Author credit"', '"Industry associations (1 min)"']) expect(action).toContain(gap);
+    expect(action).not.toContain('"Live project URL"'); // optional per owner decision
     expect(action).not.toContain("Outcome metrics");
     expect(action).not.toContain("Dossier ·");
     expect(action).toContain('downgradedToDraft ? "draft"');

@@ -327,7 +327,6 @@ export function CaseStudyForm({
         errs.palette = "Every palette color needs a name and a valid #RRGGBB hex.";
       if (!hasTestimonial) errs.testimonial = "Include the client testimonial: toggle it on and fill all three fields.";
       // Everything below is mandatory to publish (drafts save without it)
-      if (!liveUrl.trim()) errs.liveUrl = "Live project URL is required to publish.";
       if (authorName.trim().length < 2) errs.author = "Author credit is required (who wrote this case study).";
       if (industrySlugs.length === 0) errs.industrySlugs = "Associate at least 1 industry sector.";
     }
@@ -505,7 +504,7 @@ export function CaseStudyForm({
               onChange={(e) => setTeamSize(e.target.value)} placeholder="5 specialists" required={publishing} maxLength={60} />
           </Field>
           <div id="cs-live-url">
-          <Field id="cs-live" label="Live project URL" hint="Required to publish: shows as the 'View live project' button." error={errors.liveUrl}>
+          <Field id="cs-live" label="Live project URL" hint="Optional: shows as the 'View live project' button when provided." error={errors.liveUrl}>
             <input id="cs-live" className={cn(input, errors.liveUrl && "border-error/50")} type="url" value={liveUrl}
               onChange={(e) => setLiveUrl(e.target.value)} placeholder="https://example.com" maxLength={500} />
           </Field>
