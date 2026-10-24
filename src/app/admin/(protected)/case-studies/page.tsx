@@ -38,7 +38,7 @@ export default async function AdminCaseStudiesPage({
 
   const rows = prisma
     ? await prisma.contentItem
-        .findMany({ where: { collection: "case-studies" }, orderBy: { updatedAt: "desc" } })
+        .findMany({ where: { collection: "case-studies" }, orderBy: [{ order: "asc" }, { id: "asc" }] })
         .catch(() => [])
     : [];
 

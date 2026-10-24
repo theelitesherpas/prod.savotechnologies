@@ -191,8 +191,10 @@ export function CaseStudyForm({
   action,
   item,
   industryOptions = [],
+  defaultOrder = 1,
 }: {
   industryOptions?: { slug: string; title: string }[];
+  defaultOrder?: number;
   action: (formData: FormData) => Promise<void>;
   item?: { id: string; slug: string; contentStatus: string; order?: number; record?: CaseStudyRecord };
 }) {
@@ -200,7 +202,7 @@ export function CaseStudyForm({
 
   // Publishing
   const [contentStatus, setContentStatus] = useState(item?.contentStatus ?? "draft");
-  const [order, setOrder] = useState(String(item?.order ?? 0));
+  const [order, setOrder] = useState(String(item?.order ?? defaultOrder));
   const [featured, setFeatured] = useState(r?.featured ?? false);
 
   // Identity
@@ -383,7 +385,7 @@ export function CaseStudyForm({
       {item ? <input type="hidden" name="slug" value={item.slug} /> : null}
       <input type="hidden" name="payload" value={payload} />
       <input type="hidden" name="contentStatus" value={contentStatus} />
-      <input type="hidden" name="order" value={Number.isFinite(Number(order)) ? Math.min(9999, Math.max(0, Math.trunc(Number(order)))) : 0} />
+      <input type="hidden" name="order" value={Number.isFinite(Number(order)) ? Math.min(9999, Math.max(1, Math.trunc(Number(order)))) : defaultOrder} />
 
       {/* ═══ 1. PUBLISHING ═══ */}
       <div className="adm-card flex flex-wrap items-center gap-x-8 gap-y-4 px-5 py-4">
@@ -396,7 +398,7 @@ export function CaseStudyForm({
         </div>
         <div className="flex items-center gap-3">
           <label className="adm-label" htmlFor="cs-order">Order</label>
-          <input id="cs-order" className="adm-input h-9 w-20 py-1 tnum" type="number" min={0} max={9999} step={1}
+          <input id="cs-order" className="adm-input h-9 w-20 py-1 tnum" type="number" min={1} max={9999} step={1}
             value={order} onChange={(e) => setOrder(e.target.value)}
             title="Homepage + discipline ordering, lower numbers first" />
         </div>

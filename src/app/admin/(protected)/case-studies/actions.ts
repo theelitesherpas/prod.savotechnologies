@@ -30,7 +30,7 @@ const formSchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]{2,80}$/).optional(),
   payload: z.string().min(2),
   contentStatus: z.enum(LIFECYCLE),
-  order: z.coerce.number().int().min(0).max(9999).optional(),
+  order: z.coerce.number().int().min(1).max(9999).optional(),
 });
 
 /** Invalidate every surface that renders case studies: the homepage,
@@ -197,7 +197,7 @@ export async function reorderCaseStudiesAction(formData: FormData): Promise<void
     redirect("/admin/case-studies?e=Invalid%20order.");
   }
   await prisma!.$transaction(
-    ids.map((id, i) => prisma!.contentItem.updateMany({ where: { id, collection: "case-studies" }, data: { order: i } })),
+    ids.map((id, i) => prisma!.contentItem.updateMany({ where: { id, collection: "case-studies" }, data: { order: i + 1 } })),
   );
   revalidateCaseStudies();
   revalidatePath("/admin/case-studies");
@@ -227,7 +227,7 @@ export async function importCaseStudyDefaultsAction(): Promise<void> {
         collection: "case-studies",
         slug,
         title: record.title as string,
-        order: i,
+        order: i + 1,
         active: true,
         contentStatus: (status as string) === "verified" ? "published" : "demo",
         data: record as unknown as import("@prisma/client").Prisma.InputJsonValue,
