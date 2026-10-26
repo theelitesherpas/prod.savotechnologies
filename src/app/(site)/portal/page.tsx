@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { absoluteUrl } from "@/lib/env";
 import { getClientUser } from "@/lib/client-auth";
 import { PortalLoginCard } from "./login-card";
-import { openGraphFor } from "@/lib/seo";
+import { openGraphFor, socialImageFor } from "@/lib/seo";
 import { PortalEntrance } from "@/components/portal/entrance";
 
 const DESCRIPTION =
@@ -17,6 +17,12 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     url: "/portal",
   }),
+  twitter: {
+    card: "summary_large_image",
+    title: "Client Portal | Savo Technologies",
+    description: DESCRIPTION,
+    images: [socialImageFor("Client Portal | Savo Technologies", DESCRIPTION, "/portal")],
+  },
 };
 export default async function PortalPage({
   searchParams,

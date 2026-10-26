@@ -9,6 +9,7 @@ const routes: [string, SocialImageKey][] = [
   ["/", "home"], ["/about", "about"], ["/ai-agents", "ai"],
   ["/careers", "careers"], ["/case-studies", "caseStudies"], ["/contact", "contact"],
   ["/enterprise", "enterprise"], ["/hire", "hire"], ["/industries", "industries"],
+  ["/employee-portal", "employeePortal"], ["/portal", "clientPortal"],
   ["/insights", "insights"], ["/meeting/example-token", "meeting"],
   ["/services/mobile-app-development", "mobile"], ["/services/ui-ux-design", "design"],
   ["/services", "services"], ["/start-a-project", "start"], ["/services/web-development", "web"],
@@ -22,10 +23,10 @@ describe("owner-supplied social images", () => {
     expect(metadata.images).toEqual([ownerSocialImage(image)]);
     expect(metadata.title).toBe("Page title"); expect(metadata.description).toBe("Page description");
   });
-  it("uses every one of the sixteen supplied cards", () => {
-    expect(Object.keys(SOCIAL_IMAGES)).toHaveLength(16);
-    expect(new Set(routes.map(([, key]) => key)).size).toBe(16);
-    expect(new Set(Object.values(SOCIAL_IMAGES).map(card => card.file)).size).toBe(16);
+  it("uses every one of the eighteen supplied cards", () => {
+    expect(Object.keys(SOCIAL_IMAGES)).toHaveLength(18);
+    expect(new Set(routes.map(([, key]) => key)).size).toBe(18);
+    expect(new Set(Object.values(SOCIAL_IMAGES).map(card => card.file)).size).toBe(18);
   });
   it.each([
     ["/ai/automation", "ai"], ["/ai-agents/supportagent", "ai"],
@@ -34,19 +35,20 @@ describe("owner-supplied social images", () => {
     ["/industries/healthcare", "industries"], ["/insights/example-article", "insights"],
     ["/case-studies/example-project", "caseStudies"], ["/services/mobile-apps", "mobile"],
     ["/services/ui-ux", "design"], ["/start", "start"],
+    ["/employee-portal/dashboard", "employeePortal"], ["/portal/dashboard", "clientPortal"],
   ] as [string, SocialImageKey][])("inherits the correct section image on %s", (path, key) => {
     expect(providedSocialImageFor(path)).toEqual(ownerSocialImage(key));
   });
   it("normalizes canonical URLs, trailing slashes and queries without misclassifying prefixes", () => {
     expect(providedSocialImageFor("https://savotechnologies.com/services/web-development/?x=1#details")).toEqual(ownerSocialImage("web"));
-    for (const path of ["/ai-extra", "/careers-old", "/services-extra", "https://unrelated.invalid/services", "javascript:alert(1)"]) expect(providedSocialImageFor(path)).toBeUndefined();
+    for (const path of ["/ai-extra", "/careers-old", "/services-extra", "/employee-portal-old", "/portal-extra", "https://unrelated.invalid/services", "javascript:alert(1)"]) expect(providedSocialImageFor(path)).toBeUndefined();
   });
   it("never embeds invitation tokens or personal query parameters in the image URL", () => {
     const image = providedSocialImageFor("/meeting/SECRET-BEARER-TOKEN?client=Private%20Client&email=private@example.invalid");
     expect(image).toEqual(ownerSocialImage("meeting")); expect(JSON.stringify(image)).not.toMatch(/SECRET|Private|private@/);
   });
   it("matches original PNG hashes, dimensions and provenance without inventing a 1200px crop", () => {
-    expect(readdirSync("public/images/og").filter(file => file.endsWith(".png"))).toHaveLength(16);
+    expect(readdirSync("public/images/og").filter(file => file.endsWith(".png"))).toHaveLength(18);
     for (const card of Object.values(SOCIAL_IMAGES)) {
       const bytes = readFileSync(`public/images/og/${card.file}`);
       expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");

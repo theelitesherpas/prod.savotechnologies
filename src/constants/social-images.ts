@@ -112,6 +112,20 @@ export const SOCIAL_IMAGES = {
     "height": 909,
     "alt": "Savo Technologies — web development",
     "sha256": "b332e30a21cfe5181a87eddb53dc4b4c25d40f196489c059735bae4cea2a4476"
+  },
+  "employeePortal": {
+    "file": "savo-og-employee-portal.png",
+    "width": 1731,
+    "height": 909,
+    "alt": "Savo Technologies — employee portal workspace",
+    "sha256": "88e787c7961586c7655c3dacd4195e2b9477f2d904e661a8b2201e404c06a74e"
+  },
+  "clientPortal": {
+    "file": "savo-og-client-portal.png",
+    "width": 1731,
+    "height": 909,
+    "alt": "Savo Technologies — client portal dashboard",
+    "sha256": "0ee4649fba652b21e5ae2156bffce7630d950642e3105bc0f43b78e8bd826f7c"
   }
 } as const;
 

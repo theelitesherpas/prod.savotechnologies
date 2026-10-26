@@ -17,6 +17,8 @@ export const SOCIAL_IMAGE_ROUTES: readonly { path: string; image: SocialImageKey
   { path: "/case-studies", image: "caseStudies" },
   { path: "/contact", image: "contact" },
   { path: "/enterprise", image: "enterprise" },
+  { path: "/employee-portal", image: "employeePortal" },
+  { path: "/portal", image: "clientPortal" },
   { path: "/hire", image: "hire" },
   { path: "/industries", image: "industries" },
   { path: "/insights", image: "insights" },
