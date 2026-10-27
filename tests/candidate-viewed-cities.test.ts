@@ -113,10 +113,13 @@ describe("shared viewed/not viewed queues", () => {
     const form = new FormData(); for (const [key, value] of Object.entries({ id, revision, returnTo: "/admin/hr-portal/applications?read=viewed&city=Indore" })) form.set(key, value);
     await expect(markCandidateNotViewedAction(form)).rejects.toThrow("unread=1"); expect(m.update.mock.calls[0][0].data).toEqual({ status: "new" }); expect(m.mail).not.toHaveBeenCalled();
   });
-  it("keeps filters collapsed, removes redundant HR directories and disables record prefetch", () => {
-    const workspace = readFileSync("src/components/admin/hr/candidate-workspace.tsx", "utf8"), detail = readFileSync("src/components/admin/enquiry-detail.tsx", "utf8");
+  it("keeps HR records unprefetched and makes the entire record clickable without hijacking controls", () => {
+    const workspace = readFileSync("src/components/admin/hr/candidate-workspace.tsx", "utf8"), clickRecord = readFileSync("src/components/admin/hr/clickable-candidate-record.tsx", "utf8"), detail = readFileSync("src/components/admin/enquiry-detail.tsx", "utf8");
     expect(workspace).not.toContain("PortalDirectory"); expect(workspace).toContain('<details key={url()} id="candidate-filter-panel"'); expect(workspace).not.toContain("<details open");
     expect(workspace).toContain("prefetch={false} href={detail(row.id)}"); expect(workspace).not.toContain('aria-label="Recruitment stage shortcuts"');
+    expect(workspace).toContain("<ClickableCandidateRow"); expect(workspace).toContain("<ClickableCandidateCard");
+    expect(clickRecord).toContain("router.push(href)"); expect(clickRecord).toContain("target.closest(INTERACTIVE_TARGETS)");
+    expect(clickRecord).toContain("button, input, select, textarea, summary");
     expect(detail).toContain('if (!isCareer && enquiry.status === "new"'); expect(detail).toContain("<CandidateReadBoundary");
   });
 });
