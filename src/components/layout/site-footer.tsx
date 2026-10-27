@@ -44,11 +44,10 @@ export function SiteFooter({
           <section className={styles.callbackPanel} aria-labelledby="footer-callback-heading">
             <h3 id="footer-callback-heading">Prefer a call about your project?</h3>
             <p className={styles.callbackCopy}>
-              Leave your number and country, and we’ll call you back to discuss your project — the goal, the scope and how we can help.
+              Leave your number and country, and we’ll call to discuss your project.
             </p>
             <p className={styles.callbackNote}>
-              For project and client enquiries only. For job applications or career enquiries, please visit our{" "}
-              <Link href="/careers" className={styles.callbackNoteLink}>Careers page</Link>.
+              For careers, visit our <Link href="/careers" className={styles.callbackNoteLink}>Careers page</Link>.
             </p>
             <CallbackForm />
           </section>

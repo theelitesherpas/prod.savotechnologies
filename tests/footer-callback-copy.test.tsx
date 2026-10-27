@@ -16,19 +16,19 @@ function callbackPanel() {
 }
 
 describe("Footer callback audience and guidance", () => {
-  it("clearly identifies the project/client audience before the form", () => {
+  it("keeps callback guidance concise and focused on projects", () => {
     const panel = callbackPanel();
     expect(panel).toContain(`<h3 id="footer-callback-heading">${heading}</h3>`);
     expect(panel).toContain("Leave your number and country");
     expect(panel).toContain("discuss your project");
-    expect(panel).toContain("For project and client enquiries only.");
-    expect(panel.indexOf("For project and client enquiries only.")).toBeLessThan(panel.indexOf("<form"));
+    expect(panel).not.toContain("For project and client enquiries only.");
+    expect(panel).not.toContain("the goal, the scope and how we can help");
     expect(panel).not.toContain("Would you prefer a call?");
   });
 
-  it("redirects job applications and career enquiries to the existing Careers page", () => {
+  it("redirects career enquiries to the existing Careers page in one short note", () => {
     const panel = callbackPanel();
-    expect(panel).toContain("For job applications or career enquiries, please visit our");
+    expect(panel).toContain("For careers, visit our");
     expect(panel).toMatch(/<a[^>]*href="\/careers"[^>]*>Careers page<\/a>/);
     expect(panel.indexOf('href="/careers"')).toBeLessThan(panel.indexOf("<form"));
   });
