@@ -212,13 +212,20 @@ not large promotional pills. Native fields/selects preserve familiar behavior.
   never offer payment. Email/PDF actions follow the same policy; no invented
   gateway confirmation. Admin link entry is labelled and optional, with explicit
   reconfirmation when retaining a link after financial/client edits.
-- **Invoice documents:** branded white A4 pages with the official black logo,
-  supplier/client identity, stored reference/dates, service amount, status,
-  paid/due balances and actual notes. Embed complete static Inter Regular/
-  SemiBold programs (not unreliable variable/subset font outlines), retain
-  two-decimal ISO-currency amounts and paginate long fields. PDFs have their
-  own printer-safe layout, not screenshots of the portal. No invented tax,
-  GST, itemized rates or bank details. See `docs/INVOICES.md`.
+- **Invoice documents — owner-pinned service-template refinement:** one white
+  A4 page, official black logo and complete static Inter Regular/SemiBold
+  programs. Inherit the supplied service-invoice reference's composition:
+  supplier/registration and optional Bill to at left; red INVOICE, issued
+  reference, stored status and current balance at right; red numbered-table
+  heading over a quiet grey service field; notes/payment at lower left and
+  exact totals plus a red/white balance strip at lower right. Colours remain
+  Savo's, not the reference's orange. Keep the shared monetary right rail,
+  two-decimal ISO values, up to three single-line task charges and visibly
+  abbreviated legacy prose. GSTIN/TAN/CIN are owner-supplied identifiers,
+  not automatic tax calculations. Do not copy the reference's shipping,
+  quantities, rates, tax rows or contractual terms: those facts are not stored.
+  Paid/cancelled/zero invoices never get Pay now. This is a printer-safe PDF,
+  not portal screenshots or a global web redesign. See `docs/INVOICES.md`.
 - **Business references:** use the existing admin/portal fonts and tabular
   numerals, not a new visual system. New CS/PR/IN references are server-assigned,
   five-digit and immutable. Create forms show the actual reserved ID before save,

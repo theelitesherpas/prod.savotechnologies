@@ -18,18 +18,22 @@ function brandAssets() {
   ]).catch(error => { assets = undefined; throw error; });
 }
 const ink = rgb(.075, .075, .075), muted = rgb(.36, .36, .36);
-const border = rgb(.87, .87, .87), soft = rgb(.96, .96, .96), red = rgb(.72, .13, .13);
+const border = rgb(.83, .83, .83), soft = rgb(.975, .975, .975), red = rgb(.72, .13, .13);
 const white = rgb(1, 1, 1);
 const stamps = {
-  sent: { text: "UNPAID", ink: rgb(.31, .31, .31), fill: rgb(.97, .97, .97) },
-  paid: { text: "PAID", ink: rgb(.12, .38, .23), fill: rgb(.95, .98, .96) },
-  overdue: { text: "OVERDUE", ink: red, fill: rgb(.995, .96, .96) },
-  cancelled: { text: "CANCELLED", ink: muted, fill: soft },
+  sent: { text: "UNPAID", ink: muted },
+  paid: { text: "PAID", ink: rgb(.12, .38, .23) },
+  overdue: { text: "OVERDUE", ink: red },
+  cancelled: { text: "CANCELLED", ink: muted },
 };
 
-/** Existing Savo A4 design, now deliberately ONE page. At most three real task
- * rows, each one line. Long legacy prose is visibly abbreviated, never moved
- * onto a second page. Every task price and all financial totals remain exact. */
+/** Reference-pinned service invoice, adapted to Savo rather than copied data.
+ * THESIS: a clean supplier/bill-to rail, numbered services and clear settlement.
+ * OWN-WORLD: official black logo, embedded Inter, white paper and Savo red.
+ * STORY: identify the invoice, understand the actual work, review/pay the balance.
+ * FIRST VIEWPORT: supplier left; invoice/reference/balance right; red table header.
+ * FORM: owner's service-invoice-template-2x.webp; no invented qty/rate/tax/shipping.
+ * One A4 page, at most three task lines, exact stored amounts and safe URI actions. */
 export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date()): Promise<Uint8Array> {
   const balances = invoiceBalances(invoice);
   const items = invoiceDocumentItems(invoice);
@@ -105,95 +109,100 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
   function rectangle(x: number, top: number, w: number, h: number, color: ReturnType<typeof rgb>) {
     page.drawRectangle({ x, y: height - top - h, width: w, height: h, color });
   }
+  function money(value: number, top: number, size = 10.5, face = bold, color = ink, maxWidth = 140) {
+    const text = invoiceMoney(value, invoice.currency);
+    const fitted = Math.min(size, size * maxWidth / face.widthOfTextAtSize(text, size));
+    line(text, amountEdge, top, fitted, face, color, "right");
+  }
   rectangle(0, 0, width, height, white);
 
-  // Supplier, invoice identity and stamp retain the incumbent composition.
+  // Reference: brand/supplier at left, invoice identity and current balance at right.
   const logoWidth = 108, logoHeight = logoWidth * logo.height / logo.width;
-  page.drawImage(logo, { x: margin, y: height - margin - logoHeight, width: logoWidth, height: logoHeight });
-  line("INVOICE", right, 44, 28, bold, ink, "right");
-  single(invoice.number, right, 88, 230, 10.5, font, muted, "right");
-  const stamp = stamps[invoice.status], stampTop = 114, stampWidth = 96, stampHeight = 30;
-  page.drawRectangle({ x: right - stampWidth, y: height - stampTop - stampHeight, width: stampWidth, height: stampHeight, color: stamp.fill, borderColor: stamp.ink, borderWidth: .9 });
-  line(stamp.text, right - stampWidth / 2 - bold.widthOfTextAtSize(stamp.text, 11.5) / 2, stampTop + 8, 11.5, bold, stamp.ink);
-  let supplierEnd = margin + logoHeight + 14;
-  line(SITE.legalName, margin, supplierEnd, 9.5, bold); supplierEnd += 14;
-  for (const text of [`${SITE.hq.street}`, `${SITE.hq.city}, ${SITE.hq.region} ${SITE.hq.postalCode}, ${SITE.hq.country}`]) {
-    for (const row of wrap(text, 8.5, 285)) { line(row, margin, supplierEnd, 8.5, font, muted); supplierEnd += 12.5; }
+  page.drawImage(logo, { x: margin, y: height - 44 - logoHeight, width: logoWidth, height: logoHeight });
+  line("INVOICE", right, 49, 32, font, red, "right");
+  single(invoice.number, right, 92, 218, 11, bold, ink, "right");
+  const stamp = stamps[invoice.status];
+  line(stamp.text, right, 117, 9, bold, stamp.ink, "right");
+  line("Balance due", amountEdge, 151, 9.5, font, muted, "right");
+  money(balances.due, 169, 20, bold, ink, 210);
+
+  let supplierEnd = 44 + logoHeight + 13;
+  single(SITE.legalName, margin, supplierEnd, 285, 10.5, bold, red); supplierEnd += 16;
+  for (const text of [SITE.hq.street, `${SITE.hq.city}, ${SITE.hq.region} ${SITE.hq.postalCode}, ${SITE.hq.country}`]) {
+    for (const row of wrap(text, 8.5, 285)) { line(row, margin, supplierEnd, 8.5, font, muted); supplierEnd += 13; }
   }
-  single(`${SITE.email}  ·  ${SITE.phone}`, margin, supplierEnd + 2, 285, 8.5, font, muted);
-  supplierEnd += 14.5;
+  single(`${SITE.email}  ·  ${SITE.phone}`, margin, supplierEnd + 1, 285, 8.5, font, muted); supplierEnd += 14;
   const registration = [
     [SITE.registration.gst ? `GSTIN: ${SITE.registration.gst}` : "", SITE.registration.tan ? `TAN: ${SITE.registration.tan}` : ""].filter(Boolean).join(" · "),
     SITE.registration.cin ? `CIN: ${SITE.registration.cin}` : "",
   ].filter(Boolean);
-  for (const value of registration) { single(value, margin, supplierEnd, 285, 8.5, font, muted); supplierEnd += 12.5; }
-  let cursor = Math.max(supplierEnd, stampTop + stampHeight) + 12;
-  rule(cursor); cursor += 18;
+  for (const value of registration) { single(value, margin, supplierEnd, 285, 8.2, font, muted); supplierEnd += 12; }
 
-  // Optional address uses the same quiet type and line spacing as our address.
+  // No Ship to: the product stores a billing address, not a delivery destination.
   const billingWidth = bodyWidth - 192 - 36, metaX = right - 192;
-  const billTop = cursor;
-  line("Bill to", margin, cursor, 9, font, muted); cursor += 18;
-  if (invoice.client.company.trim()) { single(invoice.client.company, margin, cursor, billingWidth, 12, bold); cursor += 17; }
-  single(invoice.client.name, margin, cursor, billingWidth, 10.5); cursor += 15;
+  const billTop = Math.max(supplierEnd, 193) + 20;
+  let cursor = billTop;
+  line("Bill to", margin, cursor, 9.5); cursor += 19;
+  if (invoice.client.company.trim()) { single(invoice.client.company, margin, cursor, billingWidth, 11.5, bold, red); cursor += 17; }
+  single(invoice.client.name, margin, cursor, billingWidth, 10, invoice.client.company.trim() ? font : bold, invoice.client.company.trim() ? ink : red); cursor += 14;
   for (const address of clientAddressLines(invoice.client)) {
-    single(address, margin, cursor, billingWidth, 8.5, font, muted); cursor += 12;
+    single(address, margin, cursor, billingWidth, 8.8, font, muted); cursor += 13;
   }
-  single(invoice.client.email, margin, cursor, billingWidth, 9, font, muted); cursor += 13;
-  if (invoice.client.businessId) { single(`Client ID: ${invoice.client.businessId}`, margin, cursor, billingWidth, 8.5, font, muted); cursor += 13; }
+  if (invoice.client.businessId) { single(`Client ID: ${invoice.client.businessId}`, margin, cursor, billingWidth, 8.2, font, muted); cursor += 12; }
   const dates = [
     ["Invoice date", invoiceDate(invoice.issuedAt)], ["Due date", invoiceDate(invoice.dueDate)], ["Currency", invoice.currency],
     ...(invoice.status === "paid" ? [["Paid on", invoiceDate(invoice.paidAt)]] : []),
   ];
   dates.forEach(([label, value], index) => {
-    line(label, metaX, billTop + index * 20, 9, font, muted);
-    line(value, right, billTop + index * 20, 9, bold, ink, "right");
+    line(label, metaX, billTop + index * 21, 9, font, muted);
+    line(value, right, billTop + index * 21, 9.5, font, ink, "right");
   });
-  cursor = Math.max(cursor, billTop + dates.length * 20) + 16;
+  cursor = Math.max(cursor, billTop + dates.length * 21) + 18;
 
-  // Budget the prose around the three task lines and financial summary. Long
-  // text gets an explicit ellipsis, not an invisible clip or a second page.
-  const summaryHeight = 114, closingHeight = 40;
-  const noteRows = invoice.notes.trim() ? boundedRows(invoice.notes, 9, bodyWidth, 2) : [];
-  const notesHeight = noteRows.length ? 28 + noteRows.length * 12.5 : 0;
-  const descriptionWidth = bodyWidth - 188;
+  // A coloured heading and a single soft table field, not boxed cards. Work
+  // context is uncharged; row numbers belong only to actual task/service charges.
+  const closingHeight = 52, summaryHeight = 146;
+  const summaryTop = bottom - closingHeight - summaryHeight;
+  const tableBottom = summaryTop - 22;
+  const descriptionX = margin + 46;
+  const descriptionWidth = right - 150 - descriptionX - 12;
   const [workTitle, ...workNotes] = clean(invoiceWorkDescription(invoice)).split("\n");
-  // Bottom-anchor settlement/closing content rather than stacking everything
-  // beneath short task lists and leaving the bottom third of the page empty.
-  const summaryTop = bottom - summaryHeight - notesHeight - closingHeight;
-  const tableBottom = summaryTop - 16;
-  const minimumTaskHeight = 20;
-  const tableFixed = 36 + 18 + (invoice.project ? 26 : 0) + items.length * minimumTaskHeight + 28;
-  const noteLimit = Math.max(1, Math.min(4, Math.floor((summaryTop - cursor - tableFixed) / 12.5)));
-  rectangle(margin, cursor, bodyWidth, 30, soft); rule(cursor); rule(cursor + 30);
-  line("Description", margin + 14, cursor + 9, 9, bold, muted);
-  line("Amount", amountEdge, cursor + 9, 9, bold, muted, "right"); cursor += 36;
-  single(workTitle || (items.length ? "Task breakdown" : "Professional services"), margin + 14, cursor, descriptionWidth, 10.5, bold);
+  const minimumTaskHeight = 22;
+  const contextHeight = 18 + (invoice.project ? 26 : 0);
+  const tableFixed = 42 + contextHeight + items.length * minimumTaskHeight + 12;
+  const noteLimit = Math.max(1, Math.min(3, Math.floor((tableBottom - cursor - tableFixed) / 12.5)));
+  rectangle(margin, cursor, bodyWidth, 30, red);
+  line("#", margin + 12, cursor + 9, 9.5, font, white);
+  line("Description", descriptionX, cursor + 9, 9.5, bold, white);
+  line("Amount", amountEdge, cursor + 9, 9.5, bold, white, "right");
+  rectangle(margin, cursor + 30, bodyWidth, tableBottom - cursor - 30, soft);
+  cursor += 42;
+  if (!items.length) line("1", margin + 12, cursor, 9, font, muted);
+  single(workTitle || (items.length ? "Task breakdown" : "Professional services"), descriptionX, cursor, descriptionWidth, 10.5, bold);
   if (!items.length) line(amount, amountEdge, cursor, 10.5, bold, ink, "right");
   cursor += 18;
   if (workNotes.some(row => row.trim())) {
-    for (const row of boundedRows(workNotes.join("\n"), 9, descriptionWidth, noteLimit)) { line(row, margin + 14, cursor, 9, font, muted); cursor += 12.5; }
+    for (const row of boundedRows(workNotes.join("\n"), 9, descriptionWidth, noteLimit)) { line(row, descriptionX, cursor, 9, font, muted); cursor += 12.5; }
   }
   if (invoice.project) {
-    single(invoice.project.title, margin + 14, cursor, descriptionWidth, 9, font, muted); cursor += 13;
-    single(invoice.project.code, margin + 14, cursor, descriptionWidth, 8.5, font, muted); cursor += 13;
+    single(invoice.project.title, descriptionX, cursor, descriptionWidth, 9, font, muted); cursor += 13;
+    single(invoice.project.code, descriptionX, cursor, descriptionWidth, 8.2, font, muted); cursor += 13;
   }
-  // Short invoices get comfortable task spacing. Dense three-task documents
-  // contract to measured minimum rows, without moving totals off the page.
-  const taskHeight = items.length ? Math.min(44, (tableBottom - cursor - 12) / items.length) : 0;
+  const taskHeight = items.length ? Math.min(58, (tableBottom - cursor - 12) / items.length) : 0;
   if (items.length && taskHeight < minimumTaskHeight) throw new Error("Invoice tasks exceed the single-page layout.");
-  for (const item of items) {
-    rule(cursor + 3, margin + 14, amountEdge);
-    const textTop = cursor + 9 + (taskHeight - 24) / 2;
-    single(item.description, margin + 14, textTop, descriptionWidth, 10);
-    line(invoiceMoney(item.amount, invoice.currency), amountEdge, textTop, 10.5, bold, ink, "right");
+  for (const [index, item] of items.entries()) {
+    rule(cursor + 3);
+    const textTop = cursor + (taskHeight - 11) / 2;
+    line(String(index + 1), margin + 12, textTop, 9, font, muted);
+    single(item.description, descriptionX, textTop, descriptionWidth, 10);
+    line(invoiceMoney(item.amount, invoice.currency), amountEdge, textTop, 10.5, font, ink, "right");
     cursor += taskHeight;
   }
   if (cursor + 12 > tableBottom) throw new Error("Invoice description exceeds the single-page layout.");
   rule(tableBottom);
-  cursor = summaryTop;
 
-  // Actions are annotations only; no payment/provider calls happen here.
+  // Payment actions retain existing precedence, validation and paid-state gates.
+  // They are URI annotations only: this renderer never calls a payment provider.
   const external = invoicePaymentLink(invoice);
   let portal: string | null = null;
   if (!invoice.paymentLink?.trim() && invoice.payUrl && !/[\s\u0000-\u001f\u007f\\]/.test(invoice.payUrl)) {
@@ -208,40 +217,48 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
     : invoice.status === "overdue" ? "Payment is overdue. Already paid? Please contact our team."
     : "Payment has not yet been recorded.";
   const infoWidth = bodyWidth - 260 - 27;
-  line(invoice.status === "paid" ? "Payment received" : invoice.status === "cancelled" ? "Invoice cancelled" : "Payment information", margin, cursor + 2.5, 10.5, bold);
-  const infoLines = boundedRows(information, 9.3, infoWidth, 2);
-  infoLines.forEach((value, index) => line(value, margin, cursor + 24 + index * 13, 9.3, font, invoice.status === "overdue" ? red : muted));
+  const noteRows = invoice.notes.trim() ? boundedRows(invoice.notes, 9, infoWidth, 2) : [];
+  let infoCursor = summaryTop + 2;
+  line(noteRows.length ? "Notes" : invoice.status === "paid" ? "Payment received" : invoice.status === "cancelled" ? "Invoice cancelled" : "Payment information", margin, infoCursor, 10.5, bold);
+  infoCursor += 21;
+  if (noteRows.length) {
+    for (const row of noteRows) { line(row, margin, infoCursor, 9, font, muted); infoCursor += 12.5; }
+    infoCursor += 10;
+  }
+  for (const row of boundedRows(information, 9, infoWidth, 2)) { line(row, margin, infoCursor, 9, font, invoice.status === "overdue" ? red : muted); infoCursor += 12.5; }
   if (payment) {
-    const buttonTop = cursor + 24 + infoLines.length * 13 + 6, buttonWidth = 102, buttonHeight = 29;
-    rectangle(margin, buttonTop, buttonWidth, buttonHeight, red);
-    line("Pay now", margin + (buttonWidth - bold.widthOfTextAtSize("Pay now", 10)) / 2, buttonTop + 8, 10, bold, white);
+    const buttonTop = infoCursor + 8, buttonWidth = 102, buttonHeight = 26;
+    page.drawRectangle({ x: margin, y: height - buttonTop - buttonHeight, width: buttonWidth, height: buttonHeight, color: white, borderColor: red, borderWidth: .8 });
+    line("Pay now", margin + (buttonWidth - bold.widthOfTextAtSize("Pay now", 10)) / 2, buttonTop + 7.5, 10, bold, red);
     page.node.addAnnot(pdf.context.register(pdf.context.obj({
       Type: PDFName.of("Annot"), Subtype: PDFName.of("Link"),
       Rect: [margin, height - buttonTop - buttonHeight, margin + buttonWidth, height - buttonTop], Border: [0, 0, 0],
       A: { Type: PDFName.of("Action"), S: PDFName.of("URI"), URI: PDFString.of(payment) },
     })));
     const detail = external ? `Pay securely with ${paymentProvider(external)}.` : "Pay securely in your client portal.";
-    boundedRows(detail, 8.1, infoWidth, 2).forEach((value, index) => line(value, margin, buttonTop + buttonHeight + 7 + index * 10, 8.1, font, muted));
+    const detailRows = boundedRows(detail, 8, infoWidth, 2);
+    detailRows.forEach((value, index) => line(value, margin, buttonTop + buttonHeight + 7 + index * 10, 8, font, muted));
+    if (buttonTop + buttonHeight + 7 + detailRows.length * 10 > summaryTop + summaryHeight) throw new Error("Invoice payment details exceed the single-page layout.");
   }
+
+  // Match the reference's quiet totals and strong balance strip. No tax/discount
+  // rows are invented; the header balance is a summary, not another charge.
   const summaryX = right - 260;
   const summaryRows: [string, number][] = [["Invoice total", balances.total], ["Amount paid", balances.paid]];
   summaryRows.forEach(([label, value], index) => {
-    line(label, summaryX + 14, summaryTop + 3 + index * 23, 9.5, font, muted);
-    line(invoiceMoney(value, invoice.currency), amountEdge, summaryTop + 3 + index * 23, 9.5, bold, ink, "right");
+    line(label, summaryX + 14, summaryTop + 18 + index * 28, 10, font, muted);
+    money(value, summaryTop + 18 + index * 28, 10.5, font);
   });
-  rule(summaryTop + 52, summaryX, right);
-  rectangle(summaryX, summaryTop + 61, 260, 47, soft);
-  const balance = invoiceMoney(balances.due, invoice.currency);
-  const balanceSize = Math.min(18, 18 * 140 / bold.widthOfTextAtSize(balance, 18));
-  line("Balance due", summaryX + 14, summaryTop + 80, 10, bold);
-  line(balance, amountEdge, summaryTop + 94 - balanceSize, balanceSize, bold, ink, "right");
-  cursor = summaryTop + summaryHeight;
-  if (noteRows.length) {
-    cursor += 10; line("Notes", margin, cursor, 10.5, bold); cursor += 18;
-    noteRows.forEach(value => { line(value, margin, cursor, 9, font, muted); cursor += 12.5; });
-  }
-  cursor += 12;
-  line("For invoice queries or payment instructions, contact hello@savotechnologies.com.", margin, cursor, 8.5, font, muted); cursor += 13;
+  rule(summaryTop + 72, summaryX, right);
+  rectangle(summaryX, summaryTop + 88, 260, 46, red);
+  line("Balance due", summaryX + 14, summaryTop + 104, 10.5, bold, white);
+  money(balances.due, summaryTop + 102, 16, bold, white);
+
+  // The reference's terms region becomes factual invoice help, not invented
+  // contract terms. Closing text stays close to the footer for sparse invoices.
+  cursor = bottom - closingHeight;
+  line("Invoice enquiries", margin, cursor, 10, bold); cursor += 20;
+  line("For invoice queries or payment instructions, contact hello@savotechnologies.com.", margin, cursor, 8.5, font, muted); cursor += 14;
   line(abbreviated ? "Long text is shortened for this single-page invoice; full details remain in your portal." : "Amounts reflect the issued invoice. No additional taxes or fees are calculated in this document.", margin, cursor, 8, font, muted);
   if (cursor + 12 > bottom) throw new Error("Invoice content exceeds the single-page layout.");
   rule(height - 66);

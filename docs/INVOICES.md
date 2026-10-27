@@ -153,26 +153,30 @@ integer-minor-unit balances, two-decimal ISO-currency formatting, UTC date
 formatting and header-safe filenames. `invoice-pdf.ts` creates a standalone A4
 PDF using pdf-lib/fontkit, with verified supplier details and the official logo.
 The document includes the existing invoice number, issued/due/paid dates,
-client/company and optional billing address, owner-scoped project, work
+client/company and optional billing address (client email is deliberately not
+printed), owner-scoped project, work
 notes/task amounts (or legacy aggregate service amount), payment status,
 paid/due balances, stored invoice notes and status-as-of generation date.
 All records use a single page; long text is fitted/visibly abbreviated.
 
-### Balanced single-page A4 design
+### Reference-inspired single-page A4 design
 
 - Explicit white page, official black logo and fully embedded Inter fonts.
   A shared 48pt outer grid aligns the supplier, client, table and footer;
-  invoice title, number and stamp are consistently right-aligned.
+  the red invoice title, number, understated status and header balance are
+  right-aligned. The header balance is informational, not an additional charge.
 - Measured bill-to and date/currency columns preserve long client details
   without moving the metadata. Unusually long text is visibly shortened to
   preserve the one-page layout. Missing optional fields
   disappear cleanly rather than creating placeholder blocks.
-- A light service-table header, restrained separators and an independent
-  amount rail. Service amount, invoice total, amount paid and balance due all
-  end at exactly the same x-coordinate. The highlighted balance adapts only
-  its monetary type size for the largest stored amounts; body text stays readable.
-- **Status stamp:** stored `paid` → green PAID; `sent` → neutral UNPAID;
-  `overdue` → red OVERDUE; `cancelled` → grey CANCELLED. A stamp is a visual
+- The owner supplied `service-invoice-template-2x.webp` as composition inspiration.
+  Its orange is replaced by Savo red: a white-on-red table heading, numbered
+  service/task rows on one soft-grey field, restrained separators and a red
+  balance-due strip. Service amount, header balance, invoice total, amount paid
+  and final balance share one monetary right rail. The balance type adapts for
+  the largest stored amounts; body text stays readable.
+- **Status label:** stored `paid` → green PAID; `sent` → neutral UNPAID;
+  `overdue` → red OVERDUE; `cancelled` → grey CANCELLED. This is a visual
   status label, not a signature, certification or payment mutation. It never
   follows query parameters, and dates do not silently change the stored status.
 - The supplier block includes owner-supplied GSTIN `23ABDCS2341B1Z1`, TAN
@@ -182,9 +186,10 @@ All records use a single page; long text is fitted/visibly abbreviated.
 - Payment information and totals are bottom-anchored, with contact/closing text
   consistently above the footer. Short invoices therefore do not leave a large
   empty bottom band. The description table absorbs the available height;
-  actual task rows gain measured breathing room (up to 44pt), contracting to
-  20pt only for dense single-page content. No blank tasks or filler charges.
-  Payment information and totals stay together. Pay now remains a real
+  actual task rows gain measured breathing room (up to 58pt), contracting to
+  22pt only for dense single-page content. No blank tasks or filler charges.
+  Notes/payment information sit to the left of the totals, as in the reference.
+  Pay now is a restrained outline action, retaining a real
   HTTPS URI annotation, with manual-link precedence; paid/cancelled/zero-value
   invoices and unsafe/stale fallbacks never expose a payment action.
 - No continuation pages: task names use one line each, notes have bounded
@@ -239,7 +244,34 @@ Keep those assets and `public/images/email/logo.png` with the deployed app.
 Only public brand assets are cached in process memory; PDF records are queried
 and rendered afresh for each authorized request.
 
-## Lower-page balance and registration refinement
+## Service-template reference refinement (pending publication)
+
+The owner's supplied image establishes the new PDF composition, not a global
+identity change. Preserve Savo's black logo, red, fonts, registration identifiers
+and actual data. Do not import the sample's customer, shipping address, qty/rates,
+tax percentage, prices, discounts or payment-before-work contract terms. Number
+only actual billed tasks; legacy aggregate invoices have one numbered service
+row. An uncharged milestone/project context does not become an extra task.
+
+Local gates: **2,009 tests passed / 16 skipped**, lint, typecheck and production
+build passed. **23 synthetic PDFs / 1,457 PDFKit geometry/content assertions**
+check print bounds, row numbering, header/current balance, shared monetary rail,
+exact totals/status, optional-address behaviour and absence of invented template
+fields. Existing URI annotations and paid/cancelled/zero-value restrictions are
+unchanged. The original privately supplied invoice's billing data and payment
+target were retained, except for the explicitly requested client-email omission;
+customer data remains ignored.
+
+Visual comparison used actual PDFKit A4 renders, including minimal, dense,
+three-task, paid, unpaid and largest-amount samples. Review was performed inline,
+not independently. Evidence: ignored `tmp/invoice-reference-review/` and a new
+`*-clean-preview.pdf` in Downloads; originals were not overwritten. The reference
+itself remains an external owner-supplied image, not a shipped artwork asset.
+Client email is excluded from the PDF's Bill to block; the supplier contact
+email remains. Account/login and invoice-notification email behaviour are
+unchanged. No database migration, production change, email or payment was performed.
+
+## Earlier lower-page balance and registration refinement
 
 The owner's downloaded invoice demonstrated a large empty band below the
 payment summary. The pending refinement bottom-anchors settlement/closing
