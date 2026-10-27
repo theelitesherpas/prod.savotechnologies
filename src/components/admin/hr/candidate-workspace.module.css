@@ -2,4 +2,8 @@
 .notViewed { color: var(--accent); font-weight: 700; }
 .dot { width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: currentColor; }
 .workspace .unreadRow { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+.clickableRow { cursor: pointer; transition: background-color 140ms ease; }
+.workspace tr.clickableRow:hover td { background: color-mix(in srgb, var(--foreground) 4%, var(--surface)); }
+.clickableCard { cursor: pointer; transition: border-color 140ms ease, background-color 140ms ease; }
+.workspace article.clickableCard:hover { border-color: color-mix(in srgb, var(--foreground) 24%, var(--border)); }
 .workspace .unreadCard:global(.adm-card) { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
