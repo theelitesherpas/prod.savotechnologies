@@ -72,8 +72,9 @@ export const COMPANY_FACTS = {
   ),
 
   /* - Registration identifiers -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
-  cin: fact(null, "requires-verified-input", "CIN from certificate of incorporation (Savo to supply)"),
-  gst: fact(null, "requires-verified-input", "GSTIN (Savo to supply)"),
+  cin: fact(SITE.registration.cin, "verified", "Identifier supplied by Savo for invoices", "2026-10-27"),
+  gst: fact(SITE.registration.gst, "verified", "Identifier supplied by Savo for invoices", "2026-10-27"),
+  tan: fact(SITE.registration.tan, "verified", "Identifier supplied by Savo for invoices", "2026-10-27"),
 
   /* - Contact -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
   email: fact(SITE.email, "verified", "Company communications", "2026-09-25"),

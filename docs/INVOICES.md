@@ -175,7 +175,16 @@ All records use a single page; long text is fitted/visibly abbreviated.
   `overdue` → red OVERDUE; `cancelled` → grey CANCELLED. A stamp is a visual
   status label, not a signature, certification or payment mutation. It never
   follows query parameters, and dates do not silently change the stored status.
-- Payment information and totals are kept together. Pay now remains a real
+- The supplier block includes owner-supplied GSTIN `23ABDCS2341B1Z1`, TAN
+  `BPLS22850C` and CIN `U72900MP2020PTC050634` from `SITE.registration`.
+  The canonical company-facts registry uses the same values. These identifiers
+  do not add tax charges, change amounts or claim tax-invoice compliance.
+- Payment information and totals are bottom-anchored, with contact/closing text
+  consistently above the footer. Short invoices therefore do not leave a large
+  empty bottom band. The description table absorbs the available height;
+  actual task rows gain measured breathing room (up to 44pt), contracting to
+  20pt only for dense single-page content. No blank tasks or filler charges.
+  Payment information and totals stay together. Pay now remains a real
   HTTPS URI annotation, with manual-link precedence; paid/cancelled/zero-value
   invoices and unsafe/stale fallbacks never expose a payment action.
 - No continuation pages: task names use one line each, notes have bounded
@@ -229,6 +238,27 @@ python3 scripts/build-invoice-fonts.py
 Keep those assets and `public/images/email/logo.png` with the deployed app.
 Only public brand assets are cached in process memory; PDF records are queried
 and rendered afresh for each authorized request.
+
+## Lower-page balance and registration refinement
+
+The owner's downloaded invoice demonstrated a large empty band below the
+payment summary. The pending refinement bottom-anchors settlement/closing
+content and adds the supplied registration identifiers without changing the
+billing data, totals, status, payment links or database schema. The original PDF
+was left untouched; a separate private preview was generated in Downloads.
+Customer-specific reproduction data stays in ignored local `tmp/` files, never
+in source control or synthetic CI fixtures.
+
+Local verification: all **2,008 tests passed / 16 skipped**, lint, typecheck and
+production build passed. Apple PDFKit reviewed sparse 0/1/2/3-task documents,
+full-address/dense-note cases, status variants, Unicode/long fields and maximum
+supported currency amounts: **23 synthetic PDFs / 1,317 geometry/content checks**.
+The geometry gate now asserts lower-page contact/closing positions, lower
+settlement placement and all three supplier identifiers as well as single-page
+bounds and exact price rails. The private owner-supplied before/after document
+was additionally checked for unchanged original text and payment destination.
+Review performed inline, not independently. Local preparation only; publishing
+this refinement requires the normal reviewed release workflow.
 
 ## Task/address extension verification
 

@@ -45,10 +45,11 @@ export const SITE = {
     street: "139 PU4, Behind C21 Mall, Vijay Nagar, Scheme 54",
     postalCode: "452010",
   },
-  /** Company registration identifiers - slots only, populated when the company supplies verified values. */
+  /** Company registration identifiers supplied by Savo for invoices, 2026-10-27. */
   registration: {
-    cin: null as string | null,
-    gst: null as string | null,
+    cin: "U72900MP2020PTC050634" as string | null,
+    gst: "23ABDCS2341B1Z1" as string | null,
+    tan: "BPLS22850C" as string | null,
     foundedYear: "2015",
   },
 } as const;

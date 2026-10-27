@@ -24,8 +24,8 @@ Status legend: ⬜ needed · 🟡 partially supplied · ✅ verified
 | # | Item | Why it matters | Priority |
 |---|------|----------------|----------|
 | B1 | ⬜ Exact incorporation date + certificate | About timeline, company profile | P1 |
-| B2 | ⬜ CIN | Enterprise/procurement file | P1 |
-| B3 | ⬜ GSTIN | Company profile | P2 |
+| B2 | ✅ CIN: U72900MP2020PTC050634 (supplied by Savo, 2026-10-27) | Enterprise/procurement file, invoices | P1 |
+| B3 | ✅ GSTIN: 23ABDCS2341B1Z1 (supplied by Savo, 2026-10-27) | Company profile, invoices | P2 |
 | B4 | ⬜ Verified projects delivered count | Proof strip / metrics | P0 |
 | B5 | ⬜ Verified clients supported count | Proof strip / metrics | P0 |
 | B6 | ⬜ Industries served count (derived ok if from real engagements) | Metrics | P1 |
@@ -33,6 +33,11 @@ Status legend: ⬜ needed · 🟡 partially supplied · ✅ verified
 | B8 | ⬜ Team size (or range comfortable to publish) | About, enterprise | P1 |
 | B9 | ⬜ Leadership: names, roles, bios, photos | About, Person schema, E-E-A-T | P1 |
 | B10 | ⬜ Company timeline milestones (founded, first client, 100th project, AI capability, offices…) | About timeline (Part 26) | P1 |
+| B11 | ✅ TAN: BPLS22850C (supplied by Savo, 2026-10-27) | Invoices | P2 |
+
+Registration identifiers above are owner-supplied; no independent government
+verification or tax-invoice compliance assessment is implied. The incorporation
+date/certificate remains outstanding; do not infer it from the CIN.
 
 ## C. Third-party trust
 
