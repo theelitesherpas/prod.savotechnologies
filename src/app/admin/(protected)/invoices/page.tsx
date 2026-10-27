@@ -32,7 +32,7 @@ export default async function AdminInvoicesPage({
         prisma.invoice.findMany({ where, take: paging.take, skip: paging.skip, orderBy: [{ issuedAt: "desc" }, { id: "desc" }], include: { client: { select: { name: true } }, project: { select: { code: true } }, milestone: { select: { title: true } } } }).catch(() => []),
         prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, businessId: true } }).catch(() => []),
         prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true, clientId: true, currency: true, budget: true } }).catch(() => []),
-        prisma.projectMilestone.findMany({ orderBy: [{ projectId: "asc" }, { order: "asc" }, { createdAt: "asc" }], select: { id: true, projectId: true, title: true, scope: true, amount: true, project: { select: { currency: true } } } }).catch(() => []),
+        prisma.projectMilestone.findMany({ orderBy: [{ projectId: "asc" }, { order: "asc" }, { createdAt: "asc" }], select: { id: true, projectId: true, title: true, description: true, tasks: true, scope: true, amount: true, project: { select: { currency: true } } } }).catch(() => []),
       ])
     : [[], [], [], []];
 
@@ -100,13 +100,9 @@ export default async function AdminInvoicesPage({
       <FormGuard action={createInvoiceAction} className="adm-card space-y-5 p-5">
         <p className="adm-label">New invoice</p>
         <div className="grid gap-5 sm:grid-cols-2">
-          <InvoiceLinkFields clients={clients} projects={projects} initialClient={sp.client} milestones={milestones.map(m => ({ id: m.id, projectId: m.projectId, label: `${m.title}${m.amount != null ? ` · ${money(m.amount, m.project.currency)}` : ""}${m.scope === "additional" ? " · additional" : ""}` }))}/>
+          <InvoiceLinkFields clients={clients} projects={projects} initialClient={sp.client} milestones={milestones.map(m => ({ id: m.id, projectId: m.projectId, title: m.title, description: m.description, tasks: m.tasks, amount: m.amount, label: `${m.title}${m.amount != null ? ` · ${money(m.amount, m.project.currency)}` : ""}${m.scope === "additional" ? " · additional" : ""}` }))}/>
           <BusinessIdField type="IN" label="Invoice ID" id="invoice-reference" resetKey={reservationCount}/>
 
-          <div>
-            <label className="adm-label mb-1.5 block">Amount *</label>
-            <input name="amountMajor" type="number" step="0.01" min={0} required className={input} placeholder="2500.00" />
-          </div>
 
           <div>
             <label className="adm-label mb-1.5 block">Status</label>
@@ -127,7 +123,7 @@ export default async function AdminInvoicesPage({
           <InvoicePaymentField/>
           <div className="sm:col-span-2">
             <label className="adm-label mb-1.5 block">Notes</label>
-            <input name="notes" maxLength={500} className={input} placeholder="Phase 2 milestone payment (optional)" />
+            <textarea name="notes" rows={2} maxLength={500} className={input} placeholder="Optional payment or invoice note" />
           </div>
         </div>
         <SubmitButton label="Create invoice" />

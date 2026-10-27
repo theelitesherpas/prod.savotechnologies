@@ -151,6 +151,8 @@ describe("client workspace presentation", () => {
     const inv = invoiceRecord({
       ...invoice,
       businessId: null,
+      items: [],
+      description: null,
       issuedAt: date,
       dueDate: null,
       paidAt: date,

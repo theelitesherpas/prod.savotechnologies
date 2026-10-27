@@ -35,7 +35,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       where: { id, clientId: client.id, status: { in: [...CLIENT_INVOICE_STATUSES] } },
       select: {
         id: true, number: true, amount: true, currency: true, status: true, notes: true, paymentLink: true,
-        issuedAt: true, dueDate: true, paidAt: true,
+        issuedAt: true, dueDate: true, paidAt: true, description: true, items: true,
+        client: { select: { addressLine1: true, addressLine2: true, city: true, region: true, postalCode: true, country: true } },
+        milestone: { where: { project: { clientId: client.id } }, select: { title: true, description: true } },
         project: { where: { clientId: client.id }, select: { code: true, title: true } },
       },
     });
@@ -48,7 +50,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       ...invoice,
       payUrl: payTarget && !payTarget.external ? absoluteUrl(payTarget.url) : null,
       status: invoice.status as ClientInvoiceStatus,
-      client: { name: client.name, company: client.company, email: client.email, businessId: client.businessId ?? null },
+      client: { ...invoice.client, name: client.name, company: client.company, email: client.email, businessId: client.businessId ?? null },
     });
     const disposition = new URL(request.url).searchParams.get("view") === "1" ? "inline" : "attachment";
     return new Response(new Uint8Array(bytes), {

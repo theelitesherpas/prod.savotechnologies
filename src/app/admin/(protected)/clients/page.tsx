@@ -109,6 +109,7 @@ export default async function AdminClientsPage({
 }
 
 import { createClientAction } from "./actions";
+import { ClientAddressFields } from "@/components/admin/client-address-fields";
 
 function CreateClientCard({ resetKey }: { resetKey: number }) {
   const input = "adm-input w-full";
@@ -130,6 +131,7 @@ function CreateClientCard({ resetKey }: { resetKey: number }) {
           <label className="adm-label mb-1.5 block" htmlFor="cl-company">Company</label>
           <input id="cl-company" name="company" maxLength={120} className={input} placeholder="Company name (optional)" />
         </div>
+        <ClientAddressFields/>
         <div className="sm:col-span-2">
           <label className="adm-label mb-1.5 block" htmlFor="cl-password">Password (optional)</label>
           <input id="cl-password" name="password" maxLength={64} className={input} placeholder="Leave empty to auto-generate" />

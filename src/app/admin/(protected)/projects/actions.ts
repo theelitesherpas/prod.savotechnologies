@@ -58,7 +58,7 @@ export async function createProjectAction(form: FormData): Promise<void> {
       const { milestones, budgetMajor, ...core } = d;
       const businessId = await claimBusinessId(form, "PR", user.id, tx) ?? await generateBusinessId("PR", tx);
       const project = await tx.clientProject.create({ data: { ...core, code: businessId, businessId, budget: budgetMajor,
-        milestones: { create: milestones.map((m, order) => ({ title: m.title, description: m.description, amount: m.amountMajor, dueDate: m.dueDate, status: m.status, scope: "base", order })) } },
+        milestones: { create: milestones.map((m, order) => ({ title: m.title, description: m.description, tasks: m.tasks, amount: m.amountMajor, dueDate: m.dueDate, status: m.status, scope: "base", order })) } },
         include: { client: { select: { name: true, email: true } } } });
       await reconcileProject(tx, project.id);
       return { id: project.id, events: [event(project, "Your project plan is ready", `Your project has been created with a base budget of ${invoiceMoney(budgetMajor, core.currency)}. You can review the description, estimated delivery date and milestone allocations in your client portal.`)] };
@@ -91,7 +91,7 @@ export async function updateProjectAction(form: FormData): Promise<void> {
       if (current.invoices.some(i => i.milestoneId && removed.includes(i.milestoneId))) throw new Error("A milestone being removed still has linked invoices. Unlink those invoices before removing the milestone.");
       await tx.projectMilestone.deleteMany({ where: { projectId: id, scope: "base", id: { notIn: keep } } });
       for (const [order, m] of d.milestones.entries()) {
-        const data = { title: m.title, description: m.description, amount: m.amountMajor, dueDate: m.dueDate, status: m.status, order };
+        const data = { title: m.title, description: m.description, tasks: m.tasks, amount: m.amountMajor, dueDate: m.dueDate, status: m.status, order };
         if (m.id) await tx.projectMilestone.update({ where: { id: m.id, projectId: id, scope: "base" }, data });
         else await tx.projectMilestone.create({ data: { ...data, projectId: id, scope: "base" } });
       }
@@ -139,7 +139,7 @@ export async function saveAdditionalWorkAction(form: FormData): Promise<void> {
       if (!project) throw new Error("Project not found.");
       revision(form, project.updatedAt);
       if (project.budget == null) throw new Error("Set the base budget and allocate the base milestones before adding paid scope.");
-      const data = { title: d.title, description: d.description, amount: d.amountMajor, status: d.status, dueDate: d.dueDate };
+      const data = { title: d.title, description: d.description, tasks: d.tasks, amount: d.amountMajor, status: d.status, dueDate: d.dueDate };
       if (id) {
         if (!(await tx.projectMilestone.findFirst({ where: { id, projectId, scope: "additional" } }))) throw new Error("Additional work not found in this project.");
         await tx.projectMilestone.update({ where: { id, projectId, scope: "additional" }, data });

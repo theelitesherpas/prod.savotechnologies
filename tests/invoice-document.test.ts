@@ -90,22 +90,38 @@ describe("invoice financial document", () => {
     const pdf = await PDFDocument.load(await renderInvoicePdf({ ...invoice, ...input }, now));
     expect(pdf.getPages().every(page => !page.node.Annots() || page.node.Annots()!.size() === 0)).toBe(true);
   });
-  it("paginates an oversized service description with repeated table context", async () => {
+  it("keeps oversized legacy service descriptions on one page", async () => {
     const bytes = await renderInvoicePdf({ ...invoice, notes: "", project: { code: "SYNTHETIC-SERVICE-END", title: "Synthetic detailed service scope. ".repeat(180) } }, now);
-    expect((await PDFDocument.load(bytes)).getPageCount()).toBeGreaterThan(1);
+    expect((await PDFDocument.load(bytes)).getPageCount()).toBe(1);
     writeFileSync("tmp/invoice-pdf/long-service.pdf", bytes);
   });
-  it("retains exceptionally long legacy billing fields across pages", async () => {
+  it("keeps exceptionally long legacy billing fields on one page", async () => {
     const bytes = await renderInvoicePdf({ ...invoice, notes: "", client: { ...invoice.client, company: "Synthetic legacy billing company ".repeat(100), name: "BILLING-END-MARKER", businessId: "STPLCS02684" } }, now);
-    expect((await PDFDocument.load(bytes)).getPageCount()).toBeGreaterThan(1);
+    expect((await PDFDocument.load(bytes)).getPageCount()).toBe(1);
     writeFileSync("tmp/invoice-pdf/long-billing.pdf", bytes);
+  });
+  it.each(["sent", "overdue", "paid", "cancelled"] as const)("fits all three task rows, full optional address and notes on one A4 page (%s)", async status => {
+    const bytes = await renderInvoicePdf({
+      ...invoice, status,
+      description: `Website implementation\n${"Completed agreed development and testing. ".repeat(50)}`,
+      notes: "Invoice/payment notes. ".repeat(20),
+      items: [{ description: "Booking form development", amount: 100000 }, { description: "Payment gateway integration", amount: 100000 }, { description: "QA and release", amount: 50050 }],
+      payUrl: "https://www.savotechnologies.com/portal/invoices/example/pay",
+      client: { ...invoice.client, businessId: "STPLCS02684", addressLine1: "14 Example Street", addressLine2: "Suite 205", city: "Zürich", region: "Zürich", postalCode: "8001", country: "Switzerland" },
+    }, now);
+    expect((await PDFDocument.load(bytes)).getPageCount()).toBe(1);
+    writeFileSync(`tmp/invoice-pdf/tasks-address-${status}.pdf`, bytes);
+  });
+  it("rejects mismatched or too many task charges instead of printing a misleading total", async () => {
+    await expect(renderInvoicePdf({ ...invoice, items: [{ description: "Wrong total", amount: 100 }] }, now)).rejects.toThrow("exactly");
+    await expect(renderInvoicePdf({ ...invoice, items: Array.from({ length: 4 }, () => ({ description: "Extra task", amount: 100 })) }, now)).rejects.toThrow();
   });
   it("renders an ordinary invoice without optional company/project/date/notes fields", async () => {
     const bytes = await renderInvoicePdf({ ...invoice, client: { ...invoice.client, company: "" }, dueDate: null, project: null, notes: "" }, now);
     expect((await PDFDocument.load(bytes)).getPageCount()).toBe(1);
     writeFileSync("tmp/invoice-pdf/minimal.pdf", bytes);
   });
-  it("wraps long references and Unicode client/project names and paginates long notes", async () => {
+  it("keeps long references, Unicode names and long notes on a single page", async () => {
     const bytes = await renderInvoicePdf({
       ...invoice,
       number: "LONG-REFERENCE-".repeat(8),
@@ -114,7 +130,7 @@ describe("invoice financial document", () => {
       notes: "Detailed synthetic note with a line break.\n".repeat(90),
     }, now);
     const loaded = await PDFDocument.load(bytes);
-    expect(loaded.getPageCount()).toBeGreaterThan(1);
+    expect(loaded.getPageCount()).toBe(1);
     mkdirSync("tmp/invoice-pdf", { recursive: true });
     writeFileSync("tmp/invoice-pdf/long-values.pdf", bytes);
   });
