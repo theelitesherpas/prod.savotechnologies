@@ -98,7 +98,10 @@
   letter-spacing: -0.02em;
 }
 
-.callbackCopy { max-width: 380px; margin-top: 12px; margin-bottom: 28px; font-size: 0.875rem; line-height: 1.65; color: var(--muted); }
+.callbackCopy { max-width: 380px; margin-top: 12px; margin-bottom: 12px; font-size: 0.875rem; line-height: 1.65; color: var(--muted); }
+.callbackNote { max-width: 380px; margin-bottom: 28px; font-size: 0.8125rem; line-height: 1.6; color: var(--muted); }
+.callbackNoteLink { color: inherit; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; transition: color 0.3s ease; }
+.callbackNoteLink:hover { color: var(--foreground); }
 .callbackPanel form { gap: 20px; }
 .callbackPanel label { letter-spacing: 0.08em; }
 .callbackPanel form > div:first-child > div { min-height: 48px; padding-inline: 12px; border: 1px solid var(--border); border-radius: 4px; background: rgb(255 255 255 / 0.02); }

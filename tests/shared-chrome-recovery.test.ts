@@ -43,6 +43,9 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Shared callback recovery', () => {
+  it('labels the callback action as a project enquiry', () => {
+    expect(html()).toContain('Request a project call');
+  });
   it('shows Google CAPTCHA only after the mobile number field is entered', () => {
     gate.required = true;
     hook.states[3] = '';
@@ -109,6 +112,7 @@ describe('Shared callback recovery', () => {
   it('confirms only receipt/number, not staffing, guaranteed timing or call/email delivery', async () => {
     hook.states[4] = true; fetchMock.mockResolvedValue(reply({ ok: true })); await submit(); const markup = html();
     expect(markup).toContain('Request received.'); expect(markup).toContain('+91'); expect(markup).toContain('7502911234');
+    expect(markup).toContain('You requested a call about your project');
     expect(markup).toContain('Call timing depends on availability.');
     expect(markup).not.toMatch(/senior consultant|two business hours|email sent|call confirmed/);
   });

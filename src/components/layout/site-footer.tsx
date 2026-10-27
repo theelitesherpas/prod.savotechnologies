@@ -42,9 +42,13 @@ export function SiteFooter({
             </ul>
           </div>
           <section className={styles.callbackPanel} aria-labelledby="footer-callback-heading">
-            <h3 id="footer-callback-heading">Would you prefer a call?</h3>
+            <h3 id="footer-callback-heading">Prefer a call about your project?</h3>
             <p className={styles.callbackCopy}>
-              Leave a number and tell us which country you’re in. We’ll get in touch to talk through what you need.
+              Leave your number and country, and we’ll call you back to discuss your project — the goal, the scope and how we can help.
+            </p>
+            <p className={styles.callbackNote}>
+              For project and client enquiries only. For job applications or career enquiries, please visit our{" "}
+              <Link href="/careers" className={styles.callbackNoteLink}>Careers page</Link>.
             </p>
             <CallbackForm />
           </section>

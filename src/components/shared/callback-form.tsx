@@ -133,7 +133,7 @@ export function CallbackForm() {
         <span aria-hidden="true" className="mb-4 block h-2.5 w-2.5 bg-accent" />
         <p className="t-h4">Request received.</p>
         <p className="t-sm mt-2 text-muted">
-          You asked for a call on {rule?.dial} {digits}. Call timing depends on availability.
+          You requested a call about your project on {rule?.dial} {digits}. Call timing depends on availability.
         </p>
       </div>
     );
@@ -311,7 +311,7 @@ export function CallbackForm() {
           disabled={status === "submitting"}
           className="group/btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-[2px] bg-foreground px-5 text-[0.9375rem] font-semibold text-background transition-colors duration-300 ease-[var(--ease-out-expo)] hover:bg-accent hover:text-on-accent disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
         >
-          {status === "submitting" ? "Sending…" : "Request a call back"}
+          {status === "submitting" ? "Sending…" : "Request a project call"}
           <svg aria-hidden="true" viewBox="0 0 14 14" className="h-3 w-3 transition-transform duration-300 group-hover/btn:translate-x-[3px]" fill="none" stroke="currentColor" strokeWidth="1.6">
             <path d="M1 7h11M7.5 2.5 12 7l-4.5 4.5" />
           </svg>

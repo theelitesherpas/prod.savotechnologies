@@ -3,7 +3,7 @@ export const CONTACT_QUESTIONS = [
   { q: "Do I need a budget before getting in touch?", a: "No. The budget field is optional and includes ‘To be discussed’. If you have a range in mind, it helps give the conversation context; it is not a quote or a commitment." },
   { q: "Can we discuss confidentiality first?", a: "Yes - mention that in your first message without sharing sensitive details. Any confidentiality agreement and its scope should be discussed and agreed before you share protected information." },
   { q: "Can I apply for a job using this form?", a: "Use the Careers application for job applications so your skills, experience and availability reach the right flow. You can still use this form for a general question about Savo or a role." },
-  { q: "Can I call or message instead?", a: "Yes. Use the phone, email or WhatsApp links on this page. For a callback request, use the ‘Would you prefer a call?’ form in the footer. Response timing depends on the enquiry and availability." },
+  { q: "Can I call or message instead?", a: "Yes. Use the phone, email or WhatsApp links on this page. For a project callback request, use the ‘Prefer a call about your project?’ form in the footer. Response timing depends on the enquiry and availability." },
 ] as const;
 
 export const CONTACT_NEXT_STEPS = [
