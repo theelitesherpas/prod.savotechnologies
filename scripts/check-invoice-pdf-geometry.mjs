@@ -25,10 +25,14 @@ for (const document of documents) {
     ok(allText.includes(registration), `${document.name}: supplied ${registration.split(":")[0]} appears on invoice`);
   const contact = document.pages[0].lines.find(line => line.text.startsWith("For invoice queries"));
   const closing = document.pages[0].lines.find(line => /^(Amounts reflect|Long text is shortened)/.test(line.text));
-  const settlement = document.pages[0].lines.find(line => line.text.startsWith("Invoice total"));
+  const settlement = document.pages[0].lines.find(line => line.text.includes("Invoice total"));
+  const upperBalance = document.pages[0].lines.find(line => line.text === "Balance due" && line.y > 600);
+  ok(!!upperBalance, `${document.name}: reference-style header exposes the current balance`);
+  ok(!/(Ship [Tt]o|Tax [Rr]ate|Qty|Zylker|Terms & Conditions)/.test(allText), `${document.name}: no fabricated reference-template shipping, quantities, taxes or contract terms`);
   ok(contact?.y >= 95 && contact.y <= 112, `${document.name}: contact details remain near the footer, not above an empty bottom third`);
   ok(closing?.y >= 85 && closing.y <= 100, `${document.name}: closing line uses the lower page consistently`);
   ok(settlement?.y >= 210 && settlement.y <= 300, `${document.name}: totals anchor in the lower section even with sparse content`);
+  ok(!allText.includes("sample@example.invalid"), `${document.name}: client email is not printed`);
   let monetaryRows = 0;
   for (const page of document.pages) {
     ok(Math.abs(page.width - 595.28) < .1 && Math.abs(page.height - 841.89) < .1, `${document.name}: A4 page`);
@@ -41,9 +45,13 @@ for (const document of documents) {
       }
     }
   }
-  ok(monetaryRows === (taskCount || 1) + 3, `${document.name}: exactly ${taskCount || 1} task/service prices and three summary values`);
+  ok(monetaryRows === (taskCount || 1) + 4, `${document.name}: exactly ${taskCount || 1} task/service prices, one header balance and three settlement values`);
   if (sparseCount && taskCount) {
-    for (let index = 1; index <= taskCount; index++) ok(document.pages[0].lines.filter(line => line.text.includes(`Synthetic task ${index}`)).length === 1, `${document.name}: task ${index} remains a single line`);
+    for (let index = 1; index <= taskCount; index++) {
+      const row = document.pages[0].lines.filter(line => line.text.includes(`Synthetic task ${index}`));
+      ok(row.length === 1, `${document.name}: task ${index} remains a single line`);
+      ok(row[0].text.startsWith(`${index} `), `${document.name}: task ${index} has a real sequential row number`);
+    }
   }
   if (knownTaskInvoice) {
     for (const task of ["Booking form development", "Payment gateway integration", "QA and release"])

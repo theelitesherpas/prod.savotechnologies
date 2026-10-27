@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { PDFDict, PDFDocument, PDFName, PDFString, PDFRawStream, decodePDFRawStream } from "pdf-lib";
+import { PDFDict, PDFDocument, PDFName, PDFString, PDFRawStream, decodePDFRawStream, PDFPage } from "pdf-lib";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
 import { invoiceBalances, invoiceDate, invoiceMoney, invoiceFilename, type InvoiceDocument } from "@/lib/invoice-document";
 
@@ -57,6 +57,17 @@ describe("invoice financial document", () => {
     }
     mkdirSync("tmp/invoice-pdf", { recursive: true });
     writeFileSync(`tmp/invoice-pdf/${status}.pdf`, bytes);
+  });
+  it("does not draw the client email while retaining supplier contact and client identity", async () => {
+    const drawn = vi.spyOn(PDFPage.prototype, "drawText");
+    try {
+      await renderInvoicePdf(invoice, now);
+      const text = drawn.mock.calls.map(([value]) => value).join("\n");
+      expect(text).not.toContain(invoice.client.email);
+      expect(text).toContain(invoice.client.name);
+      expect(text).toContain(invoice.client.company);
+      expect(text).toContain("hello@savotechnologies.com");
+    } finally { drawn.mockRestore(); }
   });
   it.each(["INR", "USD", "CHF", "EUR", "GBP", "AED"])("keeps the largest stored %s amount in a one-page document without shrinking body type", async currency => {
     const bytes = await renderInvoicePdf({ ...invoice, amount: 2147483647, currency, client: { ...invoice.client, businessId: "STPLCS02684" } }, now);
