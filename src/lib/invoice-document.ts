@@ -1,3 +1,6 @@
+import { assertBillingTotal, invoiceItems, milestoneBillingDescription, type InvoiceItem } from "@/lib/billing-items";
+import type { ClientAddress } from "@/lib/client-address";
+
 /** Shared invoice document contract. Amounts remain integer minor units;
  * no conversion, inferred taxes, bank details or fabricated payment lines. */
 export const CLIENT_INVOICE_STATUSES = ["sent", "paid", "overdue", "cancelled"] as const;
@@ -18,12 +21,27 @@ export type InvoiceDocument = {
   dueDate: Date | null;
   paidAt: Date | null;
   notes: string;
+  /** Issued work notes + task prices. Null description identifies a legacy invoice. */
+  description?: string | null;
+  items?: unknown;
+  milestone?: { title: string; description: string } | null;
   paymentLink?: string | null;
   /** Server-decided pay target (absolute portal checkout URL) when no manual link exists. */
   payUrl?: string | null;
-  client: { name: string; company: string; email: string; businessId?: string | null };
+  client: { name: string; company: string; email: string; businessId?: string | null } & ClientAddress;
   project: { code: string; title: string } | null;
 };
+
+/** Only old unsnapshotted records use live milestone notes. Never infer task
+ * charges from a legacy project's current prices. */
+export function invoiceWorkDescription(invoice: Pick<InvoiceDocument, "description" | "milestone">): string {
+  return invoice.description ?? (invoice.milestone ? milestoneBillingDescription(invoice.milestone) : "");
+}
+export function invoiceDocumentItems(invoice: Pick<InvoiceDocument, "items" | "amount">): InvoiceItem[] {
+  const rows = invoiceItems(invoice.items);
+  assertBillingTotal(rows, invoice.amount, "Invoice task");
+  return rows;
+}
 
 export function invoiceBalances(invoice: Pick<InvoiceDocument, "amount" | "status">) {
   return {

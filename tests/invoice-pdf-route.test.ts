@@ -24,7 +24,8 @@ describe("private client invoice PDF endpoint", () => {
     await get(); const query = m.find.mock.calls[0][0];
     expect(query.where).toEqual({ id: "invoice-123456", clientId: client.id, status: { in: ["sent", "paid", "overdue", "cancelled"] } });
     expect(query.select.project).toEqual({ where: { clientId: client.id }, select: { code: true, title: true } });
-    expect(query.select).not.toHaveProperty("client");
+    expect(query.select.client).toEqual({ select: { addressLine1: true, addressLine2: true, city: true, region: true, postalCode: true, country: true } });
+    expect(query.select.milestone.where).toEqual({ project: { clientId: client.id } });
   });
   it.each(["other client's invoice", "draft", "unknown invoice"])("returns the same private 404 for %s", async () => {
     m.find.mockResolvedValue(null); const res = await get();
@@ -40,6 +41,12 @@ describe("private client invoice PDF endpoint", () => {
     expect(res.headers.get("x-robots-tag")).toContain("noindex");
     expect(m.render).toHaveBeenCalledWith({ ...record, payUrl: null, status, client: { name: client.name, email: client.email, company: client.company, businessId: null } });
     expect(new TextDecoder().decode(await res.arrayBuffer())).toMatch(/^%PDF-/);
+  });
+  it("passes only the invoice owner's optional address to the PDF", async () => {
+    const address = { addressLine1: "14 Example Road", addressLine2: "Suite 2", city: "Indore", region: "MP", postalCode: "452001", country: "India" };
+    m.find.mockResolvedValue({ ...record, client: address });
+    expect((await get()).status).toBe(200);
+    expect(m.render.mock.calls[0][0].client).toEqual({ ...address, name: client.name, email: client.email, company: client.company, businessId: null });
   });
   it("opens the identical PDF inline for native viewing and printing", async () => {
     const res = await get("?view=1"); expect(res.headers.get("content-disposition")).toMatch(/^inline;/);

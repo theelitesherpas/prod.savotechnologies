@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { BackLink, PageHeader, Notice } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
+import { ClientAddressFields } from "@/components/admin/client-address-fields";
 import { updateClientAction, resetClientPasswordAction } from "../actions";
 
 export const metadata: Metadata = { title: "Edit client" };
@@ -54,6 +55,7 @@ export default async function EditClientPage({
             <label className="adm-label mb-1.5 block" htmlFor="cl-company">Company</label>
             <input id="cl-company" name="company" maxLength={120} defaultValue={client.company} className={input} />
           </div>
+          <ClientAddressFields address={client}/>
         </div>
         <label className="flex cursor-pointer items-center gap-2 text-[0.875rem] font-medium text-foreground">
           <input type="checkbox" name="active" defaultChecked={client.active} className="h-4 w-4 accent-[var(--accent)]" />

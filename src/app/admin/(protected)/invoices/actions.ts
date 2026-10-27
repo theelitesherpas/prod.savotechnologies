@@ -4,6 +4,7 @@ import { generateBusinessId, claimBusinessId, rejectManualBusinessId, assertUnch
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { assertBillingTotal, invoiceItems, milestoneBillingDescription, milestoneInvoiceItems, parseInvoiceItems } from "@/lib/billing-items";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
@@ -25,12 +26,15 @@ function input(form: FormData) {
   const parsed = schema.safeParse(Object.fromEntries(["clientId", "projectId", "milestoneId", "number", "currency", "status", "notes"].map(k => [k, String(form.get(k) ?? "")])));
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Check the invoice fields.");
   const amount = minorUnits(String(form.get("amountMajor") ?? ""));
+  const items = form.has("items") ? parseInvoiceItems(form.get("items")) : undefined;
+  const description = form.has("description") ? z.string().trim().max(4000, "Work description is too long.").parse(form.get("description")) : undefined;
+  if (items) assertBillingTotal(items, amount, "Invoice task");
   const issuedAt = calendarDate(String(form.get("issuedAt") ?? "")) ?? new Date();
   const dueDate = calendarDate(String(form.get("dueDate") ?? ""));
   const paidAt = parsed.data.status === "paid" ? calendarDate(String(form.get("paidAt") ?? "")) ?? new Date() : null;
   if (dueDate && dueDate < new Date(issuedAt.toISOString().slice(0, 10))) throw new Error("Due date cannot be before the invoice issue date.");
   const paymentLink = normalizePaymentLink(String(form.get("paymentLink") ?? ""));
-  return { ...parsed.data, projectId: parsed.data.projectId || null, milestoneId: parsed.data.milestoneId || null, amount, issuedAt, dueDate, paidAt, paymentLink };
+  return { ...parsed.data, items, description, projectId: parsed.data.projectId || null, milestoneId: parsed.data.milestoneId || null, amount, issuedAt, dueDate, paidAt, paymentLink };
 }
 async function operator() { const user = await requireAdmin(); await requireSection("clients"); if (!prisma) redirect("/admin/invoices?e=Database%20unavailable."); return user; }
 const idValue = (form: FormData) => z.string().regex(/^[A-Za-z0-9_-]{10,64}$/).parse(form.get("id"));
@@ -43,16 +47,26 @@ async function owner(tx: Prisma.TransactionClient, d: { clientId: string; projec
     if (!project) throw new Error("The project does not belong to this client.");
     if (project.budget != null && project.currency !== d.currency) throw new Error("Invoice currency must match the selected project's currency. No automatic currency conversion is applied.");
   }
+  let billingMilestone: { title: string; description: string; tasks: unknown } | null = null;
   if (d.milestoneId) {
     if (d.milestoneId === d.projectId) throw new Error("Check the milestone link.");
     // Same lookup shape as delivery edits: milestone + parent project in one read.
-    const milestone = await tx.projectMilestone.findFirst({ where: { id: d.milestoneId }, select: { projectId: true, project: { select: { clientId: true, currency: true } } } });
+    const milestone = await tx.projectMilestone.findFirst({ where: { id: d.milestoneId }, select: { projectId: true, title: true, description: true, tasks: true, project: { select: { clientId: true, currency: true } } } });
     if (!milestone) throw new Error("Milestone not found.");
     if (milestone.projectId !== d.projectId) throw new Error("Link the milestone's own project to this invoice before selecting the milestone.");
     if (milestone.project.clientId !== d.clientId) throw new Error("The milestone belongs to a different client's project.");
     if (milestone.project.currency !== d.currency) throw new Error("Invoice currency must match the milestone's project currency.");
+    billingMilestone = milestone;
   }
-  return client;
+  return { client, milestone: billingMilestone };
+}
+/** Never refresh an issued invoice from a changing project plan. Omitted fields
+ * on older forms preserve saved billing details; explicit edits are validated. */
+function billingSnapshot(d: ReturnType<typeof input>, milestone: { title: string; description: string; tasks: unknown } | null, before?: { items?: unknown; description?: string | null }) {
+  const items = d.items ?? (before ? invoiceItems(before.items) : milestone ? milestoneInvoiceItems(milestone) : []);
+  assertBillingTotal(items, d.amount, "Invoice task");
+  const description = d.description ?? (before ? before.description ?? null : milestone ? milestoneBillingDescription(milestone) : "");
+  return { items, description };
 }
 function notification(client: { name: string; email: string }, invoice: { number: string; amount: number; currency: string; status: string; dueDate: Date | null; paymentLink?: string | null; payUrl?: string | null }): ProjectEmail[] {
   return invoiceNotification(client, invoice);
@@ -77,9 +91,10 @@ export async function createInvoiceAction(form: FormData): Promise<void> {
     const gatewayOn = !!(await getRazorpayConfig().catch(() => null));
     const wantsCheckout = !d.paymentLink && gatewayOn && ["sent", "overdue"].includes(d.status) && d.amount > 0;
     events = await projectTransaction(async tx => {
-      const client = await owner(tx, d);
+      const { client, milestone } = await owner(tx, d);
+      const billing = billingSnapshot(d, milestone);
       number = await claimBusinessId(form, "IN", user.id, tx) ?? await generateBusinessId("IN", tx);
-      const invoice = { ...d, number, businessId: number };
+      const invoice = { ...d, ...billing, number, businessId: number };
       const created = await tx.invoice.create({ data: invoice });
       if (created.status === "paid") await recordPaymentTransaction(tx, created);
       return [...notification(client, { ...invoice, payUrl: wantsCheckout ? absoluteUrl(portalPayPath(created.id)) : null }), ...await sync(tx, [d.projectId])];
@@ -110,8 +125,9 @@ export async function updateInvoiceAction(form: FormData): Promise<void> {
       const leavesPayable = ["sent", "overdue"].includes(before.status) && !["sent", "overdue"].includes(d.status);
       const managedDetached = !!before.razorpayLinkId && (leavesPayable || (before.paymentLink ?? null) !== d.paymentLink);
       if (managedDetached) staleLinkId = before.razorpayLinkId;
-      const client = await owner(tx, d);
-      const updated = await tx.invoice.update({ where: { id }, data: { ...d, ...(managedDetached ? { razorpayLinkId: null } : {}) } });
+      const { client, milestone } = await owner(tx, d);
+      const billing = billingSnapshot(d, milestone, before);
+      const updated = await tx.invoice.update({ where: { id }, data: { ...d, ...billing, ...(managedDetached ? { razorpayLinkId: null } : {}) } });
       if (d.status === "paid" && before.status !== "paid") await recordPaymentTransaction(tx, updated);
       const changed = before.status !== d.status || before.amount !== d.amount || before.number !== d.number || before.currency !== d.currency || before.clientId !== d.clientId || before.dueDate?.getTime() !== d.dueDate?.getTime() || (before.paymentLink ?? null) !== d.paymentLink;
       // Email pay target: manual link wins; otherwise portal checkout when the

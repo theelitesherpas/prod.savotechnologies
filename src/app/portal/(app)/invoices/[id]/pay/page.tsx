@@ -9,6 +9,8 @@ import { checkoutTotals } from "@/lib/payment-fees";
 import { invoicePaymentLink } from "@/lib/payment-links";
 import { verifiedReceiptPayment } from "@/lib/payment-receipt";
 import { fetchRazorpayPayment } from "@/lib/razorpay";
+import { BillingBreakdown } from "@/components/portal/billing-breakdown";
+import { invoiceDocumentItems, invoiceWorkDescription } from "@/lib/invoice-document";
 import { PaymentMethodChooser } from "@/components/portal/payment-method-chooser";
 import { CheckoutHelp, CheckoutIcon } from "@/components/portal/checkout-ui";
 import { CopyValue, PaymentStatusRefresh, PrintPayment } from "@/components/portal/checkout-actions";
@@ -31,7 +33,7 @@ export default async function PayInvoicePage({ params, searchParams }: {
   const { paid, payError } = await searchParams;
   const invoice = await prisma.invoice.findFirst({
     where: { id, clientId: client.id, status: { in: ["sent", "overdue", "paid", "cancelled"] } },
-    include: { project: { where: { clientId: client.id }, select: { code: true, title: true } } },
+    include: { project: { where: { clientId: client.id }, select: { code: true, title: true } }, milestone: { where: { project: { clientId: client.id } }, select: { title: true, description: true } } },
   });
   if (!invoice) redirect("/portal/invoices");
 
@@ -49,6 +51,12 @@ export default async function PayInvoicePage({ params, searchParams }: {
   const providerPayment = verifiedPaid && invoice.razorpayPaymentId
     ? await fetchRazorpayPayment(invoice.razorpayPaymentId).catch(() => null) : null;
   const receipt = verifiedReceiptPayment(invoice, providerPayment);
+  const workDescription = invoiceWorkDescription(invoice);
+  const workItems = invoiceDocumentItems(invoice);
+  const workDetails = workDescription || workItems.length ? <section aria-label="Work billed" className="my-5 min-w-0">
+    {workDescription ? <p className={`${styles.notes} whitespace-pre-wrap`}>{workDescription}</p> : null}
+    <BillingBreakdown items={workItems} currency={invoice.currency}/>
+  </section> : null;
 
   if (verifiedPaid) return <div className={styles.page}>
     <Link className={`${styles.backLink} ${styles.noPrint}`} href="/portal/invoices"><CheckoutIcon name="back"/>All invoices</Link>
@@ -73,6 +81,7 @@ export default async function PayInvoicePage({ params, searchParams }: {
         {receipt && receipt.extra > 0 ? <div><dt>Processing fees &amp; taxes paid</dt><dd>{fmtMoney(receipt.extra)}</dd></div> : null}
         <div><dt>Outstanding balance</dt><dd>{fmtMoney(0)}</dd></div>
       </dl>
+      {workDetails}
       <div className={styles.notice}><CheckoutIcon name="check"/><div><strong>You’re all set. No further payment is due.</strong><p>This confirmation stays in your portal. Download the updated invoice for your records, or quote the payment reference if you contact our team.</p></div></div>
       <div className={styles.documentActions}><a className={styles.primary} href={`/portal/invoices/${invoice.id}/pdf`} download><CheckoutIcon name="download"/>Download paid invoice</a><PrintPayment label="Print confirmation"/></div>
       <CheckoutHelp invoiceNumber={invoice.number}/>
@@ -100,6 +109,7 @@ export default async function PayInvoicePage({ params, searchParams }: {
       <div><dt>Due date</dt><dd>{invoice.dueDate ? fmtDate(invoice.dueDate) : "On receipt"}</dd></div>
       <div><dt>Invoice currency</dt><dd>{invoice.currency}</dd></div>
     </dl>
+    {workDetails}
     {invoice.notes ? <p className={styles.notes}>{invoice.notes}</p> : null}
     <a className={styles.backLink} href={`/portal/invoices/${invoice.id}/pdf?view=1`} target="_blank" rel="noopener noreferrer">View invoice PDF<CheckoutIcon name="arrow"/></a>
   </section>;

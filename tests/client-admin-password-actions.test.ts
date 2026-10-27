@@ -21,7 +21,7 @@ vi.mock("@/lib/client-password-receipt", () => ({ setClientPasswordReceipt: m.re
 vi.mock("next/cache", () => ({ revalidatePath: m.revalidate }));
 vi.mock("next/navigation", () => ({ redirect: (path: string) => { throw new Error(`REDIRECT:${path}`); } }));
 
-import { createClientAction, resetClientPasswordAction, revealClientPasswordReceiptAction } from "@/app/admin/(protected)/clients/actions";
+import { createClientAction, updateClientAction, resetClientPasswordAction, revealClientPasswordReceiptAction } from "@/app/admin/(protected)/clients/actions";
 
 const admin = { id: "admin-fixture", name: "Test Admin", role: "admin" };
 const password = "TestOnly_ClientPass_49!";
@@ -58,6 +58,19 @@ describe("client password admin actions", () => {
     expect(m.revalidate).toHaveBeenCalledWith("/admin/clients");
   });
 
+  it("stores optional billing address fields on account creation", async () => {
+    await expect(createClientAction(form({ name: "Test Client", email: "client@example.test", addressLine1: " 14 Example Road ", city: "Indore", region: "MP", postalCode: "452001", country: "India" }))).rejects.toThrow("created=1");
+    expect(m.clientCreate.mock.calls[0][0].data).toMatchObject({ addressLine1: "14 Example Road", addressLine2: "", city: "Indore", region: "MP", postalCode: "452001", country: "India" });
+  });
+  it("allows address edits and intentional clearing, without requiring any address", async () => {
+    await expect(updateClientAction(form({ id: "client-fixture", name: "Test Client", email: "client@example.test", addressLine1: "", city: "New city" }))).rejects.toThrow("saved=1");
+    expect(m.clientUpdate.mock.calls[0][0].data).toMatchObject({ addressLine1: "", city: "New city" });
+    expect(m.clientUpdate.mock.calls[0][0].data).not.toHaveProperty("country");
+  });
+  it("rejects invalid address length before saving", async () => {
+    await expect(createClientAction(form({ name: "Test Client", email: "client@example.test", addressLine1: "x".repeat(201) }))).rejects.toThrow("Check%20the%20fields");
+    expect(m.clientCreate).not.toHaveBeenCalled();
+  });
   it("rotates the password and revokes client sessions in one transaction", async () => {
     await expect(resetClientPasswordAction(form({ id: "client-fixture" })))
       .rejects.toThrow("REDIRECT:/admin/clients?reset=1");

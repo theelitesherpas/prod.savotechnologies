@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { clientAddressSchema, clientAddressInput, CLIENT_ADDRESS_FIELDS } from "@/lib/client-address";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { requireSection } from "@/lib/permissions";
@@ -23,7 +24,7 @@ export type ClientPasswordReceiptState =
  * and shown once after create/reset - never stored in plaintext.
  */
 
-const clientSchema = z.object({
+const clientSchema = clientAddressSchema.extend({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().toLowerCase().email().max(120),
   company: z.string().trim().max(120).optional().or(z.literal("")),
@@ -44,6 +45,7 @@ export async function createClientAction(formData: FormData): Promise<void> {
     email: formData.get("email"),
     company: formData.get("company") ?? "",
     active: true,
+    ...clientAddressInput(formData),
   });
   if (!parsed.success) redirect(slugError("Check the fields - name and a valid email are required."));
 
@@ -59,7 +61,7 @@ export async function createClientAction(formData: FormData): Promise<void> {
     rejectManualBusinessId(formData.get("businessId"));
     const passwordHash = await hashPassword(password);
     const client = await businessTransaction(async tx => tx.clientUser.create({
-      data: { name: parsed.data.name, email: parsed.data.email, company: parsed.data.company ?? "", passwordHash, businessId: await claimBusinessId(formData, "CS", user.id, tx) ?? await generateBusinessId("CS", tx) },
+      data: { ...clientAddressSchema.parse(parsed.data), name: parsed.data.name, email: parsed.data.email, company: parsed.data.company ?? "", passwordHash, businessId: await claimBusinessId(formData, "CS", user.id, tx) ?? await generateBusinessId("CS", tx) },
     }));
     await audit(user.id, "client.create", "ClientUser", client.email, { businessId: client.businessId });
     sendTemplateNow("clientWelcome", client.email, { name: parsed.data.name, email: client.email, password, clientReference: client.businessId ?? "" });
@@ -86,6 +88,7 @@ export async function updateClientAction(formData: FormData): Promise<void> {
     email: formData.get("email"),
     company: formData.get("company") ?? "",
     active: formData.get("active") === "on" || formData.get("active") === "true",
+    ...clientAddressInput(formData),
   });
   if (!parsed.success) redirect(`/admin/clients/${id}?e=invalid`);
 
@@ -98,6 +101,8 @@ export async function updateClientAction(formData: FormData): Promise<void> {
         email: parsed.data.email,
         company: parsed.data.company ?? "",
         active: parsed.data.active,
+        // An older form that omits address fields must not erase a saved address.
+        ...Object.fromEntries(CLIENT_ADDRESS_FIELDS.filter(field => formData.has(field)).map(field => [field, parsed.data[field]])),
       },
     });
   } catch {
@@ -105,6 +110,8 @@ export async function updateClientAction(formData: FormData): Promise<void> {
   }
   await audit(user.id, "client.update", "ClientUser", parsed.data.email);
   revalidatePath("/admin/clients");
+  revalidatePath(`/admin/clients/${id}`);
+  revalidatePath("/portal", "layout");
   redirect("/admin/clients?saved=1");
 }
 

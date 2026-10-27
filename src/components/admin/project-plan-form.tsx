@@ -7,10 +7,12 @@ import { majorUnits, minorUnits, PROJECT_CURRENCIES, PROJECT_STATUSES, PROJECT_S
 import { invoiceMoney } from "@/lib/invoice-document";
 import s from "./project-plan.module.css";
 import { BusinessIdField } from "./business-id-field";
+import { PricedTasksEditor } from "./priced-tasks-editor";
+import { draftBillingTotal, milestoneTasks, type TaskDraft } from "@/lib/billing-items";
 
-type Milestone = { id?: string; title: string; amount: number | null; description: string; status: string; dueDate: string };
+type Milestone = { id?: string; title: string; amount: number | null; description: string; status: string; dueDate: string; tasks?: unknown };
 type Project = { id: string; clientId: string; title: string; code: string; summary: string; budget: number | null; currency: string; status: string; startDate: string; dueDate: string; revision: string };
-type Row = { key: string; id?: string; title: string; amountMajor: string; description: string; status: string; dueDate: string };
+type Row = { key: string; id?: string; title: string; amountMajor: string; description: string; status: string; dueDate: string; tasks: TaskDraft[] };
 export function ProjectPlanForm({ action, clients, project, milestones = [], locked = false, currencyLocked = locked, selectedClient }: {
   action: (form: FormData) => Promise<void>;
   clients: { id: string; name: string; company?: string; businessId?: string | null }[];
@@ -19,7 +21,7 @@ export function ProjectPlanForm({ action, clients, project, milestones = [], loc
   const counter = useRef(0);
   const [currency, setCurrency] = useState(project?.currency || "INR");
   const [budget, setBudget] = useState(majorUnits(project?.budget));
-  const [rows, setRows] = useState<Row[]>(() => milestones.length ? milestones.map((m, i) => ({ ...m, key: m.id || `row-${i}`, amountMajor: majorUnits(m.amount) })) : [{ key: "initial", title: "", amountMajor: "", description: "", status: "pending", dueDate: "" }]);
+  const [rows, setRows] = useState<Row[]>(() => milestones.length ? milestones.map((m, i) => ({ ...m, key: m.id || `row-${i}`, amountMajor: majorUnits(m.amount), tasks: milestoneTasks(m.tasks).map(task => ({ title: task.title, amountMajor: majorUnits(task.amount) })) })) : [{ key: "initial", title: "", amountMajor: "", description: "", status: "pending", dueDate: "", tasks: [] }]);
   const change = (key: string, value: Partial<Row>) => setRows(rows => rows.map(row => row.key === key ? { ...row, ...value } : row));
   const money = (value: number) => invoiceMoney(value, currency);
   const amount = (value: string) => { try { return minorUnits(value); } catch { return null; } };
@@ -29,7 +31,7 @@ export function ProjectPlanForm({ action, clients, project, milestones = [], loc
   const balanced = fixed != null && fixed > 0 && rows.length > 0 && costs.every(cost => cost != null && cost > 0) && allocated === fixed;
   return <FormGuard action={action} className={`adm-card ${s.form}`}>
     {project ? <><input type="hidden" name="id" value={project.id}/><input type="hidden" name="revision" value={project.revision}/></> : null}
-    <input type="hidden" name="milestones" value={JSON.stringify(rows.map(row => ({ id: row.id, title: row.title, amountMajor: row.amountMajor, description: row.description, status: row.status, dueDate: row.dueDate })))}/>
+    <input type="hidden" name="milestones" value={JSON.stringify(rows.map(row => ({ id: row.id, title: row.title, amountMajor: row.amountMajor, description: row.description, status: row.status, dueDate: row.dueDate, tasks: row.tasks })))}/>
     <section className={s.section} aria-labelledby="project-details-heading">
       <h2 id="project-details-heading">{project ? "Project details" : "Create a project"}</h2>
       <p className={s.hint}>Define the scope, budget and delivery plan the client will see.</p>
@@ -47,15 +49,19 @@ export function ProjectPlanForm({ action, clients, project, milestones = [], loc
       {locked ? <p className={s.hint}>Client ownership is locked because invoices are linked. Budgeted projects also retain their original currency. Legacy plans must match their existing invoice currencies.</p> : null}
     </section>
     <section className={s.section} aria-labelledby="base-milestones-heading">
-      <div className={s.sectionHeading}><div><h2 id="base-milestones-heading">Base milestones</h2><p className={s.hint}>Allocate the entire fixed budget. No more, no less. Delivery progress follows completed milestone costs.</p></div><button type="button" className={s.add} disabled={rows.length >= 100} onClick={() => setRows(rows => [...rows, { key: `new-${++counter.current}`, title: "", amountMajor: "", description: "", status: "pending", dueDate: "" }])}>Add milestone</button></div>
+      <div className={s.sectionHeading}><div><h2 id="base-milestones-heading">Base milestones</h2><p className={s.hint}>Allocate the entire fixed budget. No more, no less. Delivery progress follows completed milestone costs.</p></div><button type="button" className={s.add} disabled={rows.length >= 100} onClick={() => setRows(rows => [...rows, { key: `new-${++counter.current}`, title: "", amountMajor: "", description: "", status: "pending", dueDate: "", tasks: [] }])}>Add milestone</button></div>
       <div className={s.rows}>{rows.map((row, index) => <fieldset className={s.milestone} key={row.key}><legend>Milestone {index + 1}</legend>
         <div className={s.milestoneGrid}>
           <div><label htmlFor={`ms-title-${row.key}`}>Title</label><input id={`ms-title-${row.key}`} required minLength={2} maxLength={140} value={row.title} onChange={e => change(row.key, { title: e.target.value })} className="adm-input w-full" placeholder="Discovery and design"/></div>
-          <div><label htmlFor={`ms-cost-${row.key}`}>Cost · {currency}</label><input id={`ms-cost-${row.key}`} type="number" required min="0.01" step="0.01" max="21474836.47" value={row.amountMajor} onChange={e => change(row.key, { amountMajor: e.target.value })} className="adm-input w-full"/></div>
+          <div><label htmlFor={`ms-cost-${row.key}`}>Cost · {currency}</label><input id={`ms-cost-${row.key}`} type="number" required min="0.01" step="0.01" max="21474836.47" readOnly={row.tasks.length > 0} value={row.amountMajor} onChange={e => change(row.key, { amountMajor: e.target.value })} className="adm-input w-full"/></div>
           <div><label htmlFor={`ms-date-${row.key}`}>Due date (optional)</label><input id={`ms-date-${row.key}`} type="date" value={row.dueDate} onChange={e => change(row.key, { dueDate: e.target.value })} className="adm-input w-full"/></div>
           <div><label htmlFor={`ms-status-${row.key}`}>Delivery status</label><select id={`ms-status-${row.key}`} value={row.status} onChange={e => change(row.key, { status: e.target.value })} className="adm-select w-full"><option value="pending">Upcoming</option><option value="in_progress">In progress</option><option value="done">Done</option></select></div>
         </div>
-        <div className={s.rowFoot}><details><summary>Milestone description (optional)</summary><textarea aria-label={`Description for milestone ${index + 1}`} rows={2} maxLength={2000} value={row.description} onChange={e => change(row.key, { description: e.target.value })} className="adm-input w-full"/></details><button className={s.remove} type="button" disabled={rows.length === 1} onClick={() => setRows(rows => rows.filter(m => m.key !== row.key))}>Remove milestone {index + 1}</button></div>
+        <PricedTasksEditor currency={currency} rows={row.tasks} onChange={tasks => {
+          const total = draftBillingTotal(tasks);
+          change(row.key, { tasks, amountMajor: tasks.length ? total == null ? "" : majorUnits(total) : row.amountMajor });
+        }}/>
+        <div className={s.rowFoot}><details open={!!row.description}><summary>Milestone notes (shown on invoices)</summary><textarea aria-label={`Description for milestone ${index + 1}`} rows={2} maxLength={2000} value={row.description} onChange={e => change(row.key, { description: e.target.value })} className="adm-input w-full"/></details><button className={s.remove} type="button" disabled={rows.length === 1} onClick={() => setRows(rows => rows.filter(m => m.key !== row.key))}>Remove milestone {index + 1}</button></div>
       </fieldset>)}</div>
       <div className={s.allocation} data-balanced={balanced}><dl><div><dt>Fixed base budget</dt><dd>{fixed == null ? "Not set" : money(fixed)}</dd></div><div><dt>Allocated</dt><dd>{money(allocated)}</dd></div></dl><output aria-live="polite">{balanced ? "Fully allocated — ready to save." : fixed == null || !fixed ? "Enter the fixed budget and milestone costs." : allocated < fixed ? `${money(fixed - allocated)} still to allocate.` : `${money(allocated - fixed)} over budget. Reduce milestone costs.`}</output></div>
     </section>

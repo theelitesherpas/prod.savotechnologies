@@ -282,6 +282,13 @@ model ClientUser {
   passwordHash String   @map("password_hash")
   name         String
   company      String   @default("")
+  /// Optional billing address, shown on invoices only when supplied.
+  addressLine1 String   @default("") @map("address_line_1")
+  addressLine2 String   @default("") @map("address_line_2")
+  city         String   @default("")
+  region       String   @default("")
+  postalCode   String   @default("") @map("postal_code")
+  country      String   @default("")
   active       Boolean  @default(true)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -351,6 +358,10 @@ model ProjectMilestone {
   description String      @default("")
   /// Allocated cost in the parent project's currency; null for legacy rows.
   amount    Int?          @map("amount_minor")
+  /// Optional task breakdown: [{ title, amount(minor) }]. When present the
+  /// task amounts must add up exactly to `amount` so invoices raised for
+  /// this milestone can bill its tasks line by line.
+  tasks     Json?         @default("[]")
   /// base | additional. Base allocations must equal the project's fixed budget.
   scope     String        @default("base")
   /// pending | in_progress | done
@@ -395,6 +406,11 @@ model Invoice {
   milestoneId String?          @map("milestone_id")
   milestone   ProjectMilestone? @relation(fields: [milestoneId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   number    String         @unique
+  /// Billed line items snapshot: [{ description, amount(minor) }]. Empty for
+  /// legacy invoices; when present the amounts add up exactly to `amount`.
+  items     Json?          @default("[]")
+  /// Work/milestone notes captured at issuance. Null identifies legacy records.
+  description String?      @map("work_description")
   /// Minor units (e.g. 250000 = Rs 2,500.00).
   amount    Int
   currency  String         @default("INR")

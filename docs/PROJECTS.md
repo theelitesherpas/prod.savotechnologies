@@ -6,7 +6,15 @@
 Required: client, title, description, fixed base budget, currency, estimated
 project delivery date and at least one milestone. Each base milestone has a
 title, positive cost, delivery state, optional notes and optional due date.
-Reference codes can be supplied or generated collision-resistantly.
+New references are server-generated and immutable.
+
+Each milestone can also contain **up to three named tasks with prices**. Task
+prices automatically calculate the milestone cost and must sum to it exactly
+server-side; task names are limited to 80 characters for the one-line invoice
+rows. The task breakdown is optional for existing aggregate plans. Milestone
+notes remain optional and copy into the invoice Description section. Additional
+work uses the same task editor and validation. Prices are always in the project
+currency. The fixed-budget allocation rules below remain unchanged.
 
 Currencies: INR, USD, CHF, EUR, GBP and AED. All current currencies use integer
 minor units (100 paise/cents to a major unit). Decimal strings are parsed
@@ -28,7 +36,9 @@ A forged/invalid plan cannot partially save a project or its allocations.
   Each module shows its linked-invoice payment status (Paid, Partially paid,
   Unpaid or Not invoiced) plus a **Raise invoice for this milestone** shortcut
   that opens the billing form with that milestone and its allocated cost
-  prefilled. Payment status follows only the milestone's linked invoices:
+  prefilled, along with its work notes and up to three task prices. Invoice
+  creation saves its own billed-work snapshot; later plan edits do not rewrite
+  issued invoice descriptions/prices. Payment status follows only the milestone's linked invoices:
   a paid invoice marks the milestone Paid; sent/overdue/draft leave it Unpaid
   (or Partially paid once payments cover part of the cost); cancelled invoices
   never count; milestones without links show Not invoiced. Delivery status and
@@ -127,7 +137,12 @@ Additive fields only:
 - ClientProject: nullable budget (minor units), currency (default INR),
   completedByPayment (default false).
 - ProjectMilestone: nullable amount (minor units), description, scope (base or
-  additional, default base).
+  additional, default base), optional `tasks` JSON (default empty array).
+- Invoice: optional `items` JSON (default empty array) and nullable
+  `work_description` for issued work snapshots. Null identifies legacy invoices.
+- ClientUser: optional street/address-line-2/city/region/postal/country strings
+  (default empty). Managed in client add/edit forms, shown only when supplied
+  under Bill to. See `docs/INVOICES.md` for the one-page invoice layout.
 
 Existing unbudgeted projects/rows remain visible and are not assigned invented
 costs or payment-completion rules. Admin setup must supply/allocate a budget.

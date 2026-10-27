@@ -6,6 +6,8 @@ import { BusinessIdField } from "@/components/admin/business-id-field";
 import { InvoicePaymentField } from "@/components/admin/invoice-payment-field";
 import { FormGuard } from "@/components/admin/form-guard";
 import { SubmitButton } from "@/components/admin/form";
+import { InvoiceContentFields } from "@/components/admin/invoice-content-fields";
+import { milestoneBillingDescription, milestoneInvoiceItems } from "@/lib/billing-items";
 
 /** Raise an invoice straight from a project. The project, client and currency
  * are fixed; a milestone (optional) links the invoice to that deliverable so
@@ -14,12 +16,11 @@ import { SubmitButton } from "@/components/admin/form";
 export function ProjectInvoiceForm({ action = createInvoiceAction, projectId, clientId, currency, today, milestones, initialMilestoneId = "", open = false, invoiceCount = 0, compact = false }: {
   action?: (formData: FormData) => Promise<void>;
   projectId: string; clientId: string; currency: string; today: string;
-  milestones: { id: string; title: string; amount: number | null; scope: string; status: string }[];
+  milestones: { id: string; title: string; description?: string; tasks?: unknown; amount: number | null; scope: string; status: string }[];
   initialMilestoneId?: string; open?: boolean; invoiceCount?: number; compact?: boolean;
 }) {
   const [milestoneId, setMilestoneId] = useState(initialMilestoneId);
   const selected = milestones.find(m => m.id === milestoneId) ?? null;
-  const [amount, setAmount] = useState(selected ? major(selected.amount) : "");
   const input = "adm-input w-full";
   return (
     <details className="adm-card p-5" open={open} id="raise-invoice">
@@ -33,19 +34,14 @@ export function ProjectInvoiceForm({ action = createInvoiceAction, projectId, cl
           <div>
             <label className="adm-label mb-1.5 block" htmlFor="project-invoice-milestone">Milestone (optional)</label>
             <select id="project-invoice-milestone" name="milestoneId" value={milestoneId} onChange={e => {
-              const next = milestones.find(m => m.id === e.target.value) ?? null;
               setMilestoneId(e.target.value);
-              setAmount(next ? major(next.amount) : "");
             }} className="adm-select w-full">
               <option value="">No milestone link</option>
               {milestones.map(m => <option key={m.id} value={m.id}>{m.title}{m.amount != null ? ` · ${major(m.amount)} ${currency}` : ""}{m.scope === "additional" ? " · additional" : ""}</option>)}
             </select>
-            <p className="mt-2 text-xs leading-relaxed text-muted">Choosing a milestone fills its allocated cost as the amount; adjust only if you are billing part of it.</p>
+            <p className="mt-2 text-xs leading-relaxed text-muted">Choosing a milestone copies its notes and task prices into the invoice. Review the work being billed before saving.</p>
           </div>
-          <div>
-            <label className="adm-label mb-1.5 block" htmlFor="project-invoice-amount">Amount ({currency}) *</label>
-            <input id="project-invoice-amount" name="amountMajor" type="number" step="0.01" min="0.01" max="21474836.47" required value={amount} onChange={e => setAmount(e.target.value)} className={input} placeholder="2500.00" inputMode="decimal"/>
-          </div>
+          <InvoiceContentFields key={milestoneId} currency={currency} initialAmount={selected?.amount} initialDescription={selected ? milestoneBillingDescription({ title: selected.title, description: selected.description ?? "" }) : ""} initialItems={selected ? milestoneInvoiceItems(selected) : []}/>
           <div>
             <label className="adm-label mb-1.5 block" htmlFor="project-invoice-status">Status</label>
             <select id="project-invoice-status" name="status" defaultValue="sent" className="adm-select w-full">{["draft", "sent", "paid", "overdue", "cancelled"].map(s => <option key={s} value={s}>{s}</option>)}</select>
@@ -60,7 +56,7 @@ export function ProjectInvoiceForm({ action = createInvoiceAction, projectId, cl
           </div>
           {!compact ? <div className="sm:col-span-2">
             <label className="adm-label mb-1.5 block" htmlFor="project-invoice-notes">Notes</label>
-            <input id="project-invoice-notes" name="notes" maxLength={500} className={input} placeholder={selected ? `Milestone: ${selected.title}` : "Optional note shown to the client"}/>
+            <textarea id="project-invoice-notes" name="notes" rows={2} maxLength={500} className={input} placeholder="Optional payment or invoice note (separate from the work description)"/>
           </div> : null}
           <InvoicePaymentField/>
         </div>

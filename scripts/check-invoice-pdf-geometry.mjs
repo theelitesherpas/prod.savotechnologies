@@ -12,7 +12,10 @@ let checks = 0;
 const ok = (condition, message) => { assert(condition, message); checks++; };
 for (const document of documents) {
   const allText = document.pages.flatMap(page => page.lines.map(line => line.text)).join("\n");
-  const stamp = { paid: "PAID", overdue: "OVERDUE", cancelled: "CANCELLED" }[document.name] ?? "UNPAID";
+  const status = document.name.startsWith("tasks-address-") ? document.name.slice("tasks-address-".length) : document.name;
+  const stamp = { paid: "PAID", overdue: "OVERDUE", cancelled: "CANCELLED" }[status] ?? "UNPAID";
+  const taskInvoice = document.name.startsWith("tasks-address-") || ["issued", "without-address"].includes(document.name);
+  ok(document.pages.length === 1, `${document.name}: exactly one page, never continuation pages`);
   ok(document.pages[0].lines.some(line => line.text === stamp), `${document.name}: correct stored-status stamp`);
   for (const label of ["INVOICE", "Bill to", "Invoice date", "Due date", "Currency", "Invoice total", "Amount paid", "Balance due"])
     ok(allText.includes(label), `${document.name}: retains ${label}`);
@@ -28,18 +31,25 @@ for (const document of documents) {
       }
     }
   }
-  ok(monetaryRows === 4, `${document.name}: exactly one service amount and three summary values, without duplicated continuation amounts`);
-  if (["paid", "cancelled"].includes(document.name)) ok(/Balance due\s+INR\s+0\.00/.test(allText), `${document.name}: zero balance`);
+  ok(monetaryRows === (taskInvoice ? 6 : 4), `${document.name}: exactly ${taskInvoice ? "three task prices" : "one service amount"} and three summary values`);
+  if (taskInvoice) {
+    for (const task of ["Booking form development", "Payment gateway integration", "QA and release"])
+      ok(document.pages[0].lines.filter(line => line.text.includes(task)).length === 1, `${document.name}: ${task} occupies one line exactly once`);
+    ok(!allText.includes("Professional services"), `${document.name}: actual billed work replaces generic service label`);
+  }
+  if (document.name === "issued") ok(allText.includes("14 Example Road") && allText.includes("Suite 3") && allText.includes("452001"), "optional customer address appears under Bill to");
+  if (document.name === "without-address") ok(!allText.includes("14 Example Road") && !allText.includes("Suite 3") && !allText.includes("452001"), "blank customer address is completely omitted");
+  if (["paid", "cancelled"].includes(status)) ok(/Balance due\s+INR\s+0\.00/.test(allText), `${document.name}: zero balance`);
   if (document.name === "long-values") {
     ok(allText.includes("Zoë Müller — Genève"), "Unicode client name survives actual PDF rendering/extraction");
-    ok((allText.match(/Detailed synthetic note with a line break\./g) ?? []).length === 90, "all note lines retained across pages");
-    ok(allText.includes("Notes (continued)"), "notes retain continuation context");
+    ok(allText.includes("Detailed synthetic note"), "long notes remain represented");
+    ok(allText.includes("Long text is shortened"), "abbreviation is disclosed on the single-page document");
   }
   if (document.name === "long-service") {
-    ok((allText.replace(/\s+/g, " ").match(/Synthetic detailed service scope\./g) ?? []).length === 180, "full multi-page service description retained");
-    ok(allText.includes("Professional services (continued)"), "service table retains continuation context");
+    ok(allText.includes("Synthetic detailed service scope"), "legacy service description remains represented");
+    ok(allText.includes("Long text is shortened"), "long service abbreviation is disclosed");
   }
-  if (document.name === "long-billing") ok(allText.includes("BILLING-END-MARKER") && allText.includes("STPLCS02684"), "all legacy billing content retained after pagination");
+  if (document.name === "long-billing") ok(allText.includes("BILLING-END-MARKER") && allText.includes("STPLCS02684"), "client identity retained on the single-page legacy document");
 }
 const report = `${documents.length} synthetic PDFs: ${checks} PDFKit geometry/content checks passed. No real customer documents used.\n`;
 await writeFile(join(dirname(file), "geometry-report.txt"), report);

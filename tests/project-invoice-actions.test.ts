@@ -24,7 +24,7 @@ describe("connected invoice/admin mutations",()=>{
  it("requires section authorization before touching invoices",async()=>{m.section.mockRejectedValue(new Error("Forbidden"));await expect(createInvoiceAction(form(true))).rejects.toThrow("Forbidden");expect(m.transaction).not.toHaveBeenCalled();});
  it("rejects a foreign project even when a forged form supplies its ID",async()=>{m.projectFind.mockResolvedValue(null);await expect(createInvoiceAction(form(true))).rejects.toThrow(/does%20not%20belong/);expect(m.invoiceCreate).not.toHaveBeenCalled();expect(m.emails).not.toHaveBeenCalled();});
  it("rejects a linked invoice in the wrong currency",async()=>{const f=form(true);f.set("currency","EUR");await expect(createInvoiceAction(f)).rejects.toThrow(/currency%20must%20match/);expect(m.invoiceCreate).not.toHaveBeenCalled();});
- it("links a milestone, stores the link and keeps it with the invoice",async()=>{m.milestoneFind.mockResolvedValue({projectId:before.projectId,project:{clientId:before.clientId,currency:"USD"}});const f=form(true);f.set("milestoneId","milestone-12345");await expect(createInvoiceAction(f)).rejects.toThrow("saved=created");expect(m.milestoneFind).toHaveBeenCalledWith({where:{id:"milestone-12345"},select:{projectId:true,project:{select:{clientId:true,currency:true}}}});expect(m.invoiceCreate.mock.calls[0][0].data.milestoneId).toBe("milestone-12345");});
+ it("links a milestone, stores the link and keeps it with the invoice",async()=>{m.milestoneFind.mockResolvedValue({projectId:before.projectId,title:"Design",description:"Agreed scope",tasks:[],project:{clientId:before.clientId,currency:"USD"}});const f=form(true);f.set("milestoneId","milestone-12345");await expect(createInvoiceAction(f)).rejects.toThrow("saved=created");expect(m.milestoneFind).toHaveBeenCalledWith({where:{id:"milestone-12345"},select:{projectId:true,title:true,description:true,tasks:true,project:{select:{clientId:true,currency:true}}}});expect(m.invoiceCreate.mock.calls[0][0].data.milestoneId).toBe("milestone-12345");});
  it("rejects a milestone that belongs to a different project",async()=>{m.milestoneFind.mockResolvedValue({projectId:"project-other12",project:{clientId:before.clientId,currency:"USD"}});const f=form(true);f.set("milestoneId","milestone-12345");await expect(createInvoiceAction(f)).rejects.toThrow(/own%20project/);expect(m.invoiceCreate).not.toHaveBeenCalled();expect(m.emails).not.toHaveBeenCalled();});
  it("rejects a milestone whose project uses a different currency",async()=>{m.milestoneFind.mockResolvedValue({projectId:before.projectId,project:{clientId:before.clientId,currency:"EUR"}});const f=form(true);f.set("milestoneId","milestone-12345");await expect(createInvoiceAction(f)).rejects.toThrow(/milestone's%20project%20currency/);expect(m.invoiceCreate).not.toHaveBeenCalled();});
  it("rejects an unknown milestone id before creating anything",async()=>{m.milestoneFind.mockResolvedValue(null);const f=form(true);f.set("milestoneId","milestone-unknown");await expect(createInvoiceAction(f)).rejects.toThrow(/Milestone%20not%20found/);expect(m.invoiceCreate).not.toHaveBeenCalled();});
@@ -53,6 +53,36 @@ describe("confirmed transaction history from admin actions",()=>{
  it("does not fabricate a transaction when editing an unpaid invoice",async()=>{
   await expect(updateInvoiceAction(form())).rejects.toThrow("saved=1");
   expect(m.history.create).not.toHaveBeenCalled();
+ });
+});
+
+describe("itemised invoice snapshots", () => {
+ it("copies milestone notes and exact task prices when creating without explicit invoice content", async () => {
+  m.milestoneFind.mockResolvedValue({ projectId: before.projectId, title: "Website release", description: "Completed the agreed implementation.", tasks: [{ title: "Development", amount: 10000 }, { title: "Testing", amount: 2345 }], project: { clientId: before.clientId, currency: "USD" } });
+  const f = form(true); f.set("milestoneId", "milestone-12345");
+  await expect(createInvoiceAction(f)).rejects.toThrow("saved=created");
+  expect(m.invoiceCreate.mock.calls[0][0].data).toMatchObject({ description: "Website release\nCompleted the agreed implementation.", items: [{ description: "Development", amount: 10000 }, { description: "Testing", amount: 2345 }] });
+ });
+ it("stores an explicit partial-work breakdown without rescaling or inventing task prices", async () => {
+  const f = form(true); f.set("description", "Partial release work"); f.set("items", JSON.stringify([{ description: "Development", amountMajor: "100.00" }, { description: "Testing", amountMajor: "23.45" }]));
+  await expect(createInvoiceAction(f)).rejects.toThrow("saved=created");
+  expect(m.invoiceCreate.mock.calls[0][0].data).toMatchObject({ description: "Partial release work", amount: 12345, items: [{ description: "Development", amount: 10000 }, { description: "Testing", amount: 2345 }] });
+ });
+ it("preserves saved work when an older form updates only invoice status", async () => {
+  m.invoiceFind.mockResolvedValue({ ...before, description: "Original work", items: [{ description: "Original task", amount: 12345 }] });
+  await expect(updateInvoiceAction(form())).rejects.toThrow("saved=1");
+  expect(m.invoiceUpdate.mock.calls[0][0].data).toMatchObject({ description: "Original work", items: [{ description: "Original task", amount: 12345 }] });
+ });
+ it("rejects a changed amount that no longer matches saved task prices", async () => {
+  m.invoiceFind.mockResolvedValue({ ...before, items: [{ description: "Original task", amount: 12345 }] });
+  const f = form(); f.set("amountMajor", "123.46");
+  await expect(updateInvoiceAction(f)).rejects.toThrow(/exactly/);
+  expect(m.invoiceUpdate).not.toHaveBeenCalled();
+ });
+ it("rejects forged mismatched task totals before opening a transaction", async () => {
+  const f = form(true); f.set("items", JSON.stringify([{ description: "Task", amountMajor: "123.44" }]));
+  await expect(createInvoiceAction(f)).rejects.toThrow(/exactly/);
+  expect(m.transaction).not.toHaveBeenCalled();
  });
 });
 
