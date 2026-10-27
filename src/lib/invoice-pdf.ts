@@ -121,7 +121,13 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
     for (const row of wrap(text, 8.5, 285)) { line(row, margin, supplierEnd, 8.5, font, muted); supplierEnd += 12.5; }
   }
   single(`${SITE.email}  ·  ${SITE.phone}`, margin, supplierEnd + 2, 285, 8.5, font, muted);
-  let cursor = Math.max(supplierEnd + 14.5, stampTop + stampHeight) + 12;
+  supplierEnd += 14.5;
+  const registration = [
+    [SITE.registration.gst ? `GSTIN: ${SITE.registration.gst}` : "", SITE.registration.tan ? `TAN: ${SITE.registration.tan}` : ""].filter(Boolean).join(" · "),
+    SITE.registration.cin ? `CIN: ${SITE.registration.cin}` : "",
+  ].filter(Boolean);
+  for (const value of registration) { single(value, margin, supplierEnd, 285, 8.5, font, muted); supplierEnd += 12.5; }
+  let cursor = Math.max(supplierEnd, stampTop + stampHeight) + 12;
   rule(cursor); cursor += 18;
 
   // Optional address uses the same quiet type and line spacing as our address.
@@ -147,13 +153,18 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
 
   // Budget the prose around the three task lines and financial summary. Long
   // text gets an explicit ellipsis, not an invisible clip or a second page.
-  const summaryHeight = 114, closingHeight = 36;
+  const summaryHeight = 114, closingHeight = 40;
   const noteRows = invoice.notes.trim() ? boundedRows(invoice.notes, 9, bodyWidth, 2) : [];
   const notesHeight = noteRows.length ? 28 + noteRows.length * 12.5 : 0;
   const descriptionWidth = bodyWidth - 188;
   const [workTitle, ...workNotes] = clean(invoiceWorkDescription(invoice)).split("\n");
-  const tableFixed = 36 + 18 + (invoice.project ? 26 : 0) + items.length * 24 + 28;
-  const noteLimit = Math.max(1, Math.min(4, Math.floor((bottom - cursor - tableFixed - summaryHeight - notesHeight - closingHeight) / 12.5)));
+  // Bottom-anchor settlement/closing content rather than stacking everything
+  // beneath short task lists and leaving the bottom third of the page empty.
+  const summaryTop = bottom - summaryHeight - notesHeight - closingHeight;
+  const tableBottom = summaryTop - 16;
+  const minimumTaskHeight = 20;
+  const tableFixed = 36 + 18 + (invoice.project ? 26 : 0) + items.length * minimumTaskHeight + 28;
+  const noteLimit = Math.max(1, Math.min(4, Math.floor((summaryTop - cursor - tableFixed) / 12.5)));
   rectangle(margin, cursor, bodyWidth, 30, soft); rule(cursor); rule(cursor + 30);
   line("Description", margin + 14, cursor + 9, 9, bold, muted);
   line("Amount", amountEdge, cursor + 9, 9, bold, muted, "right"); cursor += 36;
@@ -167,13 +178,20 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
     single(invoice.project.title, margin + 14, cursor, descriptionWidth, 9, font, muted); cursor += 13;
     single(invoice.project.code, margin + 14, cursor, descriptionWidth, 8.5, font, muted); cursor += 13;
   }
+  // Short invoices get comfortable task spacing. Dense three-task documents
+  // contract to measured minimum rows, without moving totals off the page.
+  const taskHeight = items.length ? Math.min(44, (tableBottom - cursor - 12) / items.length) : 0;
+  if (items.length && taskHeight < minimumTaskHeight) throw new Error("Invoice tasks exceed the single-page layout.");
   for (const item of items) {
-    rule(cursor + 3, margin + 14, amountEdge); cursor += 9;
-    single(item.description, margin + 14, cursor, descriptionWidth, 10);
-    line(invoiceMoney(item.amount, invoice.currency), amountEdge, cursor, 10.5, bold, ink, "right");
-    cursor += 15;
+    rule(cursor + 3, margin + 14, amountEdge);
+    const textTop = cursor + 9 + (taskHeight - 24) / 2;
+    single(item.description, margin + 14, textTop, descriptionWidth, 10);
+    line(invoiceMoney(item.amount, invoice.currency), amountEdge, textTop, 10.5, bold, ink, "right");
+    cursor += taskHeight;
   }
-  cursor += 12; rule(cursor); cursor += 16;
+  if (cursor + 12 > tableBottom) throw new Error("Invoice description exceeds the single-page layout.");
+  rule(tableBottom);
+  cursor = summaryTop;
 
   // Actions are annotations only; no payment/provider calls happen here.
   const external = invoicePaymentLink(invoice);
@@ -189,7 +207,7 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
     : invoice.status === "paid" ? "Payment recorded in full. Thank you."
     : invoice.status === "overdue" ? "Payment is overdue. Already paid? Please contact our team."
     : "Payment has not yet been recorded.";
-  const infoWidth = bodyWidth - 260 - 27, summaryTop = cursor;
+  const infoWidth = bodyWidth - 260 - 27;
   line(invoice.status === "paid" ? "Payment received" : invoice.status === "cancelled" ? "Invoice cancelled" : "Payment information", margin, cursor + 2.5, 10.5, bold);
   const infoLines = boundedRows(information, 9.3, infoWidth, 2);
   infoLines.forEach((value, index) => line(value, margin, cursor + 24 + index * 13, 9.3, font, invoice.status === "overdue" ? red : muted));

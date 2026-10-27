@@ -14,11 +14,21 @@ for (const document of documents) {
   const allText = document.pages.flatMap(page => page.lines.map(line => line.text)).join("\n");
   const status = document.name.startsWith("tasks-address-") ? document.name.slice("tasks-address-".length) : document.name;
   const stamp = { paid: "PAID", overdue: "OVERDUE", cancelled: "CANCELLED" }[status] ?? "UNPAID";
-  const taskInvoice = document.name.startsWith("tasks-address-") || ["issued", "without-address"].includes(document.name);
+  const knownTaskInvoice = document.name.startsWith("tasks-address-") || ["issued", "without-address"].includes(document.name);
+  const sparseCount = document.name.match(/^task-count-([0-3])$/);
+  const taskCount = knownTaskInvoice ? 3 : sparseCount ? Number(sparseCount[1]) : 0;
   ok(document.pages.length === 1, `${document.name}: exactly one page, never continuation pages`);
   ok(document.pages[0].lines.some(line => line.text === stamp), `${document.name}: correct stored-status stamp`);
   for (const label of ["INVOICE", "Bill to", "Invoice date", "Due date", "Currency", "Invoice total", "Amount paid", "Balance due"])
     ok(allText.includes(label), `${document.name}: retains ${label}`);
+  for (const registration of ["GSTIN: 23ABDCS2341B1Z1", "TAN: BPLS22850C", "CIN: U72900MP2020PTC050634"])
+    ok(allText.includes(registration), `${document.name}: supplied ${registration.split(":")[0]} appears on invoice`);
+  const contact = document.pages[0].lines.find(line => line.text.startsWith("For invoice queries"));
+  const closing = document.pages[0].lines.find(line => /^(Amounts reflect|Long text is shortened)/.test(line.text));
+  const settlement = document.pages[0].lines.find(line => line.text.startsWith("Invoice total"));
+  ok(contact?.y >= 95 && contact.y <= 112, `${document.name}: contact details remain near the footer, not above an empty bottom third`);
+  ok(closing?.y >= 85 && closing.y <= 100, `${document.name}: closing line uses the lower page consistently`);
+  ok(settlement?.y >= 210 && settlement.y <= 300, `${document.name}: totals anchor in the lower section even with sparse content`);
   let monetaryRows = 0;
   for (const page of document.pages) {
     ok(Math.abs(page.width - 595.28) < .1 && Math.abs(page.height - 841.89) < .1, `${document.name}: A4 page`);
@@ -31,8 +41,11 @@ for (const document of documents) {
       }
     }
   }
-  ok(monetaryRows === (taskInvoice ? 6 : 4), `${document.name}: exactly ${taskInvoice ? "three task prices" : "one service amount"} and three summary values`);
-  if (taskInvoice) {
+  ok(monetaryRows === (taskCount || 1) + 3, `${document.name}: exactly ${taskCount || 1} task/service prices and three summary values`);
+  if (sparseCount && taskCount) {
+    for (let index = 1; index <= taskCount; index++) ok(document.pages[0].lines.filter(line => line.text.includes(`Synthetic task ${index}`)).length === 1, `${document.name}: task ${index} remains a single line`);
+  }
+  if (knownTaskInvoice) {
     for (const task of ["Booking form development", "Payment gateway integration", "QA and release"])
       ok(document.pages[0].lines.filter(line => line.text.includes(task)).length === 1, `${document.name}: ${task} occupies one line exactly once`);
     ok(!allText.includes("Professional services"), `${document.name}: actual billed work replaces generic service label`);

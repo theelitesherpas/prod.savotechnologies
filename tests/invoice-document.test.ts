@@ -112,6 +112,14 @@ describe("invoice financial document", () => {
     expect((await PDFDocument.load(bytes)).getPageCount()).toBe(1);
     writeFileSync(`tmp/invoice-pdf/tasks-address-${status}.pdf`, bytes);
   });
+  it.each([0, 1, 2, 3])("keeps sparse invoices balanced on one page with %i tasks", async count => {
+    const bytes = await renderInvoicePdf({
+      ...invoice, amount: 3000, notes: "", description: "Release milestone", payUrl: "https://www.savotechnologies.com/portal/invoices/synthetic/pay",
+      items: Array.from({ length: count }, (_, index) => ({ description: `Synthetic task ${index + 1}`, amount: 3000 / count })),
+    }, now);
+    expect((await PDFDocument.load(bytes)).getPageCount()).toBe(1);
+    writeFileSync(`tmp/invoice-pdf/task-count-${count}.pdf`, bytes);
+  });
   it("rejects mismatched or too many task charges instead of printing a misleading total", async () => {
     await expect(renderInvoicePdf({ ...invoice, items: [{ description: "Wrong total", amount: 100 }] }, now)).rejects.toThrow("exactly");
     await expect(renderInvoicePdf({ ...invoice, items: Array.from({ length: 4 }, () => ({ description: "Extra task", amount: 100 })) }, now)).rejects.toThrow();
