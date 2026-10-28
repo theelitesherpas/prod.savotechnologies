@@ -69,6 +69,17 @@ describe("invoice financial document", () => {
       expect(text).toContain("hello@savotechnologies.com");
     } finally { drawn.mockRestore(); }
   });
+  it("shows supplier email only in the bottom enquiry line and omits the mobile number", async () => {
+    const drawn = vi.spyOn(PDFPage.prototype, "drawText");
+    try {
+      await renderInvoicePdf(invoice, now);
+      const contact = drawn.mock.calls.filter(([value]) => value.includes("hello@savotechnologies.com") || value.includes("+91 75029 01234"));
+      expect(contact).toHaveLength(1);
+      expect(contact[0][0]).toBe("For invoice queries or payment instructions, contact hello@savotechnologies.com.");
+      expect(drawn.mock.calls.some(([value]) => value.includes("+91 75029 01234"))).toBe(false);
+      expect(contact[0][1]?.y).toBeLessThan(150);
+    } finally { drawn.mockRestore(); }
+  });
   it.each(["INR", "USD", "CHF", "EUR", "GBP", "AED"])("keeps the largest stored %s amount in a one-page document without shrinking body type", async currency => {
     const bytes = await renderInvoicePdf({ ...invoice, amount: 2147483647, currency, client: { ...invoice.client, businessId: "STPLCS02684" } }, now);
     const pdf = await PDFDocument.load(bytes);
@@ -86,10 +97,9 @@ describe("invoice financial document", () => {
       return annotations ? Array.from({ length: annotations.size() }, (_, index) => annotations.lookup(index, PDFDict)) : [];
     });
     expect(pdf.getPageCount()).toBe(1);
-    expect(annotations).toHaveLength(["sent", "overdue"].includes(status) ? 1 : 0);
-    if (annotations.length) {
-      expect(annotations[0].lookup(PDFName.of("A"), PDFDict).lookup(PDFName.of("URI"), PDFString).decodeText()).toBe(payUrl);
-    }
+    const urls = annotations.map(annotation => annotation.lookup(PDFName.of("A"), PDFDict).lookup(PDFName.of("URI"), PDFString).decodeText());
+    expect(urls).toContain("https://savotechnologies.com");
+    expect(urls.filter(url => url !== "https://savotechnologies.com")).toEqual(["sent", "overdue"].includes(status) ? [payUrl] : []);
     if (status === "sent") writeFileSync("tmp/invoice-pdf/portal-checkout.pdf", bytes);
   });
   it.each([
@@ -99,7 +109,26 @@ describe("invoice financial document", () => {
     { amount: 0, payUrl: "https://www.savotechnologies.com/portal/invoices/synthetic/pay" },
   ])("does not annotate unsafe, zero-value or invalid-manual-link fallbacks: %j", async input => {
     const pdf = await PDFDocument.load(await renderInvoicePdf({ ...invoice, ...input }, now));
-    expect(pdf.getPages().every(page => !page.node.Annots() || page.node.Annots()!.size() === 0)).toBe(true);
+    const urls = pdf.getPages().flatMap(page => {
+      const annotations = page.node.Annots();
+      return annotations ? Array.from({ length: annotations.size() }, (_, index) => annotations.lookup(index, PDFDict).lookup(PDFName.of("A"), PDFDict).lookup(PDFName.of("URI"), PDFString).decodeText()) : [];
+    });
+    expect(urls).toEqual(["https://savotechnologies.com"]);
+  });
+  it.each(["sent", "overdue", "paid", "cancelled"] as const)("keeps %s neutral with a single lower balance, HTTPS footer and only a red payable button", async status => {
+    const text = vi.spyOn(PDFPage.prototype, "drawText");
+    const rectangles = vi.spyOn(PDFPage.prototype, "drawRectangle");
+    try {
+      await renderInvoicePdf({ ...invoice, status, payUrl: "https://savotechnologies.com/portal/invoices/synthetic/pay" }, now);
+      const labels = text.mock.calls.map(([value]) => value);
+      expect(labels.filter(value => value === "Balance due")).toHaveLength(1);
+      expect(labels).toContain("www.savotechnologies.com");
+      expect(labels.some(value => /Page \d+ of \d+/.test(value))).toBe(false);
+      expect(text.mock.calls.filter(([, options]) => options?.color?.type === "RGB" && options.color.red > .6 && options.color.green < .3 && options.color.blue < .3)).toHaveLength(0);
+      const red = rectangles.mock.calls.filter(([options]) => options?.color?.type === "RGB" && options.color.red > .6 && options.color.green < .3 && options.color.blue < .3);
+      expect(red).toHaveLength(["sent", "overdue"].includes(status) ? 1 : 0);
+      if (red.length) expect(red[0][0]).toMatchObject({ width: 102, height: 26 });
+    } finally { text.mockRestore(); rectangles.mockRestore(); }
   });
   it("keeps oversized legacy service descriptions on one page", async () => {
     const bytes = await renderInvoicePdf({ ...invoice, notes: "", project: { code: "SYNTHETIC-SERVICE-END", title: "Synthetic detailed service scope. ".repeat(180) } }, now);

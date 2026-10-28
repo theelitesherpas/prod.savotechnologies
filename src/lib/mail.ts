@@ -51,6 +51,10 @@ function transport(): Transporter | null {
     port,
     secure: process.env.MAIL_SECURE ? process.env.MAIL_SECURE === "true" : port === 465,
     auth: process.env.MAIL_USER ? { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS } : undefined,
+    requireTLS: !["localhost", "127.0.0.1", "::1"].includes(host),
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
   });
   return cached;
 }
@@ -72,6 +76,10 @@ function hrTransport(): Transporter | null {
     port,
     secure: process.env.MAIL_SECURE ? process.env.MAIL_SECURE === "true" : port === 465,
     auth: { user: process.env.MAIL_HR_USER || "hr@savotechnologies.com", pass },
+    requireTLS: !["localhost", "127.0.0.1", "::1"].includes(host),
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
   });
   return cachedHr;
 }
@@ -87,7 +95,7 @@ export async function sendMail(
   to: string,
   tpl: MailTemplate,
   dept: "hello" | "hr" = "hello",
-  meta?: { templateKey?: string; sentBy?: string; toName?: string },
+  meta?: { templateKey?: string; sentBy?: string; toName?: string; sensitive?: boolean },
 ): Promise<boolean> {
   if (!liveMailAllowed()) {
     logger.info("mail.delivery_disabled", { dept });
@@ -127,7 +135,7 @@ export async function sendMail(
     return false;
   }
   try {
-    await t.sendMail({
+    const delivery = await t.sendMail({
       from,
       // Reply-To routes replies through SendGrid Inbound Parse
       // (reply.savotechnologies.com) into the admin panel. Only replies
@@ -147,7 +155,13 @@ export async function sendMail(
           }
         : {}),
     });
+    if (meta?.sensitive && !delivery.accepted?.length) {
+      logger.warn("mail.security_recipient_not_accepted", { dept });
+      return false;
+    }
     logger.info("mail: sent", { dept });
+    // Authentication secrets must never reach the sent-folder database/archive.
+    if (meta?.sensitive) return true;
     // Sent-folder log - never blocks or fails the send itself.
     try {
       const { prisma } = await import("./prisma");

@@ -61,8 +61,9 @@ async function pdfLinks(context, id) {
     const a = page.node.Annots();
     for (let i = 0; i < (a?.size() ?? 0); i++) links.push(a.lookup(i, PDFDict).lookup(PDFName.of("A"), PDFDict).lookup(PDFName.of("URI"), PDFString).decodeText());
   }
-  await writeFile(`${dir}/live-${links.length ? "payable" : "no-payment"}.pdf`, bytes);
-  return links;
+  const paymentLinks = links.filter(url => url !== "https://savotechnologies.com");
+  await writeFile(`${dir}/live-${paymentLinks.length ? "payable" : "no-payment"}.pdf`, bytes);
+  return paymentLinks;
 }
 try {
   operator = await p.adminUser.create({ data: { email: `${key}-admin@example.invalid`, name: "Synthetic Payment Review Admin", role: "admin", passwordHash: "local-session-fixture-no-password" } });

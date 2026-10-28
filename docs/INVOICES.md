@@ -163,20 +163,22 @@ All records use a single page; long text is fitted/visibly abbreviated.
 
 - Explicit white page, official black logo and fully embedded Inter fonts.
   A shared 48pt outer grid aligns the supplier, client, table and footer;
-  the red invoice title, number, understated status and header balance are
-  right-aligned. The header balance is informational, not an additional charge.
+  the black invoice title, number and understated status are right-aligned.
+  The balance appears only once, in the lower summary—not beneath the status.
 - Measured bill-to and date/currency columns preserve long client details
   without moving the metadata. Unusually long text is visibly shortened to
   preserve the one-page layout. Missing optional fields
   disappear cleanly rather than creating placeholder blocks.
 - The owner supplied `service-invoice-template-2x.webp` as composition inspiration.
-  Its orange is replaced by Savo red: a white-on-red table heading, numbered
-  service/task rows on one soft-grey field, restrained separators and a red
-  balance-due strip. Service amount, header balance, invoice total, amount paid
-  and final balance share one monetary right rail. The balance type adapts for
-  the largest stored amounts; body text stays readable.
+  The later owner refinement keeps that structure but removes the loud colour:
+  black/grey text, pale-grey table heading, white task rows, fine separators
+  and a neutral balance band. Only the solid Pay now button uses red. Milestone,
+  project title and reference are a compact left-aligned block above the table,
+  not an unnumbered task row. Service amount, invoice total, amount paid and
+  final balance share one monetary right rail. Balance type adapts for the
+  largest stored amounts; body text stays readable.
 - **Status label:** stored `paid` → green PAID; `sent` → neutral UNPAID;
-  `overdue` → red OVERDUE; `cancelled` → grey CANCELLED. This is a visual
+  `overdue` → ink OVERDUE; `cancelled` → grey CANCELLED. This is a visual
   status label, not a signature, certification or payment mutation. It never
   follows query parameters, and dates do not silently change the stored status.
 - The supplier block includes owner-supplied GSTIN `23ABDCS2341B1Z1`, TAN
@@ -185,17 +187,19 @@ All records use a single page; long text is fitted/visibly abbreviated.
   do not add tax charges, change amounts or claim tax-invoice compliance.
 - Payment information and totals are bottom-anchored, with contact/closing text
   consistently above the footer. Short invoices therefore do not leave a large
-  empty bottom band. The description table absorbs the available height;
-  actual task rows gain measured breathing room (up to 58pt), contracting to
+  empty bottom band. Actual task rows use compact spacing (up to 34pt), contracting to
   22pt only for dense single-page content. No blank tasks or filler charges.
   Notes/payment information sit to the left of the totals, as in the reference.
-  Pay now is a restrained outline action, retaining a real
+  Pay now is the sole red element, with white text and a real
   HTTPS URI annotation, with manual-link precedence; paid/cancelled/zero-value
   invoices and unsafe/stale fallbacks never expose a payment action.
 - No continuation pages: task names use one line each, notes have bounded
   space and long legacy fields show ellipses/disclosure when abbreviated.
-  Footers show status-as-of and Page 1 of 1. Notes are plain text, not interpreted
-  HTML. No fabricated quantities, addresses, tax IDs, bank instructions or
+  Footers show status-as-of at left and `www.savotechnologies.com` at right;
+  the website links to exactly `https://savotechnologies.com`. There is no
+  visible page count. This informational link remains on paid/cancelled PDFs;
+  only payment annotations obey the payable-state restrictions. Notes are
+  plain text, not interpreted HTML. No fabricated quantities, addresses, tax IDs, bank instructions or
   additional tax/fee lines.
 
 The schema stores an invoice total, up to three task charges, issued work notes,
@@ -244,7 +248,33 @@ Keep those assets and `public/images/email/logo.png` with the deployed app.
 Only public brand assets are cached in process memory; PDF records are queried
 and rendered afresh for each authorized request.
 
-## Service-template reference refinement (pending publication)
+## Neutral invoice refinement (pending publication)
+
+Owner-requested follow-up: remove the upper duplicate balance, reserve red for
+Pay now, align the milestone/project/reference block, compact task rows and
+replace the page count with a right-aligned clickable website. The footer URI
+is exactly `https://savotechnologies.com`; the printed label retains `www`.
+No invoice values, status, client ownership, tax data or payment target changed.
+Client email remains omitted. Supplier contact details are removed from the
+header. The mobile number is not printed anywhere; only supplier email appears
+in the bottom line: “For invoice queries or payment instructions, contact
+hello@savotechnologies.com.”
+The site's informational link is not a payment
+link and must not be treated as one in security tests or verification scripts.
+
+Local gates: **2,014 tests passed / 16 skipped**, lint, typecheck and production
+build passed. **23 synthetic PDFs / 1,500 PDFKit geometry/content checks** cover
+one lower balance only, footer alignment/no page count, compact task rows,
+aligned work context, exact amounts, client-email omission and A4 bounds. Four
+state-specific drawing tests enforce that red is used only by the payable
+button; URI tests verify the exact HTTPS website target on every status while
+continuing to reject stale/unsafe payment actions. Evidence stays in ignored
+`tmp/invoice-neutral-review/`; the new private `*-neutral-preview.pdf` in
+Downloads leaves all previous downloads untouched. Inline visual review only;
+not an independent or physical-printer certification. No production deployment,
+database change, real email or charge in this refinement.
+
+## Earlier service-template reference refinement (published v7.14.2)
 
 The owner's supplied image establishes the new PDF composition, not a global
 identity change. Preserve Savo's black logo, red, fonts, registration identifiers

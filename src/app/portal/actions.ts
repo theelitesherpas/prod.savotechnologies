@@ -1,45 +1,19 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { z } from "zod";
-import { loginClient, logoutClient } from "@/lib/client-auth";
-import { clientIpFromHeaders } from "@/lib/api";
-import { enforceLoginCaptcha, recordLoginFailure, clearLoginFailures } from "@/lib/captcha";
+import { handlePortalLogin } from "@/lib/portal-login";
+import { logoutClient } from "@/lib/client-auth";
+import { INITIAL_PORTAL_LOGIN, type PortalLoginState } from "@/lib/portal-login-state";
 
-const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Please enter a valid email.").max(120),
-  password: z.string().min(1).max(128),
-});
+export async function clientSignInAction(previous: PortalLoginState, form: FormData): Promise<PortalLoginState> {
+  return handlePortalLogin("client", previous, form);
+}
 
-export async function clientLoginAction(formData: FormData): Promise<void> {
-  const parsed = loginSchema.safeParse({
-    email: formData.get("email") ?? "",
-    password: formData.get("password") ?? "",
-  });
-  if (!parsed.success) redirect("/portal?e=invalid");
-
-  // IP extraction (same pattern as admin/employee login)
-  const hdrs = await headers();
-  const ip = clientIpFromHeaders(hdrs);
-
-  // Mandatory human verification before processing credentials, including the first attempt.
-  const cap = await enforceLoginCaptcha("client", ip, formData.get("captchaToken"));
-  if (!cap.ok) {
-    if ("captchaRequired" in cap) {
-      redirect("/portal?e=Please complete the human verification.");
-    }
-    redirect(`/portal?e=${encodeURIComponent(cap.error)}`);
-  }
-
-  const result = await loginClient(parsed.data.email, parsed.data.password);
-  if (!result.ok) {
-    recordLoginFailure("client", ip);
-    redirect(`/portal?e=${encodeURIComponent(result.error)}`);
-  }
-
-  clearLoginFailures("client", ip);
-  redirect("/portal/dashboard");
+/** Compatibility entry point: all credential paths share the same protections. */
+export async function clientLoginAction(form: FormData): Promise<void> {
+  form.set("intent", "password");
+  const state = await clientSignInAction(INITIAL_PORTAL_LOGIN, form);
+  redirect(`/portal?e=${encodeURIComponent(state.error || "Please try signing in again.")}`);
 }
 
 export async function clientLogoutAction(): Promise<void> {

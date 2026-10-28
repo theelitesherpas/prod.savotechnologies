@@ -125,7 +125,6 @@ export function useCaptcha(
 
   const reset = useCallback(() => {
     setToken(null);
-    window.grecaptcha?.reset();
   }, []);
 
   // Initial gate check on mount (async - server state, not render state).
@@ -224,6 +223,14 @@ export function CaptchaGate({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [captcha.required, captcha.unavailable, siteKey]);
+
+  // A sign-in method change can remount this gate. Reset its own widget,
+  // not Google's default (possibly an old, unmounted widget).
+  useEffect(() => {
+    if (!captcha.token && widgetId.current !== null) {
+      window.grecaptcha?.reset(widgetId.current);
+    }
+  }, [captcha.token]);
 
   if (captcha.unavailable)
     return (
