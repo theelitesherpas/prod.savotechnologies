@@ -36,6 +36,7 @@ export async function GET(req: Request) {
       ...(calendar ? {} : { take: paging.take, skip: paging.skip }),
       select: {
         id: true, reference: true, clientName: true, clientCompany: true,
+        client: { select: { title: true } },
         title: true, meetingType: true, durationMin: true, locationType: true,
         status: true, preferredDate: true, preferredTime: true,
         confirmedDate: true, confirmedTime: true, assignedTo: true, createdAt: true,
@@ -44,14 +45,14 @@ export async function GET(req: Request) {
     includeClients
       ? prisma.clientUser.findMany({
           where: { active: true },
-          select: { id: true, name: true, company: true, email: true },
+          select: { id: true, name: true, title: true, company: true, email: true },
           orderBy: { name: "asc" },
         })
       : Promise.resolve([]),
   ]);
 
   return apiOk({
-    meetings: meetings.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() })),
+    meetings: meetings.map(({ client, ...m }) => ({ ...m, clientTitle: client ? client.title : undefined, createdAt: m.createdAt.toISOString() })),
     clients,
     paging: { page: paging.page, pageSize: paging.pageSize, total },
     counts: Object.fromEntries(counts.map(row => [row.status, row._count._all])),

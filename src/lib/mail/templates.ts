@@ -1,6 +1,7 @@
 /** Transactional defaults: copy and variables are independent of the shared
  *  v7 correspondence design, which also wraps HR, meetings and overrides. */
 import { invoicePaymentLink } from "@/lib/payment-links";
+import { clientGreetingName } from "@/lib/client-name";
 import {
   shell, lead, p, spec, highlight, prose, site, DISPLAY, SANS, MONO,
   escapeMailHtml as esc, MAIL_COLORS,
@@ -28,7 +29,7 @@ function quote(text: string): string {
   return highlight(`<span style="font-style:italic;">${esc(text).replace(/\r?\n/g, "<br>")}</span>`);
 }
 
-const fn = (name: string) => name.split(" ")[0];
+const fn = clientGreetingName;
 
 /* ══════════════ PUBLIC SITE · CLIENT ACKNOWLEDGEMENTS ══════════════ */
 
@@ -147,7 +148,7 @@ export function clientWelcome(name: string, email: string, password: string, cli
       eyebrowText: "Portal access",
       heading: `Your client portal is now active.`,
       bodyHtml: [
-        lead(`Dear ${fn(name)},<br><br>Your client portal is now active. It provides a continuous, current view of your engagement with Savo Technologies - project progress, milestones, delivery updates from your team, and complete invoice records - in one place.`),
+        lead(`Hello ${esc(fn(name))},<br><br>Your client portal is now active. It provides a continuous, current view of your engagement with Savo Technologies - project progress, milestones, delivery updates from your team, and complete invoice records - in one place.`),
         spec([
           ["Portal", "savotechnologies.com/portal"],
           ["Client ID", clientReference],
@@ -160,7 +161,7 @@ export function clientWelcome(name: string, email: string, password: string, cli
       closing: "Kind regards,",
       reason: "You are receiving this because a Savo project lead created a portal account for you.",
     }),
-    text: `${fn(name).toUpperCase()}, YOUR PORTAL IS READY\n\nPortal: ${site("/portal")}\n${clientReference ? `Client ID: ${clientReference}\n` : ""}Email: ${email}\nPassword: ${password}\n\nInside: progress & milestones, delivery updates, invoices & receipts.\n\nWelcome aboard,\nThe Savo team`,
+    text: `Hello ${fn(name)},\n\nYOUR PORTAL IS READY\n\nPortal: ${site("/portal")}\n${clientReference ? `Client ID: ${clientReference}\n` : ""}Email: ${email}\nPassword: ${password}\n\nInside: progress & milestones, delivery updates, invoices & receipts.\n\nWelcome aboard,\nThe Savo team`,
   };
 }
 
@@ -173,7 +174,7 @@ export function clientPasswordReset(name: string, password: string): MailTemplat
       eyebrowText: "Password reset",
       heading: "Your portal password has been reset.",
       bodyHtml: [
-        p(`Dear ${fn(name)},<br><br>Your portal password has been reset by your project lead. All previous sessions were signed out automatically.`),
+        p(`Hello ${esc(fn(name))},<br><br>Your portal password has been reset by your project lead. All previous sessions were signed out automatically.`),
         spec([["New password", password]]),
         highlight(`If you did not expect this change, <strong>reply to this email immediately</strong>.`),
       ].join(""),
@@ -181,7 +182,7 @@ export function clientPasswordReset(name: string, password: string): MailTemplat
       closing: "Kind regards,",
       reason: "You are receiving this because your portal account password was reset.",
     }),
-    text: `YOUR PORTAL PASSWORD WAS RESET\n\nNew password: ${password}\nPrevious sessions were signed out.\n\nSign in: ${site("/portal")}\nNot expecting this? Reply immediately.\n\nBack to work,\nThe Savo team`,
+    text: `Hello ${fn(name)},\n\nYOUR PORTAL PASSWORD WAS RESET\n\nNew password: ${password}\nPrevious sessions were signed out.\n\nSign in: ${site("/portal")}\nNot expecting this? Reply immediately.\n\nBack to work,\nThe Savo team`,
   };
 }
 
@@ -203,6 +204,7 @@ export function invoiceIssued(clientName: string, number: string, amount: number
       eyebrowText: `Invoice ${number}`,
       heading: "Your invoice is ready.",
       bodyHtml: [
+        p(`Hello ${esc(fn(clientName))},`),
         lead(`Please find the details of your invoice below. The invoice and its current status are available in your client portal at any time.`),
         spec([["Amount", money(amount, currency)]], { big: 0 }),
         meta([`ISSUED ${fmtDate(new Date()).toUpperCase()}`, dueDate ? `DUE ${fmtDate(dueDate).toUpperCase()}` : "DUE ON RECEIPT", "AWAITING PAYMENT"]),
@@ -217,7 +219,7 @@ export function invoiceIssued(clientName: string, number: string, amount: number
       closing: "Kind regards,",
       reason: "You are receiving this because a Savo invoice was issued to your account.",
     }),
-    text: `INVOICE ${number}\n\nAmount: ${money(amount, currency)}\nIssued: ${fmtDate(new Date())}\nDue: ${dueDate ? fmtDate(dueDate) : "On receipt"}\n\n${payment || checkout ? `Pay now: ${payment || checkout}\n\n` : ""}View: ${site("/portal")}\n\nWith thanks,\nThe Savo team`,
+    text: `Hello ${fn(clientName)},\n\nINVOICE ${number}\n\nAmount: ${money(amount, currency)}\nIssued: ${fmtDate(new Date())}\nDue: ${dueDate ? fmtDate(dueDate) : "On receipt"}\n\n${payment || checkout ? `Pay now: ${payment || checkout}\n\n` : ""}View: ${site("/portal")}\n\nWith thanks,\nThe Savo team`,
   };
 }
 
@@ -230,6 +232,7 @@ export function invoicePaid(clientName: string, number: string, amount: number, 
       eyebrowText: `Receipt - ${number}`,
       heading: "Payment received.",
       bodyHtml: [
+        p(`Hello ${esc(fn(clientName))},`),
         lead(`Thank you for your payment. This email confirms that the amount below has been received in full.`),
         spec([["Amount", money(amount, currency)]], { big: 0 }),
         meta([`INVOICE ${number.toUpperCase()}`, `RECEIVED ${fmtDate(new Date()).toUpperCase()}`, "PAID IN FULL"]),
@@ -239,7 +242,7 @@ export function invoicePaid(clientName: string, number: string, amount: number, 
       closing: "Kind regards,",
       reason: "You are receiving this because an invoice on your account was paid.",
     }),
-    text: `PAID IN FULL - THANK YOU\n\n${number} · ${money(amount, currency)} · Received ${fmtDate(new Date())}\n\n${site("/portal")}\n\nOnward,\nThe Savo team`,
+    text: `Hello ${fn(clientName)},\n\nPAID IN FULL - THANK YOU\n\n${number} · ${money(amount, currency)} · Received ${fmtDate(new Date())}\n\n${site("/portal")}\n\nOnward,\nThe Savo team`,
   };
 }
 
@@ -254,6 +257,7 @@ export function invoiceOverdue(clientName: string, number: string, amount: numbe
       eyebrowText: `Past due - ${number}`,
       heading: "Payment overdue reminder.",
       bodyHtml: [
+        p(`Hello ${esc(fn(clientName))},`),
         lead(`This is a reminder that the invoice below has passed its due date.`),
         spec([
           ["Amount", money(amount, currency)],
@@ -270,7 +274,7 @@ export function invoiceOverdue(clientName: string, number: string, amount: numbe
       closing: "Kind regards,",
       reason: "You are receiving this because an invoice on your account passed its due date.",
     }),
-    text: `REMINDER - INVOICE ${number} PAST DUE\n\n${money(amount, currency)} · ${daysLate} day(s) over\n\nAlready paid? Our thanks.\n${payment || checkout ? `Pay now: ${payment || checkout}\n` : ""}${site("/portal")}\n\nEasily fixed,\nThe Savo team`,
+    text: `Hello ${fn(clientName)},\n\nREMINDER - INVOICE ${number} PAST DUE\n\n${money(amount, currency)} · ${daysLate} day(s) over\n\nAlready paid? Our thanks.\n${payment || checkout ? `Pay now: ${payment || checkout}\n` : ""}${site("/portal")}\n\nEasily fixed,\nThe Savo team`,
   };
 }
 
@@ -284,6 +288,7 @@ export function milestoneUpdate(clientName: string, projectTitle: string, milest
       eyebrowText: `Milestone ${label}`,
       heading: status === "done" ? "One more step shipped." : "Work has started.",
       bodyHtml: [
+        p(`Hello ${esc(fn(clientName))},`),
         lead(`This is to inform you that the milestone below has been ${label} on your project.`),
         spec([
           ["Milestone", milestoneTitle],
@@ -296,7 +301,7 @@ export function milestoneUpdate(clientName: string, projectTitle: string, milest
       closing: "Kind regards,",
       reason: "You are receiving this because a milestone changed on your project.",
     }),
-    text: `MILESTONE ${label.toUpperCase()}\n\nProject: ${projectTitle}\nMilestone: ${milestoneTitle}\n\n${site("/portal")}\n\nSteady onward,\nThe Savo team`,
+    text: `Hello ${fn(clientName)},\n\nMILESTONE ${label.toUpperCase()}\n\nProject: ${projectTitle}\nMilestone: ${milestoneTitle}\n\n${site("/portal")}\n\nSteady onward,\nThe Savo team`,
   };
 }
 
@@ -309,6 +314,7 @@ export function projectUpdate(clientName: string, projectTitle: string, title: s
       eyebrowText: `Project update`,
       heading: title,
       bodyHtml: [
+        p(`Hello ${esc(fn(clientName))},`),
         lead(`An update has been posted to your project by the delivery team.`),
         body ? prose(body) : "",
         meta([projectTitle.toUpperCase()]),
@@ -317,7 +323,7 @@ export function projectUpdate(clientName: string, projectTitle: string, title: s
       closing: "Kind regards,",
       reason: "You are receiving this because your project team posted a delivery update.",
     }),
-    text: `PROJECT UPDATE - ${title}\n\n${body}\n\n${site("/portal")}\n\nMore as it lands,\nThe Savo team`,
+    text: `Hello ${fn(clientName)},\n\nPROJECT UPDATE - ${title}\n\n${body}\n\n${site("/portal")}\n\nMore as it lands,\nThe Savo team`,
   };
 }
 

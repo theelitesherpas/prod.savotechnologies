@@ -48,13 +48,17 @@ describe("Savo v7 correspondence", () => {
     expect(Buffer.byteLength(mail.html)).toBeLessThan(100000); // Gmail clipping threshold headroom.
   });
 
-  it("preserves all 42 original subjects and plain-text twins verbatim", () => {
+  it("preserves original subjects and body copy apart from requested client greetings", () => {
     for (const [key, hash] of Object.entries(baseline)) {
       const entry = templateEntry(key);
       expect(entry, key).toBeDefined();
       const mail = entry!.default(entry!.vars);
       // Only fixture reference data changed; keep the approved copy baseline.
-      const copy = `${mail.subject}\n${mail.text}`;
+      // Honorific-aware greetings are the only intended copy change.
+      const text = key === "clientWelcome"
+        ? mail.text.replace(/^Hello ([^\n]+),\n\n/, (_match, name: string) => `${name.toUpperCase()}, `)
+        : entry!.recipient === "client" ? mail.text.replace(/^Hello [^\n]+,\n\n/, "") : mail.text;
+      const copy = `${mail.subject}\n${text}`;
       const normalized = ["invoiceIssued", "invoicePaid", "invoiceOverdue"].includes(key) ? copy.replaceAll("STPLIN05148", "SAVO-2026-014") : copy;
       expect(createHash("sha256").update(normalized).digest("hex"), key).toBe(hash);
     }

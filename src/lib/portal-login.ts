@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { clientFullName } from "@/lib/client-name";
 import { clientIpFromHeaders } from "@/lib/api";
 import { enforceLoginCaptcha, clearLoginFailures, recordLoginFailure } from "@/lib/captcha";
 import { DUMMY_PASSWORD_HASH, verifyPassword } from "@/lib/passwords";
@@ -24,7 +25,7 @@ const NOT_REGISTERED = "This email is not registered for this portal. Please con
 const UNAVAILABLE = "Sign-in is temporarily unavailable. Please try again or contact Savo support.";
 const LIMITED = "Too many attempts. Please wait 15 minutes before trying again.";
 type Db = Prisma.TransactionClient;
-type Account = { id: string; email: string; enabled: boolean; passwordHash: string | null };
+type Account = { id: string; email: string; displayName?: string; enabled: boolean; passwordHash: string | null };
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const challengeCookie = (kind: PortalKind) => `savo_${kind}_login`;
 const sessionCookie = (kind: PortalKind) => `savo_${kind}`;
@@ -59,8 +60,8 @@ export async function portalRateAllowed(scope: string, identity: string, limit: 
 
 async function accountFor(db: Db, kind: PortalKind, where: { email: string } | { id: string }): Promise<Account | null> {
   if (kind === "client") {
-    const row = await db.clientUser.findUnique({ where, select: { id: true, email: true, active: true, passwordHash: true } });
-    return row && { id: row.id, email: row.email, enabled: row.active, passwordHash: row.passwordHash };
+    const row = await db.clientUser.findUnique({ where, select: { id: true, email: true, name: true, title: true, active: true, passwordHash: true } });
+    return row && { id: row.id, email: row.email, displayName: clientFullName(row.name ?? "", row.title), enabled: row.active, passwordHash: row.passwordHash };
   }
   const row = await db.employee.findUnique({ where, select: {
     id: true, email: true, status: true, panelUsers: { take: 1, select: { passwordHash: true } },
@@ -213,7 +214,7 @@ async function sendCode(kind: PortalKind, email: string, ip: string, remember: b
     id, kind, accountId: account.id, emailHash: sha(email), bindingHash: sha(binding),
     codeHash, remember, expiresAt: new Date(Date.now() + CODE_TTL),
   } });
-  const sent = await sendMail(account.email, portalLoginCode(kind, code), kind === "employee" ? "hr" : "hello", { sensitive: true });
+  const sent = await sendMail(account.email, portalLoginCode(kind, code, account.displayName), kind === "employee" ? "hr" : "hello", { sensitive: true });
   if (!sent) {
     await prisma.portalLoginChallenge.deleteMany({ where: { id } });
     return fail("We couldn’t send your code. Please try again shortly, use your password, or contact Savo support.");

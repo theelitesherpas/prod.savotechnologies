@@ -28,7 +28,7 @@ export type InvoiceDocument = {
   paymentLink?: string | null;
   /** Server-decided pay target (absolute portal checkout URL) when no manual link exists. */
   payUrl?: string | null;
-  client: { name: string; company: string; email: string; businessId?: string | null } & ClientAddress;
+  client: { name: string; title?: string | null; company: string; email: string; businessId?: string | null } & ClientAddress;
   project: { code: string; title: string } | null;
 };
 

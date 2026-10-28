@@ -314,6 +314,8 @@ model ClientUser {
   passwordHash String   @map("password_hash")
   name         String
   company      String   @default("")
+  /// Optional, explicitly selected honorific. Never embed this in name.
+  title        String?  @db.VarChar(4)
   /// Optional billing address, shown on invoices only when supplied.
   addressLine1 String   @default("") @map("address_line_1")
   addressLine2 String   @default("") @map("address_line_2")

@@ -38,6 +38,8 @@ node scripts/prepare-business-id-schema.mjs
 # Additive registered-email login tables and bounded-attempt constraints.
 # Apply before Prisma synchronization and before the new server starts.
 npx prisma db execute --file prisma/portal-login.sql --schema prisma/schema.prisma
+# Optional client honorifics; no inferred titles or existing-name rewrites.
+npx prisma db execute --file prisma/client-titles.sql --schema prisma/schema.prisma
 npx prisma db push
 # Idempotent: inserts missing policy rows, installs SQL invariants, never resets
 # an existing counter or renumbers historical records. Must precede app start.

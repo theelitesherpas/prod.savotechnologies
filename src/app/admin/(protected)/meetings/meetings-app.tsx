@@ -1,5 +1,7 @@
 "use client";
 
+import { clientFullName, clientGreetingName } from "@/lib/client-name";
+
 /**
  * Meetings dashboard - admin panel design language.
  * List view, create drawer, detail with client link sharing, calendar.
@@ -13,7 +15,7 @@ import { ClientPager } from "@/components/admin/paged-content";
 /* ───────────────────────── types ───────────────────────── */
 
 type Meeting = {
-  id: string; reference: string; clientName: string; clientCompany: string;
+  id: string; reference: string; clientName: string; clientTitle?: string | null; clientCompany: string;
   title: string; meetingType: string; durationMin: number; locationType: string;
   status: string; preferredDate: string | null; preferredTime: string | null;
   confirmedDate: string | null; confirmedTime: string | null;
@@ -35,7 +37,7 @@ type MeetingDetail = Meeting & {
   ics: string | null;
 };
 
-type ClientOption = { id: string; name: string; company: string; email: string };
+type ClientOption = { id: string; name: string; title?: string | null; company: string; email: string };
 
 function localToday(): string {
   const t = new Date();
@@ -239,7 +241,7 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
                 <tr key={m.id} className="cursor-pointer transition-colors hover:bg-surface-2/50" onClick={() => loadDetail(m.id)}>
                   <td className="px-4 py-3 font-mono text-[0.6875rem] text-muted">{m.reference}</td>
                   <td className="px-4 py-3">
-                    <p className="text-[0.8125rem] font-semibold">{m.clientName}</p>
+                    <p className="text-[0.8125rem] font-semibold">{clientFullName(m.clientName, m.clientTitle)}</p>
                     {m.clientCompany ? <p className="text-[0.75rem] text-muted">{m.clientCompany}</p> : null}
                   </td>
                   <td className="px-4 py-3">
@@ -425,7 +427,7 @@ function CreateDrawer({ onClose, onCreated, flash, me }: { onClose: () => void; 
                 <label className="adm-label mb-1 block">Select existing client</label>
                 <select value={form.clientId} onChange={(e) => selectClient(e.target.value)} className="adm-select w-full">
                   <option value=""> - New client - </option>
-                  {clients.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.company}</option>)}
+                  {clients.map((c) => <option key={c.id} value={c.id}>{clientFullName(c.name, c.title)} · {c.company}</option>)}
                 </select>
               </div>
             ) : null}
@@ -512,7 +514,7 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
   const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const meetingLink = detail.tokenPlain ? `${typeof window !== "undefined" ? window.location.origin : ""}/meeting/${detail.tokenPlain}` : "";
-  const waMsg = encodeURIComponent(`Hello ${detail.clientName}, as discussed, please use the link below to select your preferred date and time for our meeting:\n\n${meetingLink}`);
+  const waMsg = encodeURIComponent(`Hello ${clientGreetingName(detail.clientName, detail.clientTitle)}, as discussed, please use the link below to select your preferred date and time for our meeting:\n\n${meetingLink}`);
 
   return (
     <div>
@@ -524,7 +526,7 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
           <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[0.875rem] text-muted">
             <span className="font-mono text-[0.75rem]">{detail.reference}</span>
             <span className="text-border">|</span>
-            <span className="font-semibold text-foreground">{detail.clientName}</span>
+            <span className="font-semibold text-foreground">{clientFullName(detail.clientName, detail.clientTitle)}</span>
             {detail.clientCompany ? <><span className="text-border">|</span><span>{detail.clientCompany}</span></> : null}
             {detail.clientEmail ? <><span className="text-border">|</span><span>{detail.clientEmail}</span></> : null}
           </div>
@@ -592,7 +594,7 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
         <section className="adm-card p-6">
           <h2 className="adm-label mb-4">Client Information</h2>
           <dl className="space-y-2 text-[0.8125rem]">
-            <Row k="Name" v={detail.clientName} />
+            <Row k="Name" v={clientFullName(detail.clientName, detail.clientTitle)} />
             <Row k="Company" v={detail.clientCompany || " - "} />
             <Row k="Phone" v={detail.clientPhone ?? " - "} />
             <Row k="Email" v={detail.clientEmail ?? " - "} />
@@ -653,7 +655,7 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
             </div>
             <div className="p-6">
               <p className="text-[0.875rem] text-muted">
-                <strong>{detail.title}</strong> ({detail.reference}) for {detail.clientName} will be permanently deleted.
+                <strong>{detail.title}</strong> ({detail.reference}) for {clientFullName(detail.clientName, detail.clientTitle)} will be permanently deleted.
                 This cannot be undone. The scheduling link will stop working immediately.
               </p>
               <div className="mt-5 flex gap-2.5">
@@ -857,8 +859,8 @@ function CalendarView({ meetings, onSelect, month, setMonth }: { meetings: Meeti
             <div key={day} className={cn("min-h-[5rem] bg-background p-1.5", isToday && "bg-accent/[0.04]")}>
               <p className={cn("mb-1 text-[0.6875rem] font-semibold", isToday ? "text-accent" : "text-muted")}>{day}</p>
               {dayMeetings.map((m) => (
-                <button key={m.id} onClick={() => onSelect(m.id)} className="mb-1 block w-full truncate rounded px-1.5 py-0.5 text-left text-[0.6875rem] font-medium hover:bg-accent/[0.08]" title={`${m.clientName} - ${m.title}`}>
-                  {fTime(m.confirmedTime ?? m.preferredTime)} {m.clientName.split(" ")[0]}
+                <button key={m.id} onClick={() => onSelect(m.id)} className="mb-1 block w-full truncate rounded px-1.5 py-0.5 text-left text-[0.6875rem] font-medium hover:bg-accent/[0.08]" title={`${clientFullName(m.clientName, m.clientTitle)} - ${m.title}`}>
+                  {fTime(m.confirmedTime ?? m.preferredTime)} {clientGreetingName(m.clientName, m.clientTitle)}
                 </button>
               ))}
             </div>

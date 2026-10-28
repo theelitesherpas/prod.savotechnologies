@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { clientInitials } from "@/lib/client-name";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SavoLogo } from "@/components/shared/savo-logo";
@@ -30,13 +31,7 @@ export default async function PortalLayout({
 }) {
   const client = await getClientUser();
   if (!client) redirect("/portal");
-  const initials = client.name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+  const initials = clientInitials(client.name);
   return (
     <div className={`${styles.theme} ${styles.shell}`}>
       <div hidden dangerouslySetInnerHTML={{ __html: contract }} />

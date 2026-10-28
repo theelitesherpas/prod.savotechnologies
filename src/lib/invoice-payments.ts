@@ -1,4 +1,5 @@
 import "server-only";
+import { clientFullName } from "@/lib/client-name";
 import type { Prisma } from "@prisma/client";
 import { invoiceMoney, invoiceDate } from "@/lib/invoice-document";
 import { invoicePaymentLink } from "@/lib/payment-links";
@@ -14,7 +15,7 @@ import { recordPaymentTransaction, type PaymentEvidence } from "@/lib/payment-tr
  * milestones) reconcile inside the same transaction.
  */
 
-export type InvoiceNotificationClient = { name: string; email: string };
+export type InvoiceNotificationClient = { name: string; title?: string | null; email: string };
 
 /** Email events for an invoice state change (issued/paid/overdue). Drafts,
  *  cancelled records and unknown states never notify. `payUrl` is the
@@ -24,7 +25,7 @@ export function invoiceNotification(client: InvoiceNotificationClient, invoice: 
   if (!["sent", "paid", "overdue"].includes(invoice.status)) return [];
   const days = invoice.dueDate ? Math.max(1, Math.ceil((Date.now() - invoice.dueDate.getTime()) / 86400000)) : 1;
   return [{ key: invoice.status === "paid" ? "invoicePaid" : invoice.status === "overdue" ? "invoiceOverdue" : "invoiceIssued", to: client.email,
-    vars: { name: client.name, number: invoice.number, amount: invoiceMoney(invoice.amount, invoice.currency), amountMinor: String(invoice.amount), currency: invoice.currency,
+    vars: { name: clientFullName(client.name, client.title), number: invoice.number, amount: invoiceMoney(invoice.amount, invoice.currency), amountMinor: String(invoice.amount), currency: invoice.currency,
       due: invoice.dueDate ? invoiceDate(invoice.dueDate) : "", dueDateIso: invoice.dueDate?.toISOString() ?? "", days: String(days), invoiceStatus: invoice.status, paymentLink: invoicePaymentLink(invoice) ?? "", payUrl: invoice.payUrl ?? "" } }];
 }
 
@@ -51,7 +52,7 @@ export async function recordInvoicePaid(
     return { ok: true, alreadyPaid: true, events: [], projectId: invoice.projectId, invoiceNumber: invoice.number };
   }
   if (["draft", "cancelled"].includes(invoice.status)) return { ok: false, reason: "not_payable" };
-  const client = await tx.clientUser.findUnique({ where: { id: invoice.clientId }, select: { name: true, email: true } });
+  const client = await tx.clientUser.findUnique({ where: { id: invoice.clientId }, select: { name: true, title: true, email: true } });
   if (!client) return { ok: false, reason: "not_found" };
   const updated = await tx.invoice.update({
     where: { id: invoiceId },

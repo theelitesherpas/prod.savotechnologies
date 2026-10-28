@@ -1,4 +1,5 @@
 import "server-only";
+import { clientFullName } from "@/lib/client-name";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import fontkit from "@pdf-lib/fontkit";
@@ -141,7 +142,7 @@ export async function renderInvoicePdf(invoice: InvoiceDocument, now = new Date(
   let cursor = billTop;
   line("Bill to", margin, cursor, 9.5); cursor += 19;
   if (invoice.client.company.trim()) { single(invoice.client.company, margin, cursor, billingWidth, 11.5, bold); cursor += 17; }
-  single(invoice.client.name, margin, cursor, billingWidth, 10, invoice.client.company.trim() ? font : bold); cursor += 14;
+  single(clientFullName(invoice.client.name, invoice.client.title), margin, cursor, billingWidth, 10, invoice.client.company.trim() ? font : bold); cursor += 14;
   for (const address of clientAddressLines(invoice.client)) {
     single(address, margin, cursor, billingWidth, 8.8, font, muted); cursor += 13;
   }

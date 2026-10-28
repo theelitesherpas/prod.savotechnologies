@@ -1,4 +1,5 @@
 import "server-only";
+import { clientFullName, clientGreetingName } from "@/lib/client-name";
 import { liveMailAllowed } from "@/lib/mail/delivery-policy";
 import nodemailer, { type Transporter } from "nodemailer";
 import { logger } from "@/lib/logger";
@@ -204,6 +205,13 @@ export async function renderTemplate(
 ): Promise<MailTemplate | null> {
   const entry = templateEntry(key);
   if (!entry) return null;
+  if (entry.recipient === "client") {
+    const fullName = clientFullName(String(vars.name ?? vars.fullName ?? ""));
+    // Existing {{name}} greetings remain natural; use {{fullName}} wherever
+    // a complete client name is intended. HTML rendering escapes both.
+    const greeting = clientGreetingName(fullName);
+    vars = { ...vars, name: greeting, firstName: greeting, fullName };
+  }
   try {
     const override = prisma ? await prisma.emailTemplate.findUnique({ where: { key } }) : null;
     if (override) {

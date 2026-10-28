@@ -1,6 +1,7 @@
 import { PagedContent } from "@/components/admin/paged-content";
 import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
+import { clientFullName } from "@/lib/client-name";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -20,7 +21,7 @@ import { archiveProjectAction, restoreProjectAction, cycleMilestoneAction, saveA
 export const metadata: Metadata = { title: "Manage project" };
 export default async function EditProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string; e?: string; invoice?: string }> }) {
   await requireAdminPage("/admin/projects/[id]"); const { id } = await params; const { saved, e, invoice } = await searchParams; if (!prisma) notFound();
-  const project = await prisma.clientProject.findUnique({ where: { id }, include: { milestones: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] }, updates: { orderBy: { createdAt: "desc" } }, invoices: { orderBy: { issuedAt: "desc" } }, client: { select: { name: true } } } }); if (!project) notFound();
+  const project = await prisma.clientProject.findUnique({ where: { id }, include: { milestones: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] }, updates: { orderBy: { createdAt: "desc" } }, invoices: { orderBy: { issuedAt: "desc" } }, client: { select: { name: true, title: true } } } }); if (!project) notFound();
   const iso = (d: Date | null) => d?.toISOString().slice(0, 10) ?? "";
   const finance = projectFinancials(project, project.milestones, project.invoices.filter(i => i.clientId === project.clientId));
   const money = (amount: number | null) => amount == null ? "Not set" : invoiceMoney(amount, project.currency);
@@ -29,7 +30,7 @@ export default async function EditProjectPage({ params, searchParams }: { params
   const milestoneTitles = new Map(project.milestones.map(m => [m.id, m.title]));
   return <div className="max-w-6xl">
     <BackLink href="/admin/projects" label="All projects"/>
-    <PageHeader title={project.title} description={`${project.code} · ${project.client.name} · ${project.progress}% delivery progress`} actions={<><Link href={`/admin/projects/${id}/edit`} className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-semibold hover:bg-surface-secondary">Edit project plan</Link>{project.archivedAt ? <form action={restoreProjectAction}><input type="hidden" name="id" value={id}/><SubmitButton label="Restore project"/></form> : <form action={archiveProjectAction}><input type="hidden" name="id" value={id}/><ConfirmButton label="Delete" confirmLabel="Confirm archive"/></form>}</>}/>
+    <PageHeader title={project.title} description={`${project.code} · ${clientFullName(project.client.name, project.client.title)} · ${project.progress}% delivery progress`} actions={<><Link href={`/admin/projects/${id}/edit`} className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-semibold hover:bg-surface-secondary">Edit project plan</Link>{project.archivedAt ? <form action={restoreProjectAction}><input type="hidden" name="id" value={id}/><SubmitButton label="Restore project"/></form> : <form action={archiveProjectAction}><input type="hidden" name="id" value={id}/><ConfirmButton label="Delete" confirmLabel="Confirm archive"/></form>}</>}/>
     {saved ? <Notice>Changes saved. The client portal has been updated.</Notice> : null}{e ? <Notice kind="alert">{e}</Notice> : null}
     {project.archivedAt ? <Notice kind="alert">This project is archived and hidden from active project lists and the client portal. Its invoices, reference and delivery history are preserved; restore it at any time.</Notice> : null}
     {project.budget == null ? <Notice>This legacy project needs a base budget and milestone cost allocation before additional paid work or automatic payment completion can be used.</Notice> : null}
@@ -37,7 +38,7 @@ export default async function EditProjectPage({ params, searchParams }: { params
       <div className={s.controls}>{project.status !== "delivered" ? <form action={changeProjectStatusAction}><input type="hidden" name="id" value={id}/><input type="hidden" name="revision" value={revision}/><input type="hidden" name="status" value="delivered"/><ConfirmButton label="Complete project" confirmLabel="Confirm completion" tone="quiet"/></form> : null}{project.status !== "cancelled" ? <form action={changeProjectStatusAction}><input type="hidden" name="id" value={id}/><input type="hidden" name="revision" value={revision}/><input type="hidden" name="status" value="cancelled"/><ConfirmButton label="Cancel project" confirmLabel="Confirm cancellation"/></form> : <form action={changeProjectStatusAction}><input type="hidden" name="id" value={id}/><input type="hidden" name="revision" value={revision}/><input type="hidden" name="status" value="in_progress"/><SubmitButton label="Reopen project" compact/></form>}</div>
       <p className={s.hint}>Manual completion/cancellation does not change invoices or mark unfinished work done. Existing financial records are retained.</p>
     </section>
-    <section className={`adm-card ${s.panel}`} aria-labelledby="project-overview"><h2 id="project-overview">Project overview</h2><p className={s.hint}>Client, agreed scope and key delivery dates.</p><dl className={s.summary}>{[["Client", project.client.name], ["Project reference", project.code], ["Start date", project.startDate ? iso(project.startDate) : "Not set"], ["Estimated delivery", project.dueDate ? iso(project.dueDate) : "Not set"]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-muted">{project.summary || "No project description has been added."}</p></section>
+    <section className={`adm-card ${s.panel}`} aria-labelledby="project-overview"><h2 id="project-overview">Project overview</h2><p className={s.hint}>Client, agreed scope and key delivery dates.</p><dl className={s.summary}>{[["Client", clientFullName(project.client.name, project.client.title)], ["Project reference", project.code], ["Start date", project.startDate ? iso(project.startDate) : "Not set"], ["Estimated delivery", project.dueDate ? iso(project.dueDate) : "Not set"]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-muted">{project.summary || "No project description has been added."}</p></section>
     <section className={`adm-card ${s.panel} ${s.deliveryPanel}`} aria-labelledby="delivery-statuses">
       <header className={s.deliveryHeading}>
         <div>

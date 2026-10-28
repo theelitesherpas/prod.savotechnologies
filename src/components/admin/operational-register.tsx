@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { clientFullName, clientTitle } from "@/lib/client-name";
 import { requireAdminPage } from "@/lib/permissions";
 import { PORTALS, recordModule, recordPath, type PortalKey } from "@/lib/admin-portals";
 import { recordId, statusLabel } from "@/lib/admin-records";
@@ -42,7 +43,7 @@ export async function OperationalRegister({ portal, moduleKey, search }: { porta
     const requestedPage = Math.max(1, Math.min(100000, Number.parseInt(search.page ?? "1", 10) || 1));
     page = Math.min(requestedPage, Math.max(1, Math.ceil(total / size)));
     [rows, record] = await Promise.all([
-      prisma.adminOperationalRecord.findMany({ where, orderBy: [{ updatedAt: "desc" }, { id: "desc" }], take: size, skip: (page - 1) * size }),
+      prisma.adminOperationalRecord.findMany({ where, include: { client: { select: { name: true, title: true } } }, orderBy: [{ updatedAt: "desc" }, { id: "desc" }], take: size, skip: (page - 1) * size }),
       editing ? prisma.adminOperationalRecord.findFirst({ where: { id: editing, portal, module: definition.key } }) : null,
     ]);
   } catch {
@@ -58,17 +59,17 @@ export async function OperationalRegister({ portal, moduleKey, search }: { porta
       const subjects = await prisma.employee.findMany({ where: { OR: [{ status: { not: "exited" } }, ...(linkedId ? [{ id: linkedId }] : [])] }, select: { id: true, employeeCode: true, name: true }, orderBy: { name: "asc" }, take: 250 });
       pool.push(...subjects.map(s => ({ id: s.id, label: `${s.employeeCode} · ${s.name}` })));
     } else if (definition.subject === "client") {
-      const subjects = await prisma.clientUser.findMany({ select: { id: true, name: true, businessId: true }, orderBy: { name: "asc" }, take: 250 });
-      pool.push(...subjects.map(s => ({ id: s.id, label: `${s.businessId ? `${s.businessId} · ` : ""}${s.name}` })));
+      const subjects = await prisma.clientUser.findMany({ select: { id: true, name: true, title: true, businessId: true }, orderBy: { name: "asc" }, take: 250 });
+      pool.push(...subjects.map(s => ({ id: s.id, label: `${s.businessId ? `${s.businessId} · ` : ""}${clientFullName(s.name, s.title)}` })));
     } else {
       const subjects = await prisma.projectEnquiry.findMany({ where: CAREER_ENQUIRY_WHERE, select: { id: true, name: true, reference: true }, orderBy: { createdAt: "desc" }, take: 250 });
       pool.push(...subjects.map(s => ({ id: s.id, label: `${s.name}${s.reference ? ` · ${s.reference}` : ""}` })));
     }
     if (linkedId && !pool.some(s => s.id === linkedId)) {
       const extra = definition.subject === "employee" ? await prisma.employee.findUnique({ where: { id: linkedId }, select: { id: true, name: true } })
-        : definition.subject === "client" ? await prisma.clientUser.findUnique({ where: { id: linkedId }, select: { id: true, name: true } })
+        : definition.subject === "client" ? await prisma.clientUser.findUnique({ where: { id: linkedId }, select: { id: true, name: true, title: true } })
           : await prisma.projectEnquiry.findFirst({ where: { AND: [CAREER_ENQUIRY_WHERE, { id: linkedId }] }, select: { id: true, name: true } });
-      if (extra) pool.unshift({ id: extra.id, label: extra.name });
+      if (extra) pool.unshift({ id: extra.id, label: clientFullName(extra.name, "title" in extra ? clientTitle(extra.title) : undefined) });
     }
   }
   const data = (record?.data && typeof record.data === "object" && !Array.isArray(record.data) ? record.data : {}) as Record<string, unknown>;
@@ -117,7 +118,7 @@ export async function OperationalRegister({ portal, moduleKey, search }: { porta
         <button className="adm-btn-ghost" type="submit">Filter</button>{q || status || subject ? <Link className="adm-btn-ghost" href={path}>Clear filters</Link> : null}
       </form>
       <p className="mb-3 text-sm text-muted">{total} record{total === 1 ? "" : "s"}</p>
-      {rows.length ? <div className="adm-card overflow-x-auto"><table className="adm-hairline-table w-full min-w-[38rem]"><thead><tr>{["Record", statusLabel(definition.subject), "Status", "Owner", "Due date", "Updated"].map(label => <th key={label} className="px-4 py-3 text-left text-xs font-semibold text-muted">{label}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.id}><td className="px-4 py-3"><Link className="font-semibold hover:text-accent" href={`${path}?edit=${row.id}`}>{row.title}</Link></td><td className="px-4 py-3 text-sm">{row.subjectLabel || "Not linked"}{!row[subjectKey] && row.subjectLabel ? " (master removed)" : ""}</td><td className="px-4 py-3"><Chip>{statusLabel(row.status)}</Chip></td><td className="px-4 py-3 text-sm">{row.owner || "Unassigned"}</td><td className="px-4 py-3 text-sm tabular-nums">{formatDate(row.dueDate) || "Not set"}</td><td className="px-4 py-3 text-xs tabular-nums text-muted">{formatDate(row.updatedAt)}</td></tr>)}</tbody></table></div>
+      {rows.length ? <div className="adm-card overflow-x-auto"><table className="adm-hairline-table w-full min-w-[38rem]"><thead><tr>{["Record", statusLabel(definition.subject), "Status", "Owner", "Due date", "Updated"].map(label => <th key={label} className="px-4 py-3 text-left text-xs font-semibold text-muted">{label}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.id}><td className="px-4 py-3"><Link className="font-semibold hover:text-accent" href={`${path}?edit=${row.id}`}>{row.title}</Link></td><td className="px-4 py-3 text-sm">{row.client ? clientFullName(row.client.name, row.client.title) : row.subjectLabel || "Not linked"}{!row[subjectKey] && row.subjectLabel ? " (master removed)" : ""}</td><td className="px-4 py-3"><Chip>{statusLabel(row.status)}</Chip></td><td className="px-4 py-3 text-sm">{row.owner || "Unassigned"}</td><td className="px-4 py-3 text-sm tabular-nums">{formatDate(row.dueDate) || "Not set"}</td><td className="px-4 py-3 text-xs tabular-nums text-muted">{formatDate(row.updatedAt)}</td></tr>)}</tbody></table></div>
         : <EmptyState title="No records found" message={q || status || subject ? "Try another search or clear the filters." : `Add the first ${definition.singular.toLowerCase()} to start this register. These records are managed in admin only.`} />}
       <Pagination page={page} total={total} pageSize={size} href={(target, pageSize) => href({ page: String(target), pageSize: String(pageSize) })} label="records" />
     </>}

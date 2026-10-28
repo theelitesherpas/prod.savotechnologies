@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { clientFullName } from "@/lib/client-name";
 import { Pagination } from "@/components/admin/pagination";
 import { parseAdminPage, adminPageUrl, type PageSearch } from "@/lib/admin-pagination";
 import Link from "next/link";
@@ -24,7 +25,7 @@ export default async function AdminProjectsPage({ searchParams }: { searchParams
   const projects = prisma ? await prisma.clientProject.findMany({
     where, take: paging.take, skip: paging.skip,
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-    include: { client: { select: { name: true, company: true } }, _count: { select: { milestones: true, invoices: true } } },
+    include: { client: { select: { name: true, title: true, company: true } }, _count: { select: { milestones: true, invoices: true } } },
   }) : [];
   const total = matchingTotal;
 
@@ -45,7 +46,7 @@ export default async function AdminProjectsPage({ searchParams }: { searchParams
       <thead><tr><th scope="col">Project</th><th scope="col">Client</th><th scope="col">Delivery</th><th scope="col">Budget</th><th scope="col">Updated</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
       <tbody>{projects.map(project => <tr key={project.id}>
         <td data-label="Project"><Link className={styles.projectName} href={`/admin/projects/${project.id}`}>{project.title}</Link><span className={styles.reference}>{project.code}{project.archivedAt ? " · Archived" : ""}</span></td>
-        <td data-label="Client"><span className={styles.clientName}>{project.client.name}</span>{project.client.company ? <span className={styles.reference}>{project.client.company}</span> : null}</td>
+        <td data-label="Client"><span className={styles.clientName}>{clientFullName(project.client.name, project.client.title)}</span>{project.client.company ? <span className={styles.reference}>{project.client.company}</span> : null}</td>
         <td data-label="Delivery"><div className={styles.delivery}><StatusChip status={project.status}/><span>{project.progress}% complete</span></div><span className={styles.reference}>{project._count.milestones} {project._count.milestones === 1 ? "milestone" : "milestones"} · {project._count.invoices} {project._count.invoices === 1 ? "invoice" : "invoices"}</span></td>
         <td data-label="Budget" className={styles.budget}>{project.budget == null ? <span className={styles.reference}>Not set</span> : invoiceMoney(project.budget, project.currency)}</td>
         <td data-label="Updated" className={styles.updated}>{project.updatedAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</td>

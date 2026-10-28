@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { clientIpFromHeaders } from "@/lib/api";
+import { clientFullName } from "@/lib/client-name";
 
 /**
  * Client-portal authentication - server-side sessions, mirroring the
@@ -119,14 +120,14 @@ export const getClientUser = cache(async (): Promise<ClientSessionUser | null> =
       where: { tokenHash: hashClientToken(token) },
       select: {
         expiresAt: true,
-        client: { select: { id: true, email: true, name: true, company: true, businessId: true, active: true } },
+        client: { select: { id: true, email: true, name: true, title: true, company: true, businessId: true, active: true } },
       },
     });
     if (!row || row.expiresAt <= new Date() || !row.client.active) return null;
     return {
       id: row.client.id,
       email: row.client.email,
-      name: row.client.name,
+      name: clientFullName(row.client.name, row.client.title),
       company: row.client.company,
       businessId: row.client.businessId,
     };
