@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { clientGreetingName } from "@/lib/client-name";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -80,7 +81,7 @@ export default async function PortalDashboard() {
     <div className={styles.content}>
       <header className={`${styles.pageHeader} ${styles.workspaceHero}`}>
         <div>
-          <h1>Welcome back, {client.name.trim().split(/\s+/)[0]}.</h1>
+          <h1>Welcome back, {clientGreetingName(client.name)}.</h1>
           <p>See where your projects stand, what’s changed and which invoices need your attention.</p>
         </div>
         <Link href="/portal/projects" className={styles.workspaceAction}>

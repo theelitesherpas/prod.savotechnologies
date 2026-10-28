@@ -48,6 +48,35 @@ beforeEach(() => {
   m.receiptConsume.mockResolvedValue({ kind: "reset", password });
 });
 
+describe("optional client honorifics", () => {
+  it.each(["Mr.", "Mrs.", "Ms.", "Dr."])("stores %s separately and uses it in welcome mail", async title => {
+    await expect(createClientAction(form({ name: "James Miller", title, email: "client@example.test" }))).rejects.toThrow("created=1");
+    expect(m.clientCreate.mock.calls[0][0].data).toMatchObject({ name: "James Miller", title });
+    expect(m.send).toHaveBeenCalledWith("clientWelcome", "client@example.test", expect.objectContaining({ name: `${title} James Miller` }));
+  });
+  it("keeps omission backwards-compatible and allows explicit clearing", async () => {
+    await expect(updateClientAction(form({ id: "client-fixture", name: "James Miller", email: "client@example.test" }))).rejects.toThrow("saved=1");
+    expect(m.clientUpdate.mock.calls[0][0].data).not.toHaveProperty("title");
+    await expect(updateClientAction(form({ id: "client-fixture", name: "James Miller", email: "client@example.test", title: "" }))).rejects.toThrow("saved=1");
+    expect(m.clientUpdate.mock.calls[1][0].data.title).toBeNull();
+  });
+  it("defaults new clients to no title and never infers one", async () => {
+    await expect(createClientAction(form({ name: "James Miller", email: "client@example.test" }))).rejects.toThrow("created=1");
+    expect(m.clientCreate.mock.calls[0][0].data.title).toBeNull();
+  });
+  it.each(["Sir", "Prof.", "<script>", "Mr. Mrs."])("rejects unsupported or forged title %s", async title => {
+    await expect(createClientAction(form({ name: "James Miller", title, email: "client@example.test" }))).rejects.toThrow("Check%20the%20fields");
+    expect(m.clientCreate).not.toHaveBeenCalled();
+    await expect(updateClientAction(form({ id: "client-fixture", name: "James Miller", title, email: "client@example.test" }))).rejects.toThrow("invalid");
+    expect(m.clientUpdate).not.toHaveBeenCalled();
+  });
+  it("includes the title after password reset without rewriting the name", async () => {
+    m.clientFind.mockResolvedValue({ id: "client-fixture", email: "client@example.test", name: "James Miller", title: "Dr." });
+    await expect(resetClientPasswordAction(form({ id: "client-fixture" }))).rejects.toThrow("reset=1");
+    expect(m.send).toHaveBeenCalledWith("clientPasswordReset", "client@example.test", { name: "Dr. James Miller", password });
+  });
+});
+
 describe("client password admin actions", () => {
   it("redirects after account creation without putting the password in the URL", async () => {
     await expect(createClientAction(form({ name: "Test Client", email: "client@example.test" })))

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { PublicMeetingData } from "@/lib/meeting/service";
+import { clientGreetingName } from "@/lib/client-name";
 import { COMPANY_FACTS } from "@/constants/company-facts";
 import { MEETING_TYPES, meetingDateLabel, meetingTimeLabel, meetingLocation, safeMeetingUrl, type MeetingView } from "./meeting-model";
 import { MeetingArrow, MeetingSymbol } from "./meeting-art";
@@ -31,7 +32,7 @@ export function InvitationFacts({ data }: { data: PublicMeetingData }) {
 export function MeetingHero({ data }: { data: PublicMeetingData }) {
   return <section className={s.hero} aria-labelledby="meeting-heading"><div className={s.rail}>
     <h1 id="meeting-heading">{data.title}</h1>
-    <p className={s.heroIntro}>Hi {data.clientName.trim().split(/\s+/)[0] || "there"}, {data.status === "reschedule_requested" ? "choose a new date, then a start time." : "choose a date, then a start time."} You can review both before sending.</p>
+    <p className={s.heroIntro}>Hi {clientGreetingName(data.clientName)}, {data.status === "reschedule_requested" ? "choose a new date, then a start time." : "choose a date, then a start time."} You can review both before sending.</p>
     <div className={s.meetingMeta} aria-label="Meeting format, duration and timezone"><span>{MEETING_TYPES[data.meetingType] ?? data.meetingType}</span><span><MeetingSymbol kind="clock" />{data.durationMin} minutes</span><span>IST · UTC+5:30</span></div>
     <details className={s.mobileInvitation}><summary>View meeting details<Chevron /></summary><MeetingContext data={data} compact /></details>
   </div></section>;

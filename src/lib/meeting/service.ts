@@ -9,6 +9,7 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { clientFullName } from "@/lib/client-name";
 import { sendMailNow } from "@/lib/mail";
 import {
   meetingInvitation,
@@ -18,6 +19,12 @@ import {
 } from "@/lib/mail/meeting-templates";
 import { publish } from "@/lib/livechat/pubsub";
 import { istClock, meetingSlots, validMeetingDate } from "@/sections/meeting/meeting-model";
+
+/** Current explicit honorific, without rewriting the meeting's saved name. */
+async function meetingDisplayName(meeting: { clientName: string; clientId?: string | null }): Promise<string> {
+  const client = meeting.clientId && prisma ? await prisma.clientUser.findUnique({ where: { id: meeting.clientId }, select: { title: true } }) : null;
+  return clientFullName(meeting.clientName, client ? client.title : undefined);
+}
 
 /* ───────────────────────── tokens & references ───────────────────────── */
 
@@ -198,7 +205,7 @@ export async function createMeeting(input: CreateMeetingInput): Promise<{ meetin
   if (meeting.clientEmail) {
     const link = `https://savotechnologies.com/meeting/${token}`;
     const tpl = meetingInvitation({
-      clientName: meeting.clientName,
+      clientName: await meetingDisplayName(meeting),
       meetingTitle: input.title,
       meetingType: meeting.meetingType,
       durationMin: meeting.durationMin,
@@ -239,7 +246,7 @@ export async function sendInvitation(meetingId: string, actorName: string): Prom
   if (m.clientEmail) {
     const link = `https://savotechnologies.com/meeting/${token}`;
     const tpl = meetingInvitation({
-      clientName: m.clientName,
+      clientName: await meetingDisplayName(m),
       meetingTitle: m.title,
       meetingType: m.meetingType,
       durationMin: m.durationMin,
@@ -311,15 +318,16 @@ export async function getMeetingByToken(token: string): Promise<PublicMeetingDat
     return { error: "This meeting request has expired.", expired: true };
   }
 
+  const displayName = await meetingDisplayName(m);
   // Log open (throttled - only if not opened in last 5 min)
   const recentOpen = await prisma.meetingActivity.findFirst({
     where: { meetingId: m.id, type: "invitation_opened", createdAt: { gte: new Date(Date.now() - 5 * 60_000) } },
   });
-  if (!recentOpen) await logActivity(m.id, "invitation_opened", m.clientName);
+  if (!recentOpen) await logActivity(m.id, "invitation_opened", displayName);
 
   return {
     reference: m.reference,
-    clientName: m.clientName,
+    clientName: displayName,
     clientCompany: m.clientCompany,
     clientPhone: m.clientPhone,
     clientEmail: m.clientEmail,
@@ -444,7 +452,7 @@ export async function submitAvailability(input: SubmitAvailabilityInput): Promis
   });
   if (!committed) return { ok: false, error: "Your availability has already been submitted." };
 
-  await logActivity(m.id, "availability_submitted", m.clientName, {
+  await logActivity(m.id, "availability_submitted", await meetingDisplayName(m), {
     date: input.preferredDate,
     time: input.preferredTime,
     autoConfirmed: m.autoConfirm,
@@ -454,7 +462,7 @@ export async function submitAvailability(input: SubmitAvailabilityInput): Promis
   publish("admin", {
     type: "enquiry.new",
     enquiry: {
-      name: `${m.clientName} (meeting response)`,
+      name: `${await meetingDisplayName(m)} (meeting response)`,
       projectType: `${m.title} - ${input.preferredDate} ${input.preferredTime}`,
       source: "meeting",
     },
@@ -582,7 +590,7 @@ async function sendClientConfirmation(meetingId: string, isFinal = false): Promi
 
   if (isFinal) {
     const tpl = meetingConfirmed({
-      clientName: m.clientName,
+      clientName: await meetingDisplayName(m),
       meetingTitle: m.title,
       date: dateStr,
       time: timeStr,
@@ -595,7 +603,7 @@ async function sendClientConfirmation(meetingId: string, isFinal = false): Promi
     sendMailNow(m.clientEmail, tpl);
   } else {
     const tpl = meetingAvailabilityReceived({
-      clientName: m.clientName,
+      clientName: await meetingDisplayName(m),
       meetingTitle: m.title,
       date: dateStr,
       time: timeStr,
@@ -612,7 +620,7 @@ async function sendAdminNotification(meetingId: string): Promise<void> {
   const m = await prisma.meeting.findUnique({ where: { id: meetingId } });
   if (!m) return;
   const tpl = meetingAdminNotification({
-    clientName: m.clientName,
+    clientName: await meetingDisplayName(m),
     clientCompany: m.clientCompany,
     meetingTitle: m.title,
     date: m.preferredDate ?? "TBD",
@@ -635,6 +643,7 @@ export function generateICS(meeting: {
   locationAddress: string | null;
   meetingUrl: string | null;
   clientName: string;
+  clientTitle?: string | null;
   clientCompany: string;
 }): string | null {
   const date = meeting.confirmedDate ?? meeting.preferredDate;
@@ -646,7 +655,7 @@ export function generateICS(meeting: {
   const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 
   const location = meeting.meetingUrl ?? meeting.locationAddress ?? "Savo Technologies";
-  const description = `Meeting with ${meeting.clientName}${meeting.clientCompany ? ` (${meeting.clientCompany})` : ""}\\nRef: ${meeting.reference}\\nDuration: ${durationLabel(meeting.durationMin)}`;
+  const description = `Meeting with ${clientFullName(meeting.clientName, meeting.clientTitle)}${meeting.clientCompany ? ` (${meeting.clientCompany})` : ""}\\nRef: ${meeting.reference}\\nDuration: ${durationLabel(meeting.durationMin)}`;
 
   return [
     "BEGIN:VCALENDAR",

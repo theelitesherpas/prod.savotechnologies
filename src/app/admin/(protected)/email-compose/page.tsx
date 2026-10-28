@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice } from "@/components/admin/ui";
 import { ComposeForm } from "@/components/admin/compose-form";
+import { clientFullName } from "@/lib/client-name";
 
 export const metadata: Metadata = { title: "Send email" };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function AdminComposePage({
   const [clients, employees] = prisma
     ? await Promise.all([
         canAccess(user, "clients") && scoped !== "hr"
-          ? prisma.clientUser.findMany({ where: { active: true }, select: { email: true, name: true }, orderBy: { name: "asc" }, take: 200 })
+          ? prisma.clientUser.findMany({ where: { active: true }, select: { email: true, name: true, title: true }, orderBy: { name: "asc" }, take: 200 })
           : [],
         canAccess(user, "employees") && scoped !== "hello" ? prisma.employee.findMany({
           orderBy: { createdAt: "desc" },
@@ -40,7 +41,7 @@ export default async function AdminComposePage({
       />
       {sent ? <Notice>Sent.</Notice> : null}
       {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
-      <ComposeForm clients={clients} employees={employees} dept={scoped} preTo={preTo} preSubject={preSubject} />
+      <ComposeForm clients={clients.map(c => ({ ...c, name: clientFullName(c.name, c.title) }))} employees={employees} dept={scoped} preTo={preTo} preSubject={preSubject} />
     </div>
   );
 }

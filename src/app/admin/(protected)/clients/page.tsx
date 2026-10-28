@@ -11,6 +11,8 @@ import { ClientPasswordReceipt } from "@/components/admin/client-password-receip
 import { hasClientPasswordReceipt } from "@/lib/client-password-receipt";
 import { BusinessIdField } from "@/components/admin/business-id-field";
 import { deleteClientAction } from "./actions";
+import { clientFullName } from "@/lib/client-name";
+import { ClientTitleField } from "@/components/admin/client-title-field";
 
 export const metadata: Metadata = { title: "Clients" };
 
@@ -64,7 +66,7 @@ export default async function AdminClientsPage({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link href={`/admin/clients/${c.id}`} className="truncate text-[0.9375rem] font-semibold text-foreground hover:text-accent">
-                    {c.name}
+                    {clientFullName(c.name, c.title)}
                   </Link>
                   {c.businessId ? <span className="tnum text-xs text-muted">{c.businessId}</span> : null}
                   {!c.active ? <Chip tone="muted">disabled</Chip> : null}
@@ -119,9 +121,10 @@ function CreateClientCard({ resetKey }: { resetKey: number }) {
       <BusinessIdField type="CS" label="Client ID" id="client-reference" resetKey={resetKey}/>
       <p className="text-xs leading-relaxed text-muted">Existing accounts keep their issued references.</p>
       <div className="grid gap-5 sm:grid-cols-2">
+        <ClientTitleField />
         <div>
           <label className="adm-label mb-1.5 block" htmlFor="cl-name">Name *</label>
-          <input id="cl-name" name="name" required maxLength={80} className={input} placeholder="Meera Krishnan" />
+          <input id="cl-name" name="name" autoComplete="name" required maxLength={80} className={input} placeholder="Meera Krishnan" />
         </div>
         <div>
           <label className="adm-label mb-1.5 block" htmlFor="cl-email">Email *</label>

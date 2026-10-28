@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { clientFullName } from "@/lib/client-name";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdminPage } from "@/lib/permissions";
@@ -15,7 +16,7 @@ export default async function EditProjectPage({ params, searchParams }: { params
   if (!prisma) notFound();
   const [project, clients] = await Promise.all([
     prisma.clientProject.findUnique({ where: { id }, include: { milestones: { where: { scope: "base" }, orderBy: [{ order: "asc" }, { createdAt: "asc" }] }, invoices: { select: { id: true, status: true } } } }),
-    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, company: true, businessId: true } }),
+    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, title: true, company: true, businessId: true } }),
   ]);
   if (!project) notFound();
   const revision = project.updatedAt.toISOString();
@@ -24,6 +25,6 @@ export default async function EditProjectPage({ params, searchParams }: { params
     <PageHeader title="Edit project" description={`${project.code} · Update the client-facing plan, budget and base milestones.`} />
     {query.e ? <Notice kind="alert">{query.e}</Notice> : null}
     {project.archivedAt ? <Notice kind="alert">This project is archived. Changes are still possible, but it is hidden from the active project lists and client portal.</Notice> : null}
-    <ProjectPlanForm key={revision} action={updateProjectAction} clients={clients} project={{ id: project.id, clientId: project.clientId, title: project.title, code: project.code, summary: project.summary, budget: project.budget, currency: project.currency, status: project.status, startDate: iso(project.startDate), dueDate: iso(project.dueDate), revision }} locked={project.invoices.length > 0} currencyLocked={project.budget != null && project.invoices.length > 0} milestones={project.milestones.map(m => ({ ...m, dueDate: iso(m.dueDate) }))} />
+    <ProjectPlanForm key={revision} action={updateProjectAction} clients={clients.map(c => ({ ...c, name: clientFullName(c.name, c.title) }))} project={{ id: project.id, clientId: project.clientId, title: project.title, code: project.code, summary: project.summary, budget: project.budget, currency: project.currency, status: project.status, startDate: iso(project.startDate), dueDate: iso(project.dueDate), revision }} locked={project.invoices.length > 0} currencyLocked={project.budget != null && project.invoices.length > 0} milestones={project.milestones.map(m => ({ ...m, dueDate: iso(m.dueDate) }))} />
   </div>;
 }

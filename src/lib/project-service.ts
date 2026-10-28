@@ -1,4 +1,5 @@
 import "server-only";
+import { clientFullName } from "@/lib/client-name";
 import type { Prisma } from "@prisma/client";
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
@@ -16,7 +17,7 @@ export async function projectTransaction<T>(work: (tx: Prisma.TransactionClient)
  * mutation. Only matching-owner/currency payments count. No zero-budget or
  * partial-invoice completion. Cancellation always wins over payment events. */
 export async function reconcileProject(tx: Prisma.TransactionClient, id: string): Promise<ProjectEmail[]> {
-  const project = await tx.clientProject.findUnique({ where: { id }, include: { milestones: true, invoices: true, client: { select: { name: true, email: true } } } });
+  const project = await tx.clientProject.findUnique({ where: { id }, include: { milestones: true, invoices: true, client: { select: { name: true, title: true, email: true } } } });
   if (!project) return [];
   const finances = projectFinancials(project, project.milestones, project.invoices.filter(i => i.clientId === project.clientId));
   if (finances.total != null && !Number.isSafeInteger(finances.total)) throw new Error("Project total exceeds the supported limit.");
@@ -35,7 +36,7 @@ export async function reconcileProject(tx: Prisma.TransactionClient, id: string)
     ? "Payments now cover the agreed project total, including additional work, and no issued invoices remain unpaid. The project has been marked completed. Delivery progress still reflects the milestones marked done."
     : "The agreed scope or recorded payments have changed. The project has been reopened; review the current plan and invoice balances in your portal.";
   await tx.projectUpdate.create({ data: { projectId: id, title, body } });
-  return [{ key: "projectUpdate", to: project.client.email, vars: { name: project.client.name, project: project.title, title, body } }];
+  return [{ key: "projectUpdate", to: project.client.email, vars: { name: clientFullName(project.client.name, project.client.title), project: project.title, title, body } }];
 }
 
 /** Schedule only AFTER commit. Next keeps the work alive after redirects;

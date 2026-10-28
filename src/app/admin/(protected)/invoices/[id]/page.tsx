@@ -1,5 +1,6 @@
 import { requireAdminPage } from "@/lib/permissions";
 import type { Metadata } from "next";
+import { clientFullName } from "@/lib/client-name";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { razorpayStatus } from "@/lib/razorpay-config";
@@ -29,7 +30,7 @@ export default async function EditInvoicePage({
 
   const [invoice, clients, projects, milestones] = await Promise.all([
     prisma.invoice.findUnique({ where: { id }, include: { milestone: { select: { title: true, description: true } } } }),
-    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, businessId: true } }),
+    prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, title: true, businessId: true } }),
     prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true, clientId: true, currency: true, budget: true } }),
     prisma.projectMilestone.findMany({ orderBy: [{ projectId: "asc" }, { order: "asc" }, { createdAt: "asc" }], select: { id: true, projectId: true, title: true, description: true, tasks: true, scope: true, amount: true, project: { select: { currency: true } } } }),
   ]);
@@ -84,7 +85,7 @@ export default async function EditInvoicePage({
         <input type="hidden" name="id" value={invoice.id} />
         <input type="hidden" name="revision" value={invoice.updatedAt.toISOString()} />
         <div className="grid gap-5 sm:grid-cols-2">
-          <InvoiceLinkFields clients={clients} projects={projects} initialClient={invoice.clientId} initialProject={invoice.projectId ?? ""} initialCurrency={invoice.currency} initialMilestone={invoice.milestoneId ?? ""} initialContent={{ amount: invoice.amount, description: invoiceWorkDescription(invoice), items: invoiceDocumentItems(invoice) }} milestones={milestones.map(m => ({ id: m.id, projectId: m.projectId, title: m.title, description: m.description, tasks: m.tasks, amount: m.amount, label: `${m.title}${m.amount != null ? ` · ${money(m.amount, m.project.currency)}` : ""}${m.scope === "additional" ? " · additional" : ""}` }))}/>
+          <InvoiceLinkFields clients={clients.map(c => ({ ...c, name: clientFullName(c.name, c.title) }))} projects={projects} initialClient={invoice.clientId} initialProject={invoice.projectId ?? ""} initialCurrency={invoice.currency} initialMilestone={invoice.milestoneId ?? ""} initialContent={{ amount: invoice.amount, description: invoiceWorkDescription(invoice), items: invoiceDocumentItems(invoice) }} milestones={milestones.map(m => ({ id: m.id, projectId: m.projectId, title: m.title, description: m.description, tasks: m.tasks, amount: m.amount, label: `${m.title}${m.amount != null ? ` · ${money(m.amount, m.project.currency)}` : ""}${m.scope === "additional" ? " · additional" : ""}` }))}/>
           <div>
             <label className="adm-label mb-1.5 block" htmlFor="invoice-reference">Invoice ID / issued reference</label>
             <input id="invoice-reference" name="number" readOnly value={invoice.number} className={input} aria-describedby="invoice-reference-help" />

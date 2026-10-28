@@ -11,6 +11,7 @@
 
 import { BUSINESS_ID_CONFIG, formatBusinessId } from "@/lib/business-id-config";
 import { minorUnits } from "@/lib/project-finance";
+import { clientGreetingName } from "@/lib/client-name";
 import { invoicePaymentLink } from "@/lib/payment-links";
 
 function invoiceAmount(v: Record<string, string>): number {
@@ -602,6 +603,16 @@ export const TEMPLATE_REGISTRY: TemplateEntry[] = [
     default: (v) => holidayAnnouncement(v),
   },
 ];
+
+// Expose distinct greeting/full-name variables to the existing template editor.
+// Never infer a title for sample or real recipients.
+for (const entry of TEMPLATE_REGISTRY) {
+  if (entry.recipient === "client") {
+    const fullName = entry.vars.name;
+    const greeting = clientGreetingName(fullName);
+    entry.vars = { ...entry.vars, firstName: greeting, fullName };
+  }
+}
 
 /** Saved invoice body overrides retain their wording but get the same validated
  * optional payment action as code defaults. Other email kinds never get it. */

@@ -4,6 +4,7 @@ import { generateBusinessId, claimBusinessId, rejectManualBusinessId, assertUnch
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { clientFullName } from "@/lib/client-name";
 import { requireAdmin } from "@/lib/auth";
 import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
@@ -18,8 +19,8 @@ function failed(base: string, error: unknown): never { redirect(`${base}?e=${enc
 function revision(form: FormData, updatedAt: Date) {
   if (form.get("revision") !== updatedAt.toISOString()) throw new Error("This project changed while you were editing. Refresh before saving.");
 }
-function event(project: { title: string; client: { name: string; email: string } }, title: string, body: string): ProjectEmail {
-  return { key: "projectUpdate", to: project.client.email, vars: { name: project.client.name, project: project.title, title, body } };
+function event(project: { title: string; client: { name: string; title?: string | null; email: string } }, title: string, body: string): ProjectEmail {
+  return { key: "projectUpdate", to: project.client.email, vars: { name: clientFullName(project.client.name, project.client.title), project: project.title, title, body } };
 }
 
 export async function archiveProjectAction(form: FormData): Promise<void> {
@@ -59,7 +60,7 @@ export async function createProjectAction(form: FormData): Promise<void> {
       const businessId = await claimBusinessId(form, "PR", user.id, tx) ?? await generateBusinessId("PR", tx);
       const project = await tx.clientProject.create({ data: { ...core, code: businessId, businessId, budget: budgetMajor,
         milestones: { create: milestones.map((m, order) => ({ title: m.title, description: m.description, tasks: m.tasks, amount: m.amountMajor, dueDate: m.dueDate, status: m.status, scope: "base", order })) } },
-        include: { client: { select: { name: true, email: true } } } });
+        include: { client: { select: { name: true, title: true, email: true } } } });
       await reconcileProject(tx, project.id);
       return { id: project.id, events: [event(project, "Your project plan is ready", `Your project has been created with a base budget of ${invoiceMoney(budgetMajor, core.currency)}. You can review the description, estimated delivery date and milestone allocations in your client portal.`)] };
     });
@@ -97,7 +98,7 @@ export async function updateProjectAction(form: FormData): Promise<void> {
       }
       const budgetMajor = d.budgetMajor;
       const core = { clientId: d.clientId, title: d.title, code: current.code, summary: d.summary, currency: d.currency, status: d.status, startDate: d.startDate, dueDate: d.dueDate };
-      const project = await tx.clientProject.update({ where: { id }, data: { ...core, budget: budgetMajor, completedByPayment: d.status === current.status ? current.completedByPayment : false }, include: { client: { select: { name: true, email: true } } } });
+      const project = await tx.clientProject.update({ where: { id }, data: { ...core, budget: budgetMajor, completedByPayment: d.status === current.status ? current.completedByPayment : false }, include: { client: { select: { name: true, title: true, email: true } } } });
       const automatic = await reconcileProject(tx, id);
       return [event(project, "Your project plan has been updated", `The project details and milestone plan have been updated. Base budget: ${invoiceMoney(budgetMajor, d.currency)}. Review the current scope, dates and delivery progress in your portal.`), ...automatic];
     });
@@ -110,7 +111,7 @@ export async function cycleMilestoneAction(form: FormData): Promise<void> {
   const user = await operator(); const projectId = idValue(form, "projectId"); const id = idValue(form); let events: ProjectEmail[] = [];
   try {
     events = await projectTransaction(async tx => {
-      const project = await tx.clientProject.findUnique({ where: { id: projectId }, include: { client: { select: { name: true, email: true } } } });
+      const project = await tx.clientProject.findUnique({ where: { id: projectId }, include: { client: { select: { name: true, title: true, email: true } } } });
       if (!project) throw new Error("Project not found.");
       if (project.status === "cancelled") throw new Error("Reopen the project before changing delivery statuses.");
       const milestone = await tx.projectMilestone.findFirst({ where: { id, projectId } });
@@ -122,7 +123,7 @@ export async function cycleMilestoneAction(form: FormData): Promise<void> {
       const title = `${milestone.title} — ${status === "done" ? "completed" : status === "in_progress" ? "started" : "returned to upcoming"}`;
       await tx.projectUpdate.create({ data: { projectId, title, body: "Delivery progress has been recalculated from the milestone plan." } });
       const automatic = await reconcileProject(tx, projectId);
-      const notification: ProjectEmail = status === "pending" ? event(project, title, "The milestone status has changed. Review your current delivery plan in the client portal.") : { key: "milestoneUpdate", to: project.client.email, vars: { name: project.client.name, project: project.title, milestone: milestone.title, status: status === "done" ? "completed" : "started" } };
+      const notification: ProjectEmail = status === "pending" ? event(project, title, "The milestone status has changed. Review your current delivery plan in the client portal.") : { key: "milestoneUpdate", to: project.client.email, vars: { name: clientFullName(project.client.name, project.client.title), project: project.title, milestone: milestone.title, status: status === "done" ? "completed" : "started" } };
       return [notification, ...automatic];
     });
   } catch (error) { failed(`/admin/projects/${projectId}`, error); }
@@ -135,7 +136,7 @@ export async function saveAdditionalWorkAction(form: FormData): Promise<void> {
   try {
     const d = parseAdditionalForm(form); const id = form.get("id") ? idValue(form) : null;
     events = await projectTransaction(async tx => {
-      const project = await tx.clientProject.findUnique({ where: { id: projectId }, include: { client: { select: { name: true, email: true } } } });
+      const project = await tx.clientProject.findUnique({ where: { id: projectId }, include: { client: { select: { name: true, title: true, email: true } } } });
       if (!project) throw new Error("Project not found.");
       revision(form, project.updatedAt);
       if (project.budget == null) throw new Error("Set the base budget and allocate the base milestones before adding paid scope.");
@@ -162,7 +163,7 @@ export async function changeProjectStatusAction(form: FormData): Promise<void> {
   try {
     const status = z.enum(PROJECT_STATUSES).parse(form.get("status"));
     events = await projectTransaction(async tx => {
-      const project = await tx.clientProject.findUnique({ where: { id }, include: { client: { select: { name: true, email: true } } } });
+      const project = await tx.clientProject.findUnique({ where: { id }, include: { client: { select: { name: true, title: true, email: true } } } });
       if (!project) throw new Error("Project not found."); revision(form, project.updatedAt);
       if (project.status === status) return [];
       await tx.clientProject.update({ where: { id }, data: { status, completedByPayment: false } });
@@ -181,7 +182,7 @@ export async function addUpdateAction(form: FormData): Promise<void> {
   try {
     const title = z.string().trim().min(2).max(140).parse(form.get("title")); const body = z.string().trim().max(2000).parse(form.get("body") ?? "");
     events = await projectTransaction(async tx => {
-      const project = await tx.clientProject.findUnique({ where: { id: projectId }, include: { client: { select: { name: true, email: true } } } });
+      const project = await tx.clientProject.findUnique({ where: { id: projectId }, include: { client: { select: { name: true, title: true, email: true } } } });
       if (!project) throw new Error("Project not found.");
       await tx.projectUpdate.create({ data: { projectId, title, body } });
       return [event(project, title, body)];

@@ -2,12 +2,13 @@ import { readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const m = vi.hoisted(() => ({
-  findMeeting: vi.fn(), updateMeeting: vi.fn(), updateMany: vi.fn(), createMeeting: vi.fn(),
+  findClient: vi.fn(), findMeeting: vi.fn(), updateMeeting: vi.fn(), updateMany: vi.fn(), createMeeting: vi.fn(),
   findActivity: vi.fn(), createActivity: vi.fn(), transaction: vi.fn(),
   deleteAttendees: vi.fn(), createAttendee: vi.fn(), mail: vi.fn(), publish: vi.fn(),
   invitation: vi.fn(), availability: vi.fn(), confirmed: vi.fn(), adminNotification: vi.fn(),
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
+  clientUser: { findUnique: m.findClient },
   meeting: { findUnique: m.findMeeting, update: m.updateMeeting, updateMany: m.updateMany, create: m.createMeeting },
   meetingActivity: { findFirst: m.findActivity, create: m.createActivity },
   meetingAttendee: { deleteMany: m.deleteAttendees, create: m.createAttendee },
@@ -23,7 +24,7 @@ vi.mock("@/lib/mail/meeting-templates", () => ({
 }));
 vi.mock("@/lib/livechat/pubsub", () => ({ publish: m.publish }));
 
-import { createMeeting, getMeetingByToken, hashMeetingToken, isMeetingAccessToken, newMeetingToken, sendInvitation, submitAvailability } from "@/lib/meeting/service";
+import { createMeeting, getMeetingByToken, hashMeetingToken, isMeetingAccessToken, newMeetingToken, sendInvitation, submitAvailability, generateICS } from "@/lib/meeting/service";
 
 const validToken = "Abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG";
 const reference = "STPL-2026-ABCDE";
@@ -42,6 +43,7 @@ const meeting = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  m.findClient.mockResolvedValue({ title: "Mr." });
   m.findMeeting.mockResolvedValue(meeting);
   m.findActivity.mockResolvedValue(null);
   m.createActivity.mockResolvedValue({});
@@ -60,6 +62,21 @@ beforeEach(() => {
 });
 
 describe("meeting invitation bearer-token security", () => {
+  it("resolves a linked client's current title for existing invitations without changing the snapshot name", async () => {
+    m.findMeeting.mockResolvedValue({ ...meeting, clientId: "client-fixture", clientName: "James Miller", clientEmail: "james@example.invalid" });
+    expect(await getMeetingByToken(validToken)).toMatchObject({ clientName: "Mr. James Miller" });
+    await sendInvitation(meeting.id, "Admin");
+    expect(m.invitation).toHaveBeenLastCalledWith(expect.objectContaining({ clientName: "Mr. James Miller" }));
+    m.findClient.mockResolvedValue({ title: "Dr." });
+    expect(await getMeetingByToken(validToken)).toMatchObject({ clientName: "Dr. James Miller" });
+    m.findClient.mockResolvedValue({ title: null });
+    expect(await getMeetingByToken(validToken)).toMatchObject({ clientName: "James Miller" });
+    expect(m.updateMeeting.mock.calls.every(([arg]) => !("clientName" in arg.data))).toBe(true);
+  });
+  it("includes the full titled name, not a greeting or duplicated prefix, in calendar descriptions", () => {
+    const ics = generateICS({ ...meeting, clientName: "Mr. James Miller", clientTitle: "Mr.", preferredDate: "2030-10-15", preferredTime: "10:00" });
+    expect(ics).toContain("Meeting with Mr. James Miller"); expect(ics).not.toContain("Mr. Mr.");
+  });
   it("generates a 256-bit base64url token and rejects human references as credentials", () => {
     const token = newMeetingToken();
     expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);

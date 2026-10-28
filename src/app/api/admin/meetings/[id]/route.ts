@@ -26,6 +26,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const m = await prisma.meeting.findUnique({
     where: { id },
     include: {
+      client: { select: { title: true } },
       attendees: true,
       activity: { orderBy: { createdAt: "desc" }, take: 50 },
     },
@@ -37,11 +38,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     await prisma.meeting.update({ where: { id }, data: { seenAt: new Date() } }).catch(() => undefined);
   }
 
-  const ics = generateICS(m);
+  const { client, ...meeting } = m;
+  const clientTitle = client ? client.title : undefined;
+  const ics = generateICS({ ...m, clientTitle });
 
   return apiOk({
     meeting: {
-      ...m,
+      ...meeting,
+      clientTitle,
       tokenPlain: m.tokenPlain,
       createdAt: m.createdAt.toISOString(),
       updatedAt: m.updatedAt.toISOString(),

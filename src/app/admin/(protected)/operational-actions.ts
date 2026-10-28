@@ -6,6 +6,7 @@ import type { Prisma } from "@prisma/client";
 import { requireSection } from "@/lib/permissions";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clientFullName } from "@/lib/client-name";
 import { PORTALS, recordModule, recordPath } from "@/lib/admin-portals";
 import { parseRecordForm, recordDate, recordId } from "@/lib/admin-records";
 import { CAREER_ENQUIRY_WHERE } from "@/lib/admin-enquiries";
@@ -32,12 +33,12 @@ export async function saveOperationalRecord(form: FormData): Promise<void> {
       const subject = !d.subjectId ? null : definition.subject === "employee"
         ? await tx.employee.findUnique({ where: { id: d.subjectId }, select: { name: true, employeeCode: true } })
         : definition.subject === "client"
-          ? await tx.clientUser.findUnique({ where: { id: d.subjectId }, select: { name: true, businessId: true } })
+          ? await tx.clientUser.findUnique({ where: { id: d.subjectId }, select: { name: true, title: true, businessId: true } })
           : await tx.projectEnquiry.findFirst({ where: { AND: [CAREER_ENQUIRY_WHERE, { id: d.subjectId }] }, select: { name: true, reference: true } });
       if (d.subjectId && !subject) return "subject";
       const data = {
         title: d.title, status: d.status, owner: d.owner, startDate: recordDate(d.startDate), dueDate: recordDate(d.dueDate), notes: d.notes,
-        data: d.data as Prisma.InputJsonObject, subjectLabel: subject?.name ?? "", updatedBy: user.id,
+        data: d.data as Prisma.InputJsonObject, subjectLabel: subject ? clientFullName(subject.name, "title" in subject ? subject.title : undefined) : "", updatedBy: user.id,
         employeeId: definition.subject === "employee" && d.subjectId ? d.subjectId : null,
         clientId: definition.subject === "client" && d.subjectId ? d.subjectId : null,
         candidateId: definition.subject === "candidate" && d.subjectId ? d.subjectId : null,

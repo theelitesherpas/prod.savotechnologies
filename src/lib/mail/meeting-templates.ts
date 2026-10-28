@@ -8,7 +8,8 @@ import { shell, spec, p, lead, highlight } from "./templates";
 import { site } from "./templates";
 import type { MailTemplate } from "./templates";
 
-const fn = (name: string) => name.split(" ")[0];
+import { clientGreetingName } from "@/lib/client-name";
+const fn = clientGreetingName;
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 

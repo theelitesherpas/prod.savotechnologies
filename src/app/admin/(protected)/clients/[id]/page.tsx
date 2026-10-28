@@ -8,6 +8,7 @@ import { BackLink, PageHeader, Notice } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
 import { ClientAddressFields } from "@/components/admin/client-address-fields";
+import { ClientTitleField } from "@/components/admin/client-title-field";
 import { updateClientAction, resetClientPasswordAction } from "../actions";
 
 export const metadata: Metadata = { title: "Edit client" };
@@ -43,9 +44,10 @@ export default async function EditClientPage({
       <FormGuard action={updateClientAction} className="adm-card mb-6 space-y-5 p-5">
         <input type="hidden" name="id" value={client.id} />
         <div className="grid gap-5 sm:grid-cols-2">
+          <ClientTitleField value={client.title} />
           <div>
             <label className="adm-label mb-1.5 block" htmlFor="cl-name">Name *</label>
-            <input id="cl-name" name="name" required maxLength={80} defaultValue={client.name} className={input} />
+            <input id="cl-name" name="name" autoComplete="name" required maxLength={80} defaultValue={client.name} className={input} />
           </div>
           <div>
             <label className="adm-label mb-1.5 block" htmlFor="cl-email">Email *</label>

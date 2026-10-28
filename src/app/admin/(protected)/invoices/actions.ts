@@ -40,7 +40,7 @@ async function operator() { const user = await requireAdmin(); await requireSect
 const idValue = (form: FormData) => z.string().regex(/^[A-Za-z0-9_-]{10,64}$/).parse(form.get("id"));
 function failed(base: string, error: unknown): never { redirect(`${base}?e=${encodeURIComponent(projectError(error))}`); }
 async function owner(tx: Prisma.TransactionClient, d: { clientId: string; projectId: string | null; milestoneId?: string | null; currency: string }) {
-  const client = await tx.clientUser.findUnique({ where: { id: d.clientId }, select: { email: true, name: true } });
+  const client = await tx.clientUser.findUnique({ where: { id: d.clientId }, select: { email: true, name: true, title: true } });
   if (!client) throw new Error("Choose an existing client.");
   if (d.projectId) {
     const project = await tx.clientProject.findFirst({ where: { id: d.projectId, clientId: d.clientId }, select: { currency: true, budget: true } });
@@ -68,7 +68,7 @@ function billingSnapshot(d: ReturnType<typeof input>, milestone: { title: string
   const description = d.description ?? (before ? before.description ?? null : milestone ? milestoneBillingDescription(milestone) : "");
   return { items, description };
 }
-function notification(client: { name: string; email: string }, invoice: { number: string; amount: number; currency: string; status: string; dueDate: Date | null; paymentLink?: string | null; payUrl?: string | null }): ProjectEmail[] {
+function notification(client: { name: string; title?: string | null; email: string }, invoice: { number: string; amount: number; currency: string; status: string; dueDate: Date | null; paymentLink?: string | null; payUrl?: string | null }): ProjectEmail[] {
   return invoiceNotification(client, invoice);
 }
 async function sync(tx: Prisma.TransactionClient, ids: (string | null)[]) {

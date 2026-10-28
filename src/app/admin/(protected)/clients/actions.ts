@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { clientAddressSchema, clientAddressInput, CLIENT_ADDRESS_FIELDS } from "@/lib/client-address";
 import { prisma } from "@/lib/prisma";
+import { CLIENT_TITLES, clientFullName } from "@/lib/client-name";
 import { requireAdmin } from "@/lib/auth";
 import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
@@ -26,6 +27,7 @@ export type ClientPasswordReceiptState =
 
 const clientSchema = clientAddressSchema.extend({
   name: z.string().trim().min(2).max(80),
+  title: z.enum(CLIENT_TITLES).or(z.literal("")).nullish().transform(value => value || null),
   email: z.string().trim().toLowerCase().email().max(120),
   company: z.string().trim().max(120).optional().or(z.literal("")),
   active: z.boolean(),
@@ -44,6 +46,7 @@ export async function createClientAction(formData: FormData): Promise<void> {
     name: formData.get("name"),
     email: formData.get("email"),
     company: formData.get("company") ?? "",
+    title: formData.get("title"),
     active: true,
     ...clientAddressInput(formData),
   });
@@ -61,10 +64,10 @@ export async function createClientAction(formData: FormData): Promise<void> {
     rejectManualBusinessId(formData.get("businessId"));
     const passwordHash = await hashPassword(password);
     const client = await businessTransaction(async tx => tx.clientUser.create({
-      data: { ...clientAddressSchema.parse(parsed.data), name: parsed.data.name, email: parsed.data.email, company: parsed.data.company ?? "", passwordHash, businessId: await claimBusinessId(formData, "CS", user.id, tx) ?? await generateBusinessId("CS", tx) },
+      data: { ...clientAddressSchema.parse(parsed.data), title: parsed.data.title, name: parsed.data.name, email: parsed.data.email, company: parsed.data.company ?? "", passwordHash, businessId: await claimBusinessId(formData, "CS", user.id, tx) ?? await generateBusinessId("CS", tx) },
     }));
     await audit(user.id, "client.create", "ClientUser", client.email, { businessId: client.businessId });
-    sendTemplateNow("clientWelcome", client.email, { name: parsed.data.name, email: client.email, password, clientReference: client.businessId ?? "" });
+    sendTemplateNow("clientWelcome", client.email, { name: clientFullName(parsed.data.name, parsed.data.title), email: client.email, password, clientReference: client.businessId ?? "" });
   } catch (error) {
     if (error instanceof BusinessIdError) redirect(slugError(error.message));
     if (error instanceof Error && error.message.startsWith("Business IDs")) redirect(slugError(error.message));
@@ -87,6 +90,7 @@ export async function updateClientAction(formData: FormData): Promise<void> {
     name: formData.get("name"),
     email: formData.get("email"),
     company: formData.get("company") ?? "",
+    title: formData.get("title"),
     active: formData.get("active") === "on" || formData.get("active") === "true",
     ...clientAddressInput(formData),
   });
@@ -98,6 +102,8 @@ export async function updateClientAction(formData: FormData): Promise<void> {
       where: { id },
       data: {
         name: parsed.data.name,
+        // Older clients/forms must not erase a saved honorific by omission.
+        ...(formData.has("title") ? { title: parsed.data.title } : {}),
         email: parsed.data.email,
         company: parsed.data.company ?? "",
         active: parsed.data.active,
@@ -135,7 +141,7 @@ export async function resetClientPasswordAction(formData: FormData): Promise<voi
     redirect(slugError("Password reset failed; no changes were applied."));
   }
   await audit(user.id, "client.passwordReset", "ClientUser", client.email);
-  sendTemplateNow("clientPasswordReset", client.email, { name: client.name, password });
+  sendTemplateNow("clientPasswordReset", client.email, { name: clientFullName(client.name, client.title), password });
   await setClientPasswordReceipt(user.id, "reset", password);
 
   redirect("/admin/clients?reset=1");

@@ -2,6 +2,7 @@ import { requireAdminPage } from "@/lib/permissions";
 import { Pagination } from "@/components/admin/pagination";
 import { parseAdminPage, adminPageUrl, type PageSearch } from "@/lib/admin-pagination";
 import type { Metadata } from "next";
+import { clientFullName } from "@/lib/client-name";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, EmptyState } from "@/components/admin/ui";
@@ -29,8 +30,8 @@ export default async function AdminInvoicesPage({
   const reservationCount = sp.client && prisma ? await prisma.invoice.count().catch(() => total) : total;
   const [invoices, clients, projects, milestones] = prisma
     ? await Promise.all([
-        prisma.invoice.findMany({ where, take: paging.take, skip: paging.skip, orderBy: [{ issuedAt: "desc" }, { id: "desc" }], include: { client: { select: { name: true } }, project: { select: { code: true } }, milestone: { select: { title: true } } } }).catch(() => []),
-        prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, businessId: true } }).catch(() => []),
+        prisma.invoice.findMany({ where, take: paging.take, skip: paging.skip, orderBy: [{ issuedAt: "desc" }, { id: "desc" }], include: { client: { select: { name: true, title: true } }, project: { select: { code: true } }, milestone: { select: { title: true } } } }).catch(() => []),
+        prisma.clientUser.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, title: true, businessId: true } }).catch(() => []),
         prisma.clientProject.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true, code: true, clientId: true, currency: true, budget: true } }).catch(() => []),
         prisma.projectMilestone.findMany({ orderBy: [{ projectId: "asc" }, { order: "asc" }, { createdAt: "asc" }], select: { id: true, projectId: true, title: true, description: true, tasks: true, scope: true, amount: true, project: { select: { currency: true } } } }).catch(() => []),
       ])
@@ -62,7 +63,7 @@ export default async function AdminInvoicesPage({
                   <InvoiceStatusChip status={inv.status} />
                 </div>
                 <p className="t-caption mt-1 text-muted">
-                  {inv.client.name}
+                  {clientFullName(inv.client.name, inv.client.title)}
                   {inv.project ? ` · ${inv.project.code}` : ""}{inv.milestone ? ` · ${inv.milestone.title}` : ""} · issued {new Date(inv.issuedAt).toLocaleDateString("en-GB")}
                 </p>
               </div>
@@ -74,7 +75,7 @@ export default async function AdminInvoicesPage({
                     id={inv.id}
                     label="Mark paid"
                     title="Mark this invoice as paid?"
-                    description={`Invoice ${inv.number} for ${inv.client.name} will be recorded as paid and the client will receive the paid-confirmation email.`}
+                    description={`Invoice ${inv.number} for ${clientFullName(inv.client.name, inv.client.title)} will be recorded as paid and the client will receive the paid-confirmation email.`}
                     confirmLabel="Yes, mark paid"
                     tone="success"
                     compact
@@ -100,7 +101,7 @@ export default async function AdminInvoicesPage({
       <FormGuard action={createInvoiceAction} className="adm-card space-y-5 p-5">
         <p className="adm-label">New invoice</p>
         <div className="grid gap-5 sm:grid-cols-2">
-          <InvoiceLinkFields clients={clients} projects={projects} initialClient={sp.client} milestones={milestones.map(m => ({ id: m.id, projectId: m.projectId, title: m.title, description: m.description, tasks: m.tasks, amount: m.amount, label: `${m.title}${m.amount != null ? ` · ${money(m.amount, m.project.currency)}` : ""}${m.scope === "additional" ? " · additional" : ""}` }))}/>
+          <InvoiceLinkFields clients={clients.map(c => ({ ...c, name: clientFullName(c.name, c.title) }))} projects={projects} initialClient={sp.client} milestones={milestones.map(m => ({ id: m.id, projectId: m.projectId, title: m.title, description: m.description, tasks: m.tasks, amount: m.amount, label: `${m.title}${m.amount != null ? ` · ${money(m.amount, m.project.currency)}` : ""}${m.scope === "additional" ? " · additional" : ""}` }))}/>
           <BusinessIdField type="IN" label="Invoice ID" id="invoice-reference" resetKey={reservationCount}/>
 
 

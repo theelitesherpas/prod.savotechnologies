@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { clientFullName } from "@/lib/client-name";
 import { requireAdmin } from "@/lib/auth";
 import { requireSection } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
@@ -59,6 +60,12 @@ export async function sendTemplatedEmailAction(formData: FormData): Promise<void
     }
   }
 
+  // A selected registered client, not stale sample variables in the composer,
+  // is authoritative for their name and optional honorific.
+  if (entry.recipient === "client" && prisma) {
+    const client = await prisma.clientUser.findUnique({ where: { email: to.toLowerCase() }, select: { name: true, title: true } });
+    if (client) vars.name = clientFullName(client.name, client.title);
+  }
   const tpl = await renderTemplate(key, vars, entry.recipient === "customer" ? to : undefined);
   if (!tpl) redirect(`/admin/email-compose?e=${encodeURIComponent("Template render failed.")}`);
   const ok = await sendMail(to, tpl, entry.dept, { templateKey: key, sentBy: user.name });
