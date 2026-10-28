@@ -215,11 +215,17 @@ not large promotional pills. Native fields/selects preserve familiar behavior.
 - **Invoice documents — owner-pinned service-template refinement:** one white
   A4 page, official black logo and complete static Inter Regular/SemiBold
   programs. Inherit the supplied service-invoice reference's composition:
-  supplier/registration and optional Bill to at left; red INVOICE, issued
-  reference, stored status and current balance at right; red numbered-table
-  heading over a quiet grey service field; notes/payment at lower left and
-  exact totals plus a red/white balance strip at lower right. Colours remain
-  Savo's, not the reference's orange. Keep the shared monetary right rail,
+  supplier/registration and optional Bill to at left; black INVOICE, issued
+  reference and stored status at right, with no duplicate header balance.
+  The owner's neutral refinement supersedes the reference's coloured areas:
+  black/grey text, pale-grey numbered-table heading and lower balance band,
+  white task rows. Red is reserved for the solid Pay now button. Milestone,
+  project name and reference form one compact left-aligned block above the
+  table; real task rows are 22–34pt high. Footer status sits left and
+  www.savotechnologies.com sits right, linking to https://savotechnologies.com;
+  do not print a page count. Supplier email appears only in the bottom
+  invoice-enquiry line, not in the header. Do not print the mobile number.
+  Keep the monetary rail,
   two-decimal ISO values, up to three single-line task charges and visibly
   abbreviated legacy prose. GSTIN/TAN/CIN are owner-supplied identifiers,
   not automatic tax calculations. Do not copy the reference's shipping,
@@ -2181,3 +2187,53 @@ unit tests, full suite 1671 passed / 16 skipped, typecheck/lint clean. Review
 performed inline, not independently; no physical-device or live-card claim.
 The 72 detector advisories concern older global design records; no global
 identity rewrite or unrelated artifact migration is part of this override.
+
+## Portal entrance override — owner-supplied split-screen reference
+
+Applies only to `/portal` and `/employee-portal`, `entrance.tsx`,
+`entrance.module.css`, `login-fields.tsx` and `login.module.css`. Supersedes
+previous black/photo entrance guidance, not dashboards, checkout, global
+marketing, the logo or other portal workspace styling. The owner supplied
+`original-49033f5a3dd8d8d9a006f9c2e90d2e3f (1).webp`: form left, branded
+workspace demonstration right. No social sign-in or registration.
+
+- **Composition:** owner rejected the initial tall/tilted version. Current
+  entrance uses a centered white 1180px frame, equal desktop columns, 10px
+  inset and 14px corners. Compact 56px header and 44px footer leave the task
+  within the viewport. Left: client/employee chooser and 390px form. Right:
+  Savo-red explanation and a straight, clearly labelled workspace preview.
+  At ≤900px only the task is shown; no redundant mobile marketing panel.
+  Verified without vertical/horizontal scrolling at desktop 1280×720,
+  1366×768, 1440×900, tablet 768×1000 and phones 375×812, 390×844,
+  320×900. Natural overflow remains available for zoom, keyboards and smaller
+  viewports; never hide or clip core controls. No marketing providers.
+- **Color/type:** existing Outfit500 headings and Inter controls. White paper,
+  ink `#171a20`, muted `#626262`, input stroke `#c4c7cd`, separators `#e6e7ea`.
+  Primary/panel `#b82222`, primary hover `#991d1d`, text links `#a71f1f`, pale
+  red error/mail states. Form headings 28–32px, story 29–38px, body 13px,
+  labels 13px, controls 13–14px with 16px field values. Miniature demonstration
+  labels are not task UI or real account records.
+- **Controls:** 46px inputs/actions with 7px corners; password visibility,
+  native opt-in remember checkbox, visible CAPTCHA, clear pending/error
+  feedback and red focus. Primary and alternate method share one action row;
+  no oversized divider, duplicated security strip or stacked help block.
+  Password is the default; email OTP is a genuine alternate, not a social
+  button or disguised registration. Forgot password
+  opens OTP selection, never a fabricated reset flow.
+- **Code state:** one accessible 64px-high, six-digit input with native
+  one-time-code/paste support; expiry guidance, disabled resend countdown,
+  single verify action and back-to-sign-in recovery. Emails wrap on phones.
+- **Depth/motion:** neutral offset frame shadow (`0 12px 36px` at 5%); the
+  right-side preview is strictly upright, with a low offset shadow. No tilt,
+  rotation or perspective on either portal. One 450ms clip reveal, only
+  without reduced-motion preference. No gradients, stock photos, invented
+  figures or generated assets.
+
+Behavior/security/deployment: `docs/PORTAL-LOGIN.md`. Evidence:
+`.impeccable/review/portal-login-compact/`; 154 local browser/database checks,
+2,046 unit tests passed / 16 skipped, lint/typecheck/build passed. Finish
+review inline, not independent. The 71 detector findings are documentation
+advisories, with zero non-advisory findings. No root identity
+or sidecar migration is included. Production keys/mail delivery and deployment
+remain separate prerequisites; Google's visible public test-key notice is not
+production bot protection.

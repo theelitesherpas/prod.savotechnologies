@@ -86,10 +86,12 @@ describe("printable PDF payment links",()=>{
  it.each(["sent","overdue","paid","cancelled"] as const)("includes only a safe URI annotation when %s is payable",async status=>{
   const bytes=await renderInvoicePdf({number:row.number,amount:row.amount,currency:row.currency,status,issuedAt:new Date(row.issuedAt),dueDate:null,paidAt:null,notes:"Synthetic payment-link review only. Not payable.",paymentLink:paypal,client:{name:"Example Client",company:"Synthetic local sample",email:"sample@example.invalid"},project:null});
   const pdf=await PDFDocument.load(bytes);const annotations=pdf.getPages().flatMap(page=>{const a=page.node.Annots();return a?Array.from({length:a.size()},(_,i)=>a.lookup(i,PDFDict)):[];});
+  const paymentAnnotations=annotations.filter(annotation=>annotation.lookup(PDFName.of("A"),PDFDict).lookup(PDFName.of("URI"),PDFString).decodeText()!=="https://savotechnologies.com");
+  expect(annotations).toHaveLength(paymentAnnotations.length+1);
   if(status==="sent"||status==="overdue"){
-    expect(annotations).toHaveLength(1);const action=annotations[0].lookup(PDFName.of("A"),PDFDict);
+    expect(paymentAnnotations).toHaveLength(1);const action=paymentAnnotations[0].lookup(PDFName.of("A"),PDFDict);
     expect(action.lookup(PDFName.of("S"),PDFName).toString()).toBe("/URI");expect(action.lookup(PDFName.of("URI"),PDFString).decodeText()).toBe(paypal);
-  } else expect(annotations).toHaveLength(0);
+  } else expect(paymentAnnotations).toHaveLength(0);
   mkdirSync("tmp/payment-links",{recursive:true});writeFileSync(`tmp/payment-links/${status}.pdf`,bytes);
  });
 });

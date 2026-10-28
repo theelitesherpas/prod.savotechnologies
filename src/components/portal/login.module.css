@@ -1,0 +1,95 @@
+.card {
+  width: 100%;
+  max-width: 390px;
+  margin: auto;
+  padding-block: 18px 4px;
+  color: #171a20;
+}
+.heading h1 {
+  font-family: var(--font-outfit);
+  font-size: clamp(1.75rem, 2.5vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.heading p {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #626262;
+}
+.heading strong { display: block; color: #171a20; overflow-wrap: anywhere; font-weight: 500; }
+.form { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; line-height: 1.4; }
+.field input {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #c4c7cd;
+  border-radius: 7px;
+  background: #fff;
+  color: #171a20;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  caret-color: #b82222;
+  transition: border-color 160ms ease;
+}
+.field input::placeholder { color: #717680; font-size: 14px; }
+.field input:hover { border-color: #8e939c; }
+.field input[aria-invalid="true"] { border-color: #b82222; }
+.passwordWrap { position: relative; }
+.passwordWrap input { padding-right: 52px; }
+.passwordToggle {
+  position: absolute; top: 1px; right: 2px; width: 44px; height: 44px;
+  display: grid; place-items: center; border-radius: 5px; background: transparent; color: #626262; cursor: pointer;
+}
+.passwordToggle svg { width: 19px; height: 19px; }
+.passwordToggle:hover { color: #171a20; background: #f5f5f5; }
+.options { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-block: -4px; font-size: 12px; }
+.remember { display: inline-flex; min-height: 44px; align-items: center; gap: 9px; cursor: pointer; color: #626262; }
+.remember input { width: 16px; height: 16px; accent-color: #b82222; cursor: pointer; }
+.options button, .resend button { min-height: 44px; color: #a71f1f; background: transparent; font-size: 12px; font-weight: 500; cursor: pointer; }
+.options button:hover, .resend button:hover { text-decoration: underline; text-underline-offset: 4px; }
+.captcha { min-width: 0; font-size: 12px; }
+/* The widget already has a visible "I'm not a robot" label and an accessible
+   group name. Keep its redundant caption screen-reader-only, not the CAPTCHA. */
+.captcha > div > p:first-child:not([role]) { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; clip-path: inset(50%); white-space: nowrap; overflow: hidden; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.primary, .secondary {
+  min-height: 46px; width: 100%; display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 10px 12px; border-radius: 7px; font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.primary { background: #b82222; color: #fff; border: 1px solid #b82222; position: relative; }
+.primary svg { position: absolute; right: 17px; width: 18px; height: 18px; }
+.primary:hover { background: #991d1d; border-color: #991d1d; }
+.secondary { background: #fff; color: #30343b; border: 1px solid #d6d8dd; }
+.secondary:hover { background: #f7f7f8; border-color: #a9adb5; }
+.secondary svg { width: 18px; height: 18px; }
+.form button:disabled { cursor: not-allowed; opacity: .6; }
+.help { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; margin-top: 10px; text-align: center; color: #626262; font-size: 11px; line-height: 1.6; }
+.help a { min-height: 44px; display: inline-flex; align-items: center; gap: 7px; color: #a71f1f; font-weight: 500; }
+.help a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.help svg { width: 14px; height: 14px; }
+.error { margin-top: 12px; background: #fff3f3; border: 1px solid #ebc8c8; color: #8a2020; padding: 13px 15px; border-radius: 7px; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.mailIcon { display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid #ebc8c8; border-radius: 10px; color: #b82222; background: #fff5f5; margin-bottom: 16px; }
+.mailIcon svg { width: 24px; height: 24px; }
+.field .code { height: 64px; font-size: 28px; font-variant-numeric: tabular-nums; letter-spacing: .45em; text-align: center; padding-inline: 12px 0; }
+.hint { margin-top: 10px; color: #626262; font-size: 12px; line-height: 1.7; }
+.resend { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 5px; font-size: 12px; color: #626262; text-align: center; }
+@media (max-height: 800px) {
+  .card { padding-top: 14px; }
+  .form { margin-top: 16px; gap: 10px; }
+  .help { margin-top: 6px; }
+}
+@media (max-width: 600px) {
+  .card { padding-block: 16px 0; }
+  .heading h1 { font-size: 1.75rem; }
+  .help { font-size: 10px; }
+  .actions { gap: 8px; }
+  .actions button { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { .field input, .primary, .secondary { transition: none; } }

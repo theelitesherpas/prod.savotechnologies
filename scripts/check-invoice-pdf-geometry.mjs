@@ -27,8 +27,12 @@ for (const document of documents) {
   const closing = document.pages[0].lines.find(line => /^(Amounts reflect|Long text is shortened)/.test(line.text));
   const settlement = document.pages[0].lines.find(line => line.text.includes("Invoice total"));
   const upperBalance = document.pages[0].lines.find(line => line.text === "Balance due" && line.y > 600);
-  ok(!!upperBalance, `${document.name}: reference-style header exposes the current balance`);
+  ok(!upperBalance, `${document.name}: no duplicate balance beneath the header status`);
+  ok((allText.match(/Balance due/g) ?? []).length === 1, `${document.name}: balance appears once in the lower summary`);
   ok(!/(Ship [Tt]o|Tax [Rr]ate|Qty|Zylker|Terms & Conditions)/.test(allText), `${document.name}: no fabricated reference-template shipping, quantities, taxes or contract terms`);
+  ok((allText.match(/hello@savotechnologies\.com/g) ?? []).length === 1, `${document.name}: supplier email appears only once`);
+  ok(!allText.includes("+91 75029 01234"), `${document.name}: mobile number is omitted`);
+  ok(contact?.text.includes("hello@savotechnologies.com."), `${document.name}: supplier email is in the bottom enquiry line`);
   ok(contact?.y >= 95 && contact.y <= 112, `${document.name}: contact details remain near the footer, not above an empty bottom third`);
   ok(closing?.y >= 85 && closing.y <= 100, `${document.name}: closing line uses the lower page consistently`);
   ok(settlement?.y >= 210 && settlement.y <= 300, `${document.name}: totals anchor in the lower section even with sparse content`);
@@ -36,7 +40,9 @@ for (const document of documents) {
   let monetaryRows = 0;
   for (const page of document.pages) {
     ok(Math.abs(page.width - 595.28) < .1 && Math.abs(page.height - 841.89) < .1, `${document.name}: A4 page`);
-    ok(page.lines.some(line => line.text.includes(`Page ${page.page} of ${document.pages.length}`)), `${document.name}: page count`);
+    ok(!page.lines.some(line => /Page \d+ of \d+/.test(line.text)), `${document.name}: page count is not printed`);
+    const website = page.lines.find(line => line.text.includes("www.savotechnologies.com"));
+    ok(!!website && Math.abs(website.x + website.width - 547.28) < .2 && website.y < 60, `${document.name}: website replaces page count on the right footer rail`);
     for (const line of page.lines) {
       ok(line.x >= 47.8 && line.x + line.width <= 547.48 && line.y >= 37 && line.y + line.height <= 811, `${document.name} page ${page.page}: text remains within print bounds: ${line.text}`);
       if (/\b(?:INR|USD|CHF|EUR|GBP|AED)\s[\d,]+\.\d{2}$/.test(line.text)) {
@@ -45,7 +51,7 @@ for (const document of documents) {
       }
     }
   }
-  ok(monetaryRows === (taskCount || 1) + 4, `${document.name}: exactly ${taskCount || 1} task/service prices, one header balance and three settlement values`);
+  ok(monetaryRows === (taskCount || 1) + 3, `${document.name}: exactly ${taskCount || 1} task/service prices and three settlement values`);
   if (sparseCount && taskCount) {
     for (let index = 1; index <= taskCount; index++) {
       const row = document.pages[0].lines.filter(line => line.text.includes(`Synthetic task ${index}`));
@@ -54,6 +60,10 @@ for (const document of documents) {
     }
   }
   if (knownTaskInvoice) {
+    const context = document.pages[0].lines.filter(line => ["Website implementation", "Example product development", "TEST-PRJ-001"].includes(line.text));
+    for (const line of context) ok(Math.abs(line.x - 48) < .2, `${document.name}: project/milestone context shares the left document rail`);
+    const taskRows = document.pages[0].lines.filter(line => /Booking form development|Payment gateway integration|QA and release/.test(line.text));
+    for (let index = 1; index < taskRows.length; index++) ok(Math.abs(taskRows[index].y - taskRows[index - 1].y) <= 34.2, `${document.name}: task rows stay compact enough for three tasks`);
     for (const task of ["Booking form development", "Payment gateway integration", "QA and release"])
       ok(document.pages[0].lines.filter(line => line.text.includes(task)).length === 1, `${document.name}: ${task} occupies one line exactly once`);
     ok(!allText.includes("Professional services"), `${document.name}: actual billed work replaces generic service label`);

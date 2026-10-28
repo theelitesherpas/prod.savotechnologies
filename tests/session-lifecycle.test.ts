@@ -59,11 +59,8 @@ describe("client lifecycle",()=>{
 });
 describe("employee lifecycle",()=>{
  const employee=(status="active",linked=true)=>({id:"emp",name:"Employee",employeeCode:"STPL0301IN",status,joiningDate:new Date("2025-01-01"),lastWorkingDay:null,leaves:[],panelUsers:linked?[{id:"panel",passwordHash:"real"}]:[]});
- function credentials(){const f=new FormData();f.set("email","employee@example.test");f.set("password","password");return f;}
- it.each([null,employee("exited"),employee("active",false)])("denies unavailable/exited/unlinked logins with the same message",async e=>{
-  m.employee.mockResolvedValue(e);const {employeeLoginAction}=await import("@/app/(site)/employee-portal/actions");await expect(employeeLoginAction(credentials())).rejects.toThrow("Email or password is incorrect.");expect(m.verify).toHaveBeenCalled();expect(m.employeeCreate).not.toHaveBeenCalled();expect(JSON.stringify(m.log.mock.calls)).not.toContain("employee@example.test");
- });
- it("preserves valid employee login",async()=>{m.employee.mockResolvedValue(employee());const {employeeLoginAction}=await import("@/app/(site)/employee-portal/actions");await expect(employeeLoginAction(credentials())).rejects.toThrow("REDIRECT:/employee-portal/dashboard");expect(m.employeeCreate).toHaveBeenCalled();expect(m.set).toHaveBeenCalled();});
+ // Password/OTP login lifecycle is covered by portal-login-security.test.ts;
+ // these cases exercise independently enforced, already-issued dashboard sessions.
  it.each([employee("exited"),employee("active",false),employee("unknown")])("denies existing revoked dashboard before authored queries",async e=>{
   m.employeeSession.mockResolvedValue({expiresAt:new Date(Date.now()+10000),employee:e});const {default:Dashboard}=await import("@/app/(site)/employee-portal/dashboard/page");await expect(Dashboard()).rejects.toThrow("REDIRECT:/employee-portal");expect(m.content).not.toHaveBeenCalled();
  });

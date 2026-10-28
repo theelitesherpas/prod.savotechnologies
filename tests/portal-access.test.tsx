@@ -23,7 +23,7 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 vi.mock("@/app/(site)/employee-portal/actions", () => ({
-  employeeLoginAction: vi.fn(),
+  employeeSignInAction: vi.fn(),
 }));
 
 beforeEach(() => {
@@ -128,12 +128,17 @@ describe("focused access design", () => {
         searchParams: Promise.resolve({ e: "Invalid % sign-in" }),
       }),
     );
-    expect(html).toContain("Employee sign in.");
+    expect(html).toContain("Welcome back.");
+    expect(html).toContain("Remember me");
+    expect(html).toContain("Sign in with email OTP");
+    expect(html).not.toContain("Continue with Google");
+    expect(html).not.toContain("Register now");
     expect(html).toContain("Invalid % sign-in");
     expect(html).toContain("Contact HR");
     expect(html).toContain("Human verification");
     expect(html).toMatch(/autocomplete="username"/i);
-    expect(html).toContain("conversation-desk.webp");
+    expect(html).toContain("Employee workspace");
+    expect(html).toContain("Illustration · no account data");
     expect(html).not.toContain("<main");
   });
   it.each(["/portal", "/employee-portal", "/employee-portal/dashboard"])(
