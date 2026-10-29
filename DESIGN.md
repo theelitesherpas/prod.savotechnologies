@@ -2035,6 +2035,14 @@ The reminder does not alter the underlying payment or meeting state. Preserve
 this restrained operational pattern rather than importing marketing decoration.
 See `docs/REMINDERS.md` for eligibility, cooldowns and delivery boundaries.
 
+The shared client/HR composer keeps both **From template** and **Blank email**
+visible as native toggle buttons with pressed state and 44px targets. Both modes
+identify their sending mailbox and provide the same sandboxed letter preview.
+On narrow screens the send action and mailbox explanation wrap rather than
+compressing the button. Preserve department/mode on result navigation; never
+label an HR letter as sent when it fell back to the client mailbox. Operational
+and permissions boundaries are documented in `docs/EMAIL-COMPOSE.md`.
+
 ## Components
 
 - **Wordmark** — the official SAVO logo (ported from v1): single-color

@@ -37,6 +37,7 @@ export function ComposeForm({
   employees,
   preselectEmployeeId,
   preselectTemplate,
+  initialMode = "template",
   dept,
   preTo,
   preSubject,
@@ -45,6 +46,7 @@ export function ComposeForm({
   employees: EmployeeLite[];
   preselectEmployeeId?: string;
   preselectTemplate?: string;
+  initialMode?: "template" | "blank";
   /** Scope to one department's templates (hr = HR/careers, hello = client). */
   dept?: "hr" | "hello";
   preTo?: string;
@@ -52,7 +54,10 @@ export function ComposeForm({
 }) {
   const scoped = dept ? TEMPLATE_REGISTRY.filter((t) => t.dept === dept) : TEMPLATE_REGISTRY;
   const pool = scoped.length ? scoped : TEMPLATE_REGISTRY;
-  const [mode, setMode] = useState<"template" | "blank">(dept === "hr" ? "template" : "template");
+  const [mode, setMode] = useState<"template" | "blank">(initialMode);
+  const sendingDept = dept ?? "hello";
+  const returnQuery = new URLSearchParams({ ...(dept ? { dept } : {}), mode });
+  const backTo = `/admin/email-compose?${returnQuery}`;
   const [templateKey, setTemplateKey] = useState(
     preselectTemplate && pool.some((t) => t.key === preselectTemplate) ? preselectTemplate : pool[0].key,
   );
@@ -89,7 +94,6 @@ export function ComposeForm({
     <div className="space-y-4">
       {/* Mode switch */}
       <div className="adm-card flex flex-wrap items-center gap-2 p-3">
-        {dept === "hr" ? null : (
           <div className="flex rounded-lg border border-border p-0.5" role="group" aria-label="Compose mode">
             {(["template", "blank"] as const).map((m) => (
               <button
@@ -98,7 +102,7 @@ export function ComposeForm({
                 onClick={() => setMode(m)}
                 aria-pressed={mode === m}
                 className={cn(
-                  "rounded-md px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.08em] transition-colors",
+                  "min-h-11 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
                   mode === m ? "bg-foreground text-background" : "text-muted hover:text-foreground",
                 )}
               >
@@ -106,16 +110,16 @@ export function ComposeForm({
               </button>
             ))}
           </div>
-        )}
         <p className="t-caption ml-auto hidden text-muted sm:block">
           {mode === "template"
-            ? "Templates send via their department (HR templates from hr@, site templates from hello@)."
-            : "A one-off branded email from hello@."}
+            ? dept ? `Templates send from ${dept}@savotechnologies.com.` : "Templates send via their department (HR templates from hr@, site templates from hello@)."
+            : `A one-off branded email from ${sendingDept}@.`}
         </p>
       </div>
 
       {mode === "template" ? (
-        <FormGuard action={sendTemplatedEmailAction} className="space-y-4">
+        <FormGuard action={sendTemplatedEmailAction} className="space-y-4" summaryHeading="There is a problem — the email was not sent">
+          <input type="hidden" name="back" value={backTo} />
           <input type="hidden" name="templateKey" value={templateKey} />
 
           {/* Template picker - grouped */}
@@ -252,7 +256,7 @@ export function ComposeForm({
               type="button"
               onClick={() => setShowPreview((v) => !v)}
               aria-expanded={showPreview}
-              className="t-caption font-semibold text-accent transition-colors hover:underline"
+              className="t-caption min-h-11 font-semibold text-accent transition-colors hover:underline"
             >
               {showPreview ? "Hide preview" : "Preview before sending"}
             </button>
@@ -262,13 +266,15 @@ export function ComposeForm({
               </div>
             ) : null}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <SubmitButton label={`Send via ${entry.dept === "hr" ? "hr@" : "hello@"}`} pendingLabel="Sending…" />
             <p className="t-caption text-muted">Sends from {entry.dept === "hr" ? "hr@savotechnologies.com" : "hello@savotechnologies.com"}.</p>
           </div>
         </FormGuard>
       ) : (
-        <FormGuard action={sendCustomEmailAction} className="space-y-4">
+        <FormGuard action={sendCustomEmailAction} className="space-y-4" summaryHeading="There is a problem — the email was not sent">
+          <input type="hidden" name="dept" value={sendingDept} />
+          <input type="hidden" name="back" value={backTo} />
           <div className="adm-card p-5">
             <label htmlFor="compose-to" className="adm-label mb-1.5 block">
               To
@@ -293,6 +299,7 @@ export function ComposeForm({
               id="compose-subject"
               name="subject"
               required
+              minLength={3}
               maxLength={300}
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
@@ -308,6 +315,7 @@ export function ComposeForm({
               id="compose-body"
               name="body"
               required
+              minLength={3}
               rows={10}
               maxLength={20000}
               value={body}
@@ -319,7 +327,7 @@ export function ComposeForm({
               type="button"
               onClick={() => setShowPreview((v) => !v)}
               aria-expanded={showPreview}
-              className="t-caption mt-3 font-semibold text-accent transition-colors hover:underline"
+              className="t-caption mt-3 min-h-11 font-semibold text-accent transition-colors hover:underline"
             >
               {showPreview ? "Hide preview" : "Preview before sending"}
             </button>
@@ -329,9 +337,9 @@ export function ComposeForm({
               </div>
             ) : null}
           </div>
-          <div className="flex items-center gap-3">
-            <SubmitButton label="Send email" pendingLabel="Sending…" />
-            <p className="t-caption text-muted">Sends from hello@savotechnologies.com.</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <SubmitButton label={`Send via ${sendingDept}@`} pendingLabel="Sending…" />
+            <p className="t-caption text-muted">Sends from {sendingDept}@savotechnologies.com.</p>
           </div>
         </FormGuard>
       )}

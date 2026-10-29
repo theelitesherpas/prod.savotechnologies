@@ -92,7 +92,7 @@ export function mailFrom(): string {
   return process.env.MAIL_FROM || `Savo Technologies <${user}>`;
 }
 
-type MailMeta = { templateKey?: string; sentBy?: string; toName?: string; sensitive?: boolean; messageId?: string; requireAcceptance?: boolean };
+type MailMeta = { templateKey?: string; sentBy?: string; toName?: string; sensitive?: boolean; messageId?: string; requireAcceptance?: boolean; requireDepartment?: boolean };
 
 /** Compatibility API for existing transactional callers. */
 export async function sendMail(to: string, tpl: MailTemplate, dept: "hello" | "hr" = "hello", meta?: MailMeta): Promise<boolean> {
@@ -133,6 +133,12 @@ export async function deliverMail(
   let t = wantHr ? hrTransport() : transport();
   let from = mailFrom();
   if (wantHr && !t) {
+    // Interactive compose must never silently send an HR letter from hello@.
+    if (meta?.requireDepartment) {
+      logger.warn("mail.department_not_configured", { dept });
+      return { status: "not_sent", reason: "HR_SMTP_NOT_CONFIGURED", retryable: false };
+    }
+    // Preserve the existing fallback for legacy automated notifications.
     // HR mailbox not configured - fall back to the default mailbox.
     logger.info("mail: hr mailbox not configured, sending via default");
     t = transport();

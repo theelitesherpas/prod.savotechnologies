@@ -6,17 +6,18 @@ export async function localReminderSmtp() {
   const server = net.createServer(socket => {
     sockets.add(socket); socket.on("close", () => sockets.delete(socket));
     socket.setEncoding("utf8"); socket.write("220 localhost ESMTP synthetic-reminder-test\r\n");
-    let buffer = "", inData = false, recipient = "", body = "";
+    let buffer = "", inData = false, recipient = "", sender = "", body = "";
     socket.on("data", chunk => {
       buffer += chunk;
       let end;
       while ((end = buffer.indexOf("\r\n")) >= 0) {
         const line = buffer.slice(0, end); buffer = buffer.slice(end + 2);
         if (inData) {
-          if (line === ".") { messages.push({ recipient, body }); body = ""; inData = false; socket.write("250 queued locally\r\n"); }
+          if (line === ".") { messages.push({ recipient, body, sender }); body = ""; inData = false; socket.write("250 queued locally\r\n"); }
           else body += `${line}\n`;
-        } else if (/^EHLO|^HELO/.test(line)) socket.write("250-localhost\r\n250 SIZE 1000000\r\n");
-        else if (/^MAIL FROM:/.test(line)) { recipient = ""; socket.write("250 OK\r\n"); }
+        } else if (/^EHLO|^HELO/.test(line)) socket.write("250-localhost\r\n250-AUTH PLAIN\r\n250 SIZE 1000000\r\n");
+        else if (/^AUTH PLAIN /.test(line)) socket.write("235 Synthetic authentication accepted\r\n");
+        else if (/^MAIL FROM:/.test(line)) { recipient = ""; sender = line.match(/<([^>]+)>/)?.[1] || ""; socket.write("250 OK\r\n"); }
         else if (/^RCPT TO:/.test(line)) { recipient = line.match(/<([^>]+)>/)?.[1] || ""; if (!recipient.endsWith(".invalid")) { recipient = ""; socket.write("550 Synthetic recipients only\r\n"); } else socket.write("250 OK\r\n"); }
         else if (line === "DATA" && recipient) { inData = true; socket.write("354 End with a dot\r\n"); }
         else if (line === "QUIT") socket.end("221 Bye\r\n");

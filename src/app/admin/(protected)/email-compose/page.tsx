@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminComposePage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; e?: string; dept?: string; to?: string; subject?: string }>;
+  searchParams: Promise<{ sent?: string; e?: string; dept?: string; mode?: string; to?: string; subject?: string }>;
 }) {
   const sp = await searchParams;
   const { sent, e, dept } = sp;
@@ -20,6 +20,7 @@ export default async function AdminComposePage({
   const user = await requireAdminPage(`/admin/email-compose?${scopeQuery}`);
   const preTo = sp.to ?? "";
   const preSubject = sp.subject ?? "";
+  const initialMode = sp.mode === "blank" ? "blank" : "template";
   const scoped: "hr" | "hello" | undefined = dept === "hr" || dept === "hello" ? dept : undefined;
   const [clients, employees] = prisma
     ? await Promise.all([
@@ -40,8 +41,8 @@ export default async function AdminComposePage({
         description="A one-off email on the Savo brand - same shell as every automated email, sent from the configured mailbox."
       />
       {sent ? <Notice>Sent.</Notice> : null}
-      {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
-      <ComposeForm clients={clients.map(c => ({ ...c, name: clientFullName(c.name, c.title) }))} employees={employees} dept={scoped} preTo={preTo} preSubject={preSubject} />
+      {e ? <Notice kind="alert">{e}</Notice> : null}
+      <ComposeForm clients={clients.map(c => ({ ...c, name: clientFullName(c.name, c.title) }))} employees={employees} dept={scoped} initialMode={initialMode} preTo={preTo} preSubject={preSubject} />
     </div>
   );
 }
