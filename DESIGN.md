@@ -2025,6 +2025,16 @@ this pattern in both URL-driven lists and complete client-side collections.
 Website analytics is a direct item after Dashboard. See `docs/HR-WORKSPACE.md`
 for scoped implementation and verification; no marketing identity changes.
 
+Client invoice/meeting reminders share `ReminderButton`: an explicit action
+label, 44px minimum target and the console's foreground/background tokens.
+An outgoing email is an irreversible external action, so a native modal
+confirmation protects focus, supports Escape before submission, locks page
+scroll and returns focus on close. Submission disables repeat controls; inline
+status/error text reports the recorded server outcome, never optimistic delivery.
+The reminder does not alter the underlying payment or meeting state. Preserve
+this restrained operational pattern rather than importing marketing decoration.
+See `docs/REMINDERS.md` for eligibility, cooldowns and delivery boundaries.
+
 ## Components
 
 - **Wordmark** — the official SAVO logo (ported from v1): single-color

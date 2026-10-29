@@ -1,0 +1,17 @@
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+const m = vi.hoisted(() => ({ send: vi.fn(), archive: vi.fn(), log: vi.fn() }));
+vi.mock("nodemailer", () => ({ default: { createTransport: () => ({ sendMail: m.send }) } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { sentEmail: { create: m.archive } } }));
+vi.mock("@/lib/mail/delivery-policy", () => ({ liveMailAllowed: () => true }));
+vi.mock("@/lib/logger", () => ({ logger: { info: m.log, warn: m.log, error: m.log } }));
+vi.mock("@/lib/mail/unsubscribe", () => ({ withSignedUnsubscribe: (tpl: unknown) => tpl }));
+import { deliverMail } from "@/lib/mail";
+const tpl = { subject: "Synthetic reminder", html: "Synthetic", text: "Synthetic" };
+const meta = { requireAcceptance: true, messageId: "<synthetic-reminder@example.invalid>", templateKey: "invoiceDueToday" };
+beforeEach(() => { vi.clearAllMocks(); vi.stubEnv("MAIL_HOST", "loopback-only.invalid"); m.send.mockResolvedValue({ accepted: ["synthetic@example.invalid"] }); m.archive.mockResolvedValue({}); });
+afterEach(() => vi.unstubAllEnvs());
+it("uses the stable Message-ID and archives only after acceptance", async () => { expect(await deliverMail("synthetic@example.invalid", tpl, "hello", meta)).toEqual({ status: "accepted" }); expect(m.send.mock.calls[0][0]).toMatchObject({ messageId: meta.messageId, to: "synthetic@example.invalid" }); expect(m.archive).toHaveBeenCalledOnce(); });
+it("never calls an absent acknowledgement accepted", async () => { m.send.mockResolvedValue({}); expect((await deliverMail("synthetic@example.invalid", tpl, "hello", meta)).status).toBe("uncertain"); expect(m.archive).not.toHaveBeenCalled(); });
+it("treats an explicit recipient rejection as not sent", async () => { m.send.mockResolvedValue({ accepted: [], rejected: ["synthetic@example.invalid"] }); expect(await deliverMail("synthetic@example.invalid", tpl, "hello", meta)).toMatchObject({ status: "not_sent", retryable: false }); expect(m.archive).not.toHaveBeenCalled(); });
+it("does not retry a message just because the best-effort sent archive failed", async () => { m.archive.mockRejectedValue(new Error("archive offline")); expect((await deliverMail("synthetic@example.invalid", tpl, "hello", meta)).status).toBe("accepted"); });
+it("classifies ambiguous DATA errors without leaking private provider payloads", async () => { m.send.mockRejectedValue(Object.assign(new Error("private-provider-payload"), { command: "DATA", code: "ETIMEDOUT" })); expect((await deliverMail("synthetic@example.invalid", tpl, "hello", meta)).status).toBe("uncertain"); expect(JSON.stringify(m.log.mock.calls)).not.toContain("private-provider-payload"); });

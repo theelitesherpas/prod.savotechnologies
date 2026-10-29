@@ -2,6 +2,7 @@ import { apiOk, apiError, isJsonRequest, readJsonBody } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getAdminUser } from "@/lib/auth";
 import { canAccess } from "@/lib/permissions";
+import { sendManualMeetingReminder } from "@/lib/meeting/reminders";
 import {
   confirmMeeting,
   sendInvitation,
@@ -35,7 +36,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   // Opening the detail marks the availability response as read (badge clears).
   if (m.status === "availability_received" && !m.seenAt) {
-    await prisma.meeting.update({ where: { id }, data: { seenAt: new Date() } }).catch(() => undefined);
+    const seen = await prisma.meeting.update({ where: { id }, data: { seenAt: new Date() }, select: { updatedAt: true } }).catch(() => null);
+    if (seen) m.updatedAt = seen.updatedAt;
   }
 
   const { client, ...meeting } = m;
@@ -73,6 +75,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const d = body.data as Record<string, unknown>;
 
   switch (d.action) {
+    case "remind": {
+      if (typeof d.revision !== "string" || Number.isNaN(Date.parse(d.revision))) return apiError("Refresh this meeting before sending a reminder.", 400);
+      const result = await sendManualMeetingReminder(id, d.revision, user.name);
+      return result.ok ? apiOk({ message: result.message }) : apiError(result.message, 409);
+    }
     case "edit": {
       const existing = await prisma.meeting.findUnique({ where: { id } });
       if (!existing) return apiError("Meeting not found.", 404);

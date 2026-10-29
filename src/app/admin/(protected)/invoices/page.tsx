@@ -8,12 +8,13 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader, Notice, EmptyState } from "@/components/admin/ui";
 import { SubmitButton, ConfirmButton } from "@/components/admin/form";
 import { ConfirmAction } from "@/components/admin/confirm-dialog";
+import { ReminderButton } from "@/components/admin/reminder-button";
 import { FormGuard } from "@/components/admin/form-guard";
 import { InvoiceLinkFields } from "@/components/admin/invoice-link-fields";
 import { BusinessIdField } from "@/components/admin/business-id-field";
 import { InvoicePaymentField } from "@/components/admin/invoice-payment-field";
 import { InvoiceStatusChip, money } from "@/components/portal/ui";
-import { createInvoiceAction, markInvoicePaidAction, deleteInvoiceAction } from "./actions";
+import { createInvoiceAction, markInvoicePaidAction, deleteInvoiceAction, sendInvoiceReminderAction } from "./actions";
 
 export const metadata: Metadata = { title: "Payments" };
 
@@ -68,7 +69,8 @@ export default async function AdminInvoicesPage({
                 </p>
               </div>
               <p className="t-sm font-semibold tnum">{money(inv.amount, inv.currency)}</p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {["sent", "overdue"].includes(inv.status) && inv.amount > 0 && !inv.paidAt ? <ReminderButton id={inv.id} revision={inv.updatedAt.toISOString()} label="Send payment reminder" description={`Email ${clientFullName(inv.client.name, inv.client.title)} a reminder for invoice ${inv.number}. This does not change its amount or payment status.`} sendAction={sendInvoiceReminderAction} compact /> : null}
                 {["sent", "overdue"].includes(inv.status) ? (
                   <ConfirmAction
                     action={markInvoicePaidAction}

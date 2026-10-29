@@ -7,11 +7,12 @@ import { razorpayStatus } from "@/lib/razorpay-config";
 import { BackLink, PageHeader, Notice, Chip } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/form";
 import { FormGuard } from "@/components/admin/form-guard";
+import { ReminderButton } from "@/components/admin/reminder-button";
 import { InvoiceLinkFields } from "@/components/admin/invoice-link-fields";
 import { InvoicePaymentField } from "@/components/admin/invoice-payment-field";
 import { money } from "@/components/portal/ui";
 import { invoiceDocumentItems, invoiceWorkDescription } from "@/lib/invoice-document";
-import { updateInvoiceAction, syncInvoiceRazorpayAction } from "../actions";
+import { updateInvoiceAction, syncInvoiceRazorpayAction, sendInvoiceReminderAction } from "../actions";
 
 export const metadata: Metadata = { title: "Edit invoice" };
 
@@ -51,6 +52,8 @@ export default async function EditInvoicePage({
       {e && e !== "dup" && e !== "invalid" ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
       {sp.saved === "paid" ? <Notice>{sp.via === "razorpay" ? "Payment confirmed from Razorpay — invoice marked paid and receipt sent." : "Invoice marked paid."}</Notice> : null}
       {sp.razorpay ? <Notice>Razorpay link status: {decodeURIComponent(sp.razorpay)} (not paid yet).</Notice> : null}
+
+      {payable && !invoice.paidAt ? <div className="mb-6"><ReminderButton id={invoice.id} revision={invoice.updatedAt.toISOString()} label="Send payment reminder" description={`Send the client a payment reminder for invoice ${invoice.number}. No amount or payment status will be changed.`} sendAction={sendInvoiceReminderAction} /></div> : null}
 
       {showRazorpayCard ? (
         <div className="adm-card mb-8 p-5">

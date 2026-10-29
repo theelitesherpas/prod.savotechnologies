@@ -13,6 +13,8 @@ import { BUSINESS_ID_CONFIG, formatBusinessId } from "@/lib/business-id-config";
 import { minorUnits } from "@/lib/project-finance";
 import { clientGreetingName } from "@/lib/client-name";
 import { invoicePaymentLink } from "@/lib/payment-links";
+import { invoiceReminder, meetingReminder } from "@/lib/mail/reminder-templates";
+import type { InvoiceReminderKind } from "@/lib/reminder-policy";
 
 function invoiceAmount(v: Record<string, string>): number {
   if (v.amountMinor !== undefined) {
@@ -143,7 +145,22 @@ export const RECIPIENT_LABEL: Record<TemplateRecipient, string> = {
   prospect: "Prospective client · hello@",
 };
 
+function invoiceReminderEntry(key: string, kind: InvoiceReminderKind | "invoice_manual", label: string, fires: string): TemplateEntry {
+  return { key, category: "portal", dept: "hello", recipient: "client", label, fires,
+    vars: { name: "Mr. James Miller", number: "STPLIN05148", amount: "INR 2,500.00", amountMinor: "250000", currency: "INR", dueDateIso: "2026-11-10T00:00:00.000Z", due: "10 Nov 2026", paymentLink: "", invoiceStatus: "sent" },
+    default: v => invoiceReminder({ kind, name: v.name, number: v.number, amount: invoiceAmount(v), currency: v.currency || "INR", dueDate: invoiceDueDate(v), paymentLink: v.paymentLink, status: v.invoiceStatus || "sent" }),
+  };
+}
+
 export const TEMPLATE_REGISTRY: TemplateEntry[] = [
+  { key: "meetingReminder", category: "meetings", dept: "hello", recipient: "customer", label: "Meeting · manual client reminder", fires: "Admin explicitly reminds a client about an active invitation or upcoming confirmed meeting",
+    vars: { clientName: "Mr. James Miller", meetingTitle: "Project discussion", reference: "STPL-2026-TEST", status: "confirmed", date: "10 Nov 2026", time: "10:00 AM", durationMin: "30", location: "Online", schedulingLink: "https://savotechnologies.com/meeting/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" },
+    default: v => meetingReminder({ name: v.clientName, title: v.meetingTitle, reference: v.reference, status: v.status, date: v.date || null, time: v.time || null, durationMin: Number(v.durationMin) || 30, location: v.location, link: v.schedulingLink }),
+  },
+  invoiceReminderEntry("invoiceDueTomorrow", "invoice_before_due", "Invoice · due tomorrow", "Automatically, one calendar day before the due date at 9 AM IST"),
+  invoiceReminderEntry("invoiceDueToday", "invoice_due_today", "Invoice · due today", "Automatically, on the due date at 9 AM IST"),
+  invoiceReminderEntry("invoiceOverdueReminder", "invoice_overdue", "Invoice · one day overdue", "Automatically, one calendar day after the due date at 9 AM IST"),
+  invoiceReminderEntry("invoicePaymentReminder", "invoice_manual", "Invoice · manual payment reminder", "Admin explicitly sends a reminder for an unpaid issued invoice"),
   {
     key: "enquiryAck",
     category: "enquiries",
@@ -617,7 +634,7 @@ for (const entry of TEMPLATE_REGISTRY) {
 /** Saved invoice body overrides retain their wording but get the same validated
  * optional payment action as code defaults. Other email kinds never get it. */
 export function invoiceTemplatePayment(key: string, vars: Record<string, string | number | null | undefined>) {
-  if (key !== "invoiceIssued" && key !== "invoiceOverdue") return undefined;
+  if (!["invoiceIssued", "invoiceOverdue", "invoiceDueTomorrow", "invoiceDueToday", "invoiceOverdueReminder", "invoicePaymentReminder"].includes(key)) return undefined;
   const values = Object.fromEntries(Object.entries(vars).filter(([,v]) => v != null).map(([k,v]) => [k, String(v)]));
   try {
     const href = invoicePaymentLink({ paymentLink: values.paymentLink, status: values.invoiceStatus || (key === "invoiceIssued" ? "sent" : "overdue"), amount: invoiceAmount(values) });

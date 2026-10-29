@@ -35,6 +35,12 @@ if (e.MAIL_DELIVERY_MODE === "live") {
   if (!set("MAIL_HOST")) fail("LIVE_SMTP_HOST_REQUIRED");
   if (e.NODE_ENV !== "production" || e.NEXT_PUBLIC_CONTENT_MODE !== "production") fail("LIVE_MAIL_REQUIRES_PRODUCTION_RUNTIME_AND_CONTENT");
 }
+if (e.INVOICE_REMINDERS_ENABLED && !["true", "false"].includes(e.INVOICE_REMINDERS_ENABLED)) fail("INVOICE_REMINDERS_ENABLED_INVALID");
+if (e.INVOICE_REMINDERS_ENABLED === "true") {
+  if (!/^[A-Za-z0-9_-]{32,256}$/.test(e.INVOICE_REMINDER_SECRET || "")) fail("INVOICE_REMINDER_PRIVATE_SECRET_REQUIRED");
+  if (e.MAIL_DELIVERY_MODE !== "live" || e.NODE_ENV !== "production" || e.NEXT_PUBLIC_CONTENT_MODE !== "production") fail("INVOICE_REMINDERS_REQUIRE_LIVE_MAIL");
+  if (profile !== "live") fail("PREVIEW_AUTOMATIC_REMINDERS_FORBIDDEN");
+}
 if (issues.length) {
   console.error(`Runtime preflight (${profile}) failed: ${issues.join(", ")}`);
   process.exitCode = 1;

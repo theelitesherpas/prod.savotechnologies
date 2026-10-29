@@ -1,6 +1,8 @@
 import "server-only";
 import { clientFullName, clientGreetingName } from "@/lib/client-name";
 import { liveMailAllowed } from "@/lib/mail/delivery-policy";
+import { classifyMailFailure, type MailDeliveryResult } from "@/lib/mail/delivery-result";
+export type { MailDeliveryResult } from "@/lib/mail/delivery-result";
 import nodemailer, { type Transporter } from "nodemailer";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
@@ -90,33 +92,40 @@ export function mailFrom(): string {
   return process.env.MAIL_FROM || `Savo Technologies <${user}>`;
 }
 
-/** Send one template. Never throws - failures are logged for the audit trail.
- *  dept "hr" sends from the hr@ mailbox (careers); default is hello@. */
-export async function sendMail(
+type MailMeta = { templateKey?: string; sentBy?: string; toName?: string; sensitive?: boolean; messageId?: string; requireAcceptance?: boolean };
+
+/** Compatibility API for existing transactional callers. */
+export async function sendMail(to: string, tpl: MailTemplate, dept: "hello" | "hr" = "hello", meta?: MailMeta): Promise<boolean> {
+  return (await deliverMail(to, tpl, dept, meta)).status === "accepted";
+}
+
+/** Awaitable SMTP outcome for durable reminder delivery. Accepted is not a
+ * promise of inbox placement. Ambiguous failures must not be auto-retried. */
+export async function deliverMail(
   to: string,
   tpl: MailTemplate,
   dept: "hello" | "hr" = "hello",
-  meta?: { templateKey?: string; sentBy?: string; toName?: string; sensitive?: boolean },
-): Promise<boolean> {
+  meta?: MailMeta,
+): Promise<MailDeliveryResult> {
   if (!liveMailAllowed()) {
     logger.info("mail.delivery_disabled", { dept });
-    return false;
+    return { status: "not_sent", reason: "DELIVERY_DISABLED", retryable: true };
   }
   if (tpl.unsubscribeEmail) {
     const email = tpl.unsubscribeEmail.toLowerCase().trim();
     if (!prisma) {
       logger.warn("mail.suppression_unavailable", { templateKey: meta?.templateKey ?? null });
-      return false;
+      return { status: "not_sent", reason: "SUPPRESSION_UNAVAILABLE", retryable: true };
     }
     try {
       const suppressed = await prisma.mailSuppress.findUnique({ where: { email } });
       if (suppressed) {
         logger.info("mail: suppressed send skipped", { templateKey: meta?.templateKey ?? null });
-        return false;
+        return { status: "not_sent", reason: "RECIPIENT_SUPPRESSED", retryable: false };
       }
     } catch {
       logger.warn("mail.suppression_check_failed", { templateKey: meta?.templateKey ?? null });
-      return false;
+      return { status: "not_sent", reason: "SUPPRESSION_UNAVAILABLE", retryable: true };
     }
   }
   tpl = withSignedUnsubscribe(tpl);
@@ -133,11 +142,12 @@ export async function sendMail(
   }
   if (!t) {
     logger.info("mail: not configured", { dept });
-    return false;
+    return { status: "not_sent", reason: "SMTP_NOT_CONFIGURED", retryable: true };
   }
   try {
     const delivery = await t.sendMail({
       from,
+      ...(meta?.messageId ? { messageId: meta.messageId } : {}),
       // Reply-To routes replies through SendGrid Inbound Parse
       // (reply.savotechnologies.com) into the admin panel. Only replies
       // to our templates go to this subdomain: direct emails to the
@@ -156,13 +166,15 @@ export async function sendMail(
           }
         : {}),
     });
-    if (meta?.sensitive && !delivery.accepted?.length) {
-      logger.warn("mail.security_recipient_not_accepted", { dept });
-      return false;
+    if ((meta?.sensitive || meta?.requireAcceptance) && !delivery.accepted?.length) {
+      logger.warn("mail.recipient_not_accepted", { dept });
+      return delivery.rejected?.length
+        ? { status: "not_sent", reason: "SMTP_RECIPIENT_REJECTED", retryable: false }
+        : { status: "uncertain", reason: "SMTP_CONFIRMATION_UNKNOWN" };
     }
     logger.info("mail: sent", { dept });
     // Authentication secrets must never reach the sent-folder database/archive.
-    if (meta?.sensitive) return true;
+    if (meta?.sensitive) return { status: "accepted" };
     // Sent-folder log - never blocks or fails the send itself.
     try {
       const { prisma } = await import("./prisma");
@@ -183,10 +195,10 @@ export async function sendMail(
     } catch {
       /* logging is best-effort */
     }
-    return true;
-  } catch {
+    return { status: "accepted" };
+  } catch (error) {
     logger.error("mail: send failed", { dept });
-    return false;
+    return classifyMailFailure(error);
   }
 }
 

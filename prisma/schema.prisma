@@ -469,11 +469,43 @@ model Invoice {
   updatedAt DateTime       @updatedAt @map("updated_at")
 
   paymentTransactions PaymentTransaction[]
+  reminders ReminderDelivery[]
 
+  @@index([status, dueDate])
   @@index([clientId])
   @@index([milestoneId])
   @@index([razorpayOrderId])
   @@map("invoices")
+}
+
+/// Persistent automatic/manual reminder delivery ledger. SMTP ambiguity is
+/// quarantined rather than retried; exactly one invoice/meeting must be set.
+model ReminderDelivery {
+  id            String   @id @default(uuid())
+  dedupeKey     String   @unique @map("dedupe_key")
+  invoiceId     String?  @map("invoice_id")
+  invoice       Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  meetingId     String?  @map("meeting_id")
+  meeting       Meeting? @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  kind          String
+  dueOn         String?  @map("due_on") @db.VarChar(10)
+  scheduledOn   String?  @map("scheduled_on") @db.VarChar(10)
+  status        String   @default("pending")
+  attempts      Int      @default(0)
+  claimToken    String?  @map("claim_token")
+  claimedAt     DateTime? @map("claimed_at")
+  nextAttemptAt DateTime? @map("next_attempt_at")
+  sentAt        DateTime? @map("sent_at")
+  messageId     String   @unique @map("message_id")
+  errorCode     String?  @map("error_code")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([invoiceId, kind, createdAt])
+  @@index([meetingId, kind, createdAt])
+  @@index([status, nextAttemptAt])
+  @@index([scheduledOn])
+  @@map("reminder_deliveries")
 }
 
 /// Confirmed invoice payments only; never a browser callback or an unconfirmed
@@ -1048,6 +1080,7 @@ model Meeting {
   attendees     MeetingAttendee[]
   activity      MeetingActivity[]
   reschedules   MeetingReschedule[]
+  reminders     ReminderDelivery[]
 
   @@index([status])
   @@index([clientId])

@@ -13,6 +13,8 @@ import { audit } from "@/lib/audit";
 import { calendarDate, minorUnits, PROJECT_CURRENCIES } from "@/lib/project-finance";
 import { normalizePaymentLink } from "@/lib/payment-links";
 import { recordInvoicePaid, invoiceNotification } from "@/lib/invoice-payments";
+import { sendManualInvoiceReminder } from "@/lib/invoice-reminders";
+import type { ReminderResult } from "@/lib/reminder-policy";
 import { recordPaymentTransaction } from "@/lib/payment-transactions";
 import { cancelRazorpayPaymentLink, fetchRazorpayPaymentLink, fetchRazorpayOrderPayments } from "@/lib/razorpay";
 import { getRazorpayConfig } from "@/lib/razorpay-config";
@@ -75,6 +77,16 @@ async function sync(tx: Prisma.TransactionClient, ids: (string | null)[]) {
   const events: ProjectEmail[] = [];
   for (const id of new Set(ids.filter((id): id is string => !!id))) events.push(...await reconcileProject(tx, id));
   return events;
+}
+
+export async function sendInvoiceReminderAction(form: FormData): Promise<ReminderResult> {
+  const user = await operator();
+  const parsed = z.object({ id: z.string().regex(/^[A-Za-z0-9_-]{10,64}$/), revision: z.string().datetime() }).safeParse({ id: form.get("id"), revision: form.get("revision") });
+  if (!parsed.success) return { ok: false, message: "Refresh the invoice before sending a reminder." };
+  const result = await sendManualInvoiceReminder(parsed.data.id, parsed.data.revision, user.name);
+  if (result.ok) await audit(user.id, "invoice.reminder_sent", "Invoice", parsed.data.id, { deliveryId: result.deliveryId });
+  revalidateProjectViews();
+  return result;
 }
 
 export async function createInvoiceAction(form: FormData): Promise<void> {

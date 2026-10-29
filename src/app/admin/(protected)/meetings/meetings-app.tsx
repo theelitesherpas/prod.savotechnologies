@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/admin/ui";
 import { cn } from "@/lib/utils";
 import { ClientPager } from "@/components/admin/paged-content";
+import { ReminderButton } from "@/components/admin/reminder-button";
 
 /* ───────────────────────── types ───────────────────────── */
 
@@ -24,6 +25,7 @@ type Meeting = {
 
 type MeetingDetail = Meeting & {
   tokenPlain: string;
+  updatedAt: string;
   agenda: string; clientPhone: string | null; clientEmail: string | null;
   locationAddress: string | null; meetingUrl: string | null; notes: string | null;
   availableDates: string[]; availableFrom: string; availableTo: string;
@@ -140,8 +142,16 @@ export function MeetingsApp({ me }: { me: { id: string; name: string; role: stri
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: act, ...data }),
     });
-    const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; token?: string };
-    if (json.ok) { await loadDetail(id); await load(); }
+    const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; token?: string; message?: string };
+    if (json.ok && act === "remind") {
+      // Preserve the mounted reminder control so its accepted/failed feedback
+      // and native-dialog focus restoration are not lost during a refresh.
+      try {
+        const fresh = await fetch(`/api/admin/meetings/${id}`, { cache: "no-store" });
+        const data = await fresh.json();
+        if (data.ok && data.meeting) setDetail(data.meeting);
+      } catch { /* The recorded delivery result remains authoritative. */ }
+    } else if (json.ok) { await loadDetail(id); await load(); }
     return json;
   }, [load, loadDetail]);
 
@@ -505,7 +515,7 @@ function CreateDrawer({ onClose, onCreated, flash, me }: { onClose: () => void; 
 function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
   detail: MeetingDetail;
   onBack: () => void;
-  action: (id: string, act: string, data?: object) => Promise<{ ok?: boolean; token?: string; error?: string }>;
+  action: (id: string, act: string, data?: object) => Promise<{ ok?: boolean; token?: string; error?: string; message?: string }>;
   flash: (m: string) => void;
   onDeleted: () => void;
   onEdit: () => void;
@@ -551,6 +561,12 @@ function DetailView({ detail, onBack, action, flash, onDeleted, onEdit }: {
       {/* Action buttons - clear, visible, color-coded */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <button onClick={onEdit} className="adm-btn-secondary h-11 px-5 text-[0.875rem] font-semibold">Edit meeting</button>
+        {detail.clientEmail && ["awaiting_client", "availability_received", "confirmed", "reschedule_requested"].includes(detail.status) ? <ReminderButton id={detail.id} revision={detail.updatedAt} label="Send meeting reminder" description={`Email ${clientFullName(detail.clientName, detail.clientTitle)} a reminder about ${detail.title}. This does not confirm or reschedule the meeting.`} sendAction={async () => {
+          const result = await action(detail.id, "remind", { revision: detail.updatedAt });
+          const message = result.ok ? result.message || "Reminder accepted for delivery." : result.error || "The reminder could not be sent.";
+          flash(message);
+          return { ok: Boolean(result.ok), message };
+        }} /> : null}
         <button onClick={() => setShowDelete(true)} className="inline-flex h-11 items-center rounded-xl border border-red-400/60 bg-red-50 px-5 text-[0.875rem] font-semibold text-red-600 transition-colors hover:bg-red-100">Delete meeting</button>
         {detail.status === "draft" && (
           <button onClick={() => void action(detail.id, "send").then(() => flash("Invitation sent."))}
