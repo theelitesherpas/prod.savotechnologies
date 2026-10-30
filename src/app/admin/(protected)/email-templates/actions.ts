@@ -11,6 +11,7 @@ import { audit } from "@/lib/audit";
 import { sendMail, renderTemplate } from "@/lib/mail";
 import { templateEntry } from "@/lib/mail/registry";
 import { shell } from "@/lib/mail/templates";
+import { attachmentsFromForm } from "@/lib/mail/attachments";
 import { bodyToHtml, bodyToText } from "@/lib/mail/registry";
 
 /** Admin actions for the email centre: template overrides + custom sends. */
@@ -63,6 +64,7 @@ export async function sendTemplatedEmailAction(formData: FormData): Promise<void
   if (!entry) redirect(`/admin/email-compose?e=${encodeURIComponent("Unknown template.")}`);
   await requireComposeAccess(entry.dept);
   const backTo = safeBack(formData.get("back"), composeBack(entry.dept, "template"));
+  if (formData.getAll("attachments").some(v => typeof v === "string" || v.size > 0)) redirect(composeResult(backTo, "e", "Use Blank email to send attachments."));
 
   const vars: Record<string, string> = {};
   for (const [k, v] of formData.entries()) {
@@ -143,6 +145,9 @@ export async function sendCustomEmailAction(formData: FormData): Promise<void> {
     redirect(composeResult(backTo, "e", parsed.error.issues[0]?.message ?? "Check the fields."));
   }
   const d = parsed.data;
+  let attachments: Awaited<ReturnType<typeof attachmentsFromForm>>;
+  try { attachments = await attachmentsFromForm(formData); }
+  catch (error) { redirect(composeResult(backTo, "e", error instanceof Error ? error.message : "Check the attachment files.")); }
 
   const ok = await sendMail(
     d.to,
@@ -152,9 +157,9 @@ export async function sendCustomEmailAction(formData: FormData): Promise<void> {
       text: bodyToText(d.body),
     },
     dept,
-    { sentBy: user.name, requireDepartment: true, requireAcceptance: true },
+    { sentBy: user.name, requireDepartment: true, requireAcceptance: true, ...(attachments.length ? { attachments } : {}) },
   );
-  await audit(user.id, ok ? "email.customSent" : "email.customFailed", "Email", d.to, { subject: d.subject, dept });
+  await audit(user.id, ok ? "email.customSent" : "email.customFailed", "Email", d.to, { subject: d.subject, dept, attachmentCount: attachments.length, attachmentBytes: attachments.reduce((n, a) => n + a.size, 0) });
   // Encode result text once and preserve the department/mode on both outcomes.
-  redirect(ok ? composeResult(backTo, "sent", "1") : composeResult(backTo, "e", "Send failed - check SMTP settings or try again."));
+  redirect(ok ? composeResult(backTo, "sent", "1") : composeResult(backTo, "e", "Send not confirmed. Check Sent and your mailbox before retrying, then review SMTP settings."));
 }

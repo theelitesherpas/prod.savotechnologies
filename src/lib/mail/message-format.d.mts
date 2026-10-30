@@ -1,0 +1,1 @@
+export function formatMessageBody(message: {bodyText?:string|null;bodyHtml?:string|null;bodyFormatVersion?:number}): {bodyText:string|null;bodyHtml:string|null;originalText:string|null;quotedText:string|null};

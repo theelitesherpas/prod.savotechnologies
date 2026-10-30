@@ -76,8 +76,13 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 2592000,
   },
   experimental: {
+    // Proxy cloning must also fit a 10 MB file after MIME/base64 overhead.
+    // Each ingress handler still enforces its own lower decoded/body budget.
+    proxyClientMaxBodySize: 17_000_000,
     serverActions: {
-      bodySizeLimit: "8mb",
+      // 10,000,000 attachment bytes plus bounded multipart/field overhead.
+      // The authenticated mail action independently enforces the 10 MB total.
+      bodySizeLimit: 11_000_000,
     },
   },
   async redirects() {
@@ -109,6 +114,9 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // Only the mailbox permits sender HTTPS images at the parent level.
+      // Its opaque-origin preview blocks them until explicit per-message consent.
+      { source: "/admin/emails", headers: [{ key: "Content-Security-Policy", value: csp.replace(/img-src [^;]+/, "img-src 'self' data: blob: https:") }] },
       // Only the pinned, versioned extract is immutable; unversioned downloads can refresh.
       {
         source: "/data/india-cities.json",

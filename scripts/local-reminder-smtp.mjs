@@ -1,7 +1,7 @@
 /** In-memory verification sink. Loopback only; refuses every non-.invalid
  * recipient. Never writes raw email bodies, addresses or tokens to disk. */
 import net from "node:net";
-export async function localReminderSmtp() {
+export async function localReminderSmtp({ maxMessageBytes = 1_000_000 } = {}) {
   const messages = [], sockets = new Set();
   const server = net.createServer(socket => {
     sockets.add(socket); socket.on("close", () => sockets.delete(socket));
@@ -15,7 +15,7 @@ export async function localReminderSmtp() {
         if (inData) {
           if (line === ".") { messages.push({ recipient, body, sender }); body = ""; inData = false; socket.write("250 queued locally\r\n"); }
           else body += `${line}\n`;
-        } else if (/^EHLO|^HELO/.test(line)) socket.write("250-localhost\r\n250-AUTH PLAIN\r\n250 SIZE 1000000\r\n");
+        } else if (/^EHLO|^HELO/.test(line)) socket.write(`250-localhost\r\n250-AUTH PLAIN\r\n250 SIZE ${maxMessageBytes}\r\n`);
         else if (/^AUTH PLAIN /.test(line)) socket.write("235 Synthetic authentication accepted\r\n");
         else if (/^MAIL FROM:/.test(line)) { recipient = ""; sender = line.match(/<([^>]+)>/)?.[1] || ""; socket.write("250 OK\r\n"); }
         else if (/^RCPT TO:/.test(line)) { recipient = line.match(/<([^>]+)>/)?.[1] || ""; if (!recipient.endsWith(".invalid")) { recipient = ""; socket.write("550 Synthetic recipients only\r\n"); } else socket.write("250 OK\r\n"); }

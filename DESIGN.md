@@ -2043,6 +2043,16 @@ compressing the button. Preserve department/mode on result navigation; never
 label an HR letter as sent when it fell back to the client mailbox. Operational
 and permissions boundaries are documented in `docs/EMAIL-COMPOSE.md`.
 
+The email-only attachment extension adds native multiple-file selection to Blank
+email in both compose surfaces: 10 MB combined, 10 files, readable names/sizes,
+44px remove controls, near-field errors, pending locks and mailbox/mode-clearing
+semantics. Inbox/Sent show private download rows below the message; no automatic
+file preview/execution or misleading virus-scan claim. MIME-decoded HTML lives
+inside an opaque sandbox; external images require explicit per-message consent,
+while CID images load through authenticated file access. Plain-text quoted history
+uses native disclosure. Legacy encoding repair is display-only with original text
+available. No payment changes belong to this extension. See `docs/EMAIL-ATTACHMENTS.md`.
+
 ## Components
 
 - **Wordmark** — the official SAVO logo (ported from v1): single-color

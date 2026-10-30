@@ -219,6 +219,10 @@ model SentEmail {
   dept        String   @default("hello")
   /// Admin user name who sent it.
   sentBy      String?  @map("sent_by")
+  /// sent | pending | not_sent | uncertain (legacy rows remain sent)
+  deliveryStatus String @default("sent") @map("delivery_status")
+  messageId String? @map("message_id")
+  attachments EmailAttachment[]
   createdAt   DateTime @default(now()) @map("created_at")
   @@index([createdAt])
   @@map("sent_emails")
@@ -778,12 +782,37 @@ model EmailReply {
   /// Spam score from the parsing service (0 = clean)
   spamScore   Float?   @map("spam_score")
   isRead      Boolean  @default(false) @map("is_read")
+  deliveryKey String? @unique @map("delivery_key")
+  attachmentNotice String? @map("attachment_notice")
+  /// 0 = legacy importer; 1 = MIME-decoded by the bounded importer.
+  bodyFormatVersion Int @default(0) @map("body_format_version")
+  attachments EmailAttachment[]
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@index([fromEmail])
   @@index([enquiryId])
   @@index([createdAt])
   @@map("email_replies")
+}
+
+/// Private attachment bytes. Lists select metadata only; authenticated download
+/// always authorizes mailbox access. Never served from /public or a raw path.
+model EmailAttachment {
+  id String @id @default(cuid())
+  replyId String? @map("reply_id")
+  reply EmailReply? @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  sentId String? @map("sent_id")
+  sent SentEmail? @relation(fields: [sentId], references: [id], onDelete: Cascade)
+  filename String @db.VarChar(180)
+  contentType String @map("content_type") @db.VarChar(120)
+  contentId String? @map("content_id") @db.VarChar(255)
+  size Int
+  data Bytes
+  sha256 String @db.VarChar(64)
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([replyId])
+  @@index([sentId])
+  @@map("email_attachments")
 }
 
 // ─────────────────────── Live chat (Savo Assistant + human) ───────────────────────

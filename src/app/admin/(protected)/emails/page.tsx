@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/ui";
 import { Mailbox, type MailboxReply, type MailboxSent, type MailboxTemplate } from "@/components/admin/mailbox";
+import { formatMessageBody } from "@/lib/mail/message-format.mjs";
+import { attachmentMetadataSelect } from "@/lib/mail/attachments";
 import { TEMPLATE_REGISTRY, CATEGORY_LABEL } from "@/lib/mail/registry";
 
 export const metadata: Metadata = { title: "Emails" };
@@ -33,24 +35,27 @@ export default async function AdminEmailsPage({
   ]) : [0, 0];
   const paging = parseAdminPage(sp, total);
   const [replies, sentRows] = prisma ? await Promise.all([
-    folder === "inbox" ? prisma.emailReply.findMany({ where: inboxWhere, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: paging.take, skip: paging.skip }) : [],
-    folder === "sent" ? prisma.sentEmail.findMany({ where: sentWhere, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: paging.take, skip: paging.skip }) : [],
+    folder === "inbox" ? prisma.emailReply.findMany({ where: inboxWhere, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: paging.take, skip: paging.skip, include: { attachments: { select: attachmentMetadataSelect } } }) : [],
+    folder === "sent" ? prisma.sentEmail.findMany({ where: sentWhere, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: paging.take, skip: paging.skip, include: { attachments: { select: attachmentMetadataSelect } } }) : [],
   ]) : [[], []];
 
   const inbox: MailboxReply[] = replies.map((r) => ({
     id: r.id,
+    attachments: r.attachments ?? [],
+    attachmentNotice: r.attachmentNotice,
     fromEmail: r.fromEmail,
     fromName: r.fromName,
     dept: r.dept,
     subject: r.subject,
-    bodyText: r.bodyText,
-    bodyHtml: r.bodyHtml,
+    ...formatMessageBody(r),
     isRead: r.isRead,
     createdAt: r.createdAt.toISOString(),
   }));
 
   const sent: MailboxSent[] = sentRows.map((s) => ({
     id: s.id,
+    attachments: s.attachments ?? [],
+    deliveryStatus: s.deliveryStatus,
     toEmail: s.toEmail,
     toName: s.toName,
     dept: s.dept,

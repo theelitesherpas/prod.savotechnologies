@@ -3,6 +3,9 @@ import { clientFullName, clientGreetingName } from "@/lib/client-name";
 import { liveMailAllowed } from "@/lib/mail/delivery-policy";
 import { classifyMailFailure, type MailDeliveryResult } from "@/lib/mail/delivery-result";
 export type { MailDeliveryResult } from "@/lib/mail/delivery-result";
+import { randomUUID } from "node:crypto";
+import { attachmentRows } from "@/lib/mail/attachments";
+import type { MailAttachment } from "@/lib/mail/attachment-rules.mjs";
 import nodemailer, { type Transporter } from "nodemailer";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
@@ -92,7 +95,7 @@ export function mailFrom(): string {
   return process.env.MAIL_FROM || `Savo Technologies <${user}>`;
 }
 
-type MailMeta = { templateKey?: string; sentBy?: string; toName?: string; sensitive?: boolean; messageId?: string; requireAcceptance?: boolean; requireDepartment?: boolean };
+type MailMeta = { templateKey?: string; sentBy?: string; toName?: string; sensitive?: boolean; messageId?: string; requireAcceptance?: boolean; requireDepartment?: boolean; attachments?: MailAttachment[] };
 
 /** Compatibility API for existing transactional callers. */
 export async function sendMail(to: string, tpl: MailTemplate, dept: "hello" | "hr" = "hello", meta?: MailMeta): Promise<boolean> {
@@ -150,10 +153,32 @@ export async function deliverMail(
     logger.info("mail: not configured", { dept });
     return { status: "not_sent", reason: "SMTP_NOT_CONFIGURED", retryable: true };
   }
+  let attached: ReturnType<typeof attachmentRows> = [];
+  let attachmentArchiveId: string | undefined;
+  let messageId = meta?.messageId;
+  if (meta?.attachments?.length) {
+    if (meta.sensitive) return { status: "not_sent", reason: "SENSITIVE_ATTACHMENTS_NOT_ALLOWED", retryable: false };
+    try { attached = attachmentRows(meta.attachments); }
+    catch { return { status: "not_sent", reason: "INVALID_ATTACHMENTS", retryable: false }; }
+    if (!prisma) return { status: "not_sent", reason: "ATTACHMENT_ARCHIVE_UNAVAILABLE", retryable: true };
+    messageId ||= `<${randomUUID()}@savotechnologies.com>`;
+    try {
+      const archived = await prisma.sentEmail.create({ data: { toEmail: to, toName: meta?.toName ?? null, subject: tpl.subject, html: tpl.html, text: tpl.text ?? null, templateKey: meta?.templateKey ?? null, dept, sentBy: meta?.sentBy ?? null, deliveryStatus: "pending", messageId, attachments: { create: attached } } });
+      attachmentArchiveId = archived.id;
+    } catch {
+      logger.error("mail.attachment_archive_unavailable", { dept });
+      return { status: "not_sent", reason: "ATTACHMENT_ARCHIVE_UNAVAILABLE", retryable: true };
+    }
+  }
+  const recordAttachmentOutcome = async (status: "sent" | "not_sent" | "uncertain") => {
+    if (attachmentArchiveId && prisma) try { await prisma.sentEmail.update({ where: { id: attachmentArchiveId }, data: { deliveryStatus: status } }); }
+    catch { logger.error("mail.attachment_archive_status_unavailable", { dept }); }
+  };
   try {
     const delivery = await t.sendMail({
       from,
-      ...(meta?.messageId ? { messageId: meta.messageId } : {}),
+      ...(messageId ? { messageId } : {}),
+      ...(attached.length ? { attachments: attached.map(a => ({ filename: a.filename, contentType: a.contentType, content: a.data })) } : {}),
       // Reply-To routes replies through SendGrid Inbound Parse
       // (reply.savotechnologies.com) into the admin panel. Only replies
       // to our templates go to this subdomain: direct emails to the
@@ -174,6 +199,7 @@ export async function deliverMail(
     });
     if ((meta?.sensitive || meta?.requireAcceptance) && !delivery.accepted?.length) {
       logger.warn("mail.recipient_not_accepted", { dept });
+      await recordAttachmentOutcome(delivery.rejected?.length ? "not_sent" : "uncertain");
       return delivery.rejected?.length
         ? { status: "not_sent", reason: "SMTP_RECIPIENT_REJECTED", retryable: false }
         : { status: "uncertain", reason: "SMTP_CONFIRMATION_UNKNOWN" };
@@ -181,6 +207,7 @@ export async function deliverMail(
     logger.info("mail: sent", { dept });
     // Authentication secrets must never reach the sent-folder database/archive.
     if (meta?.sensitive) return { status: "accepted" };
+    if (attachmentArchiveId) { await recordAttachmentOutcome("sent"); return { status: "accepted" }; }
     // Sent-folder log - never blocks or fails the send itself.
     try {
       const { prisma } = await import("./prisma");
@@ -204,7 +231,9 @@ export async function deliverMail(
     return { status: "accepted" };
   } catch (error) {
     logger.error("mail: send failed", { dept });
-    return classifyMailFailure(error);
+    const outcome = classifyMailFailure(error);
+    await recordAttachmentOutcome(outcome.status === "not_sent" ? "not_sent" : "uncertain");
+    return outcome;
   }
 }
 

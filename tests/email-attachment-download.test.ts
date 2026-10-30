@@ -1,0 +1,13 @@
+import { beforeEach, expect, it, vi } from "vitest";
+const m=vi.hoisted(()=>({user:vi.fn(),file:vi.fn()}));
+vi.mock('@/lib/auth',()=>({getAdminUser:m.user}));
+vi.mock('@/lib/prisma',()=>({prisma:{emailAttachment:{findUnique:m.file}}}));
+import { GET } from '@/app/api/admin/email-attachments/[id]/route';
+const id='attachment-1234567890123456',bytes=Buffer.from('%PDF-1.7 synthetic');
+const get=(value=id)=>GET(new Request('https://local.invalid/api/admin/email-attachments/'+value),{params:Promise.resolve({id:value})});
+beforeEach(()=>{vi.clearAllMocks();m.user.mockResolvedValue({id:'admin',role:'admin'});m.file.mockResolvedValue({id,filename:'résumé.pdf',size:bytes.length,data:bytes});});
+it('requires authentication before reading document bytes',async()=>{m.user.mockResolvedValue(null);expect((await get()).status).toBe(401);expect(m.file).not.toHaveBeenCalled();});
+it('requires mailbox read permission independently of compose/client permission',async()=>{m.user.mockResolvedValue({role:'editor',permissions:['clients']});expect((await get()).status).toBe(403);expect(m.file).not.toHaveBeenCalled();});
+it('serves authorized downloads privately with safe filenames and no inline execution',async()=>{m.user.mockResolvedValue({role:'editor',permissions:['emails']});const r=await get();expect(r.status).toBe(200);expect(r.headers.get('content-type')).toBe('application/octet-stream');expect(r.headers.get('content-disposition')).toContain("filename*=UTF-8''r%C3%A9sum%C3%A9.pdf");expect(r.headers.get('cache-control')).toBe('private, no-store');expect(r.headers.get('x-content-type-options')).toBe('nosniff');expect(r.headers.get('content-security-policy')).toContain("default-src 'none'");expect(Buffer.from(await r.arrayBuffer())).toEqual(bytes);});
+it('does not treat a file ID or URL as authorization',async()=>{expect((await get('../../private')).status).toBe(404);expect(m.file).not.toHaveBeenCalled();m.file.mockResolvedValue(null);expect((await get()).status).toBe(404);});
+it('fails closed on corrupt or unavailable storage',async()=>{m.file.mockResolvedValue({size:10_000_001,data:bytes});expect((await get()).status).toBe(503);m.file.mockRejectedValue(new Error('private database details'));expect((await get()).status).toBe(503);});

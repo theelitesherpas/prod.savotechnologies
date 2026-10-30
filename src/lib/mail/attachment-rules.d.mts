@@ -1,0 +1,10 @@
+export const MAX_ATTACHMENT_BYTES: number;
+export const MAX_ATTACHMENT_COUNT: number;
+export const MAX_MAIL_WIRE_BYTES: number;
+export const ATTACHMENT_ACCEPT: string;
+export type MailAttachment = { filename: string; contentType: string; size: number; content: Uint8Array; contentId?: string };
+export function safeAttachmentName(raw: string): string;
+export function safeContentId(raw: unknown): string | undefined;
+export function attachmentBatchProblem(files: { name: string; size: number }[]): string | null;
+export function validateAttachment(file: { filename: string; content: Uint8Array }): MailAttachment;
+export function attachmentSize(bytes: number): string;

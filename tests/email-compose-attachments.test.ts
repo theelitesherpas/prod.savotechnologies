@@ -1,0 +1,13 @@
+import { beforeEach, expect, it, vi } from 'vitest';
+const m=vi.hoisted(()=>({user:vi.fn(),send:vi.fn(),audit:vi.fn()}));
+vi.mock('@/lib/prisma',()=>({prisma:{}}));vi.mock('@/lib/auth',()=>({requireAdmin:m.user}));vi.mock('@/lib/permissions',()=>({requireSection:vi.fn()}));vi.mock('@/lib/audit',()=>({audit:m.audit}));vi.mock('@/lib/mail',()=>({sendMail:m.send,renderTemplate:vi.fn()}));vi.mock('next/cache',()=>({revalidatePath:vi.fn()}));vi.mock('next/navigation',()=>({redirect:(url:string)=>{throw Error('REDIRECT:'+url);}}));
+import { sendCustomEmailAction, sendTemplatedEmailAction } from '@/app/admin/(protected)/email-templates/actions';
+function form(dept='hr'){const f=new FormData();for(const[k,v]of Object.entries({dept,to:'synthetic@example.invalid',subject:'Attached document',body:'Please review the attached file.'}))f.set(k,v);return f;}
+beforeEach(()=>{vi.clearAllMocks();m.user.mockResolvedValue({id:'admin',role:'admin',name:'Synthetic Admin'});m.send.mockResolvedValue(true);});
+it.each(['hr','hello'])('sends validated binary attachments through the selected %s mailbox',async dept=>{
+ const f=form(dept),data=Buffer.from('%PDF-1.7 synthetic');f.append('attachments',new File([data],'document.pdf',{type:'image/png'}));await expect(sendCustomEmailAction(f)).rejects.toThrow('sent=1');expect(m.send.mock.calls[0][2]).toBe(dept);expect(m.send.mock.calls[0][3].attachments[0]).toMatchObject({filename:'document.pdf',contentType:'application/pdf',size:data.length,content:new Uint8Array(data)});
+});
+it('rejects an oversized upload before SMTP',async()=>{const f=form();f.append('attachments',new File([Buffer.alloc(10_000_001)],'large.pdf'));await expect(sendCustomEmailAction(f)).rejects.toThrow('10+MB');expect(m.send).not.toHaveBeenCalled();});
+it('rejects URL/path strings rather than fetching arbitrary file locations',async()=>{const f=form();f.set('attachments','http://169.254.169.254/private');await expect(sendCustomEmailAction(f)).rejects.toThrow('file+picker');expect(m.send).not.toHaveBeenCalled();});
+it('enforces compose authorization before reading file content',async()=>{m.user.mockResolvedValue({role:'editor',permissions:['clients']});const f=form();f.append('attachments',new File([Buffer.from('%PDF-1.7')],'report.pdf'));await expect(sendCustomEmailAction(f)).rejects.toThrow('denied');expect(m.send).not.toHaveBeenCalled();});
+it('does not silently drop files posted to a template send',async()=>{const f=form();f.set('templateKey','applicationAck');f.append('attachments',new File([Buffer.from('%PDF-1.7')],'report.pdf'));await expect(sendTemplatedEmailAction(f)).rejects.toThrow('Blank+email');expect(m.send).not.toHaveBeenCalled();});

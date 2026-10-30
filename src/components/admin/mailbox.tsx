@@ -17,6 +17,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ConfirmButton } from "@/components/admin/form";
+import { EmailMessageView } from "@/components/admin/email-message-view";
+import { EmailAttachmentPicker } from "@/components/admin/email-attachment-picker";
+import { EmailAttachmentList, type EmailAttachmentInfo } from "@/components/admin/email-attachment-list";
 import { FormGuard } from "@/components/admin/form-guard";
 import { markReadAction, markUnreadAction, deleteReplyAction } from "@/app/admin/(protected)/emails/actions";
 import { TEMPLATE_REGISTRY, bodyToHtml } from "@/lib/mail/registry";
@@ -27,6 +30,10 @@ import {
 } from "@/app/admin/(protected)/email-templates/actions";
 
 export type MailboxReply = {
+  attachments?: EmailAttachmentInfo[];
+  attachmentNotice?: string | null;
+  originalText?: string | null;
+  quotedText?: string | null;
   id: string;
   fromEmail: string;
   fromName: string | null;
@@ -39,6 +46,8 @@ export type MailboxReply = {
 };
 
 export type MailboxSent = {
+  attachments?: EmailAttachmentInfo[];
+  deliveryStatus?: string;
   id: string;
   toEmail: string;
   toName: string | null;
@@ -162,7 +171,7 @@ export function Mailbox({
         subject: s.subject,
         unread: false,
         from: `To ${s.toName ? `${s.toName} · ` : ""}${s.toEmail}`,
-        snippet: s.templateKey ? `Template · ${s.templateKey}` : "Custom email",
+        snippet: s.deliveryStatus === "not_sent" ? "Not sent — check the message status" : s.deliveryStatus && s.deliveryStatus !== "sent" ? "Delivery unconfirmed — check before retrying" : s.templateKey ? `Template · ${s.templateKey}` : "Custom email",
         createdAt: s.createdAt,
       }));
   }, [folder, deptFilter, replies, sent, readIds]);
@@ -387,24 +396,8 @@ export function Mailbox({
                   </form>
                 </div>
               </header>
-              {activeReply.bodyHtml ? (
-                <iframe
-                  title="Email preview"
-                  sandbox=""
-                  srcDoc={activeReply.bodyHtml}
-                  className="mt-4 h-[46vh] w-full rounded-lg border border-border bg-white"
-                />
-              ) : (
-                <p className="mt-4 whitespace-pre-wrap break-words text-[0.875rem] leading-relaxed text-foreground/85">
-                  {activeReply.bodyText ?? "(empty message)"}
-                </p>
-              )}
-              {activeReply.bodyHtml && activeReply.bodyText ? (
-                <details className="mt-3">
-                  <summary className="t-caption cursor-pointer text-muted">View plain text</summary>
-                  <p className="mt-2 whitespace-pre-wrap break-words text-[0.8125rem] leading-relaxed text-muted">{activeReply.bodyText}</p>
-                </details>
-              ) : null}
+              <EmailMessageView key={activeReply.id} html={activeReply.bodyHtml} text={activeReply.bodyText} originalText={activeReply.originalText} quotedText={activeReply.quotedText} attachments={activeReply.attachments}/>
+              <EmailAttachmentList files={activeReply.attachments} notice={activeReply.attachmentNotice}/>
             </article>
           ) : activeSent ? (
             <article className="p-5 sm:p-6">
@@ -432,12 +425,9 @@ export function Mailbox({
                   </button>
                 </div>
               </header>
-              <iframe
-                title="Sent email preview"
-                sandbox=""
-                srcDoc={activeSent.html}
-                className="mt-4 h-[46vh] w-full rounded-lg border border-border bg-white"
-              />
+              {activeSent.deliveryStatus && activeSent.deliveryStatus !== "sent" ? <p role="status" className="mt-4 text-sm text-muted">{activeSent.deliveryStatus === "not_sent" ? "Not sent — SMTP did not confirm delivery." : "Delivery is unconfirmed. Check the mailbox before sending again; this archive is not proof of delivery."}</p> : null}
+              <EmailMessageView key={activeSent.id} html={activeSent.html} attachments={activeSent.attachments} title="Sent email preview"/>
+              <EmailAttachmentList files={activeSent.attachments}/>
             </article>
           ) : (
             <div className="flex h-full min-h-[40vh] flex-col items-center justify-center gap-3 p-8 text-center">
@@ -647,6 +637,7 @@ function ComposePanel({
         </div>
       ) : null}
 
+      {isCustom ? <EmailAttachmentPicker key={dept}/> : null}
       {/* Preview + send */}
       <div className="rounded-lg border border-border">
         <button

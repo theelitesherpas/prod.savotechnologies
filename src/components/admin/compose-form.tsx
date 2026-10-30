@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { sendCustomEmailAction, sendTemplatedEmailAction } from "@/app/admin/(protected)/email-templates/actions";
 import { FormGuard } from "@/components/admin/form-guard";
+import { EmailAttachmentPicker } from "@/components/admin/email-attachment-picker";
 import { SubmitButton } from "@/components/admin/form";
 import { TEMPLATE_REGISTRY, RECIPIENT_LABEL, CATEGORY_ORDER, CATEGORY_LABEL } from "@/lib/mail/registry";
 import { employeeVars } from "@/lib/employee-model";
@@ -337,6 +338,7 @@ export function ComposeForm({
               </div>
             ) : null}
           </div>
+          <div className="adm-card p-5"><EmailAttachmentPicker key={sendingDept}/></div>
           <div className="flex flex-wrap items-center gap-3">
             <SubmitButton label={`Send via ${sendingDept}@`} pendingLabel="Sending…" />
             <p className="t-caption text-muted">Sends from {sendingDept}@savotechnologies.com.</p>

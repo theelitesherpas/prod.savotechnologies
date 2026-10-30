@@ -1,192 +1,53 @@
-/**
- * Email Reply Poller — IMAP service that watches hr@ and hello@
- * mailboxes on Hostinger and imports replies into the admin panel.
- *
- * How it works:
- *   1. Every 60 seconds, connects to Hostinger IMAP (imap.hostinger.com)
- *   2. Checks both mailboxes for NEW (unseen) emails
- *   3. Posts each email to the local /api/email/inbound endpoint
- *   4. Marks the email as seen (so it's never imported twice)
- *   5. The existing inbound code stores it, matches it to the enquiry
- *      thread by sender email, and it appears in Admin → Emails
- *
- * Run under PM2 alongside the Next.js app:
- *   pm2 start scripts/email-poller.mjs --name savo-email-poller
- *
- * Environment variables (from .env.production):
- *   MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS      — hello@ mailbox
- *   MAIL_HR_USER, MAIL_HR_PASS                       — hr@ mailbox
- *   EMAIL_INBOUND_SECRET                             — webhook auth
- *   APP_PORT (default 4300)                          — local app port
+/** IMAP -> authenticated loopback inbox import. One sequential polling loop;
+ * stable mailbox/UIDVALIDITY/UID delivery IDs; Seen only after persisted ack.
+ * Attachments are decoded under bounded MIME limits and share app policy.
+ * No auto-replies/bounces, URL secrets, raw message or recipient logging.
  */
-
-import { ImapFlow } from "imapflow";
-
-const POLL_INTERVAL = 60 * 1000; // 60 seconds
-const APP_PORT = process.env.APP_PORT || "4300";
-const INBOUND_URL = `http://127.0.0.1:${APP_PORT}/api/email/inbound`;
-
-const mailboxes = [
-  {
-    name: "hello",
-    user: process.env.MAIL_USER || "hello@savotechnologies.com",
-    pass: process.env.MAIL_PASS,
-    dept: "hello",
-  },
-  {
-    name: "hr",
-    user: process.env.MAIL_HR_USER || "hr@savotechnologies.com",
-    pass: process.env.MAIL_HR_PASS,
-    dept: "hr",
-  },
-].filter((m) => m.pass);
-
-const log = (msg, data) => {
-  console.log(JSON.stringify({ ts: new Date().toISOString(), service: "email-poller", msg, ...data }));
-};
-
-async function pollMailbox(mailbox) {
-  const client = new ImapFlow({
-    host: process.env.IMAP_HOST || "imap.hostinger.com",
-    port: 993,
-    secure: true,
-    auth: { user: mailbox.user, pass: mailbox.pass },
-    logger: false,
-  });
-
-  try {
-    await client.connect();
-    const lock = await client.getMailboxLock("INBOX");
-    let imported = 0;
-
-    try {
-      // Search for unseen messages
-      const uids = await client.search({ seen: false });
-      if (!uids || uids.length === 0) return;
-
-      // Process up to 20 per cycle (safety cap)
-      const batch = uids.slice(-20);
-
-      for (const uid of batch) {
-        const msg = await client.fetchOne(uid, {
-          envelope: true,
-          source: true,
-          bodyStructure: true,
-        });
-        if (!msg) continue;
-
-        const env = msg.envelope || {};
-        const fromAddr = env.from?.[0]?.address || "";
-        const fromName = env.from?.[0]?.name || "";
-        const toAddr = env.to?.[0]?.address || mailbox.user;
-        const subject = env.subject || "(no subject)";
-        const messageId = env.messageId || "";
-
-        // Extract body text (prefer text/plain, fallback to stripping HTML)
-        let bodyText = "";
-        let bodyHtml = null;
-        if (msg.bodyStructure) {
-          try {
-            const { email } = await client.fetchOne(uid, { uid: true, envelope: true, source: true });
-            if (email?.body?.text) bodyText = email.body.text;
-          } catch {
-            // fallback below
-          }
-        }
-
-        // Simple source-based extraction fallback
-        if (!bodyText && msg.source) {
-          const source = msg.source.toString("utf-8");
-          // Try to find text/plain part
-          const ptMatch = source.match(/Content-Type:\s*text\/plain[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--|\r?\n\.\r?\n|$)/i);
-          if (ptMatch) bodyText = ptMatch[1].trim();
-          // Or strip HTML tags
-          if (!bodyText) {
-            const htmlMatch = source.match(/Content-Type:\s*text\/html[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--|\r?\n\.\r?\n|$)/i);
-            if (htmlMatch) {
-              bodyHtml = htmlMatch[1].trim();
-              bodyText = bodyHtml
-                .replace(/<style[\s\S]*?<\/style>/gi, "")
-                .replace(/<script[\s\S]*?<\/script>/gi, "")
-                .replace(/<br\s*\/?>/gi, "\n")
-                .replace(/<\/p>/gi, "\n\n")
-                .replace(/<[^>]+>/g, "")
-                .trim();
-            }
-          }
-        }
-
-        // Skip if we have nothing useful
-        if (!fromAddr || !fromAddr.includes("@")) {
-          await client.messageFlagsAdd(uid, ["\\Seen"]);
-          continue;
-        }
-
-        // Skip automated replies (out-of-office, bounces)
-        if (/auto-reply|out of office|vacation|no.?reply|mailer-daemon|postmaster/i.test(subject)) {
-          await client.messageFlagsAdd(uid, ["\\Seen"]);
-          continue;
-        }
-
-        // POST to the existing inbound endpoint
-        const payload = {
-          from: fromName ? `${fromName} <${fromAddr}>` : fromAddr,
-          to: toAddr,
-          subject,
-          text: bodyText || "(empty body)",
-          html: bodyHtml || undefined,
-          messageId,
-        };
-
-        const secret = process.env.EMAIL_INBOUND_SECRET;
-        const url = secret ? `${INBOUND_URL}?secret=${secret}` : INBOUND_URL;
-
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }).catch((err) => {
-          log("post_failed", { error: String(err).slice(0, 100), from: fromAddr });
-          return null;
-        });
-
-        if (res && res.ok) {
-          imported++;
-          log("imported", { from: fromAddr, subject: subject.slice(0, 50), dept: mailbox.dept });
-        }
-
-        // Mark as seen regardless (don't re-process)
-        await client.messageFlagsAdd(uid, ["\\Seen"]);
-      }
-    } finally {
-      lock.release();
+import { ImapFlow } from 'imapflow';
+import { setTimeout as sleep } from 'node:timers/promises';
+import { pathToFileURL } from 'node:url';
+import { parseInboundMime, OVERSIZE_NOTICE } from '../src/lib/mail/inbound-mime.mjs';
+import { MAX_MAIL_WIRE_BYTES } from '../src/lib/mail/attachment-rules.mjs';
+const log=(event,meta={})=>console.log(JSON.stringify({ts:new Date().toISOString(),service:'email-poller',event,...meta}));
+export async function boundedMime(content){const chunks=[];let size=0;for await(const chunk of content){size+=chunk.length;if(size>MAX_MAIL_WIRE_BYTES){content.destroy?.();return null;}chunks.push(chunk);}return Buffer.concat(chunks);}
+export async function pollMailbox(mailbox,{Client=ImapFlow,post=fetch,secret=process.env.EMAIL_INBOUND_SECRET,port=process.env.APP_PORT||'4300'}={}){
+ if(!secret||!/^\d{1,5}$/.test(port)||Number(port)<1||Number(port)>65535)throw Error('INBOUND_CONFIGURATION_REQUIRED');
+ const client=new Client({host:process.env.IMAP_HOST||'imap.hostinger.com',port:Number(process.env.IMAP_PORT||993),secure:true,auth:{user:mailbox.user,pass:mailbox.pass},logger:false,connectionTimeout:15000,greetingTimeout:15000,socketTimeout:30000});
+ let imported=0;
+ try{
+  await client.connect();const lock=await client.getMailboxLock('INBOX');
+  try{
+   const validity=String(client.mailbox?.uidValidity||'');if(!validity)throw Error('UIDVALIDITY_REQUIRED');
+   const uids=await client.search({seen:false},{uid:true});
+   for(const uid of (uids||[]).slice(0,20)){
+    const msg=await client.fetchOne(uid,{uid:true,envelope:true,size:true},{uid:true});if(!msg)continue;
+    const envelope=msg.envelope||{},sender=envelope.from?.[0];if(!sender?.address)continue;
+    let parsed={text:'',html:null,attachments:[],notice:null};
+    if(msg.size>MAX_MAIL_WIRE_BYTES)parsed.notice=OVERSIZE_NOTICE;
+    else{
+     const download=await client.download(uid,undefined,{uid:true,maxBytes:MAX_MAIL_WIRE_BYTES+1});if(!download.content)continue;
+     const source=await boundedMime(download.content);
+     if(!source)parsed.notice=OVERSIZE_NOTICE;
+     else try{parsed=await parseInboundMime(source);}catch{parsed.notice='The MIME message could not be safely processed. Ask the sender to resend supported attachments totaling 10 MB or less.';}
     }
-
-    if (imported > 0) log("cycle_done", { mailbox: mailbox.name, imported });
-    await client.logout();
-  } catch (err) {
-    log("error", { mailbox: mailbox.name, error: String(err).slice(0, 200) });
-    try { await client.logout(); } catch { /* ignore */ }
-  }
+    const form=new FormData();form.set('from',sender.name?`${JSON.stringify(sender.name)} <${sender.address}>`:sender.address);form.set('to',mailbox.user);form.set('subject',envelope.subject||parsed.subject||'(no subject)');form.set('text',parsed.text||'(empty body)');if(parsed.html)form.set('html',parsed.html);if(envelope.messageId||parsed.messageId)form.set('messageId',envelope.messageId||parsed.messageId);if(parsed.inReplyTo)form.set('inReplyTo',parsed.inReplyTo);form.set('deliveryKey',`imap:${mailbox.dept}:${validity}:${uid}`);
+    if(parsed.notice)form.set('attachmentIssue',parsed.notice===OVERSIZE_NOTICE?'oversize':'unsupported');
+    const attachmentInfo={};for(const [index,file] of parsed.attachments.entries()){const key=`attachment${index}`;form.append(key,new Blob([file.content],{type:file.contentType}),file.filename);if(file.contentId)attachmentInfo[key]={'content-id':file.contentId};}if(Object.keys(attachmentInfo).length)form.set('attachment-info',JSON.stringify(attachmentInfo));
+    const response=await post(`http://127.0.0.1:${port}/api/email/inbound`,{method:'POST',redirect:'error',headers:{'x-webhook-secret':secret},body:form,signal:AbortSignal.timeout(25000)});
+    if(response.ok){const body=await response.json();if(body.ok!==true||!body.id)throw Error('IMPORT_ACK_INVALID');await client.messageFlagsAdd(uid,['\\Seen'],{uid:true});imported++;}
+    else{log('import_not_acknowledged',{mailbox:mailbox.dept,status:response.status});break;}
+   }
+  }finally{lock.release();}
+ }catch{log('cycle_failed',{mailbox:mailbox.dept});}
+ finally{try{await client.logout();}catch{client.close?.();}}
+ if(imported)log('cycle_complete',{mailbox:mailbox.dept,imported});return imported;
 }
-
-async function main() {
-  log("started", {
-    mailboxes: mailboxes.map((m) => m.user),
-    interval: `${POLL_INTERVAL / 1000}s`,
-    inboundUrl: INBOUND_URL,
-  });
-
-  // Initial poll
-  for (const mb of mailboxes) await pollMailbox(mb);
-
-  // Poll on interval
-  setInterval(async () => {
-    for (const mb of mailboxes) await pollMailbox(mb);
-  }, POLL_INTERVAL);
+async function main(){
+ if(!process.env.EMAIL_INBOUND_SECRET)throw Error('EMAIL_INBOUND_SECRET_REQUIRED');
+ const mailboxes=[{dept:'hello',user:process.env.MAIL_USER||'hello@savotechnologies.com',pass:process.env.MAIL_PASS},{dept:'hr',user:process.env.MAIL_HR_USER||'hr@savotechnologies.com',pass:process.env.MAIL_HR_PASS}].filter(m=>m.pass);
+ if(!mailboxes.length)throw Error('NO_IMAP_MAILBOX_CONFIGURED');
+ let stopped=false;for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{stopped=true;});
+ log('started',{mailboxes:mailboxes.map(m=>m.dept)});
+ while(!stopped){for(const mailbox of mailboxes){if(stopped)break;await pollMailbox(mailbox);}if(!stopped)await sleep(60000);}
 }
-
-main().catch((err) => {
-  log("fatal", { error: String(err) });
-  process.exit(1);
-});
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(()=>{log('fatal_configuration_or_runtime_error');process.exitCode=1;});
