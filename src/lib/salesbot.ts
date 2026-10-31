@@ -12,6 +12,8 @@
  * Pure module - unit-tested in tests/salesbot.test.ts.
  */
 
+import { isUnavailableServiceRequest, SERVICE_SCOPE_MESSAGE } from "@/lib/service-scope";
+
 export type SalesbotStage =
   | "greet"
   | "discover"
@@ -74,7 +76,7 @@ const SERVICE_MATCHERS: { title: string; why: string; keywords: string[] }[] = [
   { title: "Mobile App Development", why: "iOS and Android from one Flutter or React Native codebase, shipped to both stores.", keywords: ["mobile", "app", "ios", "android", "flutter", "react native", "play store", "app store", "phone"] },
   { title: "AI Agent Development", why: "Agents like this one, copilots and RAG systems, guarded and observable in production.", keywords: ["ai", "agent", "chatbot", "bot", "llm", "gpt", "rag", "copilot", "automation", "intelligent", "machine learning", "ml"] },
   { title: "Custom Software Development", why: "Portals, SaaS products and internal systems shaped around how you operate.", keywords: ["custom software", "saas", "erp", "crm", "internal tool", "dashboard", "back office", "platform", "system"] },
-  { title: "UI/UX Design", why: "Research, interface systems and prototypes that make complex products obvious.", keywords: ["design", "ui", "ux", "figma", "prototype", "redesign", "brand", "interface", "usability"] },
+  { title: "UI/UX Design", why: "Research, interface systems and prototypes that make complex products obvious.", keywords: ["design", "ui", "ux", "figma", "prototype", "brand", "interface", "usability"] },
   { title: "Digital Marketing & SEO", why: "Search, answer engines and conversion work that compounds after launch.", keywords: ["seo", "marketing", "growth", "ads", "campaign", "content", "lead gen", "traffic", "aeo", "analytics"] },
 ];
 
@@ -179,6 +181,7 @@ const TIMELINE_PATTERNS: { re: RegExp; urgency: NonNullable<SalesbotSlots["urgen
 ];
 
 export function extractServices(text: string): string[] {
+  if (isUnavailableServiceRequest(text)) return [];
   const t = ` ${text.toLowerCase()} `;
   const hits = new Set<string>();
   for (const s of SERVICE_MATCHERS) {
@@ -297,6 +300,12 @@ export function step(session: SalesbotSession, message: string): SalesbotTurn {
   let stage = session.stage;
   let nextStage = session.stage;
   const suggestions: string[] = [];
+
+  if (isUnavailableServiceRequest(text) || (slots.need && isUnavailableServiceRequest(slots.need))) {
+    slots.need = null;
+    slots.services = [];
+    return turn(SERVICE_SCOPE_MESSAGE, "out-of-scope", slots, stage, "discover", ["A new website", "A mobile application", "Custom software"], session, null, 0);
+  }
 
   const isQuestion = /\?\s*$/.test(text) || /^(what|how|who|when|where|why|do you|can you|are you|is it|does savo|tell me)/i.test(text);
   const isGreeting = /^(hi|hello|hey|good (morning|afternoon|evening)|namaste)\b/i.test(lower);

@@ -2,7 +2,7 @@
 export const HOME_COPY = {
   services: {
     title: "Design, development and the work that comes after.",
-    lead: "You might be launching a product, replacing an awkward internal system or making an existing website work harder. We bring the right mix of strategy, design and engineering to the job.",
+    lead: "You might be launching a product, building a new website or developing an internal system. We bring the right mix of strategy, design and engineering to the job.",
   },
   portfolio: {
     title: "A closer look at what we build.",

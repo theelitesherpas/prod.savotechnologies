@@ -34,7 +34,6 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files — .env.example is the one tracked exception
-.env*
 !.env.example
 
 # vercel
@@ -51,3 +50,4 @@ next-env.d.ts
 /tmp-*.log
 /tmp-*.mjs
 /.vitest/
+config.bat

@@ -322,7 +322,7 @@ export const INDUSTRY_DETAILS: IndustryDetail[] = [
       a: "A focused storefront can launch in weeks; headless builds with ERP sync and custom checkout take months and ship in stages. Peak-season readiness is planned as a milestone, not discovered in November.",
     },
       { q: "Headless commerce or a platform like Shopify?", a: "Both are legitimate. We recommend headless when differentiation, speed or complex catalogues matter, and platform-plus-integration when speed-to-market wins. The decision starts from your catalogue size, team and roadmap, not from our preference." },
-      { q: "How do you improve conversion rate?", a: "By instrumenting the full funnel first, then removing friction where the data points, page speed, checkout steps, trust signals and mobile ergonomics. Optimisation is continuous and evidence-led, never a one-off redesign." },
+      { q: "How do you improve conversion rate?", a: "By instrumenting the full funnel first, then removing friction where the data points, page speed, checkout steps, trust signals and mobile ergonomics. Optimisation is continuous and evidence-led." },
       { q: "Can you migrate our store without losing SEO rankings?", a: "Yes, migrations preserve URL structures or ship deliberate redirect maps, keep structured data intact, and stage cutover with parity checks so search equity carries over." },
       { q: "Do you build multi-vendor marketplaces?", a: "We build marketplace platforms with vendor onboarding, commission engines, catalogue aggregation and seller operations, sized from focused B2B marketplaces to consumer plays." },
     ],

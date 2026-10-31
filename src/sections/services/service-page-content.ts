@@ -10,10 +10,9 @@ const EDITORIAL: Record<string, Editorial> = {
     heroLead: "From a stronger online presence to a platform your customers use every day, we bring design, development and integrations together to build the right web experience.",
     overview: ["Your website should do more than explain what you do. It should help people find what they need, take the next step and come back with confidence.", "We build marketing websites, customer portals and web applications around those journeys. Content management, performance, accessibility and connections to your existing systems are considered together, so the result works for your customers and the people who manage it."],
     architecture: "We choose the rendering, content model and API structure around how your application will be used. That can mean a server-rendered website, a headless content platform or a browser application with authenticated workflows. The aim is useful functionality without unnecessary complexity.",
-    quality: "The test plan can cover key user journeys, browser and device compatibility, accessibility, performance and analytics. Acceptance criteria are agreed before release, with migration and redirect checks where an existing site is being replaced.",
+    quality: "The test plan can cover key user journeys, browser and device compatibility, accessibility, performance and analytics. Acceptance criteria and launch checks are agreed before release.",
     questions: [
       { q: "Which technologies should we use?", a: "Next.js, React and TypeScript are options, not a requirement. We consider your content, integrations, team skills, hosting and expected usage before recommending a stack. Maintaining the finished product matters as much as building it." },
-      { q: "Can you redesign or migrate our existing website?", a: "Yes. We start by reviewing the current site, content, URLs and integrations. The migration plan can include redirects, metadata, content transfers and launch checks. These steps help manage search risk, but no migration can guarantee unchanged rankings." },
       { q: "Can our team manage the content?", a: "We can include a CMS with the editing roles, content types and preview workflow your team needs. What is editable, along with training and documentation, is agreed during scoping rather than left until handover." },
       { q: "Will the website support SEO and AI discovery?", a: "We can address crawlability, semantic structure, metadata, structured data and performance. These support discoverability, while content quality, competition and third-party search systems also influence visibility. Rankings or AI citations are not guaranteed." },
     ],
@@ -37,7 +36,6 @@ const EDITORIAL: Record<string, Editorial> = {
     architecture: "Journeys, content structure and component behaviour are resolved together. Design tokens, interaction states and handover guidance are aligned with the codebase so that the system can be implemented and maintained consistently.",
     quality: "Reviews can include contrast, keyboard interaction, content clarity and state coverage. Prototypes and usability sessions help test uncertain assumptions; the participant plan and accessibility requirements are agreed for the engagement.",
     questions: [
-      { q: "Can you audit or redesign an existing product?", a: "Yes. We review key journeys, existing evidence and the interface before recommending changes. Sometimes focused fixes are more useful than a complete redesign; the findings help decide." },
       { q: "Can you work with our development team?", a: "Yes. We can align designs with your stack and component system, document interactions and support implementation reviews. Collaboration and handover responsibilities are agreed with your team." },
       { q: "Do we need a design system?", a: "A reusable component and token system is useful when multiple screens, products or teams need consistency. For a smaller project, a focused UI kit may be enough. The investment should match the product's scale." },
     ],
@@ -160,8 +158,8 @@ export function servicePageDetail(slug: string): ServiceDetail | undefined {
         : "Access controls, sensitive data, authentication and relevant abuse paths are considered in the technical plan. Regulatory obligations and any specialist audit or security review are scoped explicitly with your team.",
     afterLaunch: "Handover, documentation and any ongoing monitoring or improvement work are planned with your team. Support responsibilities and service arrangements are agreed for the engagement, rather than assumed to be included indefinitely.",
     ...(slug === "web-development" ? {
-      whenNeeded: ["Your website no longer reflects the business or helps visitors take the next step.", "Your team needs to publish and manage content without routine developer help.", "Customers need a portal, dashboard or self-service workflow.", "Your website needs to connect with the systems you already use."],
-      whenNot: ["A hosted website builder already meets the important requirements.", "The experience depends on native device features that a browser cannot adequately support.", "Targeted improvements to the current site would solve the problem without a rebuild."],
+      whenNeeded: ["Your business needs a new website or web application.", "Your team needs to publish and manage content without routine developer help.", "Customers need a portal, dashboard or self-service workflow.", "Your website needs to connect with the systems you already use."],
+      whenNot: ["A hosted website builder already meets the important requirements.", "The experience depends on native device features that a browser cannot adequately support.", "Existing software already meets your requirements without custom development."],
       deliverables: [
         { title: "Corporate & marketing websites", text: "A clear online presence with purposeful journeys, responsive design and content your team can manage." },
         { title: "Custom web applications", text: "Dashboards, business tools and browser-based products shaped around your users and workflows." },
@@ -174,7 +172,7 @@ export function servicePageDetail(slug: string): ServiceDetail | undefined {
         { name: "Discover & plan", text: "Understand your users, business goals, existing systems and constraints. Agree the scope, priorities and acceptance criteria." },
         { name: "Design the experience", text: "Map journeys, content and interactions. Review prototypes and settle the important decisions before development." },
         { name: "Build & validate", text: "Develop the application and its integrations in reviewable stages. Test the key workflows, compatibility and agreed performance requirements." },
-        { name: "Launch & hand over", text: "Coordinate deployment, content and migration checks. Provide the agreed documentation, training and next-step support plan." },
+        { name: "Launch & hand over", text: "Coordinate deployment, content and launch checks. Provide the agreed documentation, training and next-step support plan." },
       ],
     } : {}),
   };

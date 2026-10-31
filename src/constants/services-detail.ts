@@ -65,7 +65,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     stack: ["Next.js", "React", "TypeScript", "Node.js", "Headless CMS", "PostgreSQL"],
 
     whenNeeded: [
-      "Your site loads slowly, ranks poorly or loses visitors before they act, and patching the current platform no longer pays.",
+      "Your business needs a new website or browser-based application.",
       "Marketing cannot publish without a developer in the loop, so campaigns ship late.",
       "You need more than a site: portals, dashboards or customer self-service living in the browser.",
       "Content, commerce and customer data live in disconnected systems that drift out of sync.",
@@ -73,7 +73,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     whenNot: [
       "You need a page live this week and a hosted site builder covers 100 percent of the need; we will say so.",
       "The product is a native-first experience (camera, sensors, deep OS integration) where the browser is the wrong container.",
-      "Traffic is tiny, change is rare and the current site performs; rebuilding is vanity, not strategy.",
+      "You only need routine content updates or technical support for the system you already run.",
     ],
     architecture:
       "Server-rendered foundations with client interactivity only where it earns its JavaScript. Content, commerce and data decoupled behind typed APIs so every surface stays fast and in sync. Caching and invalidation decided per measured problem, never installed by fashion.",
@@ -111,10 +111,6 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     {
       q: "How long does it take to build a website or web application?",
       a: "Marketing sites typically ship in weeks; platforms and portals take months because content, integrations and user accounts add real scope. Discovery runs two to four weeks and ends with a milestone plan you can hold us to. Speed comes from scope discipline, not shortcuts.",
-    },
-    {
-      q: "Can you redesign or migrate our existing website without losing SEO?",
-      a: "Yes. Redesigns start with an audit of what earns traffic and conversions, and migrations preserve URL equity with redirects, canonical tags and structured data carried over deliberately. Search visibility is protected as a deliverable, not hoped for as a side effect.",
     },
       { q: "Next.js, React or something else?", a: "We recommend the stack after understanding your product, but Next.js with React and TypeScript is our default for serious web work: performance, SEO and long-term maintainability in one foundation." },
       { q: "How long does a website project take?", a: "A focused marketing site typically ships in weeks; platforms and web applications scope in stages. You get an honest timeline after discovery, with milestones you can hold us to." },
@@ -225,7 +221,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       "Accessibility complaints, audit failures or legal exposure demand a designed, not patched, response.",
     ],
     whenNot: [
-      "The interface works and converts; a fresh coat of trend-driven redesign would spend trust and budget for aesthetics' sake. We will say so.",
+      "Your new product already has agreed journeys, tested prototypes and a complete design system.",
       "The problem is positioning or traffic, not usability; design can't rescue a message nobody wants.",
       "You need production visual design only (a landing page look) without research or systems; that is a lighter engagement than this practice.",
     ],
@@ -268,9 +264,8 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     },
     {
       q: "Do you provide UX audits for existing products?",
-      a: "Yes. An audit maps where users drop off, what confuses them and which fixes pay back fastest, ranked by evidence from analytics and session data. It is the cheapest way to find out whether you need a redesign or a set of targeted fixes.",
+      a: "Yes. An audit maps where users drop off, what confuses them and which fixes pay back fastest, ranked by evidence from analytics and session data.",
     },
-      { q: "Do you redesign existing products?", a: "Yes, and we start with an audit of what works before touching what doesn't. Redesigns preserve earned trust and muscle memory; we change what measurably fails and leave what users rely on." },
       { q: "Can you work with our engineers?", a: "We design with implementation in mind: tokens, components and specs documented for the stack that will build them. We collaborate directly with your team or ours." },
       { q: "How do you test designs?", a: "Interactive prototypes go to real users for task-based testing; findings feed revisions before code. Post-launch, analytics keeps the loop running." },
       { q: "What is a design system and do we need one?", a: "A shared component and token library that makes every screen consistent and every change cheap. If your product will grow past a handful of screens, it pays for itself quickly." },
