@@ -26,6 +26,21 @@ try{
  async function visit(path){await page.goto(base+path,{waitUntil:'networkidle'});await page.evaluate(()=>document.fonts.ready);}
  async function capture(label,width,height=1000){await page.setViewportSize({width,height});await page.waitForTimeout(250);await page.evaluate(()=>{document.activeElement?.blur?.();scrollTo({top:0,left:0,behavior:'instant'});});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const overflow=await page.evaluate(()=>Array.from(document.querySelectorAll('body *')).filter(e=>e.getBoundingClientRect().right>innerWidth+1).slice(0,8).map(e=>({tag:e.tagName,class:e.className,right:e.getBoundingClientRect().right,width:e.getBoundingClientRect().width})));if(overflow.length){errors.push(`${label}: overflow`);console.log('LAYOUT',label,JSON.stringify(overflow));}else ok(true,`${label}: no horizontal overflow`);await page.screenshot({path:`${dir}/${label}.png`,fullPage:true});}
  async function fill(dept){await page.getByLabel('To',{exact:true}).fill(`recipient-${dept}@example.invalid`);await page.getByLabel('Subject',{exact:true}).fill(`Synthetic ${dept} attached document`);await page.getByLabel('Message',{exact:true}).fill('Hello,\n\nPlease review the attached synthetic document.');}
+ // Exercise the actual browser multipart/Server Action path, not just FormData
+ // built in a unit test: React/Node rewrites an unselected file input's name.
+ for(const surface of ['standalone','mailbox'])for(const dept of ['hr','hello'])for(const scenario of ['none','removed','attached']){
+  if(surface==='standalone')await visit(`/admin/email-compose?dept=${dept}&mode=blank`);
+  else{await visit(`/admin/emails?dept=${dept}`);await page.getByRole('button',{name:'Compose',exact:true}).click();await page.getByRole('button',{name:dept==='hr'?'HR · hr@':'Clients · hello@',exact:true}).click();await page.getByLabel('Template',{exact:true}).selectOption('__custom__');}
+  await fill(dept);const subject=`Synthetic optional ${surface} ${dept} ${scenario}`;await page.getByLabel('Subject',{exact:true}).fill(subject);
+  if(scenario!=='none')await page.locator('input[type="file"]').setInputFiles({name:'optional.pdf',mimeType:'application/pdf',buffer:pdf});
+  if(scenario==='removed'){await page.getByRole('button',{name:'Remove optional.pdf',exact:true}).click();ok(await page.locator('input[type="file"]').evaluate(i=>i.files.length)===0,`${surface} ${dept}: removing the last file clears selection`);}
+  const before=sink.messages.length;await page.getByRole('button',{name:surface==='standalone'?`Send via ${dept}@`:'Send email',exact:true}).click();await page.waitForURL(u=>u.searchParams.has('sent')||u.searchParams.has('e'));
+  ok(new URL(page.url()).searchParams.get('sent')==='1',`${surface} ${dept} ${scenario}: send succeeds instead of optional attachment error`);
+  const message=await simpleParser(sink.messages.at(-1).body),want=scenario==='attached'?1:0;
+  ok(sink.messages.length===before+1&&sink.messages.at(-1).sender===`${dept}@example.invalid`,`${surface} ${dept} ${scenario}: exactly one SMTP send through the correct mailbox`);
+  ok(message.attachments.length===want&&(!want||Buffer.compare(message.attachments[0].content,pdf)===0),`${surface} ${dept} ${scenario}: SMTP attachment count and bytes are correct`);
+  const archived=await p.sentEmail.findFirst({where:{subject},include:{attachments:true}});ok(archived?.deliveryStatus==='sent'&&archived.dept===dept&&archived.attachments.length===want,`${surface} ${dept} ${scenario}: archive has no phantom/empty documents`);
+ }
  for(const dept of ['hr','hello']){
   await visit(`/admin/email-compose?dept=${dept}&mode=blank`);await fill(dept);await page.locator('input[type="file"]').setInputFiles({name:'résumé.pdf',mimeType:'application/pdf',buffer:pdf});ok(await page.getByRole('button',{name:'Remove résumé.pdf',exact:true}).isVisible(),`${dept}: selected file has a remove action`);
   await capture(`${dept}-attachments-1440`,1440);await capture(`${dept}-attachments-390`,390,844);

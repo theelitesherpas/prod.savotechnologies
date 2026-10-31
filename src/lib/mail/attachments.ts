@@ -3,7 +3,11 @@ import { createHash } from "node:crypto";
 import { attachmentBatchProblem, validateAttachment, safeContentId, type MailAttachment } from "./attachment-rules.mjs";
 export async function attachmentsFromForm(form: FormData): Promise<MailAttachment[]> {
  if (form.getAll("attachments").some(v => typeof v === "string")) throw Error("Attach files using the file picker, not a file path or URL.");
- const files = form.getAll("attachments").filter((v): v is File => typeof v !== "string" && !(v.size === 0 && !v.name));
+ // An unselected native input is an empty part with no filename. React's
+ // Busboy decoder appends that Blob with an undefined filename: Node 22 calls
+ // it "undefined", newer Node versions call it "blob". Neither is an upload.
+ // Keep rejecting actual named empty documents and every nonempty file.
+ const files = form.getAll("attachments").filter((v): v is File => typeof v !== "string" && !(v.size === 0 && (!v.name || (v.type === "application/octet-stream" && (v.name === "undefined" || v.name === "blob")))));
  const problem = attachmentBatchProblem(files); if (problem) throw Error(problem);
  const attachments: MailAttachment[] = [];
  for (const file of files) attachments.push(validateAttachment({ filename: file.name, content: new Uint8Array(await file.arrayBuffer()) }));
