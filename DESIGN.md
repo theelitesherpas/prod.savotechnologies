@@ -1823,6 +1823,17 @@ queued callbacks from restarting hidden/offscreen/reduced loops. Shared content,
 actions/chrome/layout are unchanged. Evidence: `tmp/hero-horizon-light/` and the
 updated hero surface brief. Local headless checks are not live/device clearance.
 
+## Current public service-scope override
+
+The owner withdrew website-redesign offerings following a payment-provider review.
+Remove those offers from public copy, service/SEO FAQs, enquiry choices, assistant
+recommendations and published CMS articles; do not sell the same work under a
+replacement label. New website development, software/app development and technical
+support remain separate offerings. The assistant and SalesBot decline retired work
+before pricing or qualification. Preserve historical private client/project/payment
+records, the incumbent visual identity and the deployed email features. Local
+payment-gateway work is explicitly excluded from this content-only release.
+
 ## Current v7 navigation override
 
 ### Shared action and reachable-link refinement

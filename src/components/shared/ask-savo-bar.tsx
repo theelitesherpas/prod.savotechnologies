@@ -71,13 +71,13 @@ type Session = {
 
 /* Pre-chat qualification steps (spec §5) */
 const SERVICES = [
-  "New website", "Website redesign", "Mobile application", "AI / AI Agent", "AI Automation",
+  "New website", "Mobile application", "AI / AI Agent", "AI Automation",
   "Custom Software", "SaaS Product", "UI/UX Design", "E-commerce", "SEO / AEO / GEO",
   "Existing project support", "Maintenance / Development Support", "Cloud / DevOps", "Other",
 ];
 const STAGES = [
   "Just exploring an idea", "Planning requirements", "Have designs ready", "Development already started",
-  "Have an existing product", "Need redesign / improvement", "Need urgent technical support",
+  "Have an existing product", "Need urgent technical support",
 ];
 const TIMELINES = ["As soon as possible", "Within a few weeks", "Within 1 to 3 months", "3+ months", "Just researching"];
 

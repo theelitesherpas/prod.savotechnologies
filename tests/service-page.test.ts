@@ -31,9 +31,9 @@ describe("service presentation", () => {
   it("does not invent a detail for an unknown route", () => expect(servicePageDetail("not-a-service")).toBeUndefined());
   it("keeps web questions and contract boundaries substantive", () => {
     const detail = servicePageDetail("web-development")!;
-    expect(detail.faqs).toHaveLength(7);
+    expect(detail.faqs).toHaveLength(6);
     expect(detail.faqs.find(q => q.q.includes("SEO"))?.a).toContain("not guaranteed");
-    expect(detail.faqs.find(q => q.q.includes("migrate"))?.a).toContain("no migration can guarantee");
+    expect(detail.faqs).not.toEqual(expect.arrayContaining([expect.objectContaining({ q: expect.stringMatching(/redesign|migrate/i) })]));
     expect(detail.faqs[0].a).toContain("contract");
   });
 });

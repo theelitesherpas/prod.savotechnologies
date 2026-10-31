@@ -43,7 +43,7 @@ import styles from "./project-lead-modal.module.css";
 /* ─────────────────────────── taxonomy ─────────────────────────── */
 
 const SERVICES = [
-  { id: "website", label: "Website / Web Application", api: "Website" },
+  { id: "website", label: "New Website / Web Application", api: "Website" },
   { id: "mobile", label: "Mobile App", api: "Mobile App" },
   { id: "software", label: "Custom Software", api: "Custom Software" },
   { id: "saas", label: "SaaS Product", api: "SaaS" },
@@ -62,7 +62,6 @@ const STAGES = [
   "Just an idea",
   "Planning / requirements ready",
   "Design ready",
-  "Existing product / redesign",
   "Development already started",
   "Need an existing project rescued",
   "Scaling an existing platform",

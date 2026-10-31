@@ -241,14 +241,6 @@ export const CASE_DISCIPLINES_BASE: CaseDiscipline[] = [
         stack: "Figma · Design tokens",
         outcome: PENDING_OUTCOME,
       },
-      {
-        featured: false,
-        name: PENDING_NAME,
-        sector: "Retail & eCommerce",
-        services: "Experience redesign · CRO",
-        stack: "Figma · Prototyping · Testing",
-        outcome: PENDING_OUTCOME,
-      },
     ],
   },
   {

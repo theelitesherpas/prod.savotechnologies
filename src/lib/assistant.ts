@@ -10,6 +10,7 @@
  */
 
 import { IS_DEMO } from "@/lib/content-mode";
+import { isUnavailableServiceRequest, SERVICE_SCOPE_MESSAGE } from "@/lib/service-scope";
 
 export type AssistantLink = { label: string; href: string };
 
@@ -273,16 +274,6 @@ export const KNOWLEDGE: AssistantEntry[] = [
       "Launch is a milestone here, not an exit: measure, improve and scale is literally the fifth step of our process.",
     ],
     links: [{ label: "Our services", href: "/services" }],
-  },
-  {
-    id: "redesign",
-    category: "Services",
-    question: "Can you redesign or improve an existing product?",
-    keywords: ["redesign", "re design", "revamp", "improve existing", "existing website", "existing app", "modernize", "modernise", "old website", "rebuild", "migration", "migrate"],
-    paragraphs: [
-      "Yes, website redesign and product improvement are core services: experience redesign, conversion optimisation, replatforming and migrations.",
-      "We start from what your users already do, keep what works, and change what measurably doesn't.",
-    ],
   },
   {
     id: "ecommerce",
@@ -684,8 +675,13 @@ export const CONVERSATION_ENTRIES: AssistantEntry[] = [
 /* Retrieval runs over site-truth entries AND conversational entries. */
 const RETRIEVAL_SET: AssistantEntry[] = [...KNOWLEDGE, ...CONVERSATION_ENTRIES];
 
+const OUT_OF_SCOPE: AssistantEntry = {
+  id: "service-scope", category: "Services", question: "Which projects can Savo take on?",
+  keywords: [], paragraphs: [SERVICE_SCOPE_MESSAGE], links: [{ label: "Current services", href: "/services" }],
+};
+
 export function entryById(id: string): AssistantEntry | undefined {
-  return RETRIEVAL_SET.find((e) => e.id === id);
+  return id === OUT_OF_SCOPE.id ? OUT_OF_SCOPE : RETRIEVAL_SET.find((e) => e.id === id);
 }
 
 /* Money words carry the strongest commercial intent - they outrank topic nouns. */
@@ -725,7 +721,7 @@ const ACK_WORDS = new Set(["ok", "okay", "okey", "k", "kk", "okayy", "hmm", "hm"
    website" is an e-commerce question, not a generic web question. */
 const STRONG_TOPICS = new Set([
   "saas", "mvp", "ecommerce", "erp", "crm", "seo", "aeo", "geo", "nda",
-  "redesign", "migrate", "migration", "revamp", "shopify", "woocommerce",
+  "migrate", "migration", "shopify", "woocommerce",
   "kubernetes", "devops", "webhook", "gdpr", "internship", "intern",
   "healthcare", "fintech", "banking", "logistics", "government", "edtech",
   "manufacturing", "portfolio",
@@ -750,6 +746,7 @@ const yesnoEntry = (): AssistantEntry | null => {
  * honest human handoff.
  */
 export function answerQuestion(input: string): AssistantEntry | null {
+  if (isUnavailableServiceRequest(input)) return OUT_OF_SCOPE;
   const q = ` ${input.toLowerCase().replace(/[^a-z0-9$+'\s]/g, " ").replace(/\s+/g, " ").trim()} `;
   const tokens = q.trim().split(" ").filter(Boolean);
   if (q.trim().length < 1) return null;
