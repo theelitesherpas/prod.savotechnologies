@@ -7,6 +7,24 @@ beforeEach(()=>{vi.clearAllMocks();m.user.mockResolvedValue({id:'admin',role:'ad
 it.each(['hr','hello'])('sends validated binary attachments through the selected %s mailbox',async dept=>{
  const f=form(dept),data=Buffer.from('%PDF-1.7 synthetic');f.append('attachments',new File([data],'document.pdf',{type:'image/png'}));await expect(sendCustomEmailAction(f)).rejects.toThrow('sent=1');expect(m.send.mock.calls[0][2]).toBe(dept);expect(m.send.mock.calls[0][3].attachments[0]).toMatchObject({filename:'document.pdf',contentType:'application/pdf',size:data.length,content:new Uint8Array(data)});
 });
+it.each(['hr','hello'])('allows optional file fields in %s, including native and React multipart placeholders',async dept=>{
+ for(const name of [null,'','undefined','blob']){
+  const f=form(dept);if(name!==null)f.append('attachments',new File([],name,{type:'application/octet-stream'}));
+  await expect(sendCustomEmailAction(f)).rejects.toThrow('sent=1');
+  expect(m.send.mock.calls.at(-1)?.[2]).toBe(dept);
+  expect(m.send.mock.calls.at(-1)?.[3]).not.toHaveProperty('attachments');
+ }
+});
+it.each(['hr','hello'])('still rejects a real named empty file in %s before SMTP',async dept=>{
+ const f=form(dept);f.append('attachments',new File([],'empty.pdf',{type:'application/pdf'}));
+ await expect(sendCustomEmailAction(f)).rejects.toThrow('Attachments+must+not+be+empty');expect(m.send).not.toHaveBeenCalled();
+});
+it('does not ignore nonempty placeholder-like names or named blobs with a document MIME type',async()=>{
+ for(const [name,data,type]of [['blob','content','application/octet-stream'],['undefined','content','application/octet-stream'],['blob','','application/pdf']]){
+  const f=form();f.append('attachments',new File([data],name,{type}));await expect(sendCustomEmailAction(f)).rejects.toThrow('e=');
+ }
+ expect(m.send).not.toHaveBeenCalled();
+});
 it('rejects an oversized upload before SMTP',async()=>{const f=form();f.append('attachments',new File([Buffer.alloc(10_000_001)],'large.pdf'));await expect(sendCustomEmailAction(f)).rejects.toThrow('10+MB');expect(m.send).not.toHaveBeenCalled();});
 it('rejects URL/path strings rather than fetching arbitrary file locations',async()=>{const f=form();f.set('attachments','http://169.254.169.254/private');await expect(sendCustomEmailAction(f)).rejects.toThrow('file+picker');expect(m.send).not.toHaveBeenCalled();});
 it('enforces compose authorization before reading file content',async()=>{m.user.mockResolvedValue({role:'editor',permissions:['clients']});const f=form();f.append('attachments',new File([Buffer.from('%PDF-1.7')],'report.pdf'));await expect(sendCustomEmailAction(f)).rejects.toThrow('denied');expect(m.send).not.toHaveBeenCalled();});

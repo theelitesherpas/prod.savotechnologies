@@ -11,6 +11,10 @@ first integrating the intervening email release.
 - Both hello and HR **Blank email** composers accept files: the standalone
   compose page and the mailbox's Custom email option. Templates do not silently
   accept/drop uploaded files; choose Blank email for attachments.
+- Attachments are optional in both departments and compose surfaces. Sending
+  without selecting a file, or after removing the last file, sends the message
+  without documents. Native/React empty file-input placeholders are ignored;
+  an actual named empty document still receives a validation error.
 - Up to **10 files totaling 10 MB (10,000,000 bytes) per email**, not 10 MB per
   file. Exactly the boundary is accepted; one byte over is rejected. Client
   validation helps the user; server validation and PostgreSQL enforce it too.
