@@ -21,6 +21,16 @@ describe("confirmed payment history", () => {
     await recordPaymentTransaction(tx, invoice, { paymentId: "pay_A", chargedAmount: 102360, method: "upi" }, "razorpay");
     expect(history.create).toHaveBeenCalledWith({ data: expect.objectContaining({ recordKey: "payment:pay_A", paymentId: "pay_A", chargedAmount: 102360, method: "upi", amount: 100000, source: "razorpay" }) });
   });
+  it("namespaces PayPal capture records and never labels them Razorpay", async () => {
+    await recordPaymentTransaction(tx, invoice, { paymentId: "CAPTURE1234567890", chargedAmount: 100000, method: "paypal" }, "paypal");
+    expect(history.create.mock.calls[0][0].data).toMatchObject({ recordKey: "payment:paypal:CAPTURE1234567890", paymentId: "CAPTURE1234567890", source: "paypal", chargedAmount: 100000, method: "paypal" });
+    expect(transactionMethod("paypal", "paypal")).toBe("PayPal");
+  });
+  it("enriches a manually recorded PayPal confirmation without pretending it was Razorpay", async () => {
+    history.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "history-1", clientId: invoice.clientId, invoiceId: invoice.id });
+    await recordPaymentTransaction(tx, invoice, { paymentId: "CAPTURE1234567890", chargedAmount: 100000, method: "paypal" }, "paypal");
+    expect(history.update.mock.calls[0][0].data).toMatchObject({ recordKey: "payment:paypal:CAPTURE1234567890", source: "paypal" }); expect(history.create).not.toHaveBeenCalled();
+  });
   it("enriches a retry without changing existing money, owner, invoice, or date snapshots", async () => {
     history.findUnique.mockResolvedValue({ id: "history-1", clientId: invoice.clientId, invoiceId: invoice.id, chargedAmount: 102360, method: "upi" });
     await recordPaymentTransaction(tx, { ...invoice, amount: 90000 }, { paymentId: "pay_A", chargedAmount: 93000, method: "card" }, "razorpay");

@@ -4,7 +4,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { CLIENT_INVOICE_STATUSES, invoiceFilename, type ClientInvoiceStatus } from "@/lib/invoice-document";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
-import { getRazorpayConfig } from "@/lib/razorpay-config";
+import { portalGatewayAvailable } from "@/lib/payment-gateways";
 import { invoicePayTarget } from "@/lib/payment-targets";
 import { absoluteUrl } from "@/lib/env";
 
@@ -44,7 +44,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     // Same response for unknown, another client's, private draft or an
     // unsupported status; never reveal whether a foreign invoice exists.
     if (!invoice) return failure("Invoice not found.", 404);
-    const gateway = await getRazorpayConfig().catch(() => null);
+    const gateway = await portalGatewayAvailable();
     const payTarget = invoicePayTarget(invoice, !!gateway);
     const bytes = await renderInvoicePdf({
       ...invoice,

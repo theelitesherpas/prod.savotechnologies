@@ -38,15 +38,16 @@ export type RecordPaidOutcome =
 export async function recordInvoicePaid(
   tx: Prisma.TransactionClient,
   invoiceId: string,
-  opts: PaymentEvidence & { source: "admin" | "razorpay.webhook" | "razorpay.sync" | "razorpay.checkout" },
+  opts: PaymentEvidence & { source: "admin" | "razorpay.webhook" | "razorpay.sync" | "razorpay.checkout" | "paypal.checkout" | "paypal.webhook" },
 ): Promise<RecordPaidOutcome> {
   const invoice = await tx.invoice.findUnique({ where: { id: invoiceId } });
   if (!invoice) return { ok: false, reason: "not_found" };
+  const provider = opts.source.startsWith("paypal.") ? "paypal" : opts.source === "admin" ? "manual" : "razorpay";
   if (invoice.status === "paid") {
-    await recordPaymentTransaction(tx, invoice, opts, opts.source === "admin" ? "manual" : "razorpay");
+    await recordPaymentTransaction(tx, invoice, opts, provider);
     // Idempotent confirmation (e.g. webhook after manual marking). Keep any
     // missing provider payment reference for the audit trail.
-    if (opts.paymentId && !invoice.razorpayPaymentId) {
+    if (provider === "razorpay" && opts.paymentId && !invoice.razorpayPaymentId) {
       await tx.invoice.update({ where: { id: invoiceId }, data: { razorpayPaymentId: opts.paymentId } });
     }
     return { ok: true, alreadyPaid: true, events: [], projectId: invoice.projectId, invoiceNumber: invoice.number };
@@ -56,9 +57,9 @@ export async function recordInvoicePaid(
   if (!client) return { ok: false, reason: "not_found" };
   const updated = await tx.invoice.update({
     where: { id: invoiceId },
-    data: { status: "paid", paidAt: new Date(), ...(opts.paymentId ? { razorpayPaymentId: opts.paymentId } : {}) },
+    data: { status: "paid", paidAt: new Date(), ...(provider === "razorpay" && opts.paymentId ? { razorpayPaymentId: opts.paymentId } : {}) },
   });
-  await recordPaymentTransaction(tx, updated, opts, opts.source === "admin" ? "manual" : "razorpay");
+  await recordPaymentTransaction(tx, updated, opts, provider);
   const events = [...invoiceNotification(client, updated), ...(invoice.projectId ? await reconcileProject(tx, invoice.projectId) : [])];
   return { ok: true, alreadyPaid: false, events, projectId: invoice.projectId, invoiceNumber: updated.number };
 }

@@ -10,6 +10,11 @@
  *  - The client pays subtotal + fee + GST; the invoice itself records the
  *    full amount as paid (the surcharge covers gateway costs). */
 
+/** Preserve the existing Razorpay currency scope. Newly added invoice
+ * currencies are PayPal/bank options until separately verified for Razorpay. */
+export const RAZORPAY_CHECKOUT_CURRENCIES = ["INR", "USD", "CHF", "EUR", "GBP", "AED"] as const;
+export function razorpayCurrencyAllowed(currency: string) { return (RAZORPAY_CHECKOUT_CURRENCIES as readonly string[]).includes(currency); }
+
 export const PROCESSING_FEE_RATE_INR = 0.02;
 export const PROCESSING_FEE_RATE_INTERNATIONAL = 0.03;
 export const GST_RATE_ON_FEE_INR = 0.18;

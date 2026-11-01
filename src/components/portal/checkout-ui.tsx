@@ -4,7 +4,7 @@ import styles from "./checkout.module.css";
 
 /** Reference-pinned checkout: restrained Savo white/ink/red, paired method
  * and amount panels, native controls, then a document-like transfer/receipt.
- * Trust marks describe Razorpay or supported networks, never certify Savo. */
+ * Trust marks and security links stay provider-specific, never certify Savo. */
 export function CheckoutIcon({ name, className }: { name: "lock" | "bank" | "arrow" | "back" | "check" | "download" | "copy" | "info" | "clock" | "mail"; className?: string }) {
   const paths: Record<typeof name, ReactNode> = {
     lock: <><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></>,
@@ -25,18 +25,24 @@ export function RazorpayLogo() {
   return <Image src="/images/payments/razorpay.svg" alt="Razorpay" width={100} height={24} className={styles.razorpayLogo} />;
 }
 
-export function PaymentTrust() {
+export function PayPalLogo() {
+  return <Image src="/images/payments/paypal.svg" alt="PayPal" width={85} height={24} className={styles.razorpayLogo} />;
+}
+
+export function PaymentTrust({ provider = "razorpay" }: { provider?: "razorpay" | "paypal" | "bank" }) {
+  if (provider === "bank") return <div className={styles.trust}><div className={styles.encryptedMark}><CheckoutIcon name="lock"/><span>Secure connection<small>HTTPS encryption</small></span></div><p>Bank deposits are made through your bank and confirmed by Savo after funds arrive. No online gateway charge is collected here.</p></div>;
+  const paypal = provider === "paypal";
   return <div className={styles.trust}>
     <div className={styles.trustMarks} aria-label="Payment security and supported card networks">
       <div className={styles.encryptedMark}><CheckoutIcon name="lock"/><span>Secure connection<small>HTTPS encryption</small></span></div>
-      <a href="https://razorpay.com/docs/security/" target="_blank" rel="noopener noreferrer" className={styles.pciMark} aria-label="PCI DSS information from Razorpay (opens in a new tab)">
+      <a href={paypal ? "https://www.paypal.com/in/digital-wallet/security-and-protection?locale.x=en_GB" : "https://razorpay.com/docs/security/"} target="_blank" rel="noopener noreferrer" className={styles.pciMark} aria-label={paypal ? "PayPal security information (opens in a new tab)" : "PCI DSS information from Razorpay (opens in a new tab)"}>
         <CheckoutIcon name="lock"/>
-        <span>PCI DSS<small>Razorpay security</small></span>
+        {paypal ? <span>PayPal<small>Security information</small></span> : <span>PCI DSS<small>Razorpay security</small></span>}
       </a>
       <Image src="/images/payments/visa.svg" alt="Visa" width={49} height={22} className={styles.networkLogo}/>
       <Image src="/images/payments/mastercard.svg" alt="Mastercard" width={44} height={30} className={styles.networkLogo}/>
     </div>
-    <p>Online payments are handled by Razorpay. Card authentication is handled by your bank when required. Savo does not collect your card or bank-login details.</p>
+    <p>{paypal ? "Payments are approved on PayPal’s secure website. Card authentication, when required, is handled by PayPal and your card issuer. Savo does not receive your PayPal password or full card details. Visa and Mastercard funding options depend on your country, account and PayPal checkout eligibility." : "Online payments are handled by Razorpay. Card authentication is handled by your bank when required. Savo does not collect your card or bank-login details."}</p>
   </div>;
 }
 

@@ -69,7 +69,7 @@ export async function sendStepUpCodeAction(): Promise<void> {
   }
   if (!challenge) failed(new Error("Database unavailable. Try again."));
 
-  const sent = await sendMail(destination, stepUpCode(user.name, challenge.code, PURPOSE_LABEL), "hello", { templateKey: "stepUpCode" });
+  const sent = await sendMail(destination, stepUpCode(user.name, challenge.code, PURPOSE_LABEL), "hello", { templateKey: "stepUpCode", sensitive: true, requireAcceptance: true });
   if (!sent) {
     if (process.env.NODE_ENV === "development") {
       // Local review affordance only: production never runs with NODE_ENV=development,

@@ -5,7 +5,14 @@ import { prisma } from "@/lib/prisma";
 import { getClientUser } from "@/lib/client-auth";
 import { getRazorpayConfig } from "@/lib/razorpay-config";
 import { getBankDetails } from "@/lib/bank-details";
-import { checkoutTotals } from "@/lib/payment-fees";
+import { getPayPalConfig } from "@/lib/paypal-config";
+import { paypalCurrencyReason } from "@/lib/paypal-policy";
+import { gatewaySwitches } from "@/lib/payment-availability";
+import { paypalCheckoutEnabled, paypalLocalPreview } from "@/lib/paypal-runtime";
+import { paypalReceipt } from "@/lib/paypal-receipt";
+import { PayPalReturn } from "@/components/portal/paypal-return";
+import { createPayPalCheckoutAction } from "./paypal-actions";
+import { checkoutTotals, razorpayCurrencyAllowed } from "@/lib/payment-fees";
 import { invoicePaymentLink } from "@/lib/payment-links";
 import { verifiedReceiptPayment } from "@/lib/payment-receipt";
 import { fetchRazorpayPayment } from "@/lib/razorpay";
@@ -17,7 +24,7 @@ import { CopyValue, PaymentStatusRefresh, PrintPayment } from "@/components/port
 import { createRazorpayOrderAction, verifyCheckoutAction } from "./actions";
 import styles from "@/components/portal/checkout.module.css";
 
-export const metadata: Metadata = { title: "Pay invoice", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Pay invoice", robots: { index: false, follow: false }, referrer: "no-referrer" };
 
 /** Reference-pinned Operate surface: paired payment-method / amount panels,
  * bank review → instructions, then a document-style paid receipt. Savo's
@@ -25,12 +32,12 @@ export const metadata: Metadata = { title: "Pay invoice", robots: { index: false
  * No query flag can make an invoice paid; drafts and foreign IDs stay private. */
 export default async function PayInvoicePage({ params, searchParams }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ paid?: string; payError?: string }>;
+  searchParams: Promise<{ paid?: string; payError?: string; paypalCheckout?: string; paypalState?: string; token?: string; paypalCancelled?: string }>;
 }) {
   const client = await getClientUser();
   if (!client || !prisma) redirect("/portal");
   const { id } = await params;
-  const { paid, payError } = await searchParams;
+  const { paid, payError, paypalCheckout, paypalState, token, paypalCancelled } = await searchParams;
   const invoice = await prisma.invoice.findFirst({
     where: { id, clientId: client.id, status: { in: ["sent", "overdue", "paid", "cancelled"] } },
     include: { project: { where: { clientId: client.id }, select: { code: true, title: true } }, milestone: { where: { project: { clientId: client.id } }, select: { title: true, description: true } } },
@@ -46,11 +53,19 @@ export default async function PayInvoicePage({ params, searchParams }: {
   const gateway = payable && !invoice.paymentLink ? await getRazorpayConfig().catch(() => null) : null;
   const bank = payable && !invoice.paymentLink ? await getBankDetails().catch(() => null) : null;
   const totals = checkoutTotals(invoice);
+  const paypal = payable && !invoice.paymentLink ? await getPayPalConfig().catch(() => null) : null;
+  const paypalEnabled = paypal ? await paypalCheckoutEnabled(paypal) : false;
+  const localPreview = paypal?.mode === "live" && !paypalEnabled && await paypalLocalPreview();
+  const switches = await gatewaySwitches();
+  const razorpayVisible = switches.razorpay.enabled && (!!gateway || localPreview);
+  const paypalVisible = switches.paypal.enabled && !!paypal && (paypalEnabled || localPreview);
+  const paypalReason = paypalCurrencyReason(invoice.currency, invoice.amount) || (!paypal ? "PayPal is currently unavailable or not configured. Choose Razorpay or bank deposit." : !paypalEnabled ? "PayPal checkout is disabled for this host/environment. Use sandbox credentials locally; live payments require separate production approval and verification." : null);
+  const paypalPaid = verifiedPaid ? await paypalReceipt(invoice) : null;
   // Read only the safe provider facts for an already-paid invoice. Never
   // infer a historic charge using current fee rates, or expose raw payloads.
   const providerPayment = verifiedPaid && invoice.razorpayPaymentId
     ? await fetchRazorpayPayment(invoice.razorpayPaymentId).catch(() => null) : null;
-  const receipt = verifiedReceiptPayment(invoice, providerPayment);
+  const receipt = paypalPaid ? { total: paypalPaid.total, extra: 0, method: "PayPal" } : verifiedReceiptPayment(invoice, providerPayment);
   const workDescription = invoiceWorkDescription(invoice);
   const workItems = invoiceDocumentItems(invoice);
   const workDetails = workDescription || workItems.length ? <section aria-label="Work billed" className="my-5 min-w-0">
@@ -74,9 +89,10 @@ export default async function PayInvoicePage({ params, searchParams }: {
         <div><dt>Account email</dt><dd>{client.email}</dd></div>
         {invoice.project ? <div><dt>Project</dt><dd>{invoice.project.title}</dd></div> : null}
         <div><dt>Payment date</dt><dd>{fmtDate(invoice.paidAt)}</dd></div>
-        {invoice.razorpayPaymentId ? <div><dt>Payment reference</dt><dd><CopyValue value={invoice.razorpayPaymentId} label="payment reference"/></dd></div> : null}
-        {invoice.razorpayOrderId ? <div><dt>Order reference</dt><dd>{invoice.razorpayOrderId}</dd></div> : null}
-        {receipt?.method ? <div><dt>Payment method</dt><dd>{receipt.method} via Razorpay</dd></div> : null}
+        {paypalPaid || invoice.razorpayPaymentId ? <div><dt>Payment reference</dt><dd><CopyValue value={paypalPaid?.captureId || invoice.razorpayPaymentId!} label="payment reference"/></dd></div> : null}
+        {paypalPaid || invoice.razorpayOrderId ? <div><dt>Order reference</dt><dd>{paypalPaid?.orderId || invoice.razorpayOrderId}</dd></div> : null}
+        {receipt?.method ? <div><dt>Payment method</dt><dd>{paypalPaid ? "PayPal" : `${receipt.method} via Razorpay`}</dd></div> : null}
+        {paypalPaid ? <div><dt>PayPal merchant fee</dt><dd>Paid by Savo — not added to your invoice</dd></div> : null}
         <div><dt>Applied to invoice</dt><dd>{fmtMoney(invoice.amount)}</dd></div>
         {receipt && receipt.extra > 0 ? <div><dt>Processing fees &amp; taxes paid</dt><dd>{fmtMoney(receipt.extra)}</dd></div> : null}
         <div><dt>Outstanding balance</dt><dd>{fmtMoney(0)}</dd></div>
@@ -87,6 +103,8 @@ export default async function PayInvoicePage({ params, searchParams }: {
       <CheckoutHelp invoiceNumber={invoice.number}/>
     </article>
   </div>;
+
+  if (payable && paypalCheckout && paypalState) return <div className={styles.page}><PayPalReturn invoiceId={invoice.id} checkoutId={paypalCheckout} state={paypalState} orderId={token} cancel={paypalCancelled === "1"}/><CheckoutHelp invoiceNumber={invoice.number}/></div>;
 
   if (!payable || paid) return <div className={styles.page}>
     <Link className={styles.backLink} href="/portal/invoices"><CheckoutIcon name="back"/>All invoices</Link>
@@ -117,6 +135,7 @@ export default async function PayInvoicePage({ params, searchParams }: {
   return <div className={styles.page}>
     <Link className={styles.backLink} href="/portal/invoices"><CheckoutIcon name="back"/>All invoices</Link>
     <header className={styles.heading}><div><h1>Complete your payment</h1><p>Choose how you’d like to pay invoice {invoice.number}. Review the total before you continue.</p></div><span className={styles.secureLabel}><CheckoutIcon name="lock"/>Secure payment</span></header>
+    {paypalVisible && localPreview && !invoice.paymentLink ? <section className={styles.notice} aria-label="Local PayPal preview"><CheckoutIcon name="info"/><div><strong>Local checkout preview</strong><p>Select PayPal to review the layout, invoice amount and fee disclosure. Live PayPal payments are disabled on localhost; no PayPal payment can be started here.</p></div></section> : null}
     {payError ? <div className={styles.notice} role="alert"><CheckoutIcon name="info"/><div><strong>We couldn’t confirm your payment.</strong><p>{payError.slice(0, 500)} If you were charged, contact us with your payment reference before trying again.</p></div></div> : null}
     {invoice.paymentLink ? <div className={styles.checkoutGrid}><div>{details}<CheckoutHelp invoiceNumber={invoice.number}/></div><section className={styles.panel}>
       <div className={styles.panelHeading}><h2>Payment summary</h2><span className={styles.currency}>{invoice.currency}</span></div>
@@ -127,7 +146,7 @@ export default async function PayInvoicePage({ params, searchParams }: {
     </section></div> : <PaymentMethodChooser
       invoiceId={invoice.id} invoiceNumber={invoice.number} currencyLabel={invoice.currency}
       labels={{ subtotal: fmtMoney(totals.subtotal), fee: fmtMoney(totals.fee), gst: totals.gst > 0 ? fmtMoney(totals.gst) : null, total: fmtMoney(totals.total) }}
-      totals={totals} bank={bank} providerUnavailable={!gateway} createOrder={createRazorpayOrderAction} verifyPayment={verifyCheckoutAction} invoiceDetails={details}
+      totals={totals} bank={bank} razorpayVisible={razorpayVisible} paypalVisible={paypalVisible} providerUnavailable={!gateway || !razorpayCurrencyAllowed(invoice.currency)} paypal={{ available: !paypalReason, reason: paypalReason, mode: paypal?.mode ?? "sandbox" }} createPayPal={createPayPalCheckoutAction} createOrder={createRazorpayOrderAction} verifyPayment={verifyCheckoutAction} invoiceDetails={details}
     />}
   </div>;
 }

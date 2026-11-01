@@ -10,6 +10,11 @@ import { FormGuard } from "@/components/admin/form-guard";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { saveRazorpayConfigAction, verifyRazorpayConfigAction, clearRazorpayConfigAction, sendStepUpCodeAction, verifyStepUpCodeAction, lockStepUpAction, saveBankDetailsAction } from "./actions";
 import { getBankDetails } from "@/lib/bank-details";
+import { paypalStatus } from "@/lib/paypal-config";
+import { recentPayPalCheckouts } from "@/lib/paypal-receipt";
+import { gatewaySwitches } from "@/lib/payment-availability";
+import { GatewaySwitch } from "@/components/admin/gateway-switch";
+import { PayPalSettings } from "@/components/admin/paypal-settings";
 
 export const metadata: Metadata = { title: "Payment gateway" };
 
@@ -27,14 +32,14 @@ const webhookUrl = `${canonicalOrigin}/api/webhooks/razorpay`;
 export default async function PaymentsSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; verified?: string; cleared?: string; bankSaved?: string; otp?: string; e?: string }>;
+  searchParams: Promise<{ saved?: string; verified?: string; cleared?: string; bankSaved?: string; paypalSaved?: string; paypalVerified?: string; paypalCleared?: string; paypalReconciled?: string; availabilitySaved?: string; otp?: string; e?: string }>;
 }) {
   const user = await requireAdminPage("/admin/settings/payments");
   if (user.role !== "admin") {
     // requireAdminPage authorizes the section; payments is additionally admin-only.
     redirect("/admin?denied=Payment%20credentials%20are%20admin-only");
   }
-  const [{ saved, verified, cleared, bankSaved, otp, e }, granted] = await Promise.all([searchParams, stepUpVerified(user.id, STEP_UP_PURPOSE_PAYMENTS)]);
+  const [{ saved, verified, cleared, bankSaved, paypalSaved, paypalVerified, paypalCleared, paypalReconciled, availabilitySaved, otp, e }, granted] = await Promise.all([searchParams, stepUpVerified(user.id, STEP_UP_PURPOSE_PAYMENTS)]);
   // Fixed security inbox when configured; otherwise the signed-in admin's own email.
   let destination = user.email, fixedInbox = false;
   try {
@@ -103,23 +108,36 @@ export default async function PaymentsSettingsPage({
   }
 
   // ── Verified: full management surface. ──────────────────────────────────
+  const availability = await gatewaySwitches();
   const status = await razorpayStatus();
   const bank = await getBankDetails().catch(() => null);
+  const paypal = await paypalStatus().catch(() => null);
+  const paypalRecent = await recentPayPalCheckouts().catch(() => []);
 
   return (
     <div className="max-w-xl">
       <BackLink href="/admin/settings" label="Site settings" />
       <PageHeader
-        title="Payment gateway — Razorpay"
-        description="Credentials used to create payment links for client invoices and to verify payment webhooks. Secrets are encrypted at rest and never displayed again after saving."
+        title="Payment gateways"
+        description="Manage Razorpay, PayPal and bank deposit in checkout order. Credentials are encrypted at rest and protected by email verification; stored secrets are never displayed again."
       />
 
+      {availabilitySaved ? <Notice>Gateway availability updated. Existing invoices use the current available methods; credentials and payment history are retained.</Notice> : null}
+      {!availability.readable ? <Notice kind="alert">Gateway availability could not be loaded. New portal payments are blocked until settings are available again.</Notice> : null}
+      <p className="t-caption mb-5 text-muted">Switches control portal checkout, including older unpaid invoices. Already-started payments can still be confirmed. External payment links are managed separately in the provider account.</p>
+      {paypalReconciled ? <Notice>PayPal evidence checked. Only completed, matching captures can mark an invoice paid; pending/review states remain unchanged.</Notice> : null}
+      {paypalSaved ? <Notice>PayPal credentials saved and encrypted. Verify the connection, then test in sandbox.</Notice> : null}
+      {paypalVerified ? <Notice>PayPal accepted OAuth authentication. Complete sandbox checkout testing before enabling live payments.</Notice> : null}
+      {paypalCleared ? <Notice>PayPal credentials removed. Payment records were retained.</Notice> : null}
       {saved ? <Notice>Razorpay credentials saved and encrypted. Use “Verify connection” to test them against Razorpay.</Notice> : null}
       {verified ? <Notice>Razorpay accepted the credentials. The gateway is ready.</Notice> : null}
       {cleared ? <Notice>Stored Razorpay credentials were removed.</Notice> : null}
       {bankSaved ? <Notice>Bank transfer details saved. The Bank Deposit option on the client pay page is updated.</Notice> : null}
       {e ? <Notice kind="alert">{decodeURIComponent(e)}</Notice> : null}
 
+      <nav aria-label="Payment settings sections" className="mb-6 flex flex-wrap gap-3 text-sm"><a href="#razorpay" className="inline-flex min-h-11 items-center underline">1. Razorpay</a><a href="#paypal" className="inline-flex min-h-11 items-center underline">2. PayPal</a><a href="#bank" className="inline-flex min-h-11 items-center underline">3. Bank deposit</a></nav>
+      <h2 id="razorpay" className="mb-4 scroll-mt-24 text-xl font-semibold">Razorpay</h2>
+      {availability.readable ? <GatewaySwitch provider="razorpay" state={availability.razorpay}/> : null}
       {/* ── Status ─────────────────────────────────────────────── */}
       <div className="adm-card mb-6 p-5 sm:p-6">
         <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -254,6 +272,15 @@ export default async function PaymentsSettingsPage({
         </div>
       </FormGuard>
 
+      <FormGuard action={verifyRazorpayConfigAction} className="adm-card mt-6 flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
+        <div><h3 className="text-sm font-semibold">Razorpay connection</h3><p className="t-caption mt-1 text-muted">Verify the saved Razorpay credentials after every change.</p></div>
+        <SubmitButton label="Verify Razorpay connection" pendingLabel="Contacting Razorpay…"/>
+      </FormGuard>
+      <div className="adm-card mt-6 p-5 sm:p-6"><h3 className="mb-2 text-sm font-semibold">Razorpay webhook</h3><code className="block break-all rounded-lg border border-border bg-navy/[0.03] px-4 py-3 font-mono text-[0.8125rem]">{webhookUrl}</code><p className="t-caption mt-3 text-muted">Add this endpoint in the Razorpay dashboard using the same saved webhook secret. Subscribe to payment.captured and payment_link.paid. Only verified events can confirm an invoice.</p></div>
+      {status.configured && status.source === "database" ? <div className="mt-6"><DangerZone title="Remove Razorpay credentials"><form action={clearRazorpayConfigAction}><ConfirmDialog label="Remove Razorpay credentials" title="Remove stored Razorpay credentials?" description="Razorpay payment creation and webhook verification stop. Existing invoice and payment records are retained." confirmLabel="Remove" tone="danger"/></form></DangerZone></div> : null}
+
+      {paypal ? <PayPalSettings availability={availability.readable ? availability.paypal : undefined} status={paypal} recent={paypalRecent} webhookUrl={`${canonicalOrigin}/api/webhooks/paypal`}/> : <p id="paypal" role="alert" className="mt-6 text-sm text-error">PayPal configuration could not be read. Check local schema and encrypted secret storage; no fallback credentials are used.</p>}
+      <h2 id="bank" className="mt-8 scroll-mt-24 text-xl font-semibold">Bank deposit</h2>
       {/* ── Bank transfer details (manual payment option) ───────── */}
       <FormGuard action={saveBankDetailsAction} className="adm-card mt-6 space-y-5 p-5 sm:p-6">
         <div>
@@ -285,28 +312,6 @@ export default async function PaymentsSettingsPage({
         <SubmitButton label="Save bank details" pendingLabel="Saving…" />
       </FormGuard>
 
-      {/* ── Verify ─────────────────────────────────────────────── */}
-      <FormGuard action={verifyRazorpayConfigAction} className="adm-card mt-6 flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
-        <div>
-          <p className="adm-label">Connection test</p>
-          <p className="t-caption mt-1 text-muted">
-            Calls Razorpay with the saved credentials and records the result. Verify after every change.
-          </p>
-        </div>
-        <SubmitButton label="Verify connection" pendingLabel="Contacting Razorpay…" />
-      </FormGuard>
-
-      {/* ── Webhook setup ──────────────────────────────────────── */}
-      <div className="adm-card mt-6 p-5 sm:p-6">
-        <p className="adm-label mb-2">Webhook endpoint (paste into the Razorpay dashboard)</p>
-        <code className="block break-all rounded-lg border border-border bg-navy/[0.03] px-4 py-3 font-mono text-[0.8125rem]">{webhookUrl}</code>
-        <ul className="t-caption mt-3 list-disc space-y-1.5 pl-5 text-muted">
-          <li>In Razorpay → Settings → Webhooks, add this URL and set the same secret you saved above.</li>
-          <li>Subscribe to the <span className="font-mono">payment_link.paid</span> and <span className="font-mono">payment_link.cancelled</span> events.</li>
-          <li>The endpoint is inactive until the webhook secret is saved and the payment-link feature is live.</li>
-        </ul>
-      </div>
-
       {/* ── Session controls + danger zone ─────────────────────── */}
       <FormGuard action={lockStepUpAction} className="adm-card mt-6 flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
         <div>
@@ -318,21 +323,6 @@ export default async function PaymentsSettingsPage({
         <SubmitButton label="Lock now" pendingLabel="Locking…" compact />
       </FormGuard>
 
-      {status.configured && status.source === "database" ? (
-        <div className="mt-6">
-          <DangerZone title="Remove stored credentials">
-            <form action={clearRazorpayConfigAction}>
-              <ConfirmDialog
-                label="Remove Razorpay credentials"
-                title="Remove stored credentials?"
-                description="Payment links and webhook verification stop working immediately. Invoices keep their records; nothing is deleted from Razorpay."
-                confirmLabel="Remove"
-                tone="danger"
-              />
-            </form>
-          </DangerZone>
-        </div>
-      ) : null}
     </div>
   );
 }

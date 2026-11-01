@@ -2227,6 +2227,38 @@ performed inline, not independently; no physical-device or live-card claim.
 The 72 detector advisories concern older global design records; no global
 identity rewrite or unrelated artifact migration is part of this override.
 
+## PayPal checkout extension — owner-approved production release
+
+The existing client checkout keeps its neutral/red paired-panel composition,
+invoice truth, native radios, method/summary reflow and original Razorpay fee
+policy. Enabled/ready method order is pinned: Razorpay first/default, PayPal
+second, bank third; a hidden method never remains selected. PayPal is identified by its real product name rather than a fabricated
+logo or certification seal. Its hosted approval adds no third-party SDK/CSP
+expansion. Sandbox and unavailable currency states are explicit; bank transfer
+instructions remain a separate, non-paid outcome.
+
+The PayPal summary shows the invoice's original currency/amount and identifies
+merchant fees as Savo-paid, not a guessed buyer surcharge. Actual provider fee/net
+facts belong in the protected admin confirmation history; receipts use saved
+verified evidence. No FX or INR bank-credit amount is invented. The separate
+Razorpay/PayPal trust copy must not claim that Razorpay processes PayPal payments.
+
+Payment settings retain the admin world and existing step-up boundary. Group
+credentials, connection, webhook and removal controls together per provider,
+then bank details; section anchors make the long form navigable. Each provider
+has an independent On/Off switch with a visible track/thumb, text state, 44px
+native-button target, pending feedback and keyboard semantics. Off hides the
+method and blocks new checkout requests while preserving credentials and
+completed-payment reconciliation. State changes require fresh email step-up;
+readiness/live-host safeguards are independent. No extra handling/service fee
+was introduced. Inputs never
+repopulate secrets, identifiers are masked, and sandbox/live labels stay visible.
+The owner authorized production release on 2026-11-01. Initial production PayPal
+stays Off until its protected Live credential/webhook setup is complete; never
+call an unconfigured gateway live or bypass the email-verification boundary.
+Third-party analytics must not load on private payment/auth returns or receive
+query/referrer secrets. Source/behavior and verification limits: `docs/PAYPAL.md`.
+
 ## Portal entrance override — owner-supplied split-screen reference
 
 Applies only to `/portal` and `/employee-portal`, `entrance.tsx`,

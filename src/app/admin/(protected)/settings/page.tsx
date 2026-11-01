@@ -137,7 +137,7 @@ export default async function SettingsPage({
 
       <div className="adm-card mt-6 flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
         <div>
-          <p className="adm-label">Payment gateway — Razorpay</p>
+          <p className="adm-label">Payment gateways — Razorpay & PayPal</p>
           <p className="t-caption mt-1 text-muted">
             API keys and webhook secret for client-invoice payment links. Admin-only; secrets are
             encrypted at rest.

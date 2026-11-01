@@ -40,7 +40,7 @@ export default async function PortalTransactionsPage({ searchParams }: { searchP
     </header>
     <form action="/portal/transactions" method="get" className={styles.filters} aria-label="Filter transactions" key={`${filters.q}:${filters.source}:${filters.currency}`}>
       <div className={styles.search}><label htmlFor="transaction-search">Search transactions</label><input type="search" name="q" id="transaction-search" defaultValue={filters.q} maxLength={160} placeholder="Invoice, payment reference or project" /></div>
-      <div><label htmlFor="transaction-source">Payment source</label><select name="source" id="transaction-source" defaultValue={filters.source}><option value="all">All payments</option><option value="razorpay">Razorpay</option><option value="recorded">Manually recorded</option></select></div>
+      <div><label htmlFor="transaction-source">Payment source</label><select name="source" id="transaction-source" defaultValue={filters.source}><option value="all">All payments</option><option value="razorpay">Razorpay</option><option value="paypal">PayPal</option><option value="recorded">Manually recorded</option></select></div>
       <div><label htmlFor="transaction-currency">Currency</label><select name="currency" id="transaction-currency" defaultValue={filters.currency}><option value="all">All</option>{!currencies.some(row => row.currency === filters.currency) && filters.currency !== "all" ? <option value={filters.currency}>{filters.currency}</option> : null}{currencies.map(row => <option key={row.currency} value={row.currency}>{row.currency}</option>)}</select></div>
       <button type="submit">Apply filters</button>
     </form>

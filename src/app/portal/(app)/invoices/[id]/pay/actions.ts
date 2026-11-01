@@ -8,10 +8,11 @@ import { audit } from "@/lib/audit";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
+import { gatewayEnabled } from "@/lib/payment-availability";
 import { getRazorpayConfig } from "@/lib/razorpay-config";
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { verifyRazorpayCheckout } from "@/lib/razorpay-checkout";
-import { checkoutTotals } from "@/lib/payment-fees";
+import { checkoutTotals, razorpayCurrencyAllowed } from "@/lib/payment-fees";
 import { recordInvoicePaid } from "@/lib/invoice-payments";
 import { projectTransaction, projectEmails, revalidateProjectViews } from "@/lib/project-service";
 
@@ -47,7 +48,12 @@ export async function createRazorpayOrderAction(invoiceId: string): Promise<Chec
   if (!invoice) return { ok: false, message: "Invoice not found." };
   if (!["sent", "overdue"].includes(invoice.status)) return { ok: false, message: "This invoice is not open for payment." };
   if (invoice.paymentLink) return { ok: false, message: "This invoice is paid through a provider link. Use the Pay now action on the invoice." };
+  if (!razorpayCurrencyAllowed(invoice.currency)) return { ok: false, message: "Use PayPal or bank deposit for this invoice currency. Razorpay's existing currency configuration is unchanged." };
   if (!Number.isSafeInteger(invoice.amount) || invoice.amount <= 0) return { ok: false, message: "This invoice has no payable amount." };
+  // An uncertain PayPal capture must be reconciled, not followed by a second
+  // charge through another provider. Ordinary unapproved orders do not block.
+  if (prisma.payPalCheckout && await prisma.payPalCheckout.findFirst({ where: { invoiceId: invoice.id, status: { in: ["capturing", "pending", "uncertain", "review"] } }, select: { id: true } })) return { ok: false, message: "A PayPal payment is awaiting confirmation or review. Check its status before starting another payment." };
+  if (!(await gatewayEnabled("razorpay"))) return { ok: false, message: "Razorpay is currently disabled. Refresh to choose an available payment method." };
   const config = await getRazorpayConfig();
   if (!config) return { ok: false, message: "Online payment is not available right now. Please contact us." };
   // The gateway charges subtotal + processing fee (+ GST on the fee for INR);

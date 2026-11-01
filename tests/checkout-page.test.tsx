@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { verifiedReceiptPayment } from "@/lib/payment-receipt";
 
 const m = vi.hoisted(() => ({ client: vi.fn(), invoice: vi.fn(), gateway: vi.fn(), bank: vi.fn(), payment: vi.fn() }));
+vi.mock("@/lib/payment-availability", () => ({ gatewaySwitches: async () => ({ razorpay: { enabled: true }, paypal: { enabled: true }, readable: true }) }));
 vi.mock("@/lib/client-auth", () => ({ getClientUser: m.client }));
 vi.mock("@/lib/prisma", () => ({ prisma: { invoice: { findFirst: m.invoice } } }));
 vi.mock("@/lib/razorpay-config", () => ({ getRazorpayConfig: m.gateway }));

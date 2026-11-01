@@ -1,5 +1,5 @@
 /** One project currency; integer paise/cents throughout. No currency mixing. */
-export const PROJECT_CURRENCIES = ["INR", "USD", "CHF", "EUR", "GBP", "AED"] as const;
+export const PROJECT_CURRENCIES = ["INR", "USD", "CHF", "EUR", "GBP", "AED", "AUD", "CAD", "CZK", "DKK", "HKD", "HUF", "ILS", "JPY", "MXN", "NOK", "NZD", "PHP", "PLN", "SEK", "SGD", "THB", "TWD", "BRL", "CNY", "MYR"] as const;
 export const PROJECT_STATUSES = ["planning", "in_progress", "review", "delivered", "paused", "cancelled"] as const;
 export const PROJECT_STATUS_LABELS: Record<string, string> = {
   planning: "Planning", in_progress: "In progress", review: "In review", delivered: "Completed", paused: "Paused", cancelled: "Cancelled",

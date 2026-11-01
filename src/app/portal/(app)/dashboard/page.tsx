@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getClientUser } from "@/lib/client-auth";
 import { money } from "@/components/portal/ui";
 import { InvoicePayButton } from "@/components/portal/invoice-pay-button";
-import { getRazorpayConfig } from "@/lib/razorpay-config";
+import { portalGatewayAvailable } from "@/lib/payment-gateways";
 import { invoicePayTarget } from "@/lib/payment-targets";
 import {
   EmptyState,
@@ -22,9 +22,9 @@ import styles from "@/components/portal/portal.module.css";
 export const metadata: Metadata = { title: "Overview" };
 export default async function PortalDashboard() {
   const client = await getClientUser();
-  const gatewayOn = !!(await getRazorpayConfig().catch(() => null));
-  const payTargetFor = (invoice: { id: string; status: string; amount: number; paymentLink?: string | null }) => invoicePayTarget(invoice, gatewayOn);
   if (!client || !prisma) redirect("/portal");
+  const gatewayOn = await portalGatewayAvailable({ localPreview: true });
+  const payTargetFor = (invoice: { id: string; status: string; amount: number; paymentLink?: string | null }) => invoicePayTarget(invoice, gatewayOn);
   const [projects, invoices] = await Promise.all([
     prisma.clientProject.findMany({
       where: { clientId: client.id, archivedAt: null, status: { notIn: ["cancelled"] } },

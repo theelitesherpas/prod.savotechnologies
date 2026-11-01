@@ -4,7 +4,9 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { CheckoutStart, CheckoutVerify } from "@/app/portal/(app)/invoices/[id]/pay/types";
 import type { BankDetails } from "@/lib/bank-details";
-import { CheckoutHelp, CheckoutIcon, PaymentTrust, RazorpayLogo } from "./checkout-ui";
+import type { PayPalStart } from "@/lib/paypal-policy";
+import { razorpayCurrencyAllowed } from "@/lib/payment-fees";
+import { CheckoutHelp, CheckoutIcon, PaymentTrust, RazorpayLogo, PayPalLogo } from "./checkout-ui";
 import { CopyValue, PrintPayment } from "./checkout-actions";
 import styles from "./checkout.module.css";
 
@@ -50,16 +52,21 @@ function FeeInfo({ text }: { text: string }) {
   </span>;
 }
 
-export function PaymentMethodChooser({ invoiceId, invoiceNumber, currencyLabel, labels, totals, bank, providerUnavailable, createOrder, verifyPayment, invoiceDetails }: {
+export function PaymentMethodChooser({ invoiceId, invoiceNumber, currencyLabel, labels, totals, bank, providerUnavailable, createOrder, verifyPayment, invoiceDetails, paypal, createPayPal, razorpayVisible = true, paypalVisible = true }: {
   invoiceId: string; invoiceNumber: string; currencyLabel: string;
   labels: { subtotal: string; fee: string; gst: string | null; total: string };
   totals: { subtotal: number; feeRate: number; fee: number; gstRate: number; gst: number; total: number; domestic: boolean };
   bank: BankDetails | null; providerUnavailable?: boolean; invoiceDetails?: ReactNode;
+  razorpayVisible?: boolean; paypalVisible?: boolean;
+  paypal?: { available: boolean; reason: string | null; mode: "sandbox" | "live" };
+  createPayPal?: (invoiceId: string) => Promise<PayPalStart>;
   createOrder: (invoiceId: string) => Promise<CheckoutStart>;
   verifyPayment: (input: { invoiceId: string; orderId: string; paymentId: string; signature: string }) => Promise<CheckoutVerify>;
 }) {
   const router = useRouter();
-  const [method, setMethod] = useState<"online" | "bank">("online");
+  const [selectedMethod, setMethod] = useState<"online" | "paypal" | "bank">("online");
+  const method = selectedMethod === "online" && !razorpayVisible ? (paypalVisible ? "paypal" : "bank") : selectedMethod === "paypal" && !paypalVisible ? (razorpayVisible ? "online" : "bank") : selectedMethod;
+  const methodCount = 1 + Number(razorpayVisible) + Number(paypalVisible);
   const [instructions, setInstructions] = useState(false);
   const [scriptState, setScriptState] = useState<"loading" | "ready" | "failed">("loading");
   const [busy, setBusy] = useState<"starting" | "verifying" | null>(null);
@@ -67,14 +74,15 @@ export function PaymentMethodChooser({ invoiceId, invoiceNumber, currencyLabel, 
   const inFlight = useRef(false);
   const confirming = useRef(false);
   const instructionHeading = useRef<HTMLHeadingElement>(null);
+  const razorpaySupported = razorpayCurrencyAllowed(currencyLabel);
   const bankReady = !!(bank?.accountName && bank?.accountNumber && bank?.bankName && (currencyLabel === "INR" ? bank?.ifsc : bank?.swift));
 
   useEffect(() => {
-    if (providerUnavailable) return;
+    if (providerUnavailable || !razorpayVisible) return;
     let active = true;
     void loadCheckout().then(() => { if (active) setScriptState("ready"); }).catch(() => { if (active) setScriptState("failed"); });
     return () => { active = false; };
-  }, [providerUnavailable]);
+  }, [providerUnavailable, razorpayVisible]);
   useEffect(() => { if (instructions) { instructionHeading.current?.focus(); instructionHeading.current?.scrollIntoView({ block: "start" }); } }, [instructions]);
 
   const retryScript = () => {
@@ -109,7 +117,18 @@ export function PaymentMethodChooser({ invoiceId, invoiceNumber, currencyLabel, 
       });
       checkout.on("payment.failed", () => { setError("The payment attempt was not completed. If your bank shows a debit, check the invoice status or contact us before trying again."); release(); });
       checkout.open();
-    } catch { setError("We couldn’t open checkout. Please try again, or choose bank deposit."); release(); }
+    } catch { setError("We couldn’t open checkout. Please try again, or choose PayPal or bank deposit."); release(); }
+  };
+
+  const startPayPal = async () => {
+    if (inFlight.current || !createPayPal || !paypal?.available) return;
+    inFlight.current = true; setBusy("starting"); setError(null);
+    try {
+      const result = await createPayPal(invoiceId);
+      if (result.ok) { window.location.assign(result.approvalUrl); return; }
+      setError(result.message);
+    } catch { setError("PayPal could not open. Check your invoice status before trying again."); }
+    inFlight.current = false; setBusy(null);
   };
 
   if (instructions && bank && bankReady) {
@@ -139,12 +158,16 @@ export function PaymentMethodChooser({ invoiceId, invoiceNumber, currencyLabel, 
   return <div className={styles.checkoutGrid}>
     <div className={styles.methodColumn}>
       <section className={styles.panel} aria-labelledby="payment-method-title">
-        <div className={styles.panelHeading}><h2 id="payment-method-title">Select payment method</h2><span>Two ways to pay</span></div>
+        <div className={styles.panelHeading}><h2 id="payment-method-title">Select payment method</h2><span>{methodCount === 3 ? "Three ways to pay" : methodCount === 2 ? "Two ways to pay" : "One way to pay"}</span></div>
         <fieldset className={styles.methodList} disabled={!!busy}><legend className={styles.srOnly}>Payment method</legend>
-          <label className={`${styles.methodOption} ${method === "online" ? styles.selected : ""}`}>
+          {razorpayVisible ? <label className={`${styles.methodOption} ${method === "online" ? styles.selected : ""}`}>
             <span className={styles.methodTop}><input type="radio" name="payment-method" value="online" checked={method === "online"} onChange={() => { setMethod("online"); setError(null); }}/><span className={styles.methodName}>Pay Online</span><RazorpayLogo/></span>
-            <span className={styles.methodDescription}>Cards, UPI, netbanking and wallets</span><span className={styles.methodDetail}>Pay securely and get an instant confirmation after verification.</span>
-          </label>
+            <span className={styles.methodDescription}>Cards, UPI, Netbanking and Wallets</span><span className={styles.methodDetail}>Pay securely and get an instant confirmation after verification.</span>
+          </label> : null}
+          {paypalVisible ? <label className={`${styles.methodOption} ${method === "paypal" ? styles.selected : ""}`}>
+            <span className={styles.methodTop}><input type="radio" name="payment-method" value="paypal" checked={method === "paypal"} onChange={() => { setMethod("paypal"); setError(null); }}/><span className={styles.methodName}>PayPal</span><PayPalLogo/></span>
+            <span className={styles.methodDescription}>PayPal account · International Payments</span><span className={styles.methodDetail}>{paypal?.mode === "sandbox" ? "Sandbox testing — no real payment." : "Approve on PayPal, then return for verified confirmation."}</span>
+          </label> : null}
           <label className={`${styles.methodOption} ${method === "bank" ? styles.selected : ""}`}>
             <span className={styles.methodTop}><input type="radio" name="payment-method" value="bank" checked={method === "bank"} onChange={() => { setMethod("bank"); setError(null); }}/><span className={styles.methodName}>Bank Deposit</span><CheckoutIcon name="bank" className={styles.bankIcon}/></span>
             <span className={styles.methodDescription}>{currencyLabel === "INR" ? "NEFT, RTGS or IMPS" : "International bank transfer"}</span><span className={styles.methodDetail}>Transfer directly to our bank. Confirmed manually after receipt.</span>
@@ -161,25 +184,29 @@ export function PaymentMethodChooser({ invoiceId, invoiceNumber, currencyLabel, 
         <div className={styles.invoiceReference}><span>Invoice</span><strong>{invoiceNumber}</strong></div>
         <dl className={styles.feeRows}>
           <div><dt>Subtotal</dt><dd>{labels.subtotal}</dd></div>
-          {method === "online" ? <>
+          {method === "online" && !razorpaySupported ? <div><dt>Razorpay quote</dt><dd>Unavailable for this currency</dd></div> : method === "online" ? <>
             <div><dt>Processing fee <FeeInfo text={`Calculated as ${Math.round(totals.feeRate * 100)}% of the invoice amount.`}/></dt><dd>{labels.fee}</dd></div>
             {labels.gst ? <div><dt>GST on processing fee <FeeInfo text={`GST is charged at ${Math.round(totals.gstRate * 100)}% on the processing fee.`}/></dt><dd>{labels.gst}</dd></div> : null}
-          </> : <div><dt>Online processing fee</dt><dd>Not applicable</dd></div>}
+          </> : method === "paypal" ? <div><dt>PayPal fee <FeeInfo text="PayPal deducts its actual merchant fee from Savo's proceeds. No PayPal surcharge is added to your invoice. Any buyer currency-conversion cost is shown by PayPal before approval."/></dt><dd>Paid by Savo</dd></div> : <div><dt>Online processing fee</dt><dd>Not applicable</dd></div>}
         </dl>
-        <div className={styles.total}><span>{method === "online" ? "Total to pay" : "Amount to transfer"}<small>{method === "online" ? "Including applicable fees" : "Invoice amount only"}</small></span><strong>{method === "online" ? labels.total : labels.subtotal}<small>{currencyLabel}</small></strong></div>
+        <div className={styles.total}><span>{method !== "bank" ? "Total to pay" : "Amount to transfer"}<small>{method === "online" && !razorpaySupported ? "Choose PayPal or bank deposit" : method === "online" ? "Including applicable fees" : method === "paypal" ? "No added PayPal surcharge" : "Invoice amount only"}</small></span><strong>{method === "online" && razorpaySupported ? labels.total : labels.subtotal}<small>{currencyLabel}</small></strong></div>
         {method === "online" ? <>
           <button type="button" className={styles.primary} onClick={() => void startPayment()} disabled={!!busy || scriptState !== "ready" || providerUnavailable}>
-            <CheckoutIcon name="lock"/>{busy === "verifying" ? "Verifying your payment…" : busy ? "Opening checkout…" : scriptState === "loading" ? "Loading secure checkout…" : scriptState === "failed" ? "Checkout unavailable" : `Pay ${labels.total} securely`}<CheckoutIcon name="arrow"/>
+            <CheckoutIcon name="lock"/>{providerUnavailable ? "Razorpay unavailable" : busy === "verifying" ? "Verifying your payment…" : busy ? "Opening checkout…" : scriptState === "loading" ? "Loading secure checkout…" : scriptState === "failed" ? "Checkout unavailable" : `Pay ${labels.total} securely`}<CheckoutIcon name="arrow"/>
           </button>
-          {scriptState === "failed" ? <div className={styles.inlineError} role="alert">Checkout couldn’t load. <button type="button" onClick={retryScript}>Try loading again</button> or choose Bank Deposit.</div> : null}
-          {providerUnavailable ? <p className={styles.inlineError}>Online payment is temporarily unavailable. Choose Bank Deposit or contact our team.</p> : null}
+          {scriptState === "failed" ? <div className={styles.inlineError} role="alert">Checkout couldn’t load. <button type="button" onClick={retryScript}>Try loading again</button> or choose PayPal or Bank Deposit.</div> : null}
+          {providerUnavailable ? <p className={styles.inlineError}>Razorpay is temporarily unavailable. Choose PayPal or Bank Deposit, or contact our team.</p> : null}
           <p className={styles.actionNote}>You’ll return here after checkout. Your invoice is marked paid only after we verify the payment.</p>
+        </> : method === "paypal" ? <>
+          <button type="button" className={styles.primary} onClick={() => void startPayPal()} disabled={!!busy || !paypal?.available || !createPayPal}><CheckoutIcon name="lock"/>{busy ? "Opening PayPal…" : "Continue to PayPal"}<CheckoutIcon name="arrow"/></button>
+          {!paypal?.available ? <p className={styles.inlineError}>{paypal?.reason || "PayPal is not configured yet. Choose Razorpay or bank deposit."}</p> : null}
+          <p className={styles.actionNote}>PayPal India accepts permitted international payments. We do not convert the invoice to INR; PayPal handles applicable conversion and INR withdrawal. The invoice is paid only after a verified capture.</p>
         </> : <>
           {bankReady ? <button type="button" className={styles.primary} onClick={() => setInstructions(true)}>Get bank deposit instructions<CheckoutIcon name="arrow"/></button> : <a className={styles.primary} href={`mailto:hello@savotechnologies.com?subject=${encodeURIComponent(`Bank details for ${invoiceNumber}`)}`}>Request bank details<CheckoutIcon name="arrow"/></a>}
           <p className={styles.actionNote}>No charge is made by continuing. Bank deposits are verified by our team before the invoice is marked paid.</p>
         </>}
         {error ? <p className={styles.inlineError} role="alert">{error}</p> : null}
-        <PaymentTrust/>
+        <PaymentTrust provider={method === "online" ? "razorpay" : method === "paypal" ? "paypal" : "bank"}/>
       </div>
     </section>
   </div>;
