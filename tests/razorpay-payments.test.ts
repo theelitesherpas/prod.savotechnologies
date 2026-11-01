@@ -21,7 +21,8 @@ const db = vi.hoisted(() => ({
 const auth = vi.hoisted(() => ({ requireAdmin: vi.fn(), getAdminUser: vi.fn(), getClientUser: vi.fn() }));
 const auditLog = vi.hoisted(() => ({ audit: vi.fn() }));
 const gateway = vi.hoisted(() => ({ createRazorpayOrder: vi.fn(), fetchRazorpayPayment: vi.fn(), fetchRazorpayOrderPayments: vi.fn(), createRazorpayPaymentLink: vi.fn(), fetchRazorpayPaymentLink: vi.fn(), cancelRazorpayPaymentLink: vi.fn() }));
-const config = vi.hoisted(() => ({ getRazorpayConfig: vi.fn() }));
+const config = vi.hoisted(() => ({ getRazorpayConfig: vi.fn(), enabled: vi.fn() }));
+vi.mock("@/lib/payment-availability", () => ({ gatewayEnabled: config.enabled }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: db }));
 vi.mock("@/lib/auth", () => ({ requireAdmin: auth.requireAdmin, getAdminUser: auth.getAdminUser }));
@@ -48,6 +49,7 @@ const invoice = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  config.enabled.mockResolvedValue(true);
   for (const key of ["__savoRateLimiterV2"]) delete (globalThis as Record<string, unknown>)[key];
   auth.requireAdmin.mockResolvedValue(ADMIN);
   auth.getAdminUser.mockResolvedValue(ADMIN);
@@ -153,6 +155,10 @@ describe("verifyRazorpayCheckout", () => {
 describe("portal checkout actions", () => {
   const actions = () => freshModule("@/app/portal/(app)/invoices/[id]/pay/actions") as Promise<typeof import("@/app/portal/(app)/invoices/[id]/pay/actions")>;
 
+  it("blocks a stale or forged start after Razorpay is disabled", async () => {
+    const a = await freshModule("@/app/portal/(app)/invoices/[id]/pay/actions"); db.invoice.findFirst.mockResolvedValue({ ...invoice }); config.enabled.mockResolvedValue(false);
+    expect(await a.createRazorpayOrderAction(invoice.id)).toMatchObject({ ok: false, message: expect.stringContaining("disabled") }); expect(gateway.createRazorpayOrder).not.toHaveBeenCalled();
+  });
   it("creates an order server-side from the stored amount, bound to the invoice", async () => {
     const a = await actions();
     db.invoice.findFirst.mockResolvedValue({ ...invoice });
@@ -187,7 +193,8 @@ describe("portal checkout actions", () => {
     expect(gateway.createRazorpayOrder).toHaveBeenCalledTimes(12);
   });
 
-  it("verifies a completed checkout and records payment exactly once", async () => {
+  it("verifies a completed checkout even after disablement and records payment exactly once", async () => {
+    config.enabled.mockResolvedValue(false);
     const a = await actions();
     const orderId = "order_NEWORDER12345", paymentId = "pay_PAID12345678";
     db.invoice.findFirst.mockResolvedValue({ ...invoice, razorpayOrderId: orderId });

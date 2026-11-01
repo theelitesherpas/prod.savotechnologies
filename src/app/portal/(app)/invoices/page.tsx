@@ -5,7 +5,7 @@ import { getClientUser } from "@/lib/client-auth";
 import { money } from "@/components/portal/ui";
 import { invoiceTotals, PortalIcon } from "@/components/portal/workspace-ui";
 import { invoiceRecord } from "@/components/portal/records";
-import { getRazorpayConfig } from "@/lib/razorpay-config";
+import { portalGatewayAvailable } from "@/lib/payment-gateways";
 import { InvoiceBrowser } from "@/components/portal/record-browsers";
 import styles from "@/components/portal/portal.module.css";
 import { invoicePaymentLink } from "@/lib/payment-links";
@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "Invoices" };
 export default async function PortalInvoicesPage() {
   const client = await getClientUser();
   if (!client || !prisma) redirect("/portal");
-  const gatewayOn = !!(await getRazorpayConfig().catch(() => null));
+  const gatewayOn = await portalGatewayAvailable({ localPreview: true });
   const invoices = await prisma.invoice.findMany({
     where: { clientId: client.id, status: { notIn: ["draft"] } },
     orderBy: { issuedAt: "desc" },

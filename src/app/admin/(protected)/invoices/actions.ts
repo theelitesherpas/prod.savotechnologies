@@ -17,7 +17,7 @@ import { sendManualInvoiceReminder } from "@/lib/invoice-reminders";
 import type { ReminderResult } from "@/lib/reminder-policy";
 import { recordPaymentTransaction } from "@/lib/payment-transactions";
 import { cancelRazorpayPaymentLink, fetchRazorpayPaymentLink, fetchRazorpayOrderPayments } from "@/lib/razorpay";
-import { getRazorpayConfig } from "@/lib/razorpay-config";
+import { portalGatewayAvailable } from "@/lib/payment-gateways";
 import { portalPayPath } from "@/lib/payment-targets";
 import { checkoutTotals } from "@/lib/payment-fees";
 import { absoluteUrl } from "@/lib/env";
@@ -100,7 +100,7 @@ export async function createInvoiceAction(form: FormData): Promise<void> {
     // Pay-now target for the email: a manual link always wins; otherwise the
     // portal checkout page when the gateway is configured. No provider call
     // happens at issuance — orders are created on demand when the client pays.
-    const gatewayOn = !!(await getRazorpayConfig().catch(() => null));
+    const gatewayOn = await portalGatewayAvailable();
     const wantsCheckout = !d.paymentLink && gatewayOn && ["sent", "overdue"].includes(d.status) && d.amount > 0;
     events = await projectTransaction(async tx => {
       const { client, milestone } = await owner(tx, d);
@@ -144,7 +144,7 @@ export async function updateInvoiceAction(form: FormData): Promise<void> {
       const changed = before.status !== d.status || before.amount !== d.amount || before.number !== d.number || before.currency !== d.currency || before.clientId !== d.clientId || before.dueDate?.getTime() !== d.dueDate?.getTime() || (before.paymentLink ?? null) !== d.paymentLink;
       // Email pay target: manual link wins; otherwise portal checkout when the
       // gateway is configured (orders are created on demand at payment time).
-      const gatewayOn = !!(await getRazorpayConfig().catch(() => null));
+      const gatewayOn = await portalGatewayAvailable();
       const payUrl = !d.paymentLink && gatewayOn && ["sent", "overdue"].includes(d.status) && d.amount > 0 ? absoluteUrl(portalPayPath(id)) : null;
       return { paymentLinkChanged: (before.paymentLink ?? null) !== d.paymentLink, milestoneChanged: (before.milestoneId ?? null) !== (d.milestoneId ?? null), ids: [before.projectId, d.projectId], events: [...(changed ? notification(client, { ...d, payUrl }) : []), ...await sync(tx, [before.projectId, d.projectId])] };
     });

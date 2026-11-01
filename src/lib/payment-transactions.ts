@@ -17,9 +17,9 @@ export async function recordPaymentTransaction(
   tx: Prisma.TransactionClient,
   invoice: Invoice,
   evidence: PaymentEvidence = {},
-  source: "manual" | "razorpay" = "manual",
+  source: "manual" | "razorpay" | "paypal" = "manual",
 ) {
-  const recordKey = evidence.paymentId ? `payment:${evidence.paymentId}` : `invoice:${invoice.id}`;
+  const recordKey = evidence.paymentId ? `payment:${source === "paypal" ? "paypal:" : ""}${evidence.paymentId}` : `invoice:${invoice.id}`;
   const existing = await tx.paymentTransaction.findUnique({ where: { recordKey } });
   if (existing && (existing.clientId !== invoice.clientId || existing.invoiceId !== invoice.id)) {
     throw new Error("Payment reference is already bound to another billing record.");
@@ -42,7 +42,7 @@ export async function recordPaymentTransaction(
     const unbound = await tx.paymentTransaction.findUnique({ where: { recordKey: `invoice:${invoice.id}` } });
     if (unbound) {
       if (unbound.clientId !== invoice.clientId || unbound.invoiceId !== invoice.id) throw new Error("Payment history owner changed; review this invoice manually.");
-      await tx.paymentTransaction.update({ where: { id: unbound.id }, data: { recordKey, paymentId: evidence.paymentId, source: "razorpay", ...(unbound.chargedAmount == null && chargedAmount !== undefined ? { chargedAmount } : {}), ...(!unbound.method && evidence.method ? { method: evidence.method.slice(0, 40) } : {}) } });
+      await tx.paymentTransaction.update({ where: { id: unbound.id }, data: { recordKey, paymentId: evidence.paymentId, source, ...(unbound.chargedAmount == null && chargedAmount !== undefined ? { chargedAmount } : {}), ...(!unbound.method && evidence.method ? { method: evidence.method.slice(0, 40) } : {}) } });
       return;
     }
   } else if (await tx.paymentTransaction.findFirst({ where: { invoiceId: invoice.id } })) {

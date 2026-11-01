@@ -474,6 +474,7 @@ model Invoice {
 
   paymentTransactions PaymentTransaction[]
   reminders ReminderDelivery[]
+  paypalCheckouts PayPalCheckout[]
 
   @@index([status, dueDate])
   @@index([clientId])
@@ -516,7 +517,7 @@ model ReminderDelivery {
 /// bank transfer. Snapshots preserve history when invoice details change.
 model PaymentTransaction {
   id            String     @id @default(cuid())
-  /// payment:<provider id>, or invoice:<id> for a manual/historical record.
+  /// payment:<Razorpay id>, payment:paypal:<capture id>, or invoice:<id> for a manual/historical record.
   recordKey     String     @unique @map("record_key")
   clientId      String     @map("client_id")
   client        ClientUser @relation(fields: [clientId], references: [id], onDelete: Cascade)
@@ -531,7 +532,7 @@ model PaymentTransaction {
   chargedAmount Int?       @map("charged_amount")
   paymentId     String?    @unique @map("payment_id")
   method        String?
-  /// razorpay | manual | legacy. Manual does not imply a specific bank method.
+  /// razorpay | paypal | manual | legacy. Manual does not imply a bank method.
   source        String
   /// Known payment/confirmation date. Never guess a missing historical date.
   occurredAt    DateTime?  @map("occurred_at")
@@ -563,6 +564,68 @@ model PaymentGatewayConfig {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@map("payment_gateway_configs")
+}
+
+/// PayPal credentials are all encrypted, including identifiers. Never render
+/// saved values; admin-role + existing payment step-up gates all management.
+/// Portal checkout visibility/new-payment controls, separate from editable
+/// site settings and from secret storage. Missing rows preserve legacy state.
+model PaymentGatewayAvailability {
+  provider String @id
+  enabled Boolean @default(true)
+  revision Int @default(1)
+  updatedBy String? @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@map("payment_gateway_availability")
+}
+
+model PayPalGatewayConfig {
+  id String @id @default("paypal")
+  mode String @default("sandbox")
+  clientIdEnc String @map("client_id_enc")
+  clientSecretEnc String @map("client_secret_enc")
+  merchantIdEnc String @map("merchant_id_enc")
+  webhookIdEnc String? @map("webhook_id_enc")
+  lastVerifiedAt DateTime? @map("last_verified_at")
+  lastVerifyOk Boolean? @map("last_verify_ok")
+  updatedBy String? @map("updated_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@map("paypal_gateway_configs")
+}
+
+/// Durable server-created order snapshot. Approval/query flags are not payment
+/// evidence. Request IDs survive crashes; verified captures are never replayed.
+model PayPalCheckout {
+  id String @id @default(uuid())
+  invoiceId String? @map("invoice_id")
+  invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  clientId String @map("client_id")
+  invoiceNumber String @map("invoice_number")
+  amount Int
+  currency String
+  mode String
+  credentialFingerprint String @map("credential_fingerprint")
+  merchantId String @map("merchant_id")
+  stateHash String @map("state_hash")
+  stateEnc String @map("state_enc")
+  orderId String? @unique @map("order_id")
+  approvalUrl String? @map("approval_url")
+  captureId String? @unique @map("capture_id")
+  captureRequestId String @unique @default(uuid()) @map("capture_request_id")
+  status String @default("creating")
+  captureStartedAt DateTime? @map("capture_started_at")
+  expiresAt DateTime @map("expires_at")
+  feeAmount Int? @map("fee_amount")
+  feeCurrency String? @map("fee_currency")
+  netAmount Int? @map("net_amount")
+  netCurrency String? @map("net_currency")
+  errorCode String? @map("error_code")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@index([invoiceId, status])
+  @@index([clientId, createdAt])
+  @@map("paypal_checkouts")
 }
 
 /// Webhook deliveries received from payment gateways. The provider event id

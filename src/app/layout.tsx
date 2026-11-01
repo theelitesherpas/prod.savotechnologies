@@ -5,6 +5,7 @@ import { SITE } from "@/constants/site";
 import { openGraphFor } from "@/lib/seo";
 import { absoluteUrl, canonicalOrigin, INDEXABLE, env } from "@/lib/env";
 import { IS_DEMO } from "@/lib/content-mode";
+import { googleAnalyticsBootstrap } from "@/lib/google-analytics-bootstrap";
 import { RouteLoader } from "@/components/ui/route-loader";
 import "./globals.css";
 
@@ -144,7 +145,7 @@ export default function RootLayout({
             id="ga4-interaction"
             strategy="afterInteractive"
             dangerouslySetInnerHTML={{
-              __html: `(function(){var W=window,L="dataLayer",armed=false,t;function load(){if(armed)return;armed=true;clearTimeout(t);W[L]=W[L]||[];function g(){W[L].push(arguments)}g("js",new Date());g("config","${gaId}");var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=${gaId}";document.head.appendChild(s);}["scroll","mousedown","keydown","touchstart","wheel"].forEach(function(e){W.addEventListener(e,load,{once:true,passive:true})});t=setTimeout(load,10000);})();`,
+              __html: googleAnalyticsBootstrap(gaId),
             }}
           />
         ) : null}

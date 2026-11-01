@@ -44,6 +44,10 @@ npx prisma db execute --file prisma/client-titles.sql --schema prisma/schema.pri
 npx prisma db execute --file prisma/reminders.sql --schema prisma/schema.prisma
 # Private email documents, delivery audit and strict combined 10 MB budget.
 npx prisma db execute --file prisma/email-attachments.sql --schema prisma/schema.prisma
+# Reviewed PayPal credential/checkout tables; no provider calls or live enablement.
+npx prisma db execute --file prisma/paypal.sql --schema prisma/schema.prisma
+# Provider visibility/new-payment switches; preserves legacy availability.
+npx prisma db execute --file prisma/payment-availability.sql --schema prisma/schema.prisma
 npx prisma db push
 # Idempotent: inserts missing policy rows, installs SQL invariants, never resets
 # an existing counter or renumbers historical records. Must precede app start.

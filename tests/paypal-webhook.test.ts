@@ -1,0 +1,20 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+const m = vi.hoisted(() => ({ config: vi.fn(), verify: vi.fn(), finish: vi.fn(), event: vi.fn(), upsert: vi.fn(), checkout: vi.fn() }));
+vi.mock("@/lib/prisma", () => ({ prisma: { webhookEvent: { findUnique: m.event, upsert: m.upsert }, payPalCheckout: { findUnique: m.checkout } } }));
+vi.mock("@/lib/paypal-config", () => ({ getPayPalConfig: m.config }));
+vi.mock("@/lib/paypal", () => ({ verifyPayPalWebhook: m.verify }));
+vi.mock("@/lib/paypal-checkout", () => ({ finishPayPalCheckout: m.finish }));
+vi.mock("@/lib/rate-limit", () => ({ rateLimit: () => ({ ok: true }) }));
+import { POST } from "@/app/api/webhooks/paypal/route";
+const event = { id: "WH-SYNTHETIC-EVENT123", event_type: "CHECKOUT.ORDER.APPROVED", resource: { id: "ORDER123456789012" } };
+const request = (data: object = event) => new Request("http://localhost/api/webhooks/paypal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+beforeEach(() => { vi.clearAllMocks(); m.config.mockResolvedValue({ mode: "sandbox", webhookId: "synthetic" }); m.verify.mockResolvedValue(true); m.event.mockResolvedValue(null); m.checkout.mockResolvedValue({ id: "checkout", mode: "sandbox" }); m.finish.mockResolvedValue({ ok: true, status: "completed" }); });
+describe("PayPal webhook authority and replay safety", () => {
+ it("requires PayPal verification before looking up or mutating any billing record", async () => { m.verify.mockResolvedValue(false); expect((await POST(request())).status).toBe(400); expect(m.checkout).not.toHaveBeenCalled(); expect(m.finish).not.toHaveBeenCalled(); expect(m.upsert).not.toHaveBeenCalled(); });
+ it("requires a configured same-app webhook ID", async () => { m.config.mockResolvedValue(null); expect((await POST(request())).status).toBe(503); expect(m.verify).not.toHaveBeenCalled(); });
+ it("binds by the stored provider order, not a caller-supplied invoice ID or amount", async () => { await POST(request({ ...event, resource: { ...event.resource, invoiceId: "foreign-invoice", amount: 1 } })); expect(m.checkout).toHaveBeenCalledWith({ where: { orderId: event.resource.id } }); expect(m.finish).toHaveBeenCalledWith("checkout", { webhook: true }); });
+ it("acknowledges verified replays without re-running settlement", async () => { m.event.mockResolvedValue({ status: "processed" }); expect((await POST(request())).status).toBe(200); expect(m.finish).not.toHaveBeenCalled(); });
+ it.each([{ ok: true, status: "pending" }, { ok: false, retryable: true, message: "synthetic transient failure" }])("requests provider retry for pending or ambiguous outcomes: %j", async result => { m.finish.mockResolvedValue(result); expect((await POST(request())).status).toBe(503); expect(m.upsert.mock.calls[0][0].create.status).toBe("pending"); });
+ it("does not re-run another environment's checkout", async () => { m.checkout.mockResolvedValue({ id: "live-checkout", mode: "live" }); expect((await POST(request())).status).toBe(200); expect(m.finish).not.toHaveBeenCalled(); });
+ it("does not turn unrelated or refund events into invoice-paid mutations", async () => { expect((await POST(request({ ...event, event_type: "PAYMENT.CAPTURE.REFUNDED" }))).status).toBe(200); expect(m.finish).not.toHaveBeenCalled(); expect(m.upsert.mock.calls[0][0].create.status).toBe("ignored"); });
+});

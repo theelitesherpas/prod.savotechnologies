@@ -1,11 +1,57 @@
-# Payment gateway credentials: Razorpay settings + step-up verification
+# Payment gateways: credentials, availability and step-up verification
+
+Owner-approved PayPal production extension: see [PAYPAL.md](PAYPAL.md)
+for India account/currency rules, encrypted credentials, fee treatment, verified
+capture/webhook handling and isolated testing. Razorpay remains the first/default
+checkout method; PayPal is second and bank deposit third when enabled and ready.
 
 ## Scope
 
 `/admin/settings/payments` (Settings → Payment gateway — Razorpay) stores the
 Razorpay API Key ID, Key Secret and optional Webhook Secret used by client-invoice
-payment links and webhook confirmation. It is **credential management only**;
-link creation and webhooks are separate, audited steps.
+payment links and webhook confirmation. The local extension also adds protected
+On/Off controls for new portal checkout; link creation and webhooks remain
+separate, audited steps.
+
+## Availability switches
+
+Razorpay and PayPal each have an independent, keyboard-operable **On/Off**
+switch. Both may be On together. Disabled methods are omitted from checkout,
+not just greyed out; the first remaining method becomes selected. Bank deposit
+is unchanged. If no online method is available, configured bank details retain
+the invoice payment entry point; otherwise clients can request bank details.
+
+- State is stored in a separate `payment_gateway_availability` table, not generic
+  editor-writable site settings. No missing rows are inserted during reads;
+  absent rows preserve existing enabled state, but credentials/readiness still
+  gate availability. Unreadable settings fail closed for new online payments.
+- Reads use current database state without a process cache. Old unpaid issued
+  invoices use today's methods. Paid/draft/cancelled invoices gain no new action.
+- Every mutation requires an admin role plus fresh payments email step-up and
+  validates the provider, target boolean and expected revision. Conflicting first
+  writes/stale revisions fail rather than reversing a newer operator decision.
+- Disabling blocks new Razorpay order requests, new PayPal orders and new PayPal
+  capture requests, including stale pages/forged action posts. It does not delete
+  credentials, verification metadata, receipts or payment history. Verified
+  completed money is still reconciled while Off. Already-issued provider
+  operations cannot necessarily be revoked by an application switch.
+- Existing manually supplied external payment links remain a separate exception;
+  manage those links in their provider dashboard. This is not a provider-account
+  revocation or refund control.
+- On is not a bypass: currency/account/runtime gates still apply. Loopback Live
+  PayPal remains inspectable but cannot initiate a charge; disabled is hidden
+  even in that preview. Production does not inherit the preview opt-in.
+
+**Fees are unchanged by owner decision:** INR Razorpay 2% processing fee plus
+18% GST on that fee; non-INR Razorpay 3% with no GST line; PayPal invoice amount
+only with merchant fees **Paid by Savo**; no added bank online-processing fee.
+No platform, handling or service fee was implemented. Razorpay's option reads
+**Cards, UPI, Netbanking and Wallets**.
+
+The owner authorized production release on 2026-11-01. PayPal initially stays
+Off until matching Live credentials and Webhook ID are entered/verified through
+the protected production settings; local credentials are not automatically copied.
+Existing Razorpay availability and all agreed fees are preserved.
 
 ## Access model
 

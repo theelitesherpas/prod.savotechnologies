@@ -161,6 +161,7 @@ describe("step-up actions", () => {
     expect(mail.sendMail).toHaveBeenCalledTimes(1);
     const [to, template] = mail.sendMail.mock.calls[0];
     expect(to).toBe(adminUser.email);
+    expect(mail.sendMail.mock.calls[0][3]).toMatchObject({ sensitive: true, requireAcceptance: true });
     expect(template.subject).toMatch(/[0-9]{6}/);
     expect(template.html).toContain("Confirm it is you");
     expect(db.stepUpChallenge.create).toHaveBeenCalledTimes(1);

@@ -1,0 +1,6 @@
+/** Public marketing only. Never load third-party analytics on payment/auth
+ * returns, or send nonce/token query strings and fragments to Google. */
+export function googleAnalyticsBootstrap(id: string): string {
+  if (!/^G-[A-Z0-9]+$/i.test(id)) return "";
+  return `(function(){var W=window,L="dataLayer",armed=false,t;function privatePath(path){try{var p=decodeURIComponent(path).replace(/\\/+/g,"/").toLowerCase();return /^\\/(?:_next|api|admin|portal|employee-portal|meeting|unsubscribe)(?:\\/|$)/.test(p)||/^\\/(?:insights|case-studies)\\/preview(?:\\/|$)/.test(p);}catch(e){return true;}}function load(){if(armed)return;armed=true;clearTimeout(t);var u,r="";try{u=new URL(W.location.href);if(privatePath(u.pathname))return;if(document.referrer){var ref=new URL(document.referrer);if(!privatePath(ref.pathname))r=ref.origin+ref.pathname;}}catch(e){return;}W[L]=W[L]||[];function g(){W[L].push(arguments)}g("js",new Date());g("config",${JSON.stringify(id)},{page_location:u.origin+u.pathname,page_referrer:r});var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id="+${JSON.stringify(id)};document.head.appendChild(s);}["scroll","mousedown","keydown","touchstart","wheel"].forEach(function(e){W.addEventListener(e,load,{once:true,passive:true})});t=setTimeout(load,10000);})();`;
+}
