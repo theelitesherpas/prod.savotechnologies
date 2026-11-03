@@ -15,7 +15,7 @@ export async function localPayPalProvider() {
    return send(201,order);
   }
   const match=url.pathname.match(/^\/v2\/checkout\/orders\/([A-Z0-9]{17})(\/capture)?$/);
-  if(match){const order=orders.get(match[1]);if(!order)return send(404,{});if(match[2]&&req.method==="POST"){
+  if(match){const order=orders.get(match[1]);if(!order)return send(404,{name:"RESOURCE_NOT_FOUND"});if(match[2]&&req.method==="POST"){
     if(order.status!=="COMPLETED"){
      if(order.status!=="APPROVED")return send(422,{});captures++;const unit=order.purchase_units[0];const [major,fraction=""]=unit.amount.value.split(".");const amount=Number(major)*100+Number(fraction.padEnd(2,"0"));
      // Synthetic test fee, NOT a production PayPal rate or fee quote.
@@ -24,6 +24,7 @@ export async function localPayPalProvider() {
     }
    }return send(200,order);
   }
+  if(url.pathname==="/__test/expire"&&req.method==="POST"){const order=orders.get(body.orderId);if(!order)return send(404,{});if(order.status!=="CREATED"||order.purchase_units.some(u=>u.payments?.captures?.length))return send(409,{});orders.delete(body.orderId);return send(200,{ok:true});}
   if(url.pathname==="/__test/state")return send(200,{orders:[...orders.values()],captures});
   if(url.pathname==="/__test/approve"&&req.method==="POST"){const order=orders.get(body.orderId);if(!order)return send(404,{});order.status="APPROVED";return send(200,{returnUrl:`${order.__return}&token=${order.id}`,cancelUrl:order.__cancel});}
   return send(404,{});

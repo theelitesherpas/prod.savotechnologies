@@ -171,9 +171,14 @@ history and the actual fee/net data under payment settings.
   The same durable capture request ID is reused; never start an unrelated capture.
   Unknown/pending captures block another PayPal or Razorpay charge until reviewed.
 - Expired unfunded approvals can be retired only after provider checks (or if no
-  approval link was ever available). Old expired orders are never newly captured.
-  Real completed money is still reconciled after expiry. Pending/unknown captures
-  are not silently expired or replaced.
+  approval link was ever available). A same-app authenticated order GET returning
+  HTTP 404 `RESOURCE_NOT_FOUND` can retire an expired `creating`/`created` attempt
+  only when it has **no capture ID or capture-start history**. The conditional
+  update rechecks those guards; old order/approval evidence stays intact. Auth,
+  permission, timeout, malformed and other unknown errors do not authorize a
+  replacement. A delayed create response cannot reopen a retired checkout.
+  Old expired orders are never newly captured. Real completed money is still
+  reconciled after expiry. Pending/unknown captures are not silently replaced.
 - PayPal reconciliation uses the shared serializable `recordInvoicePaid` path:
   one invoice credit, receipt event and project/milestone reconciliation.
   PayPal IDs never enter Razorpay columns. Payment history identifies PayPal and

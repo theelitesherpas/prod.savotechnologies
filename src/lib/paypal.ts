@@ -19,6 +19,9 @@ export type PayPalOrder = z.infer<typeof paypalOrderSchema>;
  * cached outside this invocation, no raw provider responses/errors in logs. */
 function base(config: PayPalConfig) { return config.mode === "sandbox" ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com"; }
 export class PayPalUnavailable extends Error { constructor() { super("PayPal could not confirm this request. Check the invoice status before trying to pay again."); } }
+/** Only an authenticated order GET can establish this; never a failed create or
+ * capture. Even this signal cannot retire an order with capture history. */
+export class PayPalOrderNotFound extends PayPalUnavailable {}
 export async function paypalToken(config: PayPalConfig): Promise<string> {
   const response = await fetch(`${base(config)}/v1/oauth2/token`, { method: "POST", redirect: "error", cache: "no-store", signal: AbortSignal.timeout(10_000), headers: { Authorization: `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64")}`, "Content-Type": "application/x-www-form-urlencoded" }, body: "grant_type=client_credentials" });
   if (!response.ok) throw new PayPalUnavailable();
@@ -28,7 +31,13 @@ export async function paypalToken(config: PayPalConfig): Promise<string> {
 async function request(config: PayPalConfig, path: string, method = "GET", body?: object, requestId?: string): Promise<unknown> {
   const token = await paypalToken(config);
   const response = await fetch(`${base(config)}${path}`, { method, redirect: "error", cache: "no-store", signal: AbortSignal.timeout(20_000), headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Prefer: "return=representation", ...(requestId ? { "PayPal-Request-Id": requestId } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
-  if (!response.ok) throw new PayPalUnavailable();
+  if (!response.ok) {
+    if (method === "GET" && /^\/v2\/checkout\/orders\/[A-Z0-9]{17}$/.test(path) && response.status === 404) {
+      const error = await response.json().catch(() => null);
+      if (error?.name === "RESOURCE_NOT_FOUND") throw new PayPalOrderNotFound();
+    }
+    throw new PayPalUnavailable();
+  }
   return response.json();
 }
 export async function createPayPalOrder(config: PayPalConfig, input: { id: string; invoiceId: string; number: string; amount: number; currency: string; returnUrl: string; cancelUrl: string }) {

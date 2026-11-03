@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { encryptSecret, decryptSecret } from "@/lib/secret-box";
 import { gatewayEnabled } from "@/lib/payment-availability";
 import { getPayPalConfig, type PayPalConfig } from "@/lib/paypal-config";
-import { createPayPalOrder, getPayPalOrder, capturePayPalOrder } from "@/lib/paypal";
+import { createPayPalOrder, getPayPalOrder, capturePayPalOrder, PayPalOrderNotFound } from "@/lib/paypal";
 import { paypalCurrencyReason, paypalApprovalUrl, type PayPalStart, type PayPalResult } from "@/lib/paypal-policy";
 import { verifyPayPalOrder, verifiedPayPalCapture } from "@/lib/paypal-evidence";
 import { recordInvoicePaid } from "@/lib/invoice-payments";
@@ -38,15 +38,25 @@ export async function startPayPalCheckout(invoiceId: string, clientId: string): 
     // provider. Unknown/pending captures are NOT retired or replaced.
     const expired = await prisma.payPalCheckout.findFirst({ where: { invoiceId, clientId, status: { in: ["creating", "created"] }, expiresAt: { lt: new Date() } }, orderBy: { createdAt: "desc" } });
     if (expired && expired.credentialFingerprint === config.fingerprint) {
+      if (expired.captureStartedAt || expired.captureId) return failure("An earlier PayPal payment needs confirmation. Contact Savo before paying again.");
+      let missing = false;
       if (expired.orderId) {
-        const oldOrder = await getPayPalOrder(config, expired.orderId);
-        const unit = verifyPayPalOrder(oldOrder, expired);
-        if (unit.payments?.captures?.length || oldOrder.status === "COMPLETED") {
-          await finishPayPalCheckout(expired.id, { webhook: true, reconcileOnly: true });
-          return failure("An earlier PayPal payment needs confirmation. Refresh the invoice before paying again.");
+        try {
+          const oldOrder = await getPayPalOrder(config, expired.orderId);
+          const unit = verifyPayPalOrder(oldOrder, expired);
+          if (unit.payments?.captures?.length || oldOrder.status === "COMPLETED") {
+            await finishPayPalCheckout(expired.id, { webhook: true, reconcileOnly: true });
+            return failure("An earlier PayPal payment needs confirmation. Refresh the invoice before paying again.");
+          }
+        } catch (error) {
+          // PayPal can remove expired approvals. Only same-app, never-captured
+          // attempts qualify; timeouts/auth/permission/unknown errors do not.
+          if (!(error instanceof PayPalOrderNotFound)) return failure("Your earlier PayPal checkout could not be checked. No replacement was created. Check the invoice status or contact Savo before trying again.");
+          missing = true;
         }
       }
-      await prisma.payPalCheckout.updateMany({ where: { id: expired.id, status: { in: ["creating", "created"] }, expiresAt: { lt: new Date() } }, data: { status: "cancelled", errorCode: "UNFUNDED_APPROVAL_EXPIRED" } });
+      const retired = await prisma.payPalCheckout.updateMany({ where: { id: expired.id, credentialFingerprint: config.fingerprint, status: { in: ["creating", "created"] }, expiresAt: { lt: new Date() }, captureStartedAt: null, captureId: null }, data: { status: "cancelled", errorCode: missing ? "EXPIRED_ORDER_NOT_FOUND" : "UNFUNDED_APPROVAL_EXPIRED" } });
+      if (retired.count !== 1) return failure("The earlier PayPal checkout changed. Refresh the invoice before paying again.");
     }
     const reserved = await prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM invoices WHERE id = ${invoiceId} FOR UPDATE`;
@@ -79,7 +89,9 @@ export async function startPayPalCheckout(invoiceId: string, clientId: string): 
     verifyPayPalOrder(order.order, { ...attempt, orderId: order.order.id });
     const fresh = await prisma.invoice.findFirst({ where: { id: invoiceId, clientId, amount: attempt.amount, currency: attempt.currency, status: { in: ["sent", "overdue"] }, paidAt: null, paymentLink: null, paymentTransactions: { none: { amount: { gt: 0 } } } } });
     if (!fresh) return failure("The invoice changed. No PayPal payment was captured; refresh its details.");
-    await prisma.payPalCheckout.update({ where: { id: attempt.id }, data: { orderId: order.order.id, approvalUrl: order.approvalUrl, status: "created", errorCode: null } });
+    // A delayed create acknowledgement must not reopen a retired checkout.
+    const opened = await prisma.payPalCheckout.updateMany({ where: { id: attempt.id, status: { in: ["creating", "created"] }, expiresAt: { gt: new Date() }, captureStartedAt: null, captureId: null }, data: { orderId: order.order.id, approvalUrl: order.approvalUrl, status: "created", errorCode: null } });
+    if (opened.count !== 1) return failure("This PayPal checkout expired or changed while opening. Refresh the invoice before trying again.");
     return { ok: true, approvalUrl: order.approvalUrl };
   } catch { return failure("PayPal could not start checkout. Check the app credentials and whether your account accepts this invoice currency. No currency was converted and no payment has been confirmed."); }
 }
