@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { createPayPalOrder, getPayPalOrder, capturePayPalOrder, verifyPayPalWebhook } from "@/lib/paypal";
+import { createPayPalOrder, getPayPalOrder, capturePayPalOrder, verifyPayPalWebhook, PayPalOrderNotFound } from "@/lib/paypal";
 import type { PayPalConfig } from "@/lib/paypal-config";
 const fetcher = vi.fn();
 const config: PayPalConfig = { mode: "sandbox", clientId: "synthetic-client-id", clientSecret: "synthetic-client-secret", merchantId: "MERCHANT12345", webhookId: "synthetic-webhook-id", fingerprint: "synthetic", verified: true };
@@ -22,6 +22,23 @@ it("never follows provider redirects or accepts untrusted order identifiers as r
   await expect(getPayPalOrder(config, "../../evil")).rejects.toThrow(); expect(fetcher).not.toHaveBeenCalled();
   fetcher.mockResolvedValueOnce(Response.json({ access_token: "synthetic-access-token", token_type: "Bearer" })).mockResolvedValueOnce(Response.json({ private: "must-not-leak" }, { status: 401 }));
   await expect(getPayPalOrder(config, id)).rejects.toThrow("could not confirm");
+});
+it.each([[404, "RESOURCE_NOT_FOUND", true], [404, "NOT_AUTHORIZED", false], [403, "RESOURCE_NOT_FOUND", false], [401, "RESOURCE_NOT_FOUND", false], [500, "RESOURCE_NOT_FOUND", false]])("classifies only authenticated order GET 404 RESOURCE_NOT_FOUND (%s/%s)", async (status, name, missing) => {
+  fetcher.mockImplementation(async (url: string) => url.endsWith("/token") ? Response.json({ access_token: "synthetic-access-token", token_type: "Bearer" }) : Response.json({ name, private: "must-not-leak" }, { status: status as number }));
+  const error = await getPayPalOrder(config, id).catch(error => error);
+  expect(error).toBeInstanceOf(Error); expect(error instanceof PayPalOrderNotFound).toBe(missing); expect(error.message).not.toContain("must-not-leak");
+});
+it("does not classify capture or create failures as safely replaceable missing orders", async () => {
+  fetcher.mockImplementation(async (url: string) => url.endsWith("/token") ? Response.json({ access_token: "synthetic-access-token", token_type: "Bearer" }) : Response.json({ name: "RESOURCE_NOT_FOUND" }, { status: 404 }));
+  for (const call of [() => capturePayPalOrder(config, id, "f08c7f9f-fcc0-40ef-a659-f37c2fc78e62"), () => createPayPalOrder(config, { id: "snapshot", invoiceId: "invoice", number: "TEST", amount: 10000, currency: "USD", returnUrl: "http://localhost/return", cancelUrl: "http://localhost/cancel" })]) {
+    const error = await call().catch(error => error); expect(error).toBeInstanceOf(Error); expect(error).not.toBeInstanceOf(PayPalOrderNotFound);
+  }
+});
+it("does not classify non-JSON 404 or OAuth failure as an expired order", async () => {
+  fetcher.mockImplementation(async (url: string) => url.endsWith("/token") ? Response.json({ access_token: "synthetic-access-token", token_type: "Bearer" }) : new Response("untrusted proxy response", { status: 404 }));
+  expect(await getPayPalOrder(config, id).catch(error => error)).not.toBeInstanceOf(PayPalOrderNotFound);
+  fetcher.mockResolvedValue(Response.json({ name: "RESOURCE_NOT_FOUND" }, { status: 404 }));
+  expect(await getPayPalOrder(config, id).catch(error => error)).not.toBeInstanceOf(PayPalOrderNotFound);
 });
 it("rejects an external approval link before it reaches the browser", async () => {
   fetcher.mockImplementation(async (url: string) => url.endsWith("/token") ? Response.json({ access_token: "synthetic-access-token", token_type: "Bearer" }) : Response.json({ ...order, links: [{ rel: "payer-action", href: `https://evil.invalid/checkoutnow?token=${id}` }] }));

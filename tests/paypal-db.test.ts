@@ -5,13 +5,14 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 const m = vi.hoisted(() => ({ db: null as PrismaClient | null, create: vi.fn(), get: vi.fn(), capture: vi.fn(), events: vi.fn(), completed: false, fingerprint: "synthetic-fingerprint" }));
 vi.mock("@/lib/prisma", async () => { const { PrismaClient } = await import("@prisma/client"); m.db = new PrismaClient(); return { prisma: m.db }; });
 vi.mock("@/lib/paypal-config", () => ({ getPayPalConfig: async () => ({ mode: "sandbox", merchantId: "MERCHANT12345", fingerprint: m.fingerprint, verified: true, webhookId: "synthetic-webhook" }) }));
-vi.mock("@/lib/paypal", () => ({ createPayPalOrder: m.create, getPayPalOrder: m.get, capturePayPalOrder: m.capture }));
+vi.mock("@/lib/paypal", async importOriginal => ({ ...await importOriginal<object>(), createPayPalOrder: m.create, getPayPalOrder: m.get, capturePayPalOrder: m.capture }));
 vi.mock("@/lib/project-service", async importOriginal => ({ ...await importOriginal<object>(), projectEmails: m.events, revalidateProjectViews: vi.fn() }));
 vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 import { startPayPalCheckout, finishPayPalCheckout } from "@/lib/paypal-checkout";
 import { setGatewayAvailability } from "@/lib/payment-availability";
 import { decryptSecret } from "@/lib/secret-box";
+import { PayPalOrderNotFound, PayPalUnavailable } from "@/lib/paypal";
 const enabled = process.env.PAYPAL_DB_TESTS === "1", tag = randomBytes(5).toString("hex"), db = () => m.db!;
 let clientId = "", count = 0;
 const orderId = "ORDER123456789012", captureId = "CAPTURE1234567890";
@@ -83,6 +84,61 @@ describe.skipIf(!enabled)("durable PayPal settlement against isolated PostgreSQL
  it("requires whole zero-decimal units and rejects INR instead of inventing a conversion", async () => { for (const [currency, amount] of [["INR", 10000], ["JPY", 10001]] as const) { const i = await invoice({ currency, amount }); expect((await startPayPalCheckout(i.id, clientId)).ok).toBe(false); } expect(m.create).not.toHaveBeenCalled(); });
  it("does not capture expired approvals but can still reconcile already captured money", async () => {
   const { a, args } = await started(); await db().payPalCheckout.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000) } }); expect((await finishPayPalCheckout(a.id, args)).ok).toBe(false); expect(m.capture).not.toHaveBeenCalled(); m.completed = true; expect((await finishPayPalCheckout(a.id, args)).ok).toBe(true);
+ });
+ it("replaces a same-app expired order missing at PayPal without losing its immutable evidence", async () => {
+  const { i, a } = await started(); await db().payPalCheckout.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
+  const create = m.create.getMockImplementation()!, next = "NEXT0123456789012";
+  m.create.mockImplementation(async (...args) => { const result = await create(...args); return { ...result, order: { ...result.order, id: next }, approvalUrl: `https://www.sandbox.paypal.com/checkoutnow?token=${next}` }; });
+  m.get.mockRejectedValue(new PayPalOrderNotFound());
+  expect(await startPayPalCheckout(i.id, clientId)).toMatchObject({ ok: true, approvalUrl: expect.stringContaining(next) });
+  expect(await db().payPalCheckout.findUnique({ where: { id: a.id } })).toMatchObject({ status: "cancelled", errorCode: "EXPIRED_ORDER_NOT_FOUND", orderId: a.orderId, approvalUrl: a.approvalUrl, captureStartedAt: null, captureId: null });
+  expect(await db().payPalCheckout.count({ where: { invoiceId: i.id } })).toBe(2); expect(m.capture).not.toHaveBeenCalled(); expect(await db().paymentTransaction.count({ where: { invoiceId: i.id } })).toBe(0);
+ });
+ it.each([new PayPalUnavailable(), new Error("synthetic timeout"), new Error("unclassified HTTP 404")])("does not replace an expired order on an inconclusive provider failure (%s)", async error => {
+  const { i, a } = await started(); await db().payPalCheckout.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000) } }); m.get.mockRejectedValue(error);
+  expect(await startPayPalCheckout(i.id, clientId)).toMatchObject({ ok: false, message: expect.stringContaining("No replacement was created") });
+  expect(await db().payPalCheckout.findUnique({ where: { id: a.id } })).toMatchObject({ status: "created", orderId }); expect(m.create).toHaveBeenCalledTimes(1); expect(m.capture).not.toHaveBeenCalled();
+ });
+ it("never retires a created-looking order with any capture-start history", async () => {
+  const { i, a } = await started(); await db().payPalCheckout.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000), captureStartedAt: new Date() } }); m.get.mockRejectedValue(new PayPalOrderNotFound());
+  expect((await startPayPalCheckout(i.id, clientId)).ok).toBe(false); expect(m.get).not.toHaveBeenCalled(); expect(m.create).toHaveBeenCalledTimes(1); expect((await db().payPalCheckout.findUnique({ where: { id: a.id } }))!.status).toBe("created");
+ });
+ it.each(["capturing", "pending", "uncertain", "review"])("does not replace an expired %s checkout", async status => {
+  const { i, a } = await started(); await db().payPalCheckout.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000), status } }); m.get.mockRejectedValue(new PayPalOrderNotFound());
+  expect((await startPayPalCheckout(i.id, clientId)).ok).toBe(false); expect(m.get).not.toHaveBeenCalled(); expect(m.create).toHaveBeenCalledTimes(1); expect(m.capture).not.toHaveBeenCalled(); expect((await db().payPalCheckout.findUnique({ where: { id: a.id } }))!.status).toBe(status);
+ });
+ it("reconciles existing captured money instead of replacing an expired approval", async () => {
+  const { i, a } = await started(); await db().payPalCheckout.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000) } }); m.completed = true;
+  expect((await startPayPalCheckout(i.id, clientId)).ok).toBe(false); expect((await db().invoice.findUnique({ where: { id: i.id } }))!.status).toBe("paid"); expect((await db().payPalCheckout.findUnique({ where: { id: a.id } }))!.status).toBe("completed"); expect(m.create).toHaveBeenCalledTimes(1); expect(m.capture).not.toHaveBeenCalled();
+ });
+ it("fails closed if the checkout changes while the missing-order lookup is in flight", async () => {
+  const { i, a } = await started(); await db().payPalCheckout.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
+  m.get.mockImplementation(async () => { await db().payPalCheckout.update({ where: { id: a.id }, data: { status: "capturing", captureStartedAt: new Date() } }); throw new PayPalOrderNotFound(); });
+  expect((await startPayPalCheckout(i.id, clientId)).ok).toBe(false); expect((await db().payPalCheckout.findUnique({ where: { id: a.id } }))!.status).toBe("capturing"); expect(m.create).toHaveBeenCalledTimes(1); expect(m.capture).not.toHaveBeenCalled();
+ });
+ it("does not look up or replace an expired approval after credentials change", async () => {
+  const { i, a } = await started(); await db().payPalCheckout.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000) } }); m.fingerprint = "another-app";
+  expect((await startPayPalCheckout(i.id, clientId)).ok).toBe(false); expect(m.get).not.toHaveBeenCalled(); expect(m.create).toHaveBeenCalledTimes(1);
+ });
+ it("reuses an unexpired approval without asking PayPal to create a replacement", async () => {
+  const { i, a } = await started(); m.get.mockRejectedValue(new PayPalOrderNotFound()); expect(await startPayPalCheckout(i.id, clientId)).toMatchObject({ ok: true, approvalUrl: a.approvalUrl }); expect(m.get).not.toHaveBeenCalled(); expect(m.create).toHaveBeenCalledTimes(1);
+ });
+ it("concurrent missing-order retries create at most one replacement checkout", async () => {
+  const { i, a } = await started(); await db().payPalCheckout.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
+  const create = m.create.getMockImplementation()!, next = "NEXT0123456789012";
+  m.create.mockImplementation(async (...args) => { const result = await create(...args); return { ...result, order: { ...result.order, id: next }, approvalUrl: `https://www.sandbox.paypal.com/checkoutnow?token=${next}` }; }); m.get.mockRejectedValue(new PayPalOrderNotFound());
+  const results = await Promise.all([startPayPalCheckout(i.id, clientId), startPayPalCheckout(i.id, clientId)]); expect(results.some(r => r.ok)).toBe(true); expect(await db().payPalCheckout.count({ where: { invoiceId: i.id } })).toBe(2); expect(await db().payPalCheckout.count({ where: { invoiceId: i.id, status: "created" } })).toBe(1); expect(new Set(m.create.mock.calls.slice(1).map(call => call[1].id)).size).toBe(1); expect(m.capture).not.toHaveBeenCalled();
+ });
+ it("does not retire a created-looking order with a capture ID but no lease timestamp", async () => {
+  const { i, a } = await started(); await db().payPalCheckout.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000), captureId } }); expect((await startPayPalCheckout(i.id, clientId)).ok).toBe(false); expect(m.get).not.toHaveBeenCalled(); expect(m.create).toHaveBeenCalledTimes(1);
+ });
+ it("does not treat a missing order during capture confirmation as permission for another payment", async () => {
+  const { a, args } = await started(); m.get.mockRejectedValue(new PayPalOrderNotFound()); expect((await finishPayPalCheckout(a.id, args)).ok).toBe(false); expect((await db().payPalCheckout.findUnique({ where: { id: a.id } }))!.status).toBe("uncertain"); expect(m.capture).not.toHaveBeenCalled(); expect(m.create).toHaveBeenCalledTimes(1);
+ });
+ it("does not let a delayed create response reopen an expired, retired checkout", async () => {
+  const i = await invoice(), create = m.create.getMockImplementation()!; let oldId = "";
+  m.create.mockImplementationOnce(async (...args) => { oldId = args[1].id; await db().payPalCheckout.update({ where: { id: oldId }, data: { expiresAt: new Date(Date.now() - 1000) } }); expect((await startPayPalCheckout(i.id, clientId)).ok).toBe(true); return create(...args); });
+  expect((await startPayPalCheckout(i.id, clientId)).ok).toBe(false); expect((await db().payPalCheckout.findUnique({ where: { id: oldId } }))!.status).toBe("cancelled"); expect(await db().payPalCheckout.count({ where: { invoiceId: i.id, status: "created" } })).toBe(1); expect(m.capture).not.toHaveBeenCalled();
  });
  it("retains captured money for review if the invoice was cancelled before confirmation", async () => {
   const { i, a, args } = await started(); await db().invoice.update({ where: { id: i.id }, data: { status: "cancelled" } }); m.completed = true;
