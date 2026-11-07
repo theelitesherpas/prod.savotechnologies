@@ -1,0 +1,60 @@
+[Unit]
+Description=Savo Technologies isolated web application
+After=network-online.target postgresql.service
+Wants=network-online.target
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=savo-web
+Group=savo-web
+WorkingDirectory=/var/www/savotechnologies
+EnvironmentFile=/var/www/savotechnologies/.env.production
+Environment=NODE_ENV=production NEXT_PUBLIC_CONTENT_MODE=production PORT=4300 TMPDIR=/run/savo-web
+UnsetEnvironment=NODE_OPTIONS NODE_PATH LD_PRELOAD LD_LIBRARY_PATH BASH_ENV ENV PAYPAL_MOCK_ORIGIN
+ExecStartPre=/opt/savo-runtime/node-v22.23.4-linux-x64/bin/node /var/www/savotechnologies/ops/runtime-preflight.mjs
+ExecStart=/opt/savo-runtime/node-v22.23.4-linux-x64/bin/node /var/www/savotechnologies/node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 4300
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+KillSignal=SIGTERM
+KillMode=control-group
+UMask=0077
+RuntimeDirectory=savo-web
+RuntimeDirectoryMode=0700
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectHostname=yes
+ProtectClock=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/www/savotechnologies/.next/cache /var/www/savotechnologies/.next/server/route-cache /var/www/savotechnologies/public/uploads
+InaccessiblePaths=-/etc/ssh -/etc/nginx -/etc/letsencrypt -/var/backups -/var/lib/postgresql -/var/lib/mysql
+InaccessiblePaths=-/var/www/advmore -/var/www/coachmax -/var/www/coachmax-admin -/var/www/tuga_backend -/var/www/tugaadmin -/var/www/tugatraders -/var/www/test -/var/www/jusspanda.com
+NoExecPaths=/var/www/savotechnologies/public/uploads /var/www/savotechnologies/.next/cache /var/www/savotechnologies/.next/server/route-cache /tmp /var/tmp /run/savo-web
+MemoryHigh=1G
+MemoryMax=1536M
+TasksMax=128
+CPUQuota=200%
+LimitNOFILE=65536
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=savo-web
+
+[Install]
+WantedBy=multi-user.target

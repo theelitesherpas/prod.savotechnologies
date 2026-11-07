@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/components/layout/site-header";
+import { scriptJson } from "@/lib/script-json";
 import { PortalSiteHeader, PortalSiteFooter, PortalMarketingBoundary, SiteInteractionProviders } from "@/components/portal/site-chrome";
 import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -179,7 +180,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: scriptJson(jsonLd) }}
       />
 
       {/* Admin-managed announcement line (Settings) - hidden when unset */}

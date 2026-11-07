@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { scriptJson } from "@/lib/script-json";
 import { SITE } from "@/constants/site";
 import { absoluteUrl } from "@/lib/env";
 import { LegalDocument } from "@/sections/legal/legal-document";
@@ -90,7 +91,7 @@ export default function TermsPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: scriptJson(jsonLd) }}
       />
 
       <LegalDocument

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { scriptJson } from "@/lib/script-json";
 import { Faq } from "@/components/shared/faq";
 import { HOME_FAQS } from "@/constants/faqs";
 import { absoluteUrl } from "@/lib/env";
@@ -21,7 +22,7 @@ export function HomeFaq() {
   return (
     <section id="faq" data-home-section="faq" aria-labelledby={headingId} className={`reftheme-light ${styles.faq}`}>
       <div className="shell">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: scriptJson(jsonLd) }} />
         <div className={styles.sectionHead}>
           <h2 id={headingId}>{HOME_COPY.faq.title}</h2>
           <p>{HOME_COPY.faq.lead}</p>

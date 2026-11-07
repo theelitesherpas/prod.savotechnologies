@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { scriptJson } from "@/lib/script-json";
 import { absoluteUrl } from "@/lib/env";
 import { openGraphFor } from "@/lib/seo";
 import { buildIndoreFaqs, buildIndoreModel } from "@/sections/indore/indore-content";
@@ -49,5 +50,5 @@ export default function IndorePage() {
       },
     ],
   };
-  return <IndoreSurface model={model} faqs={faqs}><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} /></IndoreSurface>;
+  return <IndoreSurface model={model} faqs={faqs}><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: scriptJson(jsonLd) }} /></IndoreSurface>;
 }

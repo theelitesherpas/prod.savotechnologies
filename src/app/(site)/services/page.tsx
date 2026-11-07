@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { scriptJson } from "@/lib/script-json";
 import { absoluteUrl } from "@/lib/env";
 import { SERVICE_DETAILS } from "@/constants/services-detail";
 import { ServicesDirectory } from "@/sections/services/services-directory";
@@ -57,7 +58,7 @@ export default function ServicesPage() {
     <div className={styles.page} data-services-page="directory">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: scriptJson(jsonLd) }}
       />
 
       <ServicesDirectory />

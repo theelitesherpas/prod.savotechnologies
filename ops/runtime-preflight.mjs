@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { sourceFindings } from '../scripts/verify-source-integrity.mjs';
+assert(process.getuid?.() > 0, 'The public web application must not run as root');
+assert.equal(process.versions.node, '22.23.4', 'Use the reviewed security-patched Node runtime');
+assert.equal(process.env.NODE_ENV, 'production');
+assert.equal(process.env.NEXT_PUBLIC_CONTENT_MODE, 'production');
+assert.equal(Buffer.from(process.env.SECRETS_MASTER_KEY || '', 'base64').length, 32, 'Production encryption key unavailable');
+const findings = sourceFindings(process.cwd(), { env: process.env });
+assert.equal(findings.length, 0, findings.join('; '));
+console.log('Non-root runtime/bootstrap preflight passed; no provider requests or emails made.');

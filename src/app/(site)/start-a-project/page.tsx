@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { scriptJson } from "@/lib/script-json";
 import { absoluteUrl } from "@/lib/env";
 import { initialProjectType } from "@/sections/start/start-content";
 import styles from "@/sections/start/start.module.css";
@@ -59,7 +60,7 @@ export default async function StartPage({
     <div className={styles.page} data-start-page="detailed-project-brief" data-design-contract="start-v7:THESIS=an-early-idea-is-enough;OWN-WORLD=Outfit-Inter-white-black-red-grey;STORY=encouragement-you-project-review;FIRST-VIEWPORT=compact-offer-black-brief-invitation-white-live-step-form;FORM=owner-pinned-three-step-workspace;FINISH=review-verdict-documentation-provenance">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: scriptJson(jsonLd) }}
       />
 
       <StartHero />

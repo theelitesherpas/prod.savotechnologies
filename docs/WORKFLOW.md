@@ -64,16 +64,22 @@ git push https://github.com/theelitesherpas/prod.savotechnologies.git main
 
 * Verify the release: `git ls-remote origin main test main prod main` —
   the three `main` heads should show the intended promotion state.
-* Production is served by the VPS (`root@50.6.44.47`, `/var/www/savotechnologies`,
-  PM2 `savo` on port 4300 behind Cloudflare). Publish the promoted main
-  with one command:
+* After the v7.21.0 runtime migration, production uses the non-root
+  `savo-web.service` on loopback4300 behind NGINX/Cloudflare. Root performs
+  reviewed maintenance only; the app must not run under root PM2.
+* First create and verify a complete current backup, then provide the immutable
+  reviewed commit AND tested tree (not a branch/tag name):
 
   ```bash
-  ssh root@50.6.44.47 'bash /var/www/savotechnologies/scripts/server-update.sh'
+  ssh root@50.6.44.47 'bash /var/www/savotechnologies/scripts/server-update.sh --release FULL_COMMIT_SHA --tree FULL_TREE_SHA --backup /root/savo-backups/full-TIMESTAMP'
   ```
 
-  The script pulls `main` from the public prod repo (no token needed),
-  runs `npm ci`, `prisma db push`, the production build and restarts PM2.
+  The code-only updater validates the backup and pending source with its installed
+  bootstrap policy before executing it, installs with lifecycle hooks disabled,
+  explicitly generates the reviewed Prisma client, audits/builds and restarts only
+  Savo. It refuses automatic schema/data writes and root PM2 fallbacks. Initial
+  migration requires a separate pinned/staged deployment with rollback. See
+  [SECURITY-HARDENING.md](SECURITY-HARDENING.md).
 
 ## Rules (industry standard)
 
@@ -125,7 +131,10 @@ main deletion, content cherry-pick after QA, or protection change is needed.
 
 Before the VPS update:
 - Check the already-loaded production runtime with `verify-runtime-env.mjs live`.
-- Take a private `pg_dump` backup and retain the prior commit/build for rollback.
+- Create/verify a full private recovery set and retain the current commit/build
+  for rollback. Owner policy keeps one latest verified Savo VPS set: never remove
+  the old one before its replacement passes extraction and isolated DB-restore
+  checks. Off-site backup remains separate.
 - Inspect the Prisma schema diff; invoice/project releases add nullable/defaulted
   columns only. Never accept data-loss/reset flags to push this schema.
 - Business IDs require the reviewed `prepare-business-id-schema.mjs` additive SQL
@@ -135,8 +144,10 @@ Before the VPS update:
   **before invoking its updated deployment script**: the already-running old
   updater cannot acquire new migration logic mid-execution. Retain the old SHA/
   build and backup first; use only a clean server checkout.
-- Apply the schema **before** the new code starts, build with the existing live
-  environment, then restart only PM2 `savo`. Keep private environment files intact.
+- Apply separately reviewed additive schema changes **before** new code starts,
+  using an authorized administrator/schema-owner role, not the limited web role.
+  Build with the existing live environment and restart only `savo-web.service`.
+  Keep private environment bytes/master key intact; preserve the reminder timer.
 - Smoke-test public routes, unauthenticated portal/admin boundaries and PDF
   authorization without changing real invoices/projects or sending test emails.
   Local fixture scripts refuse production and must not be run on the live DB.

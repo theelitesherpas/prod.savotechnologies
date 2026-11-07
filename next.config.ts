@@ -57,6 +57,13 @@ const nextConfig: NextConfig = {
   // Case-study records carry cropped hero images (data URLs up to ~4 MB)
   // through server actions — the 1 MB default would reject them.
   images: {
+    // User-controlled SVG execution and private-network image fetches are never
+    // needed. Official SVG branding is served directly, not through optimization.
+    dangerouslyAllowSVG: false,
+    dangerouslyAllowLocalIP: false,
+    maximumRedirects: 0,
+    maximumResponseBody: 10_000_000,
+    maximumDiskCacheSize: 500_000_000,
     localPatterns: [
       { pathname: "/images/**", search: "" },
       { pathname: "/api/insight-image/**", search: "" },

@@ -4,8 +4,8 @@ import { isPrivateSurface, isSensitiveResponse } from "@/lib/publication-policy"
 import { middleware } from "@/middleware";
 
 const fetchMock = vi.fn();
-beforeEach(() => { vi.stubGlobal("fetch", fetchMock); fetchMock.mockReset(); });
-afterEach(() => vi.unstubAllGlobals());
+beforeEach(() => { vi.stubGlobal("fetch", fetchMock); vi.stubEnv("PORT", "4312"); fetchMock.mockReset(); });
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 function request(path: string, init: NonNullable<ConstructorParameters<typeof NextRequest>[1]> = {}) {
   return new NextRequest(`http://localhost:4312${path}`, init);
@@ -58,6 +58,19 @@ describe("private discovery/cache boundaries", () => {
     expect(options.cache).toBe("no-store");
     expect(options.signal).toBeInstanceOf(AbortSignal);
     expect(options.headers.cookie).toBeUndefined();
+  });
+
+  it("never lets a forged request/forwarded port select a different local service", async () => {
+    fetchMock.mockResolvedValue(new Response("<main><p>Public page</p></main>"));
+    const forged = new NextRequest("http://attacker.example:5432/services", { headers: { accept: "text/markdown", host: "attacker.example:5432", "x-forwarded-host": "attacker.example:6379", "x-forwarded-port": "22" } });
+    expect((await middleware(forged)).status).toBe(200);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://127.0.0.1:4312/services");
+  });
+
+  it.each(["0", "65536", "5432evil", "http://attacker.example"])("fails closed for invalid server-owned listener %s", async port => {
+    vi.stubEnv("PORT", port);
+    expect((await middleware(request("/services", { headers: { accept: "text/markdown" } }))).status).toBe(502);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("fails safely when the Markdown origin request fails", async () => {

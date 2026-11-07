@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { scriptJson } from "@/lib/script-json";
 import { notFound } from "next/navigation";
 import { absoluteUrl } from "@/lib/env";
 import { openGraphFor } from "@/lib/seo";
@@ -99,7 +100,7 @@ export default async function ServicePage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: scriptJson(jsonLd) }}
       />
 
       <ServiceDetailPage detail={detail} industries={industries} services={services} work={verifiedWork} />

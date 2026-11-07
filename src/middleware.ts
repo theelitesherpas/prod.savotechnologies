@@ -125,11 +125,13 @@ function publicUrl(req: NextRequest): URL {
 async function renderMarkdown(req: NextRequest): Promise<NextResponse> {
   try {
     // Fetch the page as a browser would - Accept: text/html keeps the
-    // sub-request out of this branch (no recursion). req.url points at
-    // Next's own listener; force plain http to that listener so the
-    // fetch does not attempt TLS against the HTTP-only app server.
+    // sub-request out of this branch (no recursion). The port is owned by
+    // server configuration, NEVER a Host/forwarded URL supplied by a caller.
+    // Otherwise Markdown negotiation could probe other loopback services.
     const listener = new URL(req.url);
-    const self = `http://127.0.0.1:${listener.port || "3000"}${listener.pathname}${listener.search}`;
+    const port = process.env.PORT || "3000";
+    if (!/^\d{1,5}$/.test(port) || Number(port) < 1 || Number(port) > 65535) throw new Error("Invalid server listener configuration");
+    const self = `http://127.0.0.1:${port}${listener.pathname}${listener.search}`;
     const page = await fetch(self, {
       headers: { accept: "text/html", "user-agent": req.headers.get("user-agent") ?? "" },
       redirect: "manual",

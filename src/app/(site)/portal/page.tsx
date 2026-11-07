@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { scriptJson } from "@/lib/script-json";
 import { redirect } from "next/navigation";
 import { absoluteUrl } from "@/lib/env";
 import { getClientUser } from "@/lib/client-auth";
@@ -65,7 +66,7 @@ export default async function PortalPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: scriptJson(jsonLd) }}
       />
       <PortalEntrance kind="client">
         <PortalLoginCard
