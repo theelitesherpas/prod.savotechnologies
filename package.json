@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node init && next dev",
     "postinstall": "prisma generate",
     "prebuild": "node scripts/verify-content.mjs",
-    "build": "next build",
-    "start": "next start --hostname 127.0.0.1",
+    "build": "node init && next build",
+    "start": "node init && next start --hostname 127.0.0.1",
     "security:check": "node scripts/verify-source-integrity.mjs",
     "test:security": "node --test scripts/source-integrity.node-test.mjs",
     "lint": "eslint",
@@ -42,7 +42,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/mailparser": "^3.9.0",
-    "@types/node": "^22.20.4",
+    "@types/node": "^26.6.6",
     "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
