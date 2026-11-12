@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node init && next dev",
     "postinstall": "prisma generate",
     "prebuild": "node scripts/verify-content.mjs",
-    "build": "next build",
-    "start": "next start --hostname 127.0.0.1",
+    "build": "node init && next build",
+    "start": "node init && next start --hostname 127.0.0.1",
     "security:check": "node scripts/verify-source-integrity.mjs",
     "test:security": "node --test scripts/source-integrity.node-test.mjs",
     "lint": "eslint",
@@ -35,7 +35,7 @@
     "next": "16.4.5",
     "nodemailer": "^10.0.10",
     "pdf-lib": "^1.17.1",
-    "react": "19.2.8",
+    "react": "19.3.1",
     "react-dom": "19.2.8",
     "zod": "^4.6.6"
   },
